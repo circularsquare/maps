@@ -7,6 +7,7 @@ import { PROFIT_STOPS, rgb, SPEED_STOPS } from "../game/palette";
 import { PSI_PER_UNIT } from "./geo";
 import { BAND_M_RANGE, BAND_RANGE, BAND_SHARE } from "./lineBands";
 import { PROJECT_GLSL } from "./gl";
+import { F_HOLE } from "./strokeSlots";
 import { LEVEL_FADE, LEVEL_SHOWN_GLSL } from "./visibility";
 import { TURNBACK_M } from "./terminalBays";
 import { ONE_BULGE_K, ONE_BUMP, ONE_END, PASS_LEAD_M, PLATFORM_POINTS, SEL_GLOW_PX, SEL_OUTLINE_PX, SHAPE_GLSL, ST_BUILDING, ST_FLIP, ST_BUFFER, ST_ONE, ST_ONE_MID, ST_ONE_NEG, ST_PASSING, ST_ROOM, ST_SINGLE, ST_TERMINAL, ST_TRAM, TRAM_BOX, TERMINAL_CAP, TERMINAL_EAR } from "./stationGeometry";
@@ -183,6 +184,8 @@ void main() {
   v_inner = vec4(0.0);
   v_aa = 0.0;
   int flags = int(a_flags + 0.5);
+  // T-4262: a slot of a network's set no segment holds (strokeSlots.ts F_HOLE)
+  if ((flags & ${F_HOLE}) != 0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   bool hsr = (flags & 256) != 0;
   bool tram = (flags & 4096) != 0;
   // T-3378: a busway, drawn as tram track (its flag is set too) in a road's grey with a dashed white centre line

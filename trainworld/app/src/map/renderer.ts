@@ -38,12 +38,7 @@ import { codeHidden, hidden as vis, levelHidden, levelShown, pickSkip } from "./
 import { EPOCH_S, STAGE_WAIT_MS, TripArgs, LINE_PX, noBays, BAYS, StationGroups, DrawOptions, StrokeVao, TexName, plainWmul, fullAttr, STROKE_ATTRIBS, STILL_MAX_MS, StrokeLodState, NetworkLayers, TRAIN_MAX_MPS, CROWD_STEP_S } from "./rendererParts";
 export { EPOCH_S, laneState, passingState, CROWD_ZOOM, CONFLICT_ZOOM } from "./rendererParts";
 export type { StationGroups, DrawOptions, NetworkLayers } from "./rendererParts";
-import { texture, buffer, attrib, strokes, checkStrokes, checkFull, checkTextures, dropLodOf, rewrite, keepTexture, changedRows, joinRows, unchangedRuns, spareOf, dropSpare, type KeptTex, type TexKind } from "./rendererStrokes";
-
-/** T-4262: how long after a network its stroke sets' old buffers are kept for the next one to copy into, ms: an
- * edit's network then needs no new buffers, whose allocation was most of the GPU's work after one (about 40 MB on her
- * Asia save), at the cost of holding a second copy of the strokes meanwhile */
-const SPARE_MS = 20000;
+import { texture, buffer, attrib, strokes, checkStrokes, checkFull, checkTextures, dropLodOf, keepTexture, changedRows, joinRows, unchangedRuns, writeSegs, writeSegRange, type KeptTex, type TexKind } from "./rendererStrokes";
 import { drawFrame, bindTrainTextures } from "./rendererDraw";
 
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
@@ -443,6 +438,8 @@ export class NetworkRenderer {
   quiet = false;
   /** T-4262: bytes sent to the GPU, copied on it and allocated there since the page opened (checks and profiles read them) */
   gpuBytes = { up: 0, copy: 0, alloc: 0 };
+  /** T-4262 stage 2: stroke sets laid out whole (a network posted whole, or room run out near an edit) */
+  slotLayouts = 0;
   /** T-4262: a network takes the GL objects of the one before and writes only what differs (`?perfOff=keepGl`: each
    * network's textures and stroke buffers made anew, its traffic marks and lanes worked out whole, as before) */
   keepGl = !perfOff("keepGl");
@@ -566,7 +563,7 @@ export class NetworkRenderer {
   gpuDump(): Record<string, [WebGLBuffer, number]> {
     const out: Record<string, [WebGLBuffer, number]> = {};
     for (const [name, v] of [["track", this.track], ["lines", this.lines]] as const)
-      v?.attribs?.forEach(({ buf, bytes }, i) => (out[`${name}.${STROKE_ATTRIBS[i]}`] = [buf, Math.max(1, v.count) * bytes]));
+      v?.attribs?.forEach(({ buf, bytes }, i) => (out[`${name}.${STROKE_ATTRIBS[i]}`] = [buf, Math.max(1, v.drawn ?? v.count) * bytes]));
     return out;
   }
 
@@ -654,7 +651,7 @@ export class NetworkRenderer {
     this.fullDrawn = drawn;
     const { out, any } = this.fullValues(n, keys, null, null);
     this.anyFull = any;
-    rewrite(this, l.fullBuf, out);
+    writeSegs(this, l, l.fullBuf, out, 2);
     this.linesFull = out;
     this.fullKey = key;
     this.perSegV++;
@@ -726,33 +723,24 @@ export class NetworkRenderer {
     const oldFull = this.linesFull;
     const fullRuns = this.keepGl && patch && oldLines && oldFull && this.fullKey === key && oldFull.length === Math.max(1, oldLines.count) * 2 ? patch.lines : null;
     const full = this.fullValues(n, keys, fullRuns, oldFull);
-    // (the sets' buffers made with room, so the set after next can be copied into them: `spare`)
-    const spare = this.spare;
-    this.track = strokes(this, n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track, spare: spare.track } : null, { room: true });
-    if (this.track !== oldTrack && patch && oldTrack && this.keepGl) spare.track = null;
-    this.lines = strokes(this, n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines, spare: spare.lines } : null, { full: full.out, fullKept: full.kept, room: true });
-    if (this.lines !== oldLines && patch && oldLines && this.keepGl) spare.lines = null;
-    // T-4262: a set written in place keeps its buffers, and its simplified copies and culling boxes while none of its
-    // segments changed
+    // T-4262: each set's segments in slots in its own buffers, an edit's written where it changed them (strokeSlots.ts)
+    this.track = strokes(this, n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track } : null, { room: true });
+    this.lines = strokes(this, n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null, { full: full.out, fullKept: full.kept, room: true });
+    // a set keeps its simplified copies and culling boxes while none of its segments changed, and the culling boxes
+    // of the chunks before its first change
     const linesSame = this.lines === oldLines && !!patch && unchangedRuns(patch.lines, this.lines.count);
     for (const [old, now, runs] of [[oldTrack, this.track, patch?.track], [oldLines, this.lines, patch?.lines]] as const) {
       if (!old) continue;
-      if (old !== now) {
-        // (the culling boxes of the chunks before the first change are the last set's)
+      if (old !== now || !runs || !unchangedRuns(runs, now.count)) {
         const boxes = this.lodOf.get(old)?.boxes;
         if (boxes && runs && this.keepGl && runs[0] === 0 && runs[2] === 0) now.boxesFrom = { boxes, upTo: runs[1] };
         dropLodOf(this, old);
-        // T-4262: its buffers are the next set's to copy into, for a while (`SPARE_MS`)
-        const kind = old === oldTrack ? "track" : "lines";
-        dropSpare(this, spare[kind]);
-        spare[kind] = spareOf(this, old);
-      } else if (!runs || !unchangedRuns(runs, now.count)) dropLodOf(this, now);
+      }
+      if (old !== now) for (const r of old.res ?? []) r.del();
     }
-    clearTimeout(this.spareTimer);
-    if (spare.track || spare.lines) this.spareTimer = setTimeout(() => this.dropSpares(), SPARE_MS);
     // the demand widths the runs kept had, the new segments' plain, until `setLayers` (T-4262: `wmulHeld`)
     if (this.lines.count && !this.lines.wmulPlain && !this.lines.wmulHeld) {
-      rewrite(this, this.lines.wmulBuf, plainWmul(this.lines.count));
+      writeSegs(this, this.lines, this.lines.wmulBuf, plainWmul(this.lines.count), 3);
       this.lines.wmulPlain = true;
     }
     this.linesWmul = this.lines.wmulPlain ? null : this.lines.wmulHeld ?? null;
@@ -1024,18 +1012,6 @@ export class NetworkRenderer {
     this.putTexture("fill", this.blankFill(Math.max(1, this.net.samples.length / 2)), "rg32f", TEX_W);
   }
 
-  /** T-4262: the last network's stroke sets' buffers, which the next network's copy into (`strokes`), and when they go */
-  spare: { track: StrokeVao | null; lines: StrokeVao | null } = { track: null, lines: null };
-  spareTimer = 0;
-  dropSpares() {
-    clearTimeout(this.spareTimer);
-    // (deleting them changes nothing drawn: the strokes' cache is not drawn again for it)
-    this.uncached(() => {
-      dropSpare(this, this.spare.track);
-      dropSpare(this, this.spare.lines);
-    });
-    this.spare = { track: null, lines: null };
-  }
   /** T-4262: the network textures kept from one network to the next (`keepTexture`) */
   keptTex: Partial<Record<TexName, KeptTex>> = {};
   /** Network texture `name` from `data`: the one kept written where it differs (`rows`: start and count pairs of the
@@ -1208,7 +1184,6 @@ export class NetworkRenderer {
     this.keptTex = {};
     this.laneIn = null;
     this.fullKey = null;
-    this.spare = { track: null, lines: null };
     for (const k of Object.keys(this.tex) as TexName[]) this.tex[k] = null;
     this.track = this.lines = null;
     this.lodOf.clear();
@@ -1462,14 +1437,14 @@ const WMUL_ROW = 1024;
 function writeWmul(rnd: NetworkRenderer, v: StrokeVao, wm: Float32Array | null): boolean {
   const held = v.wmulPlain ? null : v.wmulHeld;
   if (!rnd.keepGl || !held || !wm || held.length !== wm.length) {
-    rewrite(rnd, v.wmulBuf, wm ?? plainWmul(v.count));
+    writeSegs(rnd, v, v.wmulBuf, wm ?? plainWmul(v.count), 3);
     return true;
   }
   const rows = changedRows(held, wm, WMUL_ROW * 3);
   if (!rows.length) return false;
-  const gl = rnd.gl, per = WMUL_ROW * 3;
+  const gl = rnd.gl;
   gl.bindBuffer(gl.ARRAY_BUFFER, v.wmulBuf);
-  for (let i = 0; i + 1 < rows.length; i += 2) gl.bufferSubData(gl.ARRAY_BUFFER, rows[i] * per * 4, wm.subarray(rows[i] * per, Math.min(wm.length, (rows[i] + rows[i + 1]) * per)));
+  for (let i = 0; i + 1 < rows.length; i += 2) writeSegRange(rnd, v, wm, 3, rows[i] * WMUL_ROW, Math.min(v.count, (rows[i] + rows[i + 1]) * WMUL_ROW) - rows[i] * WMUL_ROW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   return true;
 }

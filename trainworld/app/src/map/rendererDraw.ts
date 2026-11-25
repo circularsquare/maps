@@ -227,8 +227,9 @@ function strokeDraws(rnd: NetworkRenderer, c: Ctx2) {
     gl.bindVertexArray(s.vao);
     const drawAll = () => {
       if (!ranges) {
-        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.count);
-        rnd.strokeInstances += s.count;
+        // (a network's set in slots: every slot up to its last segment's, the holes drawing nothing, T-4262)
+        gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, s.drawn ?? s.count);
+        rnd.strokeInstances += s.drawn ?? s.count;
         return;
       }
       for (let r = 0; r < ranges.length; r += 2) {

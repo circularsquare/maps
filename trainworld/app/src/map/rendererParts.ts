@@ -1,5 +1,6 @@
 // Constants, option types and helpers of the network renderer (renderer.ts), moved out of it (T-2374).
 
+import type { SlotLayout } from "./strokeSlots";
 import { BAD_RED, rgbf } from "../game/palette";
 import { PASS_GAP_PX, PASS_TRACK_M, STATION_BOX_ZOOM } from "./stationGeometry";
 import { kAtY, pxPerUnitAt } from "./geo";
@@ -181,8 +182,9 @@ export interface StrokeVao {
   /** T-4262: `wmulBuf` holds the plain widths (`plainWmul`), or else `wmulHeld`, a copy of what it holds */
   wmulPlain?: boolean;
   wmulHeld?: Float32Array | null;
-  /** T-4262: bytes each buffer has room for, the attributes' then `wmulBuf`'s and `fullBuf`'s */
-  caps?: number[];
+  /** T-4262 stage 2: a network's set, where its segments sit in its buffers (strokeSlots.ts), and the slots drawn */
+  layout?: SlotLayout;
+  drawn?: number;
   /** T-4262: the last set's culling boxes, whose chunks before segment `upTo` are this set's too (`chunkBoxes`) */
   boxesFrom?: { boxes: ChunkBoxes; upTo: number };
   /** per segment its traffic mark (T-819, `writeFull`) and where along its run it starts (`fullAttr`) */

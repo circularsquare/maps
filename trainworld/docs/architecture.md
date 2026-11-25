@@ -73,10 +73,14 @@ Web first, so it can be shared as a link.
   stroke runs found by identity of the reused pieces, arrays as last posted left out; each stroke set
   is posted whole, as the last network's with no arrays, or as only its new segments, which the page
   writes over the ones they replace in the arrays it has (a segment that moves, because one was
-  inserted or removed before it, makes the set whole again; `map/strokePost.ts`, T-1381); the renderer
-  copies the unchanged runs on the GPU (T-1028), writes the new segments into the drawn buffers where no
-  run moved, else into the last network's buffers kept for 20 s, and keeps every network texture,
-  writing only the rows whose data changed (T-4262); the pick and snap grids are carried over through
+  inserted or removed before it, makes the set whole again; `map/strokePost.ts`, T-1381). The renderer
+  keeps each network stroke set in its own buffers, its segments in draw order with a quarter more slots
+  spread between and after them (`map/strokeSlots.ts`, T-4262): the runs kept stay in their slots, an
+  edit's new segments are written into the room where they belong and the slots they free are marked as
+  holes, which the stroke shader skips; where the room there is too small a nearby stretch is laid out
+  again, and only when that stretch would pass 64 times the new segments is the set laid out afresh
+  (in its buffers while they have room, else in larger ones). It keeps every network texture, writing
+  only the rows whose data changed (T-4262); the pick and snap grids are carried over through
   the same runs instead of built again (T-1030).
   Anything that cannot be taken as changes (a load, a new draw anchor, a mismatch) goes whole;
   `?patch=0` posts everything whole, `?patch=check` compares the changes with whole builds

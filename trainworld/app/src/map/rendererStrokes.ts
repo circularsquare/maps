@@ -1,6 +1,7 @@
 // The renderer's stroke buffers and their level of detail, moved out of renderer.ts (T-2374).
 
 import { type Project } from "./stationGeometry";
+import { F_HOLE, forPieces, planPatch, slotRanges, slotShare, wholeItems, wholeLayout } from "./strokeSlots";
 import { pxPerUnitAt } from "./geo";
 import { chunkBoxes, mergeRanges, significance, simplifiedLater, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather } from "./strokeGather";
@@ -135,94 +136,31 @@ export function attrib(rnd: NetworkRenderer, prog: WebGLProgram, name: string, b
 }
 
 /** A stroke set's VAO. `from` (a network's strokes, T-1028): the strokes drawn before and the runs
- * (start, count, old start or -1, `NetPatch`) that make these from them: unchanged runs are copied
- * on the GPU from the old buffers, only the new segments uploaded. T-4262: where no run moved, the new
- * segments are written into the old buffers and the old VAO is returned; else the copies go into `spare`'s
- * buffers where they have room (a set no longer drawn, its VAO gone: those not taken are deleted). `more`: the
- * `a_wmul` values when worked out already, and the `a_full` values, or "later" for an `a_full` written by its
- * caller (T-2403); `fullKept`: the old buffers' `a_full` holds these values on the runs copied; `room` (a
- * network's set): new buffers made with room to grow, for a later set to copy into. */
-export function strokes(rnd: NetworkRenderer, s: Strokes, list = rnd.res, from?: { old: StrokeVao; runs: Int32Array; spare?: StrokeVao | null } | null, more?: { wmul?: Float32Array | null; full?: Float32Array | "later"; fullKept?: boolean; room?: boolean }): StrokeVao {
+ * (start, count, old start or -1, `NetPatch`) that make these from them. `more`: the `a_wmul` values when worked
+ * out already, and the `a_full` values, or "later" for an `a_full` written by its caller (T-2403); `fullKept`: the
+ * old buffers' `a_full` holds these values on the runs kept; `room` (a network's set, T-4262): its segments laid
+ * out in slots with room between them (strokeSlots.ts), an edit's written into the set's own buffers where it
+ * changed them, the set returned (new buffers only when the set outgrows them). Without `room`, or with
+ * `?perfOff=keepGl`: new buffers, the unchanged runs copied on the GPU from the old ones and only the new segments
+ * uploaded. */
+export function strokes(rnd: NetworkRenderer, s: Strokes, list = rnd.res, from?: { old: StrokeVao; runs: Int32Array } | null, more?: { wmul?: Float32Array | null; full?: Float32Array | "later"; fullKept?: boolean; room?: boolean }): StrokeVao {
+  if (more?.room && rnd.keepGl && more.full !== "later") return slotted(rnd, s, list, from ?? null, more);
   const gl = rnd.gl;
   const n = s.count;
-  const patch = from && n && from.old.attribs?.length === STROKE_ATTRIBS.length ? from : null;
-  const sub = <T extends Float32Array | Uint32Array | Uint8Array | Int16Array>(a: T, per: number) => (start: number, count: number) => a.subarray(start * per, (start + count) * per);
-  const speed = s.speed, lane = s.lane, band = s.band;
-  const speedOf = speed ? (start: number, count: number) => shownSpeed(speed.subarray(start, start + count), s.trainSpeed?.length === speed.length ? s.trainSpeed.subarray(start, start + count) : undefined) : (_: number, count: number) => new Float32Array(count).fill(160);
-  /** per buffer: its values for segments (start, count) and its bytes a segment; the attributes in `STROKE_ATTRIBS`
-   * order, then `a_wmul` (WMUL) and `a_full` (FULL) */
+  const patch = from && n && from.old.attribs?.length === STROKE_ATTRIBS.length && !from.old.layout ? from : null;
+  const valuesOf = valuesFor(s, more);
   const given = more?.full instanceof Float32Array ? more.full : null;
-  const wmulPlain = !more?.wmul;
-  const valuesOf: [(start: number, count: number) => ArrayBufferView, number][] = [
-    [sub(s.seg, 4), 16], [sub(s.colour, 1), 4], [sub(s.edge, 1), 4], [sub(s.level, 1), 4], [sub(s.flags, 1), 4], [speedOf, 4],
-    [lane ? sub(lane, 2) : (_, count) => new Uint8Array(count * 2).fill(255), 2],
-    [band ? sub(band, BAND_STRIDE) : (_, count) => new Int16Array(count * BAND_STRIDE), BAND_STRIDE * 2],
-    [more?.wmul ? sub(more.wmul, 3) : (_, count) => plainWmul(count), 12],
-    [given ? sub(given, 2) : (start, count) => fullAttr(s, count, undefined, start), 8],
-  ];
   /** the old `a_full` holds the values of the runs copied: the track's (geometry only) or a given one's that says so */
   const fullCopies = !more?.full || (!!given && !!more.fullKept);
-  const bufOf = (v: StrokeVao, i: number) => (i < WMUL ? v.attribs![i].buf : i === WMUL ? v.wmulBuf : v.fullBuf);
-  if (patch && rnd.keepGl && n === patch.old.count && !more?.wmul && inPlace(patch.runs)) {
-    const v = patch.old, r = patch.runs;
-    const put = (i: number, at: number, data: ArrayBufferView) => {
-      gl.bindBuffer(gl.COPY_WRITE_BUFFER, bufOf(v, i));
-      gl.bufferSubData(gl.COPY_WRITE_BUFFER, at * valuesOf[i][1], data);
-    };
-    for (let k = 0; k < r.length; k += 3) {
-      if (r[k + 2] >= 0) continue;
-      const a = r[k], c = r[k + 1];
-      for (let i = 0; i < FULL; i++) put(i, a, valuesOf[i][0](a, c));
-      if (fullCopies && more?.full !== "later") put(FULL, a, valuesOf[FULL][0](a, c));
-      v.wmulHeld?.set(plainWmul(c), a * 3);
-    }
-    if (given && !fullCopies) put(FULL, 0, given.subarray(0, n * 2));
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
-    return v;
-  }
-  const vao = gl.createVertexArray()!;
-  list.push({ del: () => gl.deleteVertexArray(vao) });
-  gl.bindVertexArray(vao);
-  const p = rnd.strokeProg;
-  const spare = rnd.keepGl && from?.spare?.caps ? from.spare : null, taken: boolean[] = [];
-  const caps: number[] = [];
-  /** buffer `i` for `n` segments, its contents to be written: a spare one with room, or a new one */
-  const target = (i: number): WebGLBuffer => {
-    const bytes = valuesOf[i][1], need = n * bytes;
-    const sb = spare ? bufOf(spare, i) : null;
-    if (sb && spare!.caps![i] >= need) {
-      taken[i] = true;
-      caps[i] = spare!.caps![i];
-      list.push({ del: () => gl.deleteBuffer(sb) });
-      gl.bindBuffer(gl.COPY_WRITE_BUFFER, sb);
-      return sb;
-    }
-    const buf = gl.createBuffer()!;
-    list.push({ del: () => gl.deleteBuffer(buf) });
-    caps[i] = more?.room && rnd.keepGl ? (n + Math.max(n >> 3, 256)) * bytes : need;
-    gl.bindBuffer(gl.COPY_WRITE_BUFFER, buf);
-    gl.bufferData(gl.COPY_WRITE_BUFFER, caps[i], gl.STATIC_DRAW);
-    return buf;
-  };
   /** buffer `i`: unchanged runs copied from the old set's on the GPU, the rest uploaded; `whole` all uploaded */
   const make = (i: number, whole = false): WebGLBuffer => {
     const [get, bytes] = valuesOf[i];
-    if (!n) {
-      const empty = EMPTY[i]();
-      caps[i] = empty.byteLength;
-      return buffer(rnd, empty, list);
-    }
-    if (!patch || whole) {
-      if (!more?.room || !rnd.keepGl) {
-        caps[i] = n * bytes;
-        return buffer(rnd, i === FULL && given ? given.subarray(0, n * 2) : get(0, n), list);
-      }
-      const buf = target(i);
-      gl.bufferSubData(gl.COPY_WRITE_BUFFER, 0, i === FULL && given ? given.subarray(0, n * 2) : get(0, n));
-      gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
-      return buf;
-    }
-    const buf = target(i);
+    if (!n) return buffer(rnd, EMPTY[i](), list);
+    if (!patch || whole) return buffer(rnd, get(0, n), list);
+    const buf = gl.createBuffer()!;
+    list.push({ del: () => gl.deleteBuffer(buf) });
+    gl.bindBuffer(gl.COPY_WRITE_BUFFER, buf);
+    gl.bufferData(gl.COPY_WRITE_BUFFER, n * bytes, gl.STATIC_DRAW);
     gl.bindBuffer(gl.COPY_READ_BUFFER, bufOf(patch.old, i));
     const r = patch.runs;
     for (let k = 0; k < r.length; k += 3) {
@@ -233,62 +171,196 @@ export function strokes(rnd: NetworkRenderer, s: Strokes, list = rnd.res, from?:
     gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
     return buf;
   };
-  const attribs: { buf: WebGLBuffer; bytes: number }[] = [];
-  const attr = (i: number) => {
-    const buf = make(i);
-    attribs.push({ buf, bytes: valuesOf[i][1] });
-    return buf;
-  };
-  attrib(rnd, p, "a_seg", attr(0), 4, gl.FLOAT, 1);
-  attrib(rnd, p, "a_colour", attr(1), 1, gl.UNSIGNED_INT, 1, true);
-  attrib(rnd, p, "a_edge", attr(2), 1, gl.UNSIGNED_INT, 1, true);
-  attrib(rnd, p, "a_level", attr(3), 1, gl.FLOAT, 1);
-  attrib(rnd, p, "a_flags", attr(4), 1, gl.FLOAT, 1);
-  attrib(rnd, p, "a_speed", attr(5), 1, gl.FLOAT, 1);
-  // T-4262: the widths of the runs kept copied from the old set (plain, or the demand view's it held), the new
-  // segments' plain, rather than all uploaded again
-  const wmulFrom = patch && rnd.keepGl && wmulPlain ? (patch.old.wmulPlain ? "plain" : patch.old.wmulHeld ? "held" : null) : null;
-  const wmulBuf = make(WMUL, !wmulFrom);
-  let wmulHeld: Float32Array | null = null;
-  if (wmulFrom === "held") {
-    const old = patch!.old.wmulHeld!, r = patch!.runs;
-    wmulHeld = new Float32Array(n * 3);
-    for (let k = 0; k < r.length; k += 3) wmulHeld.set(r[k + 2] >= 0 ? old.subarray(r[k + 2] * 3, (r[k + 2] + r[k + 1]) * 3) : plainWmul(r[k + 1]), r[k] * 3);
-  }
-  attrib(rnd, p, "a_wmul", wmulBuf, 3, gl.FLOAT, 1);
-  let fullBuf: WebGLBuffer;
+  const bufs: WebGLBuffer[] = [];
+  for (let i = 0; i < WMUL; i++) bufs.push(make(i));
+  bufs.push(make(WMUL, true));
   if (more?.full === "later") {
-    fullBuf = gl.createBuffer()!;
+    const fullBuf = gl.createBuffer()!;
     list.push({ del: () => gl.deleteBuffer(fullBuf) });
     gl.bindBuffer(gl.ARRAY_BUFFER, fullBuf);
     gl.bufferData(gl.ARRAY_BUFFER, Math.max(1, n) * 8, gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    caps[FULL] = Math.max(1, n) * 8;
-  } else fullBuf = make(FULL, !fullCopies);
-  attrib(rnd, p, "a_full", fullBuf, 2, gl.FLOAT, 1);
-  const laneBuf = attr(6);
+    bufs.push(fullBuf);
+  } else bufs.push(make(FULL, !fullCopies));
+  return { ...vaoOf(rnd, bufs, list), count: n, wmulPlain: !more?.wmul, wmulHeld: null };
+}
+
+/** per buffer of a stroke set: its values for segments (start, count) of `s` and its bytes a segment, the attributes
+ * in `STROKE_ATTRIBS` order, then `a_wmul` (WMUL) and `a_full` (FULL); `held`: the demand widths in place of the
+ * plain ones, when the set holds some */
+function valuesFor(s: Strokes, more?: { wmul?: Float32Array | null; full?: Float32Array | "later" }, held?: Float32Array | null): [(start: number, count: number) => ArrayBufferView, number][] {
+  const sub = <T extends Float32Array | Uint32Array | Uint8Array | Int16Array>(a: T, per: number) => (start: number, count: number) => a.subarray(start * per, (start + count) * per);
+  const speed = s.speed, lane = s.lane, band = s.band;
+  const speedOf = speed ? (start: number, count: number) => shownSpeed(speed.subarray(start, start + count), s.trainSpeed?.length === speed.length ? s.trainSpeed.subarray(start, start + count) : undefined) : (_: number, count: number) => new Float32Array(count).fill(160);
+  const given = more?.full instanceof Float32Array ? more.full : null, wm = more?.wmul ?? held;
+  return [
+    [sub(s.seg, 4), 16], [sub(s.colour, 1), 4], [sub(s.edge, 1), 4], [sub(s.level, 1), 4], [sub(s.flags, 1), 4], [speedOf, 4],
+    [lane ? sub(lane, 2) : (_, count) => new Uint8Array(count * 2).fill(255), 2],
+    [band ? sub(band, BAND_STRIDE) : (_, count) => new Int16Array(count * BAND_STRIDE), BAND_STRIDE * 2],
+    [wm ? sub(wm, 3) : (_, count) => plainWmul(count), 12],
+    [given ? sub(given, 2) : (start, count) => fullFrom(s, start, count), 8],
+  ];
+}
+
+/** `a_full` (geometry only) of segments `start` to `start + count`, its run's distances from where the run begins
+ * (before `start` where a slot block begins inside one), as a whole set's */
+function fullFrom(s: Strokes, start: number, count: number): Float32Array {
+  const g = s.seg;
+  let r = start;
+  while (r > 0 && s.colour[r] === s.colour[r - 1] && s.edge[r] === s.edge[r - 1] && g[r * 4] === g[r * 4 - 2] && g[r * 4 + 1] === g[r * 4 - 1]) r--;
+  const out = fullAttr(s, start - r + count, undefined, r);
+  return r === start ? out : out.subarray((start - r) * 2, (start - r + count) * 2);
+}
+
+/** a stroke set's VAO over its ten buffers (`STROKE_ATTRIBS`, then `a_wmul`, `a_full`) */
+function vaoOf(rnd: NetworkRenderer, bufs: WebGLBuffer[], list: { del: () => void }[]): Omit<StrokeVao, "count"> {
+  const gl = rnd.gl, p = rnd.strokeProg;
+  const vao = gl.createVertexArray()!;
+  list.push({ del: () => gl.deleteVertexArray(vao) });
+  gl.bindVertexArray(vao);
+  attrib(rnd, p, "a_seg", bufs[0], 4, gl.FLOAT, 1);
+  attrib(rnd, p, "a_colour", bufs[1], 1, gl.UNSIGNED_INT, 1, true);
+  attrib(rnd, p, "a_edge", bufs[2], 1, gl.UNSIGNED_INT, 1, true);
+  attrib(rnd, p, "a_level", bufs[3], 1, gl.FLOAT, 1);
+  attrib(rnd, p, "a_flags", bufs[4], 1, gl.FLOAT, 1);
+  attrib(rnd, p, "a_speed", bufs[5], 1, gl.FLOAT, 1);
+  attrib(rnd, p, "a_wmul", bufs[WMUL], 3, gl.FLOAT, 1);
+  attrib(rnd, p, "a_full", bufs[FULL], 2, gl.FLOAT, 1);
   const loc = gl.getAttribLocation(p, "a_lane");
   if (loc >= 0) {
-    gl.bindBuffer(gl.ARRAY_BUFFER, laneBuf);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufs[6]);
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.UNSIGNED_BYTE, true, 0, 0);
     gl.vertexAttribDivisor(loc, 1);
   }
-  // lines side by side (T-1799): none on track and the other stroke sets
-  const bandBuf = attr(7);
-  // the shifts and widths, then the metres to the ribbon's middle (T-2132), from one buffer
+  // lines side by side (T-1799): none on track and the other stroke sets; the shifts and widths, then the metres
+  // to the ribbon's middle (T-2132), from one buffer
   for (const [name, size, off] of [["a_band", 4, 0], ["a_band_m", 2, 8]] as const) {
     const bloc = gl.getAttribLocation(p, name);
     if (bloc < 0) continue;
-    gl.bindBuffer(gl.ARRAY_BUFFER, bandBuf);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufs[7]);
     gl.enableVertexAttribArray(bloc);
     gl.vertexAttribPointer(bloc, size, gl.SHORT, true, BAND_STRIDE * 2, off);
     gl.vertexAttribDivisor(bloc, 1);
   }
   gl.bindVertexArray(null);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  if (spare) for (let i = 0; i <= FULL; i++) if (!taken[i]) gl.deleteBuffer(bufOf(spare, i));
-  return { vao, count: n, wmulBuf, fullBuf, attribs, res: list, wmulPlain: wmulFrom !== "held" && wmulPlain, wmulHeld, caps };
+  return { vao, wmulBuf: bufs[WMUL], fullBuf: bufs[FULL], attribs: bufs.slice(0, WMUL).map((buf, i) => ({ buf, bytes: BYTES[i] })), res: list };
+}
+
+/** per buffer: the typed array its values are and how many a segment */
+const KINDS: [new (n: number) => Float32Array | Uint32Array | Uint8Array | Int16Array, number][] = [[Float32Array, 4], [Uint32Array, 1], [Uint32Array, 1], [Float32Array, 1], [Float32Array, 1], [Float32Array, 1], [Uint8Array, 2], [Int16Array, BAND_STRIDE], [Float32Array, 3], [Float32Array, 2]];
+const BYTES = [16, 4, 4, 4, 4, 4, 2, BAND_STRIDE * 2, 12, 8];
+/** the `a_flags` buffer */
+const FLAGS = 4;
+const bufOf = (v: StrokeVao, i: number) => (i < WMUL ? v.attribs![i].buf : i === WMUL ? v.wmulBuf : v.fullBuf);
+
+/** T-4262 stage 2: a network's stroke set in slots (strokeSlots.ts): an edit's segments written into the last set's
+ * buffers where `planPatch` puts them, the slots they free marked as holes; laid out afresh in new buffers when
+ * there is no last set or it has too little room. */
+function slotted(rnd: NetworkRenderer, s: Strokes, list: { del: () => void }[], from: { old: StrokeVao; runs: Int32Array } | null, more: { full?: Float32Array | "later"; fullKept?: boolean }): StrokeVao {
+  const gl = rnd.gl, n = s.count;
+  const old = from?.old.layout && from.old.attribs?.length === STROKE_ATTRIBS.length ? from.old : null;
+  const plan = old ? planPatch(old.layout!, from!.runs, n) : null;
+  const given = more.full instanceof Float32Array ? more.full : null;
+  // the demand widths the runs kept had, the new segments' plain, until `setLayers` (`wmulHeld`)
+  let held: Float32Array | null = null;
+  if (old && !old.wmulPlain && old.wmulHeld) {
+    const was = old.wmulHeld, r = from!.runs;
+    held = new Float32Array(n * 3);
+    for (let k = 0; k < r.length; k += 3) held.set(r[k + 2] >= 0 ? was.subarray(r[k + 2] * 3, (r[k + 2] + r[k + 1]) * 3) : plainWmul(r[k + 1]), r[k] * 3);
+  }
+  const valuesOf = valuesFor(s, more, held);
+  if (!plan) {
+    // laid out afresh: in the last set's buffers while they have room for it, else in new ones with room
+    const reuse = old && old.layout!.cap >= n + Math.floor((n * slotShare.room) / 2) ? old : null;
+    const layout = wholeLayout(n, reuse ? reuse.layout!.cap : undefined), items = wholeItems(layout);
+    const bufs: WebGLBuffer[] = [];
+    for (let i = 0; i <= FULL; i++) {
+      const buf = reuse ? bufOf(reuse, i) : gl.createBuffer()!;
+      gl.bindBuffer(gl.COPY_WRITE_BUFFER, buf);
+      if (reuse) gl.bufferSubData(gl.COPY_WRITE_BUFFER, 0, staged(i, valuesOf[i][0], 0, layout.cap, items));
+      else {
+        list.push({ del: () => gl.deleteBuffer(buf) });
+        gl.bufferData(gl.COPY_WRITE_BUFFER, staged(i, valuesOf[i][0], 0, layout.cap, items), gl.STATIC_DRAW);
+      }
+      bufs.push(buf);
+    }
+    gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+    rnd.slotLayouts++;
+    if (reuse) return Object.assign(reuse, { count: n, drawn: layout.end, layout, wmulPlain: !held, wmulHeld: held });
+    return { ...vaoOf(rnd, bufs, list), count: n, drawn: layout.end, layout, wmulPlain: !held, wmulHeld: held };
+  }
+  const v = old!;
+  for (let i = 0; i <= FULL; i++) {
+    gl.bindBuffer(gl.COPY_WRITE_BUFFER, bufOf(v, i));
+    for (let k = 0, q = 0; k + 1 < plan.spans.length; k += 2) {
+      const g0 = plan.spans[k], g1 = plan.spans[k + 1], q0 = q;
+      while (q < plan.items.length && plan.items[q] < g1) q += 3;
+      if (g1 > g0) gl.bufferSubData(gl.COPY_WRITE_BUFFER, g0 * BYTES[i], staged(i, valuesOf[i][0], g0, g1, plan.items, q0, q));
+    }
+    if (i === FLAGS) for (let k = 0; k + 1 < plan.holes.length; k += 2) gl.bufferSubData(gl.COPY_WRITE_BUFFER, plan.holes[k] * 4, new Float32Array(plan.holes[k + 1]).fill(F_HOLE));
+  }
+  gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+  v.count = n;
+  v.layout = plan.layout;
+  v.drawn = plan.layout.end;
+  v.wmulHeld = held;
+  v.wmulPlain = v.wmulPlain || !held;
+  if (!v.wmulPlain && !held) {
+    writeSegs(rnd, v, v.wmulBuf, plainWmul(n), 3);
+    v.wmulPlain = true;
+  }
+  // (traffic marks made from other inputs than the last set's: all written)
+  if (given && !more.fullKept) writeSegs(rnd, v, v.fullBuf, given.subarray(0, n * 2), 2);
+  return v;
+}
+
+/** buffer `i`'s values for slots `g0` to `g1`: items `q0` to `q1` of `items` (slot, first segment, count) from
+ * `get`, every other slot a hole (`F_HOLE` in `a_flags`, the rest 0) */
+function staged(i: number, get: (start: number, count: number) => ArrayBufferView, g0: number, g1: number, items: number[], q0 = 0, q1 = items.length): ArrayBufferView {
+  const [Ctor, per] = KINDS[i];
+  // (one item filling the slots: its values as they are)
+  if (q1 - q0 === 3 && items[q0] === g0 && items[q0 + 2] === g1 - g0) return get(items[q0 + 1], items[q0 + 2]);
+  const out = new Ctor((g1 - g0) * per);
+  if (i === FLAGS) out.fill(F_HOLE);
+  for (let q = q0; q < q1; q += 3) out.set(get(items[q + 1], items[q + 2]) as Float32Array, (items[q] - g0) * per);
+  return out;
+}
+
+/** T-4262: per-segment values (`per` floats a segment, in segment order) written whole into buffer `buf` of set `v`,
+ * through its slots when it has them (holes between written with whatever: only `a_flags` marks them) */
+export function writeSegs(rnd: NetworkRenderer, v: StrokeVao, buf: WebGLBuffer, data: Float32Array, per: number) {
+  const gl = rnd.gl, L = v.layout;
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  if (!L) gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+  else if (L.end) {
+    const out = new Float32Array(L.end * per);
+    forPieces(L, 0, L.count, (g, x, c) => out.set(data.subarray(x * per, (x + c) * per), g * per));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, out);
+  }
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+/** T-4262: segments `a` to `a + c` of per-segment values `data` written into buffer `buf` of set `v` (bound to ARRAY_BUFFER by the caller) */
+export function writeSegRange(rnd: NetworkRenderer, v: StrokeVao, data: Float32Array, per: number, a: number, c: number) {
+  const gl = rnd.gl, L = v.layout;
+  if (!L) gl.bufferSubData(gl.ARRAY_BUFFER, a * per * 4, data.subarray(a * per, (a + c) * per));
+  else forPieces(L, a, c, (g, x, m) => gl.bufferSubData(gl.ARRAY_BUFFER, g * per * 4, data.subarray(x * per, (x + m) * per)));
+}
+
+/** `?patch=check`: buffer `buf` of set `v` read back, `bytes` a segment, in segment order (through its slots) */
+function readSegs(rnd: NetworkRenderer, v: StrokeVao, buf: WebGLBuffer, bytes: number): Uint8Array {
+  const gl = rnd.gl, L = v.layout, out = new Uint8Array(v.count * bytes);
+  gl.bindBuffer(gl.COPY_READ_BUFFER, buf);
+  if (!L) gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, out);
+  else if (L.end) {
+    const all = new Uint8Array(L.end * bytes);
+    gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, all);
+    forPieces(L, 0, L.count, (g, x, c) => out.set(all.subarray(g * bytes, (g + c) * bytes), x * bytes));
+  }
+  gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+  return out;
 }
 
 /** two sets of culling boxes alike, bit for bit */
@@ -307,27 +379,6 @@ const WMUL = STROKE_ATTRIBS.length, FULL = WMUL + 1;
 /** each buffer of a set of no segments */
 const EMPTY: (() => ArrayBufferView)[] = [() => new Float32Array(4), () => new Uint32Array(1), () => new Uint32Array(1), () => new Float32Array(1), () => new Float32Array(1), () => new Float32Array(1).fill(160), () => new Uint8Array(2).fill(255), () => new Int16Array(BAND_STRIDE), () => plainWmul(1), () => new Float32Array(2)];
 
-/** T-4262: a network's stroke set no longer drawn kept as the next one's spare buffers (`strokes`): its VAO deleted */
-export function spareOf(rnd: NetworkRenderer, v: StrokeVao): StrokeVao | null {
-  rnd.gl.deleteVertexArray(v.vao);
-  v.wmulHeld = null;
-  if (v.caps?.length === FULL + 1 && rnd.keepGl) return v;
-  for (let i = 0; i <= FULL; i++) rnd.gl.deleteBuffer(i < WMUL ? v.attribs![i].buf : i === WMUL ? v.wmulBuf : v.fullBuf);
-  return null;
-}
-
-/** T-4262: spare buffers deleted */
-export function dropSpare(rnd: NetworkRenderer, v: StrokeVao | null) {
-  if (!v) return;
-  for (let i = 0; i <= FULL; i++) rnd.gl.deleteBuffer(i < WMUL ? v.attribs![i].buf : i === WMUL ? v.wmulBuf : v.fullBuf);
-}
-
-/** T-4262: every run of a patch (start, count, old start or -1) that keeps segments keeps them where they were */
-export function inPlace(runs: Int32Array): boolean {
-  for (let k = 0; k < runs.length; k += 3) if (runs[k + 2] >= 0 && runs[k + 2] !== runs[k]) return false;
-  return true;
-}
-
 /** T-4262: whether a patch's runs make every segment of the old set again, where it was */
 export function unchangedRuns(runs: Int32Array, count: number): boolean {
   return count === 0 ? runs.length === 0 : runs.length === 3 && runs[0] === 0 && runs[1] === count && runs[2] === 0;
@@ -339,13 +390,22 @@ export function checkStrokes(rnd: NetworkRenderer, name: string, v: StrokeVao | 
   const want: ArrayBufferView[] = [s.seg, s.colour, s.edge, s.level, s.flags, s.speed ? shownSpeed(s.speed, s.trainSpeed) : new Float32Array(n).fill(160), s.lane ?? new Uint8Array(n * 2).fill(255), s.band ?? new Int16Array(n * BAND_STRIDE)];
   const bad: string[] = [];
   v.attribs.forEach(({ buf, bytes }, i) => {
-    const got = new Uint8Array(n * bytes), w = want[i];
-    gl.bindBuffer(gl.COPY_READ_BUFFER, buf);
-    gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, got);
+    const got = readSegs(rnd, v, buf, bytes), w = want[i];
     const x = new Uint8Array(w.buffer, w.byteOffset, w.byteLength);
     if (x.length !== got.length || x.some((b, k) => b !== got[k])) bad.push(STROKE_ATTRIBS[i]);
   });
-  gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+  // T-4262: every slot drawn that holds no segment marked as a hole
+  const L = v.layout;
+  if (L && L.end) {
+    const flags = new Float32Array(L.end), held = new Uint8Array(L.end);
+    gl.bindBuffer(gl.COPY_READ_BUFFER, v.attribs[FLAGS].buf);
+    gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, flags);
+    gl.bindBuffer(gl.COPY_READ_BUFFER, null);
+    forPieces(L, 0, L.count, (g, _, c) => held.fill(1, g, g + c));
+    let open = 0;
+    for (let g = 0; g < L.end; g++) if (!held[g] && flags[g] !== F_HOLE) open++;
+    if (open) bad.push(`${open} slots holding no segment not marked as holes`);
+  }
   if (bad.length) console.error(`T-1028 check: the ${name} strokes patched on the GPU differ from the network's in ${bad.join(", ")}`);
 }
 
@@ -353,13 +413,9 @@ export function checkStrokes(rnd: NetworkRenderer, name: string, v: StrokeVao | 
  * `want` (T-4262: the lines', with their `a_wmul` against `wmul`) */
 export function checkFull(rnd: NetworkRenderer, v: StrokeVao | null, s: Strokes, want = fullAttr(s, s.count), wmul?: Float32Array) {
   if (!v || !s.count) return;
-  const gl = rnd.gl;
   const differs = (buf: WebGLBuffer, w: Float32Array) => {
-    const got = new Float32Array(s.count * (w.length / Math.max(1, s.count)));
-    gl.bindBuffer(gl.COPY_READ_BUFFER, buf);
-    gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, got);
-    gl.bindBuffer(gl.COPY_READ_BUFFER, null);
-    const x = new Uint32Array(w.buffer, w.byteOffset, got.length), y = new Uint32Array(got.buffer);
+    const per = Math.round(w.length / Math.max(1, s.count)), got = readSegs(rnd, v, buf, per * 4);
+    const x = new Uint32Array(w.buffer, w.byteOffset, s.count * per), y = new Uint32Array(got.buffer);
     return x.some((b, k) => b !== y[k]);
   };
   if (differs(v.fullBuf, want.subarray(0, s.count * 2))) console.error(`T-2403 check: the ${wmul ? "lines'" : "track's"} a_full patched by runs differs from a whole one`);
@@ -438,7 +494,8 @@ export function pickStrokes(rnd: NetworkRenderer, s: StrokeVao | null, src: Stro
   let total = 0;
   for (let i = 1; i < ranges.length; i += 2) total += ranges[i];
   if (!total) return { vao, ranges };
-  if (!rnd.strokeGather || total > GATHER_MAX) return { vao, ranges: mergeRanges(ranges, RANGE_GAP) };
+  // (the full set's segments as the slots they are in, T-4262; the gathered instances are read from the arrays)
+  if (!rnd.strokeGather || total > GATHER_MAX) return { vao, ranges: mergeRanges(vao === s && s.layout ? slotRanges(s.layout, ranges) : ranges, RANGE_GAP) };
   let g = rnd.gathers.get(s);
   if (!g) rnd.gathers.set(s, (g = new StrokeGather(rnd.gl, (name) => rnd.strokeLoc[name])));
   const b = used?.strokes ?? src;
