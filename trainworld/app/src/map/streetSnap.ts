@@ -127,8 +127,9 @@ export class StreetSnap {
   ) {
     this.tramRoads = new BusRoads(map, () => this.landed());
     this.railRoads = new BusRoads(map, () => this.landed(), railRoad);
-    this.brtRoads = new BusRoads(map, () => this.landed());
-    this.brtRoads.buswaySource = () => buswaysOf(overlay);
+    // the station tool's hover is worked out again when the roads land (`landed` is for the track tool's search)
+    this.brtRoads = new BusRoads(map, () => this.redraw());
+    this.brtRoads.buswaySource = () => buswaysOf(overlay, true);
   }
 
   /** T-3378: the roads a bus may use, for placing a BRT station beside one */

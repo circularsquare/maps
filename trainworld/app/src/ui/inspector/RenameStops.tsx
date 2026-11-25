@@ -78,13 +78,8 @@ export function RenameStops({ order, colour, onClose }: { order: readonly string
     });
   };
   const key = (k: number, e: KeyboardEvent) => {
-    if (e.isComposing) return;
-    if (e.key === "Escape") {
-      // Esc closes the boxes and nothing more: the panel and the selection stay
-      e.preventDefault();
-      e.stopPropagation();
-      onClose();
-    } else if (e.key === "Enter") {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === "Enter") {
       e.preventDefault();
       const next = box(k + 1);
       if (next && !(e.ctrlKey || e.metaKey)) {
@@ -93,15 +88,22 @@ export function RenameStops({ order, colour, onClose }: { order: readonly string
       } else void save();
     }
   };
+  // Esc closes the boxes and nothing more, from a box or a button: the panel and the selection stay
+  const esc = (e: KeyboardEvent) => {
+    if (e.key !== "Escape" || e.isComposing) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  };
   return (
-    <div class="rename-stops">
+    <div class="rename-stops" onKeyDown={esc}>
       <ol ref={list} class="stops rename" style={{ "--c": colour }}>
         {rows.map((r, k) => (
           <li key={r.key}>
             <input class={"rename-box" + (isChanged(r) ? " changed" : "")} value={text(r)} disabled={busy}
               aria-label={tr("renameStops.box", { name: r.name })} data-tip={isChanged(r) ? r.name : undefined}
               onInput={(e) => { const v = e.currentTarget.value; setTyped((m) => new Map(m).set(r.key, v)); }}
-              onFocus={() => setListHot({ stations: complexOf(r.id) })} onBlur={() => setListHot(null)}
+              onFocus={() => setListHot({ stations: r.key.startsWith("c:") ? complexOf(r.id) : [r.id] })} onBlur={() => setListHot(null)}
               onPaste={(e) => paste(k, e)} onKeyDown={(e) => key(k, e)} />
           </li>
         ))}

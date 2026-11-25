@@ -128,6 +128,7 @@ export class BusRoads {
   private notify = false;
   /** T-4257: the sim's bus speeds are in the graph (or could not be loaded: roads then count by length) */
   private speeds = false;
+  private speedsAsked = false;
   /** T-3378: the busways, constructed and planned (lng, lat pairs flat, a line each), roads like any other here */
   private busways: { key: string; lines: number[][] } = { key: "", lines: [] };
   /** where the busways come from, asked before each search (none: no busways) */
@@ -194,6 +195,8 @@ export class BusRoads {
    * A tile that failed counts as empty for `RETRY_MS`. */
   private need(x0: number, y0: number, x1: number, y1: number): boolean {
     if (!this.speeds) {
+      if (this.speedsAsked) return false;
+      this.speedsAsked = true;
       void busSpeeds().then((s) => {
         if (s) this.graph.setBusSpeeds(...s);
         this.speeds = true;

@@ -192,6 +192,7 @@ export async function startVite(port) {
  * ('src/map/network.ts'), or the source of a virtual entry whose `@app` stands for app's folder:
  * "export { a } from '@app/src/x.ts';".
  */
+const loadAppDirs = [];
 export async function loadApp(spec) {
   const { build } = await import(pathToFileURL(join(HERE, '../app/node_modules/vite/dist/node/index.js')).href);
   const app = fileURLToPath(new URL('../app', import.meta.url)).replace(/\\/g, '/');
@@ -205,7 +206,9 @@ export async function loadApp(spec) {
   // written out, since the entry imports its own chunks (a dynamic import, the workers' files) by relative path
   const out = (Array.isArray(bundle) ? bundle[0] : bundle).output;
   const dir = await mkdtemp(join(tmpdir(), 'tw-loadapp-'));
-  process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
+  loadAppDirs.push(dir);
+  if (loadAppDirs.length === 1) process.on('exit', () => { for (const d of loadAppDirs) try { rmSync(d, { recursive: true, force: true }); } catch {} });
+  writeFileSync(join(dir, 'package.json'), '{"type":"module"}'); // the chunks are ES modules whatever their extension
   for (const o of out) {
     mkdirSync(dirname(join(dir, o.fileName)), { recursive: true });
     writeFileSync(join(dir, o.fileName), o.type === 'chunk' ? o.code : o.source);

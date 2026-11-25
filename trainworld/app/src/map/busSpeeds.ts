@@ -12,6 +12,10 @@ export function busSpeeds(): Promise<[number, number, number] | null> {
       const v = m.bus_road_speeds();
       return [v[0], v[1], v[2]] as [number, number, number];
     })
-    .catch(() => null);
+    .catch(() => null)
+    .then((v) => {
+      if (!v) loading = null; // a failed load is tried again by the next ask
+      return v;
+    });
   return loading;
 }
