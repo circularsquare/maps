@@ -8,8 +8,9 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { touchInput } from "../../map/touch";
 import { t } from "../../i18n";
 import { Icon } from "../widgets";
+import { keyIsTheirs } from "../keys";
 
-export function NameEdit({ name, onRename, prompt = false, onPrompted, control, children }: {
+export function NameEdit({ name, onRename, prompt = false, onPrompted, control, hotkey, children }: {
   name: string;
   /** called with the trimmed new name when it is not empty and differs; while a promise it returns is out, the
    * new name is shown (T-3793) */
@@ -19,6 +20,8 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
   onPrompted?: () => void;
   /** the editor's open state kept by the caller */
   control?: { open: boolean; set: (open: boolean) => void };
+  /** a plain key (compared lowercase) that opens the editor, while it is not open and no text is being typed */
+  hotkey?: string;
   /** buttons before the pencil */
   children?: ComponentChildren;
 }) {
@@ -53,6 +56,17 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
       }
     }
   }, [editing]);
+  useEffect(() => {
+    if (!hotkey || editing) return;
+    const open = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() !== hotkey || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || e.repeat || e.defaultPrevented || keyIsTheirs(e)) return;
+      if (document.querySelector("dialog:modal, .start-menu")) return;
+      e.preventDefault();
+      setEditing(true);
+    };
+    window.addEventListener("keydown", open);
+    return () => window.removeEventListener("keydown", open);
+  }, [hotkey, editing]);
   const commit = (close: boolean) => {
     if (done.current) return;
     const shown = kept ?? name, n = (draft ?? shown).trim();

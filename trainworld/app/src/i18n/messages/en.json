@@ -1032,6 +1032,7 @@
   "help.undoRedo": "Undo or redo blueprint edits",
   "help.saveNow": "Save the game now",
   "help.find": "Find a place",
+  "help.renameStation": "Rename the open station",
   "help.hideUi": "Hide the interface, or bring it back (Esc too)",
   "help.esc": "Esc",
   "help.back": "Back out one step, then clear the selection",

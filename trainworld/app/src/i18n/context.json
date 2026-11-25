@@ -1036,6 +1036,7 @@
   "help.undoRedo": "Right column of a row in the controls list (opened by the ? at the top of Settings): what the gesture or key does.",
   "help.saveNow": "Right column of a row in the controls list (opened by the ? at the top of Settings): what the gesture or key does.",
   "help.find": "Right column of a row in the controls list (opened by the ? at the top of Settings): what the gesture or key does.",
+  "help.renameStation": "Right column of a row in the controls list (opened by the ? at the top of Settings): what the gesture or key does.",
   "help.hideUi": "Right column of a row in the controls list (opened by the ? at the top of Settings): what the gesture or key does.",
   "help.esc": "Left column of a row in the controls list (opened by the ? at the top of Settings): a mouse gesture or key to press.",
   "help.back": "Right column of a row in the controls list (opened by the ? at the top of Settings): what the gesture or key does.",

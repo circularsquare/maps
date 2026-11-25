@@ -43,6 +43,8 @@ export const DEMAND_KEY = "d";
 export const SWITCH_PICK_KEY = "e";
 /** T-1491: hides the interface for screenshots (ui/hideUi.ts). */
 export const HIDE_UI_KEY = "F2";
+/** T-4273: opens the open station panel's name for editing, as clicking the name does (ui/inspector/NameEdit.tsx). */
+export const RENAME_KEY = "r";
 /** T-3527: opens and closes the help panel (ui/HelpPanel.tsx); the browser's own help is kept off it. */
 export const HELP_KEY = "F1";
 /** T-670: letter keys for new line, edit stops (the selected line's) and construct blueprints, from any tab;

@@ -33,6 +33,7 @@ import { nodeUpkeepOf } from "../../game/regionMoney";
 import { Actions, Built, Chip, Icon, Row, Stepper } from "../widgets";
 import { nextSuggestion } from "../../map/stationNames";
 import { NameEdit } from "./NameEdit";
+import { RENAME_KEY } from "../toolKeys";
 import { complexTitle } from "../../game/complexLead";
 import { locateStation } from "../locate";
 import { ComplexMap } from "./ComplexMap";
@@ -238,7 +239,7 @@ export function StationInspector({ id }: { id: string }) {
     <>
       <div class="title">
         <span class="st-glyph" />
-        <NameEdit key={id} name={title} onRename={(n) => rename(n)}>
+        <NameEdit key={id} name={title} onRename={(n) => rename(n)} hotkey={RENAME_KEY}>
           {/* T-3759: one station of a complex, bound to the complex's name or not */}
           {!asComplex && !s.port && members.length > 1 && (
             <button class={"btn icon" + (s.unbound ? "" : " on")} aria-pressed={!s.unbound} data-tip={tr("stationInspector.bound")} aria-label={tr("stationInspector.bound")}

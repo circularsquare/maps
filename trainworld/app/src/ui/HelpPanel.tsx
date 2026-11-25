@@ -10,7 +10,7 @@ import { mobileDevice } from "../workers/deviceMemory";
 import { marketOff } from "../game/ui";
 import { tripView } from "../game/trip";
 import { shownPeriod } from "../map/tripView";
-import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HELP_KEY, HIDE_UI_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TOOLS, TRIP_KEY } from "./toolKeys";
+import { ACTION_KEYS, BUS_KEY, DEMAND_KEY, HELP_KEY, HIDE_UI_KEY, RENAME_KEY, SWITCH_PICK_KEY, TAB_KEYS, TOOL_KEYS, TOOLS, TRIP_KEY } from "./toolKeys";
 import { Icon } from "./widgets";
 
 export const helpOpen = signal(false);
@@ -135,6 +135,7 @@ function sections(): [string, [string, string][]][] {
     ["Ctrl Z, Ctrl Y", t("help.undoRedo")], // i18n-ignore
     ["Ctrl S", t("help.saveNow")], // i18n-ignore
     ["/, Ctrl K, Ctrl F", t("help.find")], // i18n-ignore
+    [RENAME_KEY.toUpperCase(), t("help.renameStation")],
     [HIDE_UI_KEY, t("help.hideUi")],
     [HELP_KEY, t("help.openHelp")],
     [t("help.esc"), t("help.back")],
