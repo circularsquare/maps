@@ -186,10 +186,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
   - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
   - Other: notes/T-4149.md
-- T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2 (taking, 2026-11-25, agent pageedit2)
-  - Context: Stage 1 (tree pageedit): on your Asia save the page's own work after a station edit went from 104-117 ms to 65-69 ms, cleanup from 45-110 ms to 8-10 ms, about 4-10% of the wait. Left: achievements, fare income's line checks, the track's line lists, station labels, and the change list itself walking every node and edge.
-  - Goal: Under 20 ms of the page's own work for a station on Asia; then the demand layers and the delete tool's hover per change; 3-4 h.
-  - Other: T-3804 (today answers 125-445 ms) still open; notes/T-4150.md "Left, by stage"
+- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 3
+  - Context: From T-4150 stage 2 on your Asia save: after a delete, the delete tool's hover reads the whole drawn network's snap grid (13-39 ms); the demand layers rebuild every line (9-48 ms); fare income, points and the station complexes still go over every line or station (5-12 ms together).
+  - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
+  - Other: notes/T-4150.md "Left"
 - T-4198 [P3] {L:checks} Changelog edited mark only for your edits
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
@@ -199,8 +199,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
 - T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent followcut)
-  - Context: Click run on your Asia save on 8800 (ff532d4e9, 11-25): first station confirmed 558 ms after the press, later ones 2.2 s (p90 2.9 s). Each waits for the click before it, whose follow-up redoes whole-save steps in blocks of 0.4-2.5 s (notes/T-4267-measure.md).
+  - Context: Stage 1 (11-25): a cut line's train samples are taken again only around the cut, so the first block after a click went 165 to 118 ms on your Asia save. Click run in my tree: first 199 ms, later 618, 1,538, 2,156. Later clicks still wait up to 1 s for the previous click's follow-up, mostly whole-save work.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
+  - Other: notes/T-4281.md
 - T-4283 [P1] {L:solve-speed} {after:T-4281} Weekend held count kept after a weekend headway change
   - Context: From the review of T-4239 (unpublished): after a weekend-only headway or percent change that keeps the weekend train count, the line's held weekend entry stays, so its weekend trains keep the old rate, through a reload too. The fix is in world.rs, followcut's while T-4281 runs.
   - Goal: Each day's held entries dropped by that day's own headways, with a Rust test beside T-4239's.
@@ -926,7 +927,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-25, agent aside4)
   - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-3 done: a snapshot of the figures on screen at each whole re-solve, read-only stand-ins for untouched cities, and the side calculation's plan (which cities it recalculates, or why not); figures unchanged. Next: stage 4, the calculation itself. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)

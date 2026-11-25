@@ -1,29 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 07:28 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 08:31 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 0. Usage: Claude runs out before Gemini; Gemini for reviews (gemini_audit.py) and small clear code. Stay light: briefs
    in files, report heads only, review findings go to fix agents unread. Overnight (her): calm pace, 2-4 agents.
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Running: pageedit2 (Opus, T-4150 stage 2, the page's whole-save readers after an edit; my scratch
-   pageedit2/brief.md), followcut (Opus, T-4281:
-   follow-up steps by record so later clicks don't wait; brief in maps-c5 scratch followcut/brief.md). Asia click run on
-   8800 ff532d4e9: first 558 ms, later 2.2 s (edit_bench --save asia --only clickrun). Landed tonight: T-4149, T-4249,
-   T-4153 s6, T-4262 s1-2, T-4274, T-4280, T-4272 stage. Her answer pending a-2026-11-25-4 (buy trains after the confirm):
-   on yes, line-track stations confirm locally (T-4272 rest). Then measure the click run again and report yes/no per edit.
-2. fixes16a landed (2a6a45584). Its one real finding is T-4283 (world.rs, after followcut; the fix is written out in
-   notes/T-4282.md "For followcut"; fits a Gemini code agent). Batch review (Gemini) due over T-4272, T-4274, T-4280,
-   T-4281, T-4282 once T-4281 lands.
-3. 8800 = dc01ef413 (master), smoke passed 07:25 UTC. T-4275 roads fix is on
-   8800: tell her it's ready for the hotfix publish when she's back (publish skill; her word).
-4. Waiting on her: asks.py list (weekend solve T-4242, OpenFreeMap proxy, buy trains after confirm, rename and
-   speedometer text, Asia load on fewer workers, PR #21/#24 comments). T-3742 after she asks; T-4250; T-4248.
-5. Running: grouptt (Opus, T-4276 group timetable, three-version sheet first; my scratch grouptt/brief.md). Next:
-   T-4080 s3 after pageedit2 (both touch stopsOf), T-4153 rest and T-4149 rest after followcut's step table (same
-   follow-up steps), T-4199 s2, T-3160, T-4187.
-6. reserve_cores: maps-3e's loop (its tab) holds the mutex (mine exited 07:18); start one (`-All -Loop 30`) if it dies.
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Running: followcut (Opus, T-4281,
+   maps-c5's tab: later clicks wait on the previous click's whole-save follow-up; Asia click run on ff532d4e9: first
+   558 ms, later 2.2 s), pagestage3 (Opus, T-4284, page work after an edit, stage 2 left 27 ms placed / 49 removed).
+   On her yes to a-2026-11-25-4 (buy trains after the confirm): line-track stations confirm locally (T-4272 rest).
+2. aside4 (Opus, T-4220 stage 4, side solve behind a dev call). Briefs: my scratch <agent>/brief.md.
+3. Landed this round: T-4282 (2a6a45584), T-4276 (cb79c1bbd, look A; ask a-2026-11-25-5), T-4150 s2 (3d899ba02,
+   money.ts and readers: risky). When followcut lands: Gemini batch review over T-4272, T-4274, T-4280, T-4281, T-4282,
+   T-4150 s2; T-4283 after it (a Gemini code agent fits); 1 edit_bench NYC on master (pageedit2 saw undo 133 to 612 ms,
+   stop reorder 168 to 457 against an older baseline, worker side: check it there). 8800 rebuilt at 08:3x with smoke.
+4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
+5. Next: T-4080 s3 (Sonnet, now pageedit2 is done), T-4153 rest and T-4149 rest after followcut's step table, T-4199
+   s2, T-3160, T-4187.
+6. reserve_cores: maps-3e's loop (its tab) holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
 - 11-24 evening her time: edit speed's root cause is the main focus ("we should *only be targeting the root cause*",

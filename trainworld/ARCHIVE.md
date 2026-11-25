@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2 (2026-11-25): Page's own work for a station placed on Asia 65-69 to 27 ms (readers 11-29 ms, median 18); removals 29-78 ms; figures identical; stage 1's memo leak fixed; stage 3 filed as T-4284. notes/T-4150.md.
 - T-4276 [P2] {L:timetables} Timetable for a whole line group (2026-11-25): Look A built (one table, branches as blocks); B and C on the sheet behind groupLook; group button reuses Detailed schedule; real NYC 4/5/6/6X group 36 to 81 rows. notes/T-4276.md.
 - T-4282 [P1] {L:checks} Fix the review's findings on the edit-path landings (2026-11-25): Four findings checked: one fixed (lineBands splice end), one gone, one not real, one real in world.rs filed as T-4283 for after followcut. notes/T-4282.md.
 - T-4280 [P2] {L:edit-speed} Edits name the lines they changed for the renderer (2026-11-25): trainSlots.ts per-line slots with room; touched.paths exact, new touched.phases, NetPatch.stretches and lanes; Asia renderer 12 ms station placed, 28 ms line deleted; NYC ?patch=check clean; GPU about 3 MB more (budget 27 of 30 MB). notes/T-4280.md.
