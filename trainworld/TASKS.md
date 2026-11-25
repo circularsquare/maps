@@ -178,18 +178,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor"; on your Asia save a station shows up in 1-3 s, a removal in about 4 s. Parts: T-4153 (drawn network), T-4214 (clickable map), T-4149 (worker rows), T-4150 (page).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent netcut)
-  - Context: You, 11-23: "this is the entire issue". Stage 6 (tree cutstretch3): a cut line's bands are redone only near the cut (3 of 909 entries for a station on line 33). Asia network build, profiled: a station on a three-line trunk 315 to 242 ms. Left: cut lines' samples, speeds and whole-line band stages.
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+  - Context: You, 11-23: "this is the entire issue". Stage 7 (tree netcut): cut lines' samples and band samples kept by entry. Your Asia save, Node, a station on a three-line trunk: network build about 255 to 190 ms (first click 350 to 280), lines block 140 to 80. Left: cut lines' runs and steps, corridors, train speeds, whole-save passes.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
-  - Other: notes/T-4153.md stage 6 "What is left"
+  - Other: notes/T-4153.md stage 7 "What is left"
 - T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2
   - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
   - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
   - Other: notes/T-4149.md
-- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 3 (taking, 2026-11-25, agent pagestage3)
-  - Context: From T-4150 stage 2 on your Asia save: after a delete, the delete tool's hover reads the whole drawn network's snap grid (13-39 ms); the demand layers rebuild every line (9-48 ms); fare income, points and the station complexes still go over every line or station (5-12 ms together).
+- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 3
+  - Context: Stage 3 (tree pagestage3) cut a removal's page work on your Asia save from about 125 to about 45 ms: the delete tool's hover, the demand layers, the snap and pick grids and the tools' map cost what an edit changed. Left: the figures go over every line (23 ms), each world's edges (3 ms), the trains' fill (2-3 ms).
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
-  - Other: notes/T-4150.md "Left"
+  - Other: notes/T-4150.md "Stage 3" and "Left"
 - T-4198 [P3] {L:checks} Changelog edited mark only for your edits
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
@@ -198,7 +198,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent followcut2)
   - Context: Stage 1 (11-25): a cut line's train samples are taken again only around the cut, so the first block after a click went 165 to 118 ms on your Asia save. Click run in my tree: first 199 ms, later 618, 1,538, 2,156. Later clicks still wait up to 1 s for the previous click's follow-up, mostly whole-save work.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md

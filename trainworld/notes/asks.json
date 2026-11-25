@@ -54,5 +54,12 @@
     "text": "Edit speed (T-4272): a station on a running line's track can't be confirmed quickly today, because the game first works out whether you can afford the extra trains that headway lines sharing that track would need (369 ms on your Asia save). Proposal: confirm the station from its own checks, then buy those trains right after, letting cash dip below zero the way loans can. Then every station and delete is confirmed from local checks. OK? I'd say yes.",
     "since": "2026-11-25",
     "by": "maps-c5"
+  },
+  {
+    "id": "a-2026-11-25-5",
+    "title": "Group timetable look",
+    "text": "T-4276 (a player asked to see all of a line group's routes in one timetable) is on master: look A, one table listing each station of the group's lines once, branches as blocks, every train under its line's bullet; the group's button now has a line's timetable icon and hover (\"Detailed schedule\", reused). Sheet with Now, A, B (a band per line) and C (a row per line under each station): C:\\Users\\anita\\projects\\maps\\artifacts\\trainworld\\review\\group-timetable.png. Keep A, or swap to B or C? I'd keep A.",
+    "since": "2026-11-25",
+    "by": "maps-13"
   }
 ]
