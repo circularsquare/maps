@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 08:43 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 09:00 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -12,11 +12,12 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    T-4284, page work after an edit: 27 ms placed / 49 removed now). Next: T-4281 stage 2 (passes over every edge, line
    and station plus the post, about 150 ms; the today and blueprintQuote questions run the whole follow-up in one
    block) once netcut's files are known; T-4149 rest (rows, about 60 ms). On her yes to a-2026-11-25-4: T-4272 rest.
-2. aside4 (Opus, T-4220 stage 4, side solve behind a dev call). fixweekend (Gemini code agent, T-4283, world.rs).
+2. aside4 (Opus, T-4220 stage 4, side solve behind a dev call). fixes17 (Opus, T-4285: batch17 review findings;
+   ones in pagestage3's or netcut's files come under "For ..." in its notes: pass them on). T-4283 landed f6489a0d2.
    Briefs: my scratch <agent>/brief.md.
 3. Landed this round: T-4282, T-4276 (look A; ask a-2026-11-25-5), T-4150 s2 (3d899ba02), T-4281 s1 (eab8c1aa7).
-   8800 = 73160a08f (without T-4281), smoke passed 08:37. Gemini batch review running: artifacts/trainworld/gemini/
-   batch17/review.md (T-4274/80, T-4281, T-4150 s2, T-4282); findings to a fix agent. Owed once the machine is quieter:
+   8800 = 73160a08f (without T-4281), smoke passed 08:37. Gemini batch17 review done (artifacts/trainworld/gemini/
+   batch17/review.md), fixes17 on it. Next batch review: T-4283 (sim), netcut, pagestage3. Owed once the machine is quieter:
    1 edit_bench NYC on master (followcut and pageedit2 both saw NYC rows 30-160% slower than older runs, e.g. undo 133
    to 612 ms, a rename too: noise or a regression from T-4272/T-4274/T-4280?), then 8800 rebuild + smoke.
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
