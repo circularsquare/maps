@@ -1,25 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 09:55 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 10:07 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 0. Usage: Claude runs out before Gemini; Gemini for reviews (gemini_audit.py) and small clear code. Stay light: briefs
    in files, report heads only, review findings go to fix agents unread. Overnight (her): calm pace, 2-4 agents.
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Running: followcut2 (Opus,
-   T-4281 stage 2: passes over every edge, line and station plus the post; today and blueprintQuote forcing the whole
-   follow-up), benchwhy (Opus, T-4293: NYC edit_bench rows rose over tonight's landings, station built 188 to 587-614
-   ms: real, which landing, or noise; and whether pagestage3's tree is fit to land). Held: pagestage3's tree (T-4284
-   stage 3, removal 125 to 45 ms of page work) until benchwhy answers. T-4153 stage 7 landed 80cff39c2 (network build
-   255 to 190 ms; fastest-train speeds can't be local without a per-piece speed profile from the sim). Next: T-4149
-   rest (rows, about 60 ms). On her yes to a-2026-11-25-4: T-4272 rest.
-2. aside5 (Gemini, T-4220 stage 5, the Node equality check) hit Gemini's quota 09:11; retry after 09:57 UTC:
-   `gemini_agent.py start aside5 --brief <my scratch>/aside5/brief.md --task T-4220` (tree kept). Its checks/INDEX.md
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). T-4281 stage 2 landed 800843cf0:
+   Asia later clicks 144-360 ms (were 618-2,156; first 212); questions no longer force a pending follow-up whole.
+   Running: benchwhy (Opus, T-4293: NYC edit_bench rows rose over tonight's landings, station built 188 to 587-910 ms;
+   real, which landing, or noise; and whether pagestage3's held tree, T-4284 stage 3, is fit to land). Next, after
+   pagestage3 is settled (clockClient overlap): T-4291 (rows and post by what an edit touched, about 144 ms on Asia),
+   which also covers T-4149's rest. On her yes to a-2026-11-25-4: T-4272 rest (the train work before each answer).
+   Also running, not edit speed: busnames3 (Sonnet, T-4080 stage 3, bus stop names).
+2. aside5 (Gemini, T-4220 stage 5, the Node equality check), restarted 10:01 after Gemini's quota ran out at 09:11
+   (if it hits the quota again: `gemini_agent.py start aside5 --brief <my scratch>/aside5/brief.md --task T-4220`). Its checks/INDEX.md
    edit needs the patch dance at landing. Briefs: my scratch <agent>/brief.md.
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1, T-4283, T-4220 s4, T-4285,
-   T-4153 s7. 8800 = 73160a08f, smoke passed 08:37; rebuild + smoke once benchwhy answers. Next batch review: T-4283,
-   T-4220 s4, T-4285, T-4153 s7, with followcut2 and pagestage3.
+   T-4153 s7, T-4281 s2 (c034). 8800 = 73160a08f, smoke passed 08:37; rebuild + smoke once benchwhy answers. Next batch review: T-4283,
+   T-4220 s4, T-4285, T-4153 s7, T-4281 s2, and pagestage3 once landed (after aside5, to spare Gemini quota).
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
 5. Next: T-4080 s3 (Sonnet, now pageedit2 is done), T-4153 rest and T-4149 rest after followcut's step table, T-4199
    s2, T-3160, T-4187.

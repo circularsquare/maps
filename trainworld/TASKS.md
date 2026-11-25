@@ -198,10 +198,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent followcut2)
-  - Context: Stage 1 (11-25): a cut line's train samples are taken again only around the cut, so the first block after a click went 165 to 118 ms on your Asia save. Click run in my tree: first 199 ms, later 618, 1,538, 2,156. Later clicks still wait up to 1 s for the previous click's follow-up, mostly whole-save work.
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
+  - Context: Stage 2 (11-25, tree followcut2): questions and timer trips no longer run the previous click's follow-up in one block. Click run on your Asia save: first 212 ms, later 360, 278, 144 (stage 1: 618, 1,538, 2,156). Left: each click's own apply (T-4272's question) and the page holding it until the one before is confirmed.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
+- T-4291 [P1] {L:edit-speed} Rows and post sent by what an edit touched
+  - Context: From T-4281 stage 2: after any edit the worker reads every edge, node and line again for the rows (about 120 ms in Node on your Asia save) and the post compares every row and network array (about 24 ms), since each state carries whole lists that the network and the post compare.
+  - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
+  - Other: notes/T-4281.md "Stage 2"
+- T-4293 [P1] {L:edit-speed} New York edit timings rose over tonight's landings (taking, 2026-11-25, agent benchwhy)
+  - Context: Tonight's edit_bench New York runs in agents' trees (DEV builds, one sample per action) read slower than master's 11-24 baseline: station built 188 to 340-614 ms, undo 133 to 612, stop reorder 168 to 457-538. pagestage3's tree: four shows rows at 46-83 ms against under 20 before.
+  - Goal: The cause named with the step and the code, fixed or filed; or shown to be noise.
+  - Other: notes/T-4293.md
 - T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches
   - Need from Anita: A station on a running line's track can make headway lines need more trains. Buy them right after the confirm, cash dipping below zero if short? I'd say yes
   - Context: Stations and deletes on track no running line uses now skip the train work before their answer (16-72 ms of worker time on your Asia save; answers 95-207 ms in a run). On a running line's track they still wait 0.15-0.6 s for the trains they need.

@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c034",
+      "text": "placing several stations in a row responds faster on big networks",
+      "edited": "stations placed one after another on big networks show up about 5x faster",
+      "hidden": false,
+      "task": "T-4281",
+      "by": "followcut2",
+      "at": "2026-11-25T10:06:12Z",
+      "rev": 2,
+      "area": "performance",
+      "fix": false,
+      "changed": "2026-11-25T10:06:29Z"
+    },
+    {
       "id": "c033",
       "text": "a line group's timetable lists every station of its lines, branches included",
       "edited": null,
