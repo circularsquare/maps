@@ -748,7 +748,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   them, and drop bit 7, passing tracks), on `StationData::upgrades`, so undo, renames and platform
   changes keep them. Upkeep (T-3922, Anita 2026-11-21): each constructed upgrade, passage and station building pays
   `upgrades::UPKEEP_SHARE` (0.2%) of its price at today's prices a game day (twice a port's ratio and ground
-  track's), a waiting room's `upgrades::WAITING_ROOM_UPKEEP_FACTOR` (half, 0.1%, T-4342); a passage half at each end, a building evenly over its constructed members; counted with the station
+  track's); a passage half at each end, a building evenly over its constructed members; counted with the station
   (its Upkeep row, its lines' shares, its region; a port's waiting room with the port). The buy buttons' hovers give
   it under the price ("Upkeep $5k per day").
   - **Terminal** (turnback sidings): a train turning at the station (a line's end or a reversal
@@ -763,7 +763,7 @@ Full design, numbers and sources: `notes/T-008.md`.
     as the platform plus 0.4 km of double track at the station's level, 1.5 times on high-speed
     track, twice over water (`upgrades::price`): US$22.5M for a 200 m ground station, US$45M for a
     400 m high-speed one. A tram stop has the terminal and passing tracks too (T-3574, Anita 2026-11-17), at the tram
-    kind's level table instead of rail's (the terminal US$37.5M off street at grade, US$7.5M on a street; a tram stop with a terminal turns 30 an hour, without one 15); park and ride stays rail's. Works on double track only. `TrackApi::passing_spots(line)`: the
+    kind's level table instead of rail's (the terminal US$37.5M off street at grade, US$7.5M on a street; a tram stop with a terminal turns 30 an hour, without one 15); park and ride is a smaller lot at a tram stop (`TRAM_PARK_RIDE_COST`, US$5M, T-4344). Works on double track only. `TrackApi::passing_spots(line)`: the
     stations where a line's trains get passed or would pass a slower line's, without them yet.
   - **Park and ride**: a ride to or from the station costs 10 perceived minutes less ([demand-mode.md](demand-mode.md),
     `kernel::ride_fixed`); a P after the station's name. Drawn as a car park beside the complex (below).
@@ -1763,7 +1763,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   crossing 0.1 km (cheap to build, dear in delay). Station upgrades (6.1, T-1281): a terminal
   1 km of track at the station's level (US$37.5M at grade, US$120M at -2, 2x over water; a tram stop's at the tram kind's table, T-3574: the same US$37.5M off street at grade, US$7.5M on a street), passing
   tracks the platform plus 0.4 km of it, 1.5x on high-speed track (US$22.5M for a 200 m station at
-  grade, US$72M at -2; T-2231), park and ride US$20M, waiting room US$5M, a passage US$10M plus US$90M a km, a station building US$2,000 a m² of floor (T-2217). A crossover: two junctions, all told (6.1,
+  grade, US$72M at -2; T-2231), park and ride US$20M (US$5M at a tram stop, T-4344), waiting room US$5M, a passage US$10M plus US$90M a km, a station building US$2,000 a m² of floor (T-2217). A crossover: two junctions, all told (6.1,
   T-338); the blueprint breakdown counts it as two junction switches. A tram crossover is priced at the tram kind's level table (T-3575).
 
 #### Blueprint, trains and running costs
@@ -1897,7 +1897,7 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   the dearer step a level, 6.4 "Stations") and US$50k at grade or above (T-2619), either one times
   `UPKEEP_ONE_PLATFORM_SHARE` (0.6, Anita 2026-11-13) when its platform is on one track only: a one way
   station, or a stop on single track without a passing loop (`Network::one_platform`; the app reads the set
-  from `one_platform_stations`); what is bought on a station 0.2% of its price, a waiting room 0.1% ("Station upgrades", T-3922, T-4342; the
+  from `one_platform_stations`); what is bought on a station 0.2% of its price ("Station upgrades", T-3922; the
   app reads each station's from `station_upgrade_upkeep`); crossovers, junctions and flyovers
   nothing on top; blueprint nothing (`UPKEEP_GROUND_KM`, `UPKEEP_VIADUCT_KM`, `UPKEEP_CUT_KM`,
   `UPKEEP_BORED_KM`, `UPKEEP_STATION`, `UPKEEP_STATION_UNDER`, real US$350, 500, 1,000, 1,300, 500 and

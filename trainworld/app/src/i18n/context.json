@@ -1666,7 +1666,7 @@
   "moneyTab.transferFare": "Row label in the Money tab's fare list: the extra fare when a trip changes lines.",
   "moneyTab.transferFareLabel": "Screen reader name of the stepper that sets the transfer fare.",
   "moneyTab.transferTip": "Hover on the transfer fare's number field.",
-  "moneyTab.upgradesUpkeep": "Last line of the hover on the Money tab's Upkeep row, under the track and station rates: station upgrades cost this share of their price every game day. share: \"0.2%\"; room: a waiting room's, \"0.1%\".",
+  "moneyTab.upgradesUpkeep": "Last line of the hover on the Money tab's Upkeep row, under the track and station rates: station upgrades cost this share of their price every game day. share: \"0.2%\".",
   "moneyTab.upkeep": "Row label of the Money tab's ledger: the upkeep of track and stations.",
   "moneyTab.yesterday": "Column heading of the Money tab's ledger.",
   "moneyText.fares": "Second line of the hover on a line's money figure. amount: money, e.g. \"$3,400\".",

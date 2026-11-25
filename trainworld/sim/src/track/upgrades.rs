@@ -31,6 +31,8 @@ pub const TERMINAL_KM: f64 = 1.0;
 /// turnouts and run-out either side).
 pub const PASSING_EXTRA_KM: f64 = 0.4;
 pub const PARK_RIDE_COST: f64 = 20.0;
+/// A tram stop's park and ride is a smaller lot (about 300 spaces; Anita 2026-11-25, to stop spamming them), so US$10k a game day of upkeep.
+pub const TRAM_PARK_RIDE_COST: f64 = 5.0;
 pub const WAITING_ROOM_COST: f64 = 5.0;
 pub const PARK_RIDE_MIN: f32 = 10.0;
 pub const WAITING_ROOM_WAIT: f32 = 0.8;
@@ -55,19 +57,9 @@ pub const BUILDING_PER_M2: f64 = 0.002;
 
 /// T-3922 (Anita 2026-11-21, to stop free spamming): the upkeep a game day of everything bought on a station (the
 /// four upgrades, passages, buildings) over its price: 0.1% matched a port's ratio (US$10k a game day on US$10M)
-/// and ground track's (US$35k on US$37.5M a km); Anita raised it to 0.2%. A waiting room's is half (below). Prices stay real and upkeep is a game day's, so this is the game's
+/// and ground track's (US$35k on US$37.5M a km); Anita raised it to 0.2%. Prices stay real and upkeep is a game day's, so this is the game's
 /// ratio as the player sees it, not a real figure times `ECONOMY`.
 pub const UPKEEP_SHARE: f64 = 0.002;
-
-/// T-4342: a waiting room pays this share of `UPKEEP_SHARE` (0.1% of its price): a real shelter or small hall
-/// costs a tenth of what the share gives a car park or track.
-pub const WAITING_ROOM_UPKEEP_FACTOR: f64 = 0.5;
-
-/// The part of `cost` US$M, a station's upgrades `bits`' price, that pays upkeep at `UPKEEP_SHARE`: all of it but
-/// a waiting room's other half. Every upgrade upkeep sum takes its prices through this.
-pub fn upkept_price(bits: u8, cost: f64) -> f64 {
-    if bits & WAITING_ROOM != 0 { cost - WAITING_ROOM_COST * (1.0 - WAITING_ROOM_UPKEEP_FACTOR) } else { cost }
-}
 
 /// The upkeep a game day, US$M, of upgrades that cost `price` US$M.
 pub fn upkeep(price: f64) -> f64 {
@@ -99,7 +91,7 @@ pub fn price(bit: u8, level: i8, wet: bool, platform: u16, kind: TrackKind) -> f
     match bit {
         TERMINAL => km(TERMINAL_KM),
         PASSING => km(platform as f64 / 1000.0 + PASSING_EXTRA_KM) * if kind.is_hsr() { HSR_COST } else { 1.0 },
-        PARK_RIDE => PARK_RIDE_COST,
+        PARK_RIDE => if kind.is_tram() { TRAM_PARK_RIDE_COST } else { PARK_RIDE_COST },
         WAITING_ROOM => WAITING_ROOM_COST,
         _ => 0.0,
     }

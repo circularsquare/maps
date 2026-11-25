@@ -38,10 +38,7 @@ export const passagePrice = (m: number) => PASSAGE_BASE + PASSAGE_PER_KM * m / 1
 
 /** T-3922: the upkeep a game day, US$, of what costs `priceM` US$M to buy on a station (`upgrades::upkeep`); 0
  * before the money has come. */
-export const upgradeUpkeep = (priceM: number, m: { upkeepUpgradeShare: number } | null | undefined, bit?: number) =>
-  m ? priceM * 1e6 * (m.upkeepUpgradeShare ?? 0) * (bit === UPGRADE.waitingRoom ? WAITING_ROOM_UPKEEP_FACTOR : 1) : 0;
-
-/** T-4342: a waiting room's share of the upgrade upkeep rate (sim `upgrades::WAITING_ROOM_UPKEEP_FACTOR`). */
-export const WAITING_ROOM_UPKEEP_FACTOR = 0.5;
+export const upgradeUpkeep = (priceM: number, m: { upkeepUpgradeShare: number } | null | undefined) =>
+  m ? priceM * 1e6 * (m.upkeepUpgradeShare ?? 0) : 0;
 
 export const hasUpgrade =(bits: number | undefined, bit: number) => ((bits ?? 0) & bit) !== 0;

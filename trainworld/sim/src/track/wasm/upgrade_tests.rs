@@ -147,6 +147,10 @@ fn upgrades_go_into_the_blueprint_and_are_paid_at_once_on_a_built_station() {
     assert!((a.station_upgrade_cost(st, upgrades::TERMINAL) - 37.5).abs() < 1e-9, "1 km of track at ground level");
     assert_eq!(a.station_upgrade_cost(st, upgrades::PARK_RIDE), 20.0);
     assert_eq!(a.station_upgrade_cost(st, upgrades::WAITING_ROOM), 5.0);
+    use crate::track::params::TrackKind::{Regular, StreetTram, Tram};
+    assert_eq!(upgrades::price(upgrades::PARK_RIDE, 0, false, 200, Regular), 20.0);
+    assert_eq!(upgrades::price(upgrades::PARK_RIDE, 0, false, 200, Tram), 5.0, "a tram stop's lot is the smaller one");
+    assert_eq!(upgrades::price(upgrades::PARK_RIDE, 0, false, 200, StreetTram), 5.0);
     let quote = a.blueprint_cost();
     assert_eq!(a.set_station_upgrade(&[st], upgrades::TERMINAL, true), 0, "{}", a.issues());
     assert!((a.blueprint_cost() - quote - 37.5).abs() < 1e-6, "in the blueprint's quote");
