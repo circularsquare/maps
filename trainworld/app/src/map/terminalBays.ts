@@ -149,18 +149,31 @@ export interface TerminalEnd {
   single?: boolean;
 }
 
+/** T-4291: the rows `terminalEnds` reads, by id (the clock worker's kept ones), in place of going over every edge and node:
+ * an edge's and a node's row, and how many edge ends a node has */
+export interface EndLook {
+  edgeOf: { get(id: number): ClockEdge | undefined };
+  nodeOf: { get(id: number): ClockNode | undefined };
+  endCount: { get(node: number): number | undefined };
+}
+
 /**
  * Per line, the end of each run (run 0 ends at its last stop, run 1 at its first), null where
  * nothing is drawn differently (a bus, no platform, a loop).
  */
-export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[], lines: readonly ClockLine[]): Map<number, [TerminalEnd | null, TerminalEnd | null]> {
-  const endCount = new Map<number, number>(), edgeOf = new Map<number, ClockEdge>();
-  for (const e of edges) {
-    endCount.set(e.a, (endCount.get(e.a) ?? 0) + 1).set(e.b, (endCount.get(e.b) ?? 0) + 1);
-    edgeOf.set(e.id, e);
+export function terminalEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[], lines: readonly ClockLine[], look?: EndLook): Map<number, [TerminalEnd | null, TerminalEnd | null]> {
+  let endCount: { get(node: number): number | undefined }, edgeOf: { get(id: number): ClockEdge | undefined }, nodeOf: { get(id: number): ClockNode | undefined };
+  if (look) ({ endCount, edgeOf, nodeOf } = look);
+  else {
+    const ends = new Map<number, number>(), byId = new Map<number, ClockEdge>();
+    for (const e of edges) {
+      ends.set(e.a, (ends.get(e.a) ?? 0) + 1).set(e.b, (ends.get(e.b) ?? 0) + 1);
+      byId.set(e.id, e);
+    }
+    const nodeRows = new Map<number, ClockNode>();
+    for (const n of nodes) nodeRows.set(n.id, n);
+    [endCount, edgeOf, nodeOf] = [ends, byId, nodeRows];
   }
-  const nodeOf = new Map<number, ClockNode>();
-  for (const n of nodes) nodeOf.set(n.id, n);
   const groups = new Map<string, number>();
   const out = new Map<number, [TerminalEnd | null, TerminalEnd | null]>();
   for (const l of lines) {

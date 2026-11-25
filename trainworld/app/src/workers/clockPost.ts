@@ -167,6 +167,8 @@ export const posted = {
   arrays: new Map<string, ArrayBufferView>(),
   edges: new Map<number, ClockEdge>(), nodes: new Map<number, ClockNode>(), lines: new Map<number, ClockLine>(),
   edgeIds: [] as number[], nodeIds: [] as number[], lineIds: [] as number[],
+  /** T-4291: the first rows read (workers/rowLog.ts) the client has not had, once a state was posted */
+  read: undefined as number | undefined,
 };
 export const sender = new StrokeSender();
 export function postWhole() {
@@ -175,6 +177,7 @@ export function postWhole() {
   posted.arrays.clear();
   posted.edges.clear(); posted.nodes.clear(); posted.lines.clear();
   posted.edgeIds = []; posted.nodeIds = []; posted.lineIds = [];
+  posted.read = undefined;
   moneyHeld = null;
 }
 
@@ -399,6 +402,31 @@ function rowsDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids:
   return { ids: sameIds ? null : rows.map((r) => r.id), rows: changed, gone };
 }
 
+/** T-4291: `rowsDelta` from the rows reads since the client's last (`RowLog.since`): only the rows they changed are looked at
+ * (`now`: a row as the last read handed it out), and the ids in order are sent only where some came, went or moved */
+function loggedDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids: ReadonlySet<number>, order: boolean, now: (id: number) => T | undefined): { ids: number[] | null; rows: T[]; gone: number[] } {
+  const changed: T[] = [], gone: number[] = [];
+  for (const id of ids) {
+    const r = now(id), was = by.get(id);
+    if (r) {
+      if (r === was) continue;
+      if (!sameValue(was, r)) changed.push(r);
+      by.set(id, r);
+    } else if (was) { by.delete(id); gone.push(id); }
+  }
+  return { ids: order ? rows.map((r) => r.id) : null, rows: changed, gone };
+}
+
+/** T-4291's check (`?patch=check`): after a delta from the log, what the client holds (`posted`) is the state's rows */
+function checkLogged(s: ClockState, d: { ids: number[] | null }[]) {
+  const bad: string[] = [];
+  (["edges", "nodes", "lines"] as const).forEach((k, j) => {
+    const rows = s[k] as { id: number }[], by = posted[k] as Map<number, unknown>, ids = d[j].ids ?? posted[k === "edges" ? "edgeIds" : k === "nodes" ? "nodeIds" : "lineIds"];
+    if (by.size !== rows.length || ids.length !== rows.length || rows.some((r, i) => by.get(r.id) !== r || ids[i] !== r.id)) bad.push(k);
+  });
+  if (bad.length) console.error(`T-4291 check: the ${bad.join(", ")} posted from the rows' log differ from the state's`);
+}
+
 /** T-4149: a state's `touched` from its rows' deltas and the lines whose runs moved; the drawn runs' list starts again
  * once a network is posted, the phase tables' (T-4280) once a state carrying them is */
 function touchedOf(s: ClockState, ...d: { rows: { id: number }[]; gone: number[] }[]): EditTouched {
@@ -423,17 +451,28 @@ function listsPosted(s: ClockState) {
  * (T-648, T-1029: copying them to the main thread and back into objects was most of a state's time
  * there on a big network). */
 export function postState(s: ClockState, transfer: Transferable[]) {
+  const read = s.rowsRead;
+  delete s.rowsRead;
   if (patchMode === "0" || !posted.edgeIds.length && !posted.nodeIds.length && !posted.lineIds.length) {
     rowsDelta(s.edges, posted.edges, posted.edgeIds);
     rowsDelta(s.nodes, posted.nodes, posted.nodeIds);
     rowsDelta(s.lines, posted.lines, posted.lineIds);
     posted.edgeIds = s.edges.map((e) => e.id); posted.nodeIds = s.nodes.map((n) => n.id); posted.lineIds = s.lines.map((l) => l.id);
+    posted.read = read === undefined ? undefined : read + 1;
     listsPosted(s);
     send({ kind: "state", state: { ...s, ...moneyPost(s.money!), touched: touchedAll() } }, transfer);
     return;
   }
   const t0 = performance.now();
-  const de = rowsDelta(s.edges, posted.edges, posted.edgeIds), dn = rowsDelta(s.nodes, posted.nodes, posted.nodeIds), dl = rowsDelta(s.lines, posted.lines, posted.lineIds);
+  // T-4291: the rows the reads since the client's last changed, when this state holds the last read's lists; else every row
+  // compared (a state built before a later read, a whole read among them, `?patch=walk`)
+  const since = read !== undefined && read === stateRows.lastRead && posted.read !== undefined && patchMode !== "walk" ? stateRows.log.since(posted.read) : null;
+  const [de, dn, dl] = since
+    ? [loggedDelta(s.edges, posted.edges, since.ids[0], since.order[0], (id) => stateRows.edgeNow(id)), loggedDelta(s.nodes, posted.nodes, since.ids[1], since.order[1], (id) => stateRows.nodeNow(id)),
+      loggedDelta(s.lines, posted.lines, since.ids[2], since.order[2], (id) => stateRows.lineNow(id))]
+    : [rowsDelta(s.edges, posted.edges, posted.edgeIds), rowsDelta(s.nodes, posted.nodes, posted.nodeIds), rowsDelta(s.lines, posted.lines, posted.lineIds)];
+  if (patchMode === "check" && since) checkLogged(s, [de, dn, dl]);
+  posted.read = read === undefined ? undefined : read + 1;
   if (de.ids) posted.edgeIds = de.ids;
   if (dn.ids) posted.nodeIds = dn.ids;
   if (dl.ids) posted.lineIds = dl.ids;

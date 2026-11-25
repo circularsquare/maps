@@ -289,15 +289,22 @@ Web first, so it can be shared as a link.
   The worker itself reads from the track model only the rows an edit changed: it keeps the last
   rows, the track model lists the lines whose service or net was touched and the stations whose name
   was set since the last read, and a station's name is kept by node (`stateRows.ts`, T-1382). Edges and
-  nodes are looked at only where an edit touched them (`take_touched`), at the ends of track whose lines
-  moved, and in the regions those lie in: the world split into regions of at most 64 stations
-  (`workers/regions.ts`, a quadtree that is a function of the station set). A rows state with many regions
-  dirty does those of the edit and the view first and leaves the rest for the next read. A noted line
-  whose stamp (everything the worker reads of it) is unchanged is left off the list (T-4113). A repricing
-  for water or terrain still looks at every record. A line's drawn runs are sampled again only where the
+  nodes are read (`edges_info_of`, `nodes_info_of`) only where an edit touched them (`take_touched`, which lists every
+  record whose numbers an edit or the model's own working out moved: an edge's ends, a run of single track's ways and their
+  ends), at the ends of track whose lines moved (a path entry, or a move on through a node, that came or went; a line that
+  starts or stops counting, running, or running back), where a list the rows read whole changed (one way, joins, limits and
+  the like), and in the regions those lie in: the world split into regions of at most 64 stations
+  (`workers/regions.ts`, a quadtree that is a function of the station set). No other record is visited [T-4291]. A rows
+  state with many regions dirty does those of the edit and the view first and leaves the rest for the next read. A noted
+  line whose stamp (everything the worker reads of it) is unchanged is left off the list (T-4113). A load, a repricing for
+  water or terrain and `?patch=walk` still look at every record. Each read goes in a numbered log of the ids whose rows
+  changed or went (`workers/rowLog.ts`): the post sends the rows the reads since the page's last state changed, and the
+  lists, the platforms' tracks and line counts (`platformLines.ts`), the line ends and each edge's drawn points kept beside
+  the edges' list are patched by those ids; a whole read among them, or a state built before a later read, compares every
+  row [T-4291]. A line's drawn runs are sampled again only where the
   model says they lie anywhere new on the track (`take_moved_lines`: their entries, offsets or length
-  moved, or an edge under them was touched); a settle's new timing, or a rebuild onto the same track, keeps
-  them. Where a line's run 0 moved only in a stretch (`take_moved_spans`: the entries from the first unlike one to the
+  moved, or an edge under either run was touched); a settle's new timing, or a rebuild onto the same track, keeps
+  them, ways back included. Where a line's run 0 moved only in a stretch (`take_moved_spans`: the entries from the first unlike one to the
   last before the alike end, the edges an edit touched counted unlike), only the samples and bends there are taken
   again (`run_polyline_range`, `run_bends_range`) and the rest kept, after the stretch moved along the track by the
   run's length change (a few mm for a station on its track); a line's runs are sampled whole once those changes add up

@@ -705,12 +705,15 @@ export function stationsKey(ni = api!.nodes_info()): string {
 let complexNodes: { version: number; of: Uint32Array } | null = null;
 export function complexOfNodes(): Uint32Array {
   if (complexNodes?.version === version) return complexNodes.of;
-  const a = api!, ni = a.nodes_info();
-  const geo: StationGeo[] = [];
-  let top = 0;
-  for (let i = 0; i < ni.length; i += 10) {
-    top = Math.max(top, ni[i]);
-    if (ni[i + 7] > 0) geo.push(stationGeo(a, ni, i));
+  const a = api!;
+  // T-4291: from the state's node rows (each kept row's platform line is the one `platformLineOf` gives, T-1382's check)
+  const rows = stateRows.modelNodes(), geo: StationGeo[] = [];
+  const top = rows.length ? rows[rows.length - 1].id : 0;
+  for (const r of rows) if (r.platform > 0) geo.push(rowGeo(r));
+  if (patchMode === "check") {
+    const ni = a.nodes_info(), was: StationGeo[] = [];
+    for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0) was.push(stationGeo(a, ni, i));
+    if (was.length !== geo.length || was.some((g, k) => g.id !== geo[k].id || g.x !== geo[k].x || g.y !== geo[k].y || !Object.is(g.heading, geo[k].heading) || g.length !== geo[k].length || !sameLine(g.line, geo[k].line))) console.error("T-4291 check: the stations the complexes are made from differ from the model's");
   }
   const fl = a.station_links(), links: [string, string][] = [];
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
@@ -719,6 +722,15 @@ export function complexOfNodes(): Uint32Array {
   for (const g of geo) of[Number(g.id)] = cx.of.get(g.id)!;
   complexNodes = { version, of };
   return of;
+}
+
+const sameLine = (p: ArrayLike<number> | undefined, q: ArrayLike<number> | undefined) => p === q || (!!p && !!q && p.length === q.length && Array.prototype.every.call(p, (v: number, k: number) => Object.is(v, q[k])));
+/** a station row as the complexes take it, the same object while the row is */
+const geoOfRow = new WeakMap<ClockNode, StationGeo>();
+function rowGeo(r: ClockNode): StationGeo {
+  let g = geoOfRow.get(r);
+  if (!g) geoOfRow.set(r, (g = { id: String(r.id), x: r.x, y: r.y, heading: r.heading, length: r.platform, ...(r.line ? { line: r.line } : {}) }));
+  return g;
 }
 
 export function scheduleSnapshot() {

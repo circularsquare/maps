@@ -158,7 +158,8 @@ let tableChecks = 0;
 async function nearDifference(rows, api, rnd) {
   const ll = (x, y) => [x / 111320, Math.max(-80, Math.min(80, y / 111320))];
   const all = rows.nodes.map((n) => { const [lng, lat] = ll(n.x, n.y); return { id: n.id, lng, lat, ports: n.ports ?? 0, ...(n.bus ? { bus: true } : {}), ...(n.port ? { port: true } : {}), ...(n.brtStation ? { brtStation: true } : {}), ...(n.kind ? { kind: n.kind } : {}) }; });
-  const w = { nodes: new Map(all.map((n) => [n.id, n])) }, at = all.map((n) => toLocal(n.lng, n.lat));
+  // (`save`: the page's world diff reads its lists, none here)
+  const w = { nodes: new Map(all.map((n) => [n.id, n])), save: {} }, at = all.map((n) => toLocal(n.lng, n.lat));
   const pts = [], m = api.markers_in(0);
   for (let k = 0; k < m.length && pts.length < 150; k += 7) pts.push(toLocal(...ll(m[k], m[k + 1])));
   for (let k = 0; k < 40; k++) { const [x, y] = at[Math.floor(rnd() * at.length)]; pts.push([x + (rnd() - 0.5) * 4000, y + (rnd() - 0.5) * 4000]); }

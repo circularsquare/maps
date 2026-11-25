@@ -9,9 +9,9 @@ import { networkFromState, networkSteps, newNetCache, runsTrains, shiftNetCache,
 import { terminalEnds } from "../map/terminalBays";
 import { packCross } from "../map/markData";
 import { type Complexes } from "../game/complexes";
-import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
+import { alignList, StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
-import type { ClockLine, ClockNode, ClockState } from "./protocol";
+import type { ClockEdge, ClockLine, ClockNode, ClockState } from "./protocol";
 import { publishSlots, saves } from "./slots";
 import { META_PER_LINE, profileOf } from "../map/profiles";
 import { buildSnapshot, busRow, complexesOf, complexOfNodes, forgetKeeps, groundK, loadsLater, namedKeeps, nodeComplexes, putXferSet, sendTrips, shownBuildings, snapTimer, StationGeo } from "./clockDemand";
@@ -48,9 +48,32 @@ export function hex(c: number) {
   return "#" + c.toString(16).padStart(6, "0");
 }
 
+/** T-4291: a map that notes, for each reader it hands out, the keys set or deleted since that reader last emptied its
+ * record (`all`: cleared since) */
+class NotedMap<K, V> extends Map<K, V> {
+  private readers?: { keys: Set<K>; all: boolean }[];
+  reader(): { keys: Set<K>; all: boolean } {
+    const r = { keys: new Set<K>(), all: true };
+    (this.readers ??= []).push(r);
+    return r;
+  }
+  set(k: K, v: V): this {
+    if (this.readers) for (const r of this.readers) r.keys.add(k);
+    return super.set(k, v);
+  }
+  delete(k: K): boolean {
+    if (this.readers) for (const r of this.readers) r.keys.add(k);
+    return super.delete(k);
+  }
+  clear() {
+    if (this.readers) for (const r of this.readers) { r.all = true; r.keys.clear(); }
+    super.clear();
+  }
+}
+
 // What the renderer draws, per edge and per line, in local units, kept between edits: an edit
 // re-renders only the edges and lines it dirtied (T-063). Cleared when a game is loaded.
-export const edgeDrawn = new Map<number, Float32Array>();
+export const edgeDrawn = new NotedMap<number, Float32Array>();
 const edgeSpeedDrawn = new Map<number, Float32Array>();
 export const lineDrawn = new Map<number, Float32Array>();
 /** T-1170: the same points in mercator 0..1 (float64; z or nothing after x, y), which no anchor move
@@ -142,14 +165,11 @@ export function forget(all = false) {
     // T-4281: a run 0 that moved only in a stretch (`take_moved_spans`) is sampled again there alone
     const near = new Map<number, ArrayLike<number>>();
     for (let k = 0; k + 5 < spans.length; k += 6) if (spans[k + 1] === 0) near.set(spans[k], spans.subarray(k, k + 6));
-    for (const l of moved) if (!spliceRun0(a, l, near.get(l))) dropDrawnLine(l);
+    // T-4291: a way back is sampled again only where its line moved (`note_moved` looks at both runs: their entries and
+    // the touched edges under each), whole
+    for (const l of moved) if (!spliceRun0(a, l, near.get(l))) dropDrawnLine(l); else dropBack(l);
   }
   for (const l of a.dirty_lines()) if (a.is_bus(l) || a.is_ferry(l)) dropDrawnLine(l);
-  // (a way back is not on the edges' lines: any track edit may move one)
-  if (edges.length) {
-    for (const l of backDrawn.keys()) keepBack(l);
-    backDrawn.clear();
-  }
 }
 
 /** T-4280: the run samples and bends of lines dropped since the last network was posted, as they were drawn: a line sampled
@@ -172,8 +192,12 @@ function resampled(was: { merc: Float64Array; bends: Float32Array } | undefined,
   return false;
 }
 function dropDrawnLine(l: number) {
-  keepRun0(l); keepBack(l);
-  lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); backDrawn.delete(l); drift.delete(l);
+  keepRun0(l); dropBack(l);
+  lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); drift.delete(l);
+}
+function dropBack(l: number) {
+  keepBack(l);
+  backDrawn.delete(l);
 }
 /** T-4281: per line, how far (ground m) its kept run 0 samples past a stretch sampled again may lie along the track from
  * where a whole resample would put them: the summed length changes of the cuts since its last whole sampling (a station
@@ -366,6 +390,29 @@ function drawnBack(a: TrackApi, id: number, back: readonly number[]): Float32Arr
   return c.d;
 }
 
+/** T-4291: each edge's points and speeds (`drawnEdge`) beside the edges' list, as the last full state's had them: only those of
+ * rows that changed, came or went since, and of edges whose points were dropped or made again since (`edgeDrawn`'s own
+ * record), are looked up again */
+let listed: { read: number; edges: readonly ClockEdge[]; drawn: Float32Array[]; speeds: (Float32Array | undefined)[] } | null = null;
+const listedFresh = edgeDrawn.reader();
+function drawnLists(a: TrackApi, edges: readonly ClockEdge[]): { drawn: Float32Array[]; speeds: (Float32Array | undefined)[] } {
+  const read = stateRows.readNumber, rows = listed && !listedFresh.all && patchMode !== "walk" ? stateRows.changedSince(listed.read, 0) : null;
+  let out: { drawn: Float32Array[]; speeds: (Float32Array | undefined)[] };
+  if (!listed || !rows) out = { drawn: edges.map((e) => drawnEdge(a, e.id)), speeds: [] };
+  else {
+    const ids = new Set([...rows, ...listedFresh.keys]);
+    out = ids.size || edges !== listed.edges ? { drawn: alignList(listed.drawn, listed.edges, edges, ids, (id) => drawnEdge(a, id)), speeds: [] } : listed;
+    if (out !== listed) out.speeds = alignList(listed.speeds, listed.edges, edges, ids, (id) => edgeSpeedDrawn.get(id));
+  }
+  if (!listed || !rows) out.speeds = edges.map((e) => edgeSpeedDrawn.get(e.id));
+  // (after the points made just now, which note themselves)
+  listedFresh.all = false;
+  listedFresh.keys.clear();
+  listed = { read, edges, ...out };
+  if (patchMode === "check" && edges.some((e, k) => out.drawn[k] !== edgeDrawn.get(e.id) || out.speeds[k] !== edgeSpeedDrawn.get(e.id))) console.error("T-4291 check: the edges' points kept beside their list differ from those drawn");
+  return out;
+}
+
 /** T-4113: the view's bounds, west, south, east, north, from the page's "view"; a rows state reads the regions there
  * first */
 let view: [number, number, number, number] | undefined;
@@ -390,12 +437,11 @@ function buildState(rowsOnly = false): ClockState {
   rowsOnly &&= StateRows.bounded;
   stateRows.begin(a, rowsOnly ? { rect: viewRect() } : undefined);
   const edges = stateRows.edges(a);
-  const drawn: Float32Array[] = [];
-  if (!rowsOnly) for (const { id } of edges) drawn.push(drawnEdge(a, id));
-  const speedParts = rowsOnly ? [] : edges.map((e) => edgeSpeedDrawn.get(e.id));
+  const { drawn, speeds: speedParts } = rowsOnly ? { drawn: [], speeds: [] } : drawnLists(a, edges);
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
   const ups = upgradesOf(a);
-  platformLines.sync(edges);
+  platformLines.sync(edges, stateRows.changes(0), (id) => stateRows.edgeNow(id));
+  if (patchMode === "check") { const bad = platformLines.differs(edges); if (bad.length) console.error(`T-4291 check: the platforms' ${bad.join(", ")} laid from changes differ from a whole sync`); }
   let nodes = stateRows.nodes(a, rowEnv, ups);
   // T-3759: an older save's typed stations that showed their own names keep them, unbound (once a load,
   // not on undo)
@@ -409,7 +455,8 @@ function buildState(rowsOnly = false): ClockState {
   const stationCount = nodes.length;
   const tq2 = performance.now(); timing.sNodes = tq2 - tq1;
   const lines = stateRows.lines(a, rowEnv, nodes);
-  platformLines.setLines(lines);
+  platformLines.setLines(lines, stateRows.changes(2), (id) => stateRows.lineNow(id));
+  if (patchMode === "check") { const bad = platformLines.differs(edges, lines); if (bad.length) console.error(`T-4291 check: the platforms' ${bad.join(", ")} from changes differ from whole ones`); }
   const tq3 = performance.now(); timing.sLines = tq3 - tq2;
   const w = stateRows.work;
   timing.sFold = w.foldMs;
@@ -423,7 +470,9 @@ function buildState(rowsOnly = false): ClockState {
   }));
   const tq3a = performance.now();
   placeLineCountries();
-  termEnds = terminalEnds(edges, nodes, lines);
+  // T-4291: from the rows by id, not a pass over every edge and node
+  termEnds = terminalEnds(edges, nodes, lines, { edgeOf: { get: (id) => stateRows.edgeNow(id) }, nodeOf: { get: (id) => stateRows.nodeNow(id) }, endCount: { get: (n) => platformLines.endsAt(n) } });
+  if (patchMode === "check" && JSON.stringify([...termEnds]) !== JSON.stringify([...terminalEnds(edges, nodes, lines)])) console.error("T-4291 check: the line ends read by id differ from those of every row");
   timing.sEnds = performance.now() - tq3a;
   const tq3b = performance.now();
   let first: ClockNode | null = null;
@@ -535,6 +584,7 @@ function buildState(rowsOnly = false): ClockState {
     },
     money: moneyState(),
     anchor: anchorSpec(),
+    rowsRead: stateRows.lastRead,
   };
 }
 

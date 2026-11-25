@@ -929,6 +929,8 @@ export interface ClockState {
   delta?: { edges: RowsDelta<ClockEdge>; nodes: RowsDelta<ClockNode>; lines: RowsDelta<ClockLine> };
   /** `?patch=check`: the rows in full, for the client to compare its rebuilt ones with */
   checkRows?: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] };
+  /** the clock worker only (T-4291): the number of the rows read its edges, nodes and lines are (workers/rowLog.ts) */
+  rowsRead?: number;
   /** T-4149: what the edits since the last state posted touched, the one list a reader patches by: the ids of the edges,
    * nodes and lines whose rows changed or are gone, the lines whose drawn run samples or bends differ from the last network
    * posted's (`paths`), and those whose phase tables may (`phases`). `all`: everything may have changed, the state or its

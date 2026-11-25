@@ -294,6 +294,8 @@ export function moneyState(): MoneyState {
   const a = api!;
   dayEntry(ledgerDay(moneyNow()));
   hourEntry(Math.floor(moneyNow() / 3600));
+  // T-4291: every fleet's need in one call (each alone works out every line's weekends)
+  const [carsNeeded, carsNeededFast, busesNeeded, boatsNeeded, tramsNeeded, boatsNeededSmall, boatsNeededLarge] = a.fleet_needed();
   return {
     cash: a.cash(),
     dayShift,
@@ -302,19 +304,19 @@ export function moneyState(): MoneyState {
     ...(modded ? { modded: true } : {}),
     game,
     fleet: a.fleet(),
-    carsNeeded: a.cars_needed(),
+    carsNeeded,
     fleetFast: a.fleet_fast(),
-    carsNeededFast: a.cars_needed_fast(),
+    carsNeededFast,
     fleetBus: a.fleet_bus(),
-    busesNeeded: a.buses_needed(),
+    busesNeeded,
     fleetFerry: a.fleet_ferry(),
-    boatsNeeded: a.boats_needed(),
+    boatsNeeded,
     fleetFerrySmall: a.fleet_ferry_small(),
-    boatsNeededSmall: a.boats_needed_small(),
+    boatsNeededSmall,
     fleetFerryLarge: a.fleet_ferry_large(),
-    boatsNeededLarge: a.boats_needed_large(),
+    boatsNeededLarge,
     fleetTram: a.fleet_tram(),
-    tramsNeeded: a.trams_needed(),
+    tramsNeeded,
     tramPrice: TrackApi.kind_defaults(3)[4],
     ...prices,
     upkeep: upkeepNow(),

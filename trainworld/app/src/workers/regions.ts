@@ -70,12 +70,15 @@ export class Regions {
   private everything = true;
   /** leaves split or merged so far (for the notes' figures) */
   reshapes = 0;
+  /** T-4291: moves on whenever any leaf's key may name another cell (a split, a merge, a reset) */
+  cells = 0;
 
   constructor(readonly cap: number) {
     this.reset();
   }
 
   reset() {
+    this.cells++;
     this.leaves.clear();
     this.inner.clear();
     this.at.clear();
@@ -106,28 +109,7 @@ export class Regions {
   sync(ni: ArrayLike<number>, ei: ArrayLike<number>, only?: { nodes: Set<number>; edges: Set<number> }) {
     // `only`: the records an edit touched, the rest as they were unless the count of either moved. A touched record
     // can be gone as well as new or moved, and one edit can remove some and add as many (the counts then hold).
-    if (only && ni.length / 10 === this.at.size && ei.length / 10 === this.ends.size) {
-      const seenN = new Set<number>(), seenE = new Set<number>();
-      for (let i = 0; i < ni.length; i += 10) {
-        if (!only.nodes.has(ni[i])) continue;
-        const id = ni[i], x = ni[i + 1], y = ni[i + 2], station = ni[i + 7] > 0, was = this.at.get(id);
-        seenN.add(id);
-        if (was && was.x === x && was.y === y && was.station === station) continue;
-        if (was) this.dropNode(id, was);
-        this.addNode(id, x, y, station);
-      }
-      for (const id of only.nodes) { const was = this.at.get(id); if (was && !seenN.has(id)) this.dropNode(id, was); }
-      for (let i = 0; i < ei.length; i += 10) {
-        if (!only.edges.has(ei[i])) continue;
-        const id = ei[i], a = ei[i + 1], b = ei[i + 2], was = this.ends.get(id);
-        seenE.add(id);
-        if (was && was[0] === a && was[1] === b) continue;
-        if (was) this.dropEdge(id, was);
-        this.addEdge(id, a, b);
-      }
-      for (const id of only.edges) { const was = this.ends.get(id); if (was && !seenE.has(id)) this.dropEdge(id, was); }
-      return;
-    }
+    if (only && ni.length / 10 === this.at.size && ei.length / 10 === this.ends.size) return this.syncTouched(ni, ei, only);
     const seen = new Set<number>();
     for (let i = 0; i < ni.length; i += 10) {
       const id = ni[i], x = ni[i + 1], y = ni[i + 2], station = ni[i + 7] > 0;
@@ -148,6 +130,36 @@ export class Regions {
       this.addEdge(id, a, b);
     }
     if (this.ends.size > seenE.size) for (const [id, was] of this.ends) if (!seenE.has(id)) this.dropEdge(id, was);
+  }
+
+  /** T-4291: the records an edit touched (`only`) as the model has them now: `ni` and `ei` hold the numbers of those still
+   * there (`nodes_info_of`, `edges_info_of`; whole lists do too), each new, gone, moved, or a station or not anew marking its
+   * region dirty. A touched record can be gone as well as new or moved. */
+  syncTouched(ni: ArrayLike<number>, ei: ArrayLike<number>, only: { nodes: Set<number>; edges: Set<number> }) {
+    const seenN = new Set<number>(), seenE = new Set<number>();
+    for (let i = 0; i < ni.length; i += 10) {
+      if (!only.nodes.has(ni[i])) continue;
+      const id = ni[i], x = ni[i + 1], y = ni[i + 2], station = ni[i + 7] > 0, was = this.at.get(id);
+      seenN.add(id);
+      if (was && was.x === x && was.y === y && was.station === station) continue;
+      if (was) this.dropNode(id, was);
+      this.addNode(id, x, y, station);
+    }
+    for (const id of only.nodes) { const was = this.at.get(id); if (was && !seenN.has(id)) this.dropNode(id, was); }
+    for (let i = 0; i < ei.length; i += 10) {
+      if (!only.edges.has(ei[i])) continue;
+      const id = ei[i], a = ei[i + 1], b = ei[i + 2], was = this.ends.get(id);
+      seenE.add(id);
+      if (was && was[0] === a && was[1] === b) continue;
+      if (was) this.dropEdge(id, was);
+      this.addEdge(id, a, b);
+    }
+    for (const id of only.edges) { const was = this.ends.get(id); if (was && !seenE.has(id)) this.dropEdge(id, was); }
+  }
+
+  /** T-4291: an edge's ends as last synced */
+  endsOf(id: number): readonly [number, number] | undefined {
+    return this.ends.get(id);
   }
 
   private addNode(id: number, x: number, y: number, station: boolean) {
@@ -213,6 +225,7 @@ export class Regions {
 
   private split(leaf: Leaf) {
     this.reshapes++;
+    this.cells++;
     const level = levelOf(leaf.key) + 1;
     this.leaves.delete(leaf.key);
     this.inner.set(leaf.key, leaf.stations);
@@ -247,6 +260,7 @@ export class Regions {
   /** every leaf under cell `top` as one leaf */
   private merge(top: Key) {
     this.reshapes++;
+    this.cells++;
     const into: Leaf = { key: top, stations: 0, nodes: new Set(), edges: new Set() };
     let dirty = false;
     const level = levelOf(top);
@@ -284,6 +298,18 @@ export class Regions {
   }
   markAll() {
     this.everything = true;
+  }
+  /** T-4291: the regions these points (x, y each) are in, good while `cells` stays as it is now */
+  keysOf(pts: ArrayLike<number>): Set<Key> {
+    const out = new Set<Key>();
+    for (let k = 0; k + 1 < pts.length; k += 2) out.add(this.leafAt(pts[k], pts[k + 1]).key);
+    return out;
+  }
+  /** whether any of these regions (`keysOf`) is among those `t` (one `take` just handed over) took */
+  takesAny(t: Taken, keys: ReadonlySet<Key>): boolean {
+    if (t.all) return true;
+    for (const k of keys) if (this.takenKeys.has(k)) return true;
+    return false;
   }
   /** whether a point is in a region of `t` (one `take` just handed over) */
   isTaken(t: Taken, x: number, y: number): boolean {

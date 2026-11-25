@@ -112,6 +112,12 @@ impl TrackApi {
     pub fn cars_needed(&self) -> u32 {
         cars_needed(&self.w)[0]
     }
+    /// T-4291: what the running lines need now of every fleet at once (`cars_needed`, `cars_needed_fast`, `buses_needed`,
+    /// `boats_needed`, `trams_needed`, `boats_needed_small`, `boats_needed_large`, in that order): one working out of
+    /// every line's weekends (a pass over the whole network's track limits) where each of those makes its own.
+    pub fn fleet_needed(&self) -> Vec<u32> {
+        cars_needed(&self.w).to_vec()
+    }
     /// High-speed cars the running lines need now (T-817).
     pub fn cars_needed_fast(&self) -> u32 {
         cars_needed(&self.w)[1]
