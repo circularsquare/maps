@@ -2529,12 +2529,16 @@ class DemandClient {
   }
 
   /** T-325: whether a load needs a solve to finish: at startup, in a game load's hold, or when a
-   * city of it must be covered by the solves (not a zone opened bare). */
+   * city of it must be covered by the solves (not a zone opened bare) and has no figures on the map yet. */
   private jobNeedsSolve(job: NonNullable<DemandClient["job"]>): boolean {
     // (T-2552: and a game load whose network has not arrived: the network in hand is the last game's)
     if (job.startup || this.hold || (job.wait !== null && gameLoadArmed())) return true;
     const need = this.solveNeed(this.latest());
-    return !need || job.cities.some((id) => need.has(id));
+    // T-4359: a city with figures shown (its bare ones: a zone opens bare first) is loaded once its packs are open. The solve
+    // that takes it in is then an edit's, which publishes nothing before its final, so waiting on it would keep "Loading
+    // data" up, its bar full, for a whole re-solve; the status tag says that wait is calculating trips.
+    const shown = cityDemandViews.peek();
+    return !need || job.cities.some((id) => need.has(id) && !shown.has(id));
   }
 
   private newJob(atStartup: boolean): NonNullable<DemandClient["job"]> {
@@ -2614,8 +2618,13 @@ class DemandClient {
         f = this.job!.best;
         steps.set(id, { step: load?.step ?? STAGE_TEXT.data, leftMs: load?.leftMs ?? null, at: now });
       } else {
-        // (open and in the running solve: waiting for that, whatever its share says; else for the packs)
-        steps.set(id, this.isOpen(id) && st && s?.cities.includes(id) ? solving : { step: STAGE_TEXT.data, leftMs: null, at: now });
+        // (a zone a solve covers opens in every solving worker: their acks are its real progress)
+        const toSolve = !!sn?.has(id);
+        const covered = !!s && !s.rough && s.cities.includes(id);
+        // T-4359: once open where the solves need it, it waits on the calculation, never on its packs (an edit's solve has no
+        // `st`; its time left is its workers' units)
+        const calc = (toSolve && this.opened.has(id)) || (this.isOpen(id) && !!st && covered);
+        steps.set(id, !calc ? { step: STAGE_TEXT.data, leftMs: null, at: now } : covered && st ? solving : { step: STAGE_TEXT.demand, leftMs: covered ? units?.ms ?? null : null, at: now });
         let got = 0, total = 0, at = Infinity;
         for (const file of [`${id}.json`, `${id}.bin`]) {
           const d = this.downloads.get(file);
@@ -2626,15 +2635,13 @@ class DemandClient {
         const dlMs = at === Infinity ? 300 : dl >= 1 || got === 0 ? Math.max(300, now - at) : (now - at) / dl;
         const openMs = Math.max(300, (bytes ?? (total || GUESS_BYTES)) / 1e6 * OPEN_MS_PER_MB.city);
         const log = lastLoad(this.start.loads, (l) => l.item === id && l.downloadedAt !== undefined && !l.openedAt);
-        // (a zone a solve covers opens in every solving worker: their acks are its real progress)
-        const toSolve = !!sn?.has(id);
         const acked = toSolve ? Math.min(1, 0.9 * (this.packAcks.get(id) ?? 0) / this.solvingHolders(id).length) : 0;
         const open = this.isOpen(id) ? 1 : Math.max(acked, log ? Math.min(STEP_CAP, (now - log.downloadedAt!) / openMs) : 0);
         // T-2552: and it waits for that solve: the one running, to its final with the barrier and to its first
         // round without, else the next, expected as the solves before it took
         let solveMs = 0, solve = 0;
         if (toSolve) {
-          if (s && !s.rough && s.cities.includes(id)) {
+          if (covered && s) {
             const zs = st ?? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, READY_ROUND, solveEstimate(stopCount(s.svc)), loadPace().later, now, PERIODS.length, solveWaves, setupOf(s));
             solveMs = zs.ms;
             solve = zs.share;

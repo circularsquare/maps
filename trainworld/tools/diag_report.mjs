@@ -103,5 +103,18 @@ const zones = events.filter((e) => e.event === 'dm-zone' && e.detail.ev === 'ope
 console.log(`\nZONES  ${zones.length} opened (${zones.filter((e) => e.detail.bare).length} bare), ${events.filter((e) => e.event === 'dm-level').length} level changes, ${events.filter((e) => e.event === 'dm-zone' && e.detail.ev === 'closed').length} closed`);
 const gaps = events.filter((e) => /heartbeat-gap|slow-phase|slow-receive|slow-query|page-error|clock-error|error/.test(e.event));
 if (gaps.length) { console.log('\nSTALLS AND ERRORS'); for (const e of gaps.slice(-20)) console.log(`  ${rel(e.at)}  ${e.source} ${e.event} ${JSON.stringify(e.detail).slice(0, 160)}`); }
-if (report.demandNow) console.log(`\nAT DOWNLOAD  workers (WASM MB): ${(report.demandNow.workers ?? []).map((w) => w.wasm + '/' + w.need).join(' ')}  zones open ${report.demandNow.zonesOpen}, market packs ${report.demandNow.marketPacksOpen}`);
+// T-4359: the load in hand (waitsFor: the solve it waits on, against the newest; packsIn: its packs all open) and what the
+// status tag, the loading card and the zones' bars said, bars in tens of percent
+const shownEv = events.filter((e) => e.event === 'dm-load' || e.event === 'dm-tag');
+if (shownEv.length) {
+  console.log('\nLOAD IN HAND AND WHAT THE TAG SAID' + (shownEv.length > 40 ? `  (last 40 of ${shownEv.length})` : ''));
+  for (const e of shownEv.slice(-40)) {
+    const { t: _t, ...d } = e.detail ?? {};
+    console.log(`  ${rel(e.at)}  ${e.event === 'dm-load' ? 'load' : 'tag '}  ${JSON.stringify(d).slice(0, 220)}`);
+  }
+}
+if (report.demandNow) {
+  console.log(`\nAT DOWNLOAD  workers (WASM MB): ${(report.demandNow.workers ?? []).map((w) => w.wasm + '/' + w.need).join(' ')}  zones open ${report.demandNow.zonesOpen}, market packs ${report.demandNow.marketPacksOpen}`);
+  if ('load' in report.demandNow) console.log(`  load in hand: ${JSON.stringify(report.demandNow.load)}\n  shown: ${JSON.stringify(report.demandNow.shown)}`);
+}
 if (args.includes('--events')) { console.log('\nALL EVENTS'); for (const e of events) console.log(`  ${rel(e.at)}  ${e.source} ${e.event} ${JSON.stringify(e.detail ?? '').slice(0, 200)}`); }

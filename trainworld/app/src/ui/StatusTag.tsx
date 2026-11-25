@@ -143,6 +143,19 @@ effect(() => {
   solvePlace = { best: 0 };
   editShown.all = editShown.view = null;
 });
+// T-4359: a final that covers every edit made ends the wait the bar measured (an edit held behind a final keeps it going).
+// A solve still running then (the same network solved again: a pack that opened meanwhile, a zone at another level) is a
+// wait of its own, from 0: carried on, its minutes sat at the top of a bar that never goes back.
+let behind = false;
+effect(() => {
+  const was = behind;
+  behind = demandBehindFrom.value !== null;
+  if (!was || behind) return;
+  solvingSince = demandUpdating.peek() ? performance.now() : null;
+  tagPlace = { best: 0 };
+  solvePlace = { best: 0 };
+  editShown.all = editShown.view = null;
+});
 /** a share of a wait, and whether it is bounded: past half on the bar only then (`barPlace`) */
 type Work = { share: number; bounded: boolean };
 /** the share of that wait passed, by the time left the hover shows: what has passed over that and what is left;

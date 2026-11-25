@@ -1706,10 +1706,12 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   bounded. Bounded is a solve's share of its wait by its workers' time left (`editLeftOf`): every unit still to run
   timed at this solve's own pace (a unit of its stage has ended on that worker) and none in hand past its time at
   that pace, the card's other stages done; and counted downloads (terrain). A bounded share runs the bar from where
-  it stands to the top in step with it; where the bound lapses (a unit over its time, the stretch after the last
-  unit until the figures show) the bar holds. The bar never goes back: when a bounded share falls (an estimate
-  grows) it keeps its place and the rest is spread over the rest of it, moving again with the next work done
-  [T-2552]. It is never full before the card goes, except after a
+  it stands to the top in step with it; where the bound lapses (a unit over its time, a wait for the next unit
+  longer than what the units have left, the stretch after the last unit until the figures show) the bar holds, and
+  the time left adds a fifth of the overrun so far [T-4359]. The bar never goes back: when a bounded share falls (an
+  estimate grows) it keeps its place and the rest is spread over the rest of it, moving again with the next work done
+  [T-2552]; the status tag's wait ends at a final that covers every edit made, so a solve still running then (the same
+  network solved again) starts its own bar from empty [T-4359]. It is never full before the card goes, except after a
   cached result [T-2574]: once the load's network is found in the cache (its zones, build, workers and flags match,
   its packs' digests still to come), the stages are the game, the packs' download and the result's showing (1.5 s
   once the network and packs are in), with nothing opened or solved; the bar keeps its place and runs from there, the
@@ -1744,7 +1746,10 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
 - **A city loading later** (a pan, construction reaching it) holds nothing and has no card: the
   status says "Loading data" with a thin bar after it, its hover naming the cities and step
   ("Loading Boston, 37%. Loading city data"); in a narrow bar the thin bar goes first, then the
-  text ends in an ellipsis.
+  text ends in an ellipsis. It ends once the cities' packs are open, except a city with no figures on the map yet,
+  which waits for the solve that gives it some; a city with figures (from a look at it: zones open bare first) is
+  then in the calculation the status shows as calculating trips [T-4359]. A zone's own bar says "Loading city data"
+  only until its packs are open, then "Calculating trips".
 - **Terrain on its way** [T-2613, notes/T-2613.md]: after a city's "Loading data" and before every
   case below, the status says "Downloading terrain…" with the spinner once a terrain download has
   been on its way 1.5 s (the clock worker's terrain classes, water masks or world water, or the hill

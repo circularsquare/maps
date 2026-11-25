@@ -35,8 +35,8 @@ export function editLeft(parts: readonly WorkPart[], now: number, prior: EditLef
 /** T-4264 (Anita, 11-25: a bar past about half only on a time left we can bound): `editLeft`'s time left, and whether
  * this solve's own units bound it. They do when every unit still to run is timed at this solve's pace (a unit of its
  * stage has ended here) and none in hand has run past its time at that pace; not before (the passes' prior, a time of
- * minutes that turned into 8: T-4209), nor past an overrun (its time is then a floor, a fifth of its time so far), nor
- * once only the stretch after the last unit is left. */
+ * minutes that turned into 8: T-4209), nor past an overrun (its time is then a floor, a fifth of its time so far; T-4359:
+ * the wait for the next unit too, once longer than what is left), nor once only the stretch after the last unit is left. */
 export function editLeftOf(parts: readonly WorkPart[], now: number, { pace, tailMs, gapMs }: EditLeftIn, part: "all" | "view" = "all"): { ms: number; bounded: boolean } | null {
   const sum = (v: [number, number]) => v[0] + v[1];
   if (part === "view" && !parts.some((p) => sum(p.viewLeft) > 0 || sum(p.viewBlind) > 0 || p.curView)) {
@@ -104,7 +104,16 @@ export function editLeftOf(parts: readonly WorkPart[], now: number, { pace, tail
     }
     // the whole solve waits a moment after the local results show, for the next edit
     const gap = !view && p.left[1] + p.blind[1] > 0 && (p.left[0] + p.blind[0] > 0 || (p.busy && p.stage === 0)) ? gapMs : 0;
-    worst = Math.max(worst, hand + rest + blindMs + gap);
+    // T-4359: no unit in hand while units are still to run: the worker is between them (a cluster's set-up, the market's),
+    // time no unit counts. Once that wait is longer than what is left (and the page's gap after a local stage), the next
+    // unit is late: a fifth of the wait so far again and no bound, as for a unit in hand past its time (else the count
+    // reaches 0 with units still to run, and the bar fills)
+    let late = 0;
+    if (!p.busy && rest + blindMs > 0) {
+      const idle = Math.max(0, now - p.at);
+      if (idle > rest + blindMs + (!view && p.stage === 0 ? gapMs : 0)) { bounded = false; late = 0.2 * idle; }
+    }
+    worst = Math.max(worst, hand + rest + blindMs + gap + late);
   }
   return { ms: worst + tailMs, bounded: bounded && any };
 }

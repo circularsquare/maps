@@ -5,6 +5,7 @@
 // code carries two one-line calls (startDemand, workerDied); nothing here changes what it does.
 import { demandHeld, demandScope, demandStep, demandUpdating, demandView, editHeld, editsSettling } from "../game/demand";
 import { setDemandSnapshot, trace } from "../game/freezeTrace";
+import { loadProgress, zoneLoads, zoneSteps } from "../game/loading";
 
 const epoch = (ms: number | undefined) => (ms === undefined ? undefined : Math.round(performance.timeOrigin + ms));
 const MARKET = "market:";
@@ -31,11 +32,32 @@ const brief = (s: Solve) => ({ version: s.version, kind: s.rough ? "rough" : s.b
   arrived: epoch(s.arrivedAt), sent: epoch(s.sentAt), local: epoch(s.localEndAt), shown: epoch(s.localShownAt), whole: epoch(s.wholeAt), final: epoch(s.refinedAt),
   cutAfterMs: s.cutAfter, memMB: (s.memBytes ?? []).map((b: number) => Math.round(b / 1048576)) });
 
+/** a share as whole tens of percent, so a bar's creep is not logged */
+const tenths = (pct: number | null | undefined) => (pct === null || pct === undefined || !Number.isFinite(pct) ? null : Math.floor(pct / 10) * 10);
+
+/** T-4359: the load in hand (`job`): its cities, the solve it waits for against the newest, whether its packs are all in,
+ * whether it is a game's load, its stage and bar */
+function loadOf(client: any) {
+  const j = client.job, p = loadProgress.peek();
+  if (!j) return null;
+  return { cities: j.cities.slice(0, 8), n: j.cities.length, items: j.items.length, waitsFor: j.version ?? null, newest: client.cur?.version ?? null,
+    packsIn: j.dataAt !== undefined, game: j.wait !== null, step: p?.step ?? null, pct: tenths(p ? p.fraction * 100 : null) };
+}
+
+/** T-4359: the status tag's words and bar, the loading card's, and the zones' bars (zone, bar, stage), as the player sees them */
+function shownOf() {
+  const tag = document.querySelector(".status-tag"), card = document.querySelector(".loading-card");
+  const pct = (el: Element | null | undefined) => tenths(el ? Number(el.querySelector("[role=progressbar]")?.getAttribute("aria-valuenow")) : null);
+  const steps = zoneSteps.peek();
+  return { tag: tag?.querySelector(".demand-busy")?.textContent ?? null, tagPct: pct(tag), card: card?.querySelector(".big")?.textContent ?? null, cardPct: pct(card),
+    zones: [...zoneLoads.peek()].slice(0, 6).map(([id, f]) => `${id} ${tenths(f * 100)} ${steps.get(id)?.step ?? ""}`) };
+}
+
 export function startDemandTrace(client: any) {
   const solves = new WeakMap<object, Set<string>>();
   const loads = new WeakMap<object, number>();
   let levels = new Map<string, number>();
-  let waiting: unknown = null, state = "";
+  let waiting: unknown = null, state = "", load = "", tag = "";
   const sample = () => {
     const now = performance.now();
     const w = client.waiting;
@@ -80,6 +102,14 @@ export function startDemandTrace(client: any) {
       shownVersion: view?.version, shownFinal: !!view?.final, newest: client.cur?.version };
     const text = JSON.stringify(st);
     if (text !== state) { state = text; trace("dm-state", { t: epoch(now), ...st }); }
+    // T-4359: the load in hand (what the status tag's "Loading data" and the card describe) and what the tag and the zones'
+    // bars show, their bars by tenths: a wait shown as a load is told apart from the calculation it waits on
+    const l = loadOf(client);
+    const lt = JSON.stringify(l);
+    if (lt !== load) { load = lt; trace("dm-load", { t: epoch(now), ...(l ?? { none: true }) }); }
+    const shown = shownOf();
+    const sh = JSON.stringify(shown);
+    if (sh !== tag) { tag = sh; trace("dm-tag", { t: epoch(now), ...shown }); }
   };
   // every network the clock sends, and whether it changed anything demand reads (a train count does not: no pass follows)
   const submit = client.submitNetwork?.bind(client);
@@ -92,5 +122,5 @@ export function startDemandTrace(client: any) {
   setInterval(() => { try { sample(); } catch { /* diagnostics must not affect play */ } }, 250);
   setDemandSnapshot(() => ({ at: epoch(performance.now()), state: JSON.parse(state || "null"), workers: client.memory?.(), solving: client.computeN,
     zonesOpen: [...client.opened].filter((i: string) => !i.startsWith(MARKET)).length, marketPacksOpen: [...client.opened].filter((i: string) => i.startsWith(MARKET)).length,
-    levels: Object.fromEntries(client.levelPosted), recentPasses: (client.log as Solve[]).slice(-8).map(brief) }));
+    levels: Object.fromEntries(client.levelPosted), recentPasses: (client.log as Solve[]).slice(-8).map(brief), load: loadOf(client), shown: shownOf() }));
 }
