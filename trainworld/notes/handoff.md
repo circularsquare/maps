@@ -1,25 +1,26 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session caa91e48-7288-4753-9895-c2b79ad5e3d9, name maps-c5 [fde5f5], since 2026-11-25 02:20 UTC
-Updated: 2026-11-25 07:17 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
+Updated: 2026-11-25 07:27 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 0. Usage: Claude runs out before Gemini; Gemini for reviews (gemini_audit.py) and small clear code. Stay light: briefs
    in files, report heads only, review findings go to fix agents unread. Overnight (her): calm pace, 2-4 agents.
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Running: followcut (Opus, T-4281:
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Running: pageedit2 (Opus, T-4150 stage 2, the page's whole-save readers after an edit; my scratch
+   pageedit2/brief.md), followcut (Opus, T-4281:
    follow-up steps by record so later clicks don't wait; brief in maps-c5 scratch followcut/brief.md). Asia click run on
    8800 ff532d4e9: first 558 ms, later 2.2 s (edit_bench --save asia --only clickrun). Landed tonight: T-4149, T-4249,
    T-4153 s6, T-4262 s1-2, T-4274, T-4280, T-4272 stage. Her answer pending a-2026-11-25-4 (buy trains after the confirm):
    on yes, line-track stations confirm locally (T-4272 rest). Then measure the click run again and report yes/no per edit.
 2. fixes16a (Opus, T-4282: batch16a review findings, avoiding followcut's files; findings there go under "For followcut"
    in its notes: pass them on). Batch review due over T-4272, T-4274, T-4280, T-4281 when landed.
-3. 8800 = ff532d4e9, smoke passed 07:06 UTC; T-4274/T-4280 landed after (rebuild next round). T-4275 roads fix is on
+3. 8800 = dc01ef413 (master), smoke passed 07:25 UTC. T-4275 roads fix is on
    8800: tell her it's ready for the hotfix publish when she's back (publish skill; her word).
 4. Waiting on her: asks.py list (weekend solve T-4242, OpenFreeMap proxy, buy trains after confirm, rename and
    speedometer text, Asia load on fewer workers, PR #21/#24 comments). T-3742 after she asks; T-4250; T-4248.
 5. Next starts (not edit speed): T-4276 group timetable, T-4080 s3-6, T-4199 s2, T-3160, T-4187.
-6. reserve_cores: maps-3e's loop (its tab) holds the mutex; start one (`-All -Loop 30`) if it dies.
+6. reserve_cores: maps-3e's loop (its tab) holds the mutex (mine exited 07:18); start one (`-All -Loop 30`) if it dies.
 
 ## Her words
 - 11-24 evening her time: edit speed's root cause is the main focus ("we should *only be targeting the root cause*",
@@ -27,7 +28,6 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   smaller (landed). 35 MB GPU copy OK. Use more cores: she plays off; test off, both after big loading changes. Bars:
   past half only on a bounded time left. Don't ask her to test the bar or edit speed until it feels right on 8800.
   Repeats tracked in notes/repeats.md. Edit-speed memory budget 30 MB. Game stays at anita.garden.
-- 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
 - 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
   kinda just flavor. we should mostly be focusing on isolating the changes and cutting out the impacts on the broader
   map." (DECISIONS T-4097; T-4149, T-4150, T-4262 at P1.) Asia: station adds 1-3 s, removal about 4 s.

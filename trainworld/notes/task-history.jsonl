@@ -416,3 +416,4 @@
 {"t":"2026-11-25T04:52Z","n":312,"area":{"demand":99,"interface":22,"ops":21,"schedule":19,"performance":48,"track":66,"community":18,"schematic":19},"pri":{"P3":242,"P2":60,"P1":10},"opened":4,"closed":5}
 {"t":"2026-11-25T05:42Z","n":309,"area":{"demand":99,"interface":20,"ops":20,"schedule":19,"performance":48,"track":66,"community":18,"schematic":19},"pri":{"P3":242,"P2":58,"P1":9},"opened":1,"closed":4}
 {"t":"2026-11-25T06:32Z","n":310,"area":{"demand":99,"interface":20,"ops":20,"schedule":19,"performance":49,"track":66,"community":18,"schematic":19},"pri":{"P3":242,"P2":59,"P1":9},"opened":1,"closed":0}
+{"t":"2026-11-25T07:22Z","n":310,"area":{"demand":99,"interface":20,"ops":21,"schedule":19,"performance":48,"track":66,"community":18,"schematic":19},"pri":{"P3":242,"P2":58,"P1":10},"opened":2,"closed":2}

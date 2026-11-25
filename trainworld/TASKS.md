@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor"; on your Asia save a station shows up in 1-3 s, a removal in about 4 s. Parts: T-4153 (drawn network), T-4214 (clickable map), T-4149 (worker rows), T-4150 (page).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent cutstretch3)
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
   - Context: You, 11-23: "this is the entire issue". Stage 6 (tree cutstretch3): a cut line's bands are redone only near the cut (3 of 909 entries for a station on line 33). Asia network build, profiled: a station on a three-line trunk 315 to 242 ms. Left: cut lines' samples, speeds and whole-line band stages.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 6 "What is left"
@@ -186,7 +186,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
   - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
   - Other: notes/T-4149.md
-- T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2
+- T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2 (taking, 2026-11-25, agent pageedit2)
   - Context: Stage 1 (tree pageedit): on your Asia save the page's own work after a station edit went from 104-117 ms to 65-69 ms, cleanup from 45-110 ms to 8-10 ms, about 4-10% of the wait. Left: achievements, fare income's line checks, the track's line lists, station labels, and the change list itself walking every node and edge.
   - Goal: Under 20 ms of the page's own work for a station on Asia; then the demand layers and the delete tool's hover per change; 3-4 h.
   - Other: T-3804 (today answers 125-445 ms) still open; notes/T-4150.md "Left, by stage"
@@ -194,20 +194,21 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
   - Other: notes/T-4196.md
-- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save (taking, 2026-11-24, agent editdesign2)
+- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
 - T-4276 [P2] {L:timetables} Timetable for a whole line group
   - Context: A player (X, 11-24): "Currently, the timetable only displays one route at a time. I'd like to be able to display all the routes in a group together." You, 11-24: file it.
   - Goal: A line group's panel shows one timetable with every line of the group, each line's trains told apart.
-- T-4282 [P1] {L:checks} Fix the review's findings on the edit-path landings (taking, 2026-11-25, agent fixes16a)
-  - Context: Gemini's review of T-4149, T-4239, T-4249, T-4153 stage 6, T-4262 stage 1, T-4271, T-4258 and T-4255 (artifacts/trainworld/gemini/batch16a/review.md). Each finding is checked against the code first; T-4262 was rewritten since.
-  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
 - T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent followcut)
   - Context: Click run on your Asia save on 8800 (ff532d4e9, 11-25): first station confirmed 558 ms after the press, later ones 2.2 s (p90 2.9 s). Each waits for the click before it, whose follow-up redoes whole-save steps in blocks of 0.4-2.5 s (notes/T-4267-measure.md).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
-- T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches (taking, 2026-11-24, agent answerfirst)
+- T-4283 [P1] {L:solve-speed} {after:T-4281} Weekend held count kept after a weekend headway change
+  - Context: From the review of T-4239 (unpublished): after a weekend-only headway or percent change that keeps the weekend train count, the line's held weekend entry stays, so its weekend trains keep the old rate, through a reload too. The fix is in world.rs, followcut's while T-4281 runs.
+  - Goal: Each day's held entries dropped by that day's own headways, with a Rust test beside T-4239's.
+  - Other: the fix written out in notes/T-4282.md "For followcut"
+- T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches
   - Need from Anita: A station on a running line's track can make headway lines need more trains. Buy them right after the confirm, cash dipping below zero if short? I'd say yes
   - Context: Stations and deletes on track no running line uses now skip the train work before their answer (16-72 ms of worker time on your Asia save; answers 95-207 ms in a run). On a running line's track they still wait 0.15-0.6 s for the trains they need.
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
@@ -223,7 +224,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
-- T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends (taking, 2026-11-25, agent busrebuild)
+- T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
@@ -254,7 +255,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4230 [P2] {L:loading} The clock worker's first state sooner on load (taking, 2026-11-24, agent firststate)
+- T-4230 [P2] {L:loading} The clock worker's first state sooner on load
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
   - Other: notes/T-4225.md

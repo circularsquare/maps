@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4282 [P1] {L:checks} Fix the review's findings on the edit-path landings (2026-11-25): Four findings checked: one fixed (lineBands splice end), one gone, one not real, one real in world.rs filed as T-4283 for after followcut. notes/T-4282.md.
 - T-4280 [P2] {L:edit-speed} Edits name the lines they changed for the renderer (2026-11-25): trainSlots.ts per-line slots with room; touched.paths exact, new touched.phases, NetPatch.stretches and lanes; Asia renderer 12 ms station placed, 28 ms line deleted; NYC ?patch=check clean; GPU about 3 MB more (budget 27 of 30 MB). notes/T-4280.md.
 - T-4274 [P1] {L:edit-speed} Line tables in slots of their own on the GPU (2026-11-25): trainSlots.ts per-line slots with room; touched.paths exact, new touched.phases, NetPatch.stretches and lanes; Asia renderer 12 ms station placed, 28 ms line deleted; NYC ?patch=check clean; GPU about 3 MB more (budget 27 of 30 MB). notes/T-4280.md.
 - T-4277 [P1] {L:checks} Fix the review's findings on the demand and loading landings (2026-11-25): 4 real findings fixed (StatusTag.tsx, demandClient.ts airport answers and sums merge); the rest answered in notes; NYC run: bar 0 to 70.7% with no drop over 14 wording changes, bubbles equal to the pre-edit final. notes/T-4277.md.
