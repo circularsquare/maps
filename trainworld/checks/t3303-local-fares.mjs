@@ -1,11 +1,12 @@
-// T-3303: after a fare edit, the zone in view's local result (T-1733) lands ahead of the whole solve with its lines'
-// longer trips as last solved, at the old fares. Those lines must keep the figures and fares they had until the
-// whole solve's final, or every longer trip pays the new fare it never chose. New game, two lines in Manhattan
-// solved, then a third built and, as its riders come in, the curve set MUL times (300 by default, under FARE_MAX).
+// T-3303: after a fare edit, intermediate results before the whole solve's final (a local result when one runs, or
+// whole-solve period steps in a one-city game where T-3512 skips the local stage) hold lines priced at the old fares
+// (`takesMarketless` in publishCluster / publishStep), or unsolved periods / longer trips pay the new fare they never
+// chose. New game, three lines in Manhattan solved, then the curve set MUL times (300 by default, under FARE_MAX).
 // Every 50 ms until the fare's final: the shown view, each line's solved fares, the income and the cash.
-// PASS when the fare solve showed a local result, no line is priced at the new fares before that solve's final,
-// income never passes 1.05 times what it was, and the cash gained is no more than twice the old income over the
-// game hours passed. `perfOff=fareHold` (the second argument) turns the fix off: it should FAIL.
+// PASS when the fare solve showed a pre-final step or local result, no line is priced at the new fares before that
+// solve's final, income never passes 1.05 times what it was, the cash gained is no more than twice the old income over
+// the game hours passed, and after the final every line is priced at the new fares with riders under 1% of before.
+// `perfOff=fareHold` (the second argument) turns the fix off: it should FAIL.
 //   node trainworld/checks/t3303-local-fares.mjs [url] [extra query]
 // from the maps root, on your own Vite (port 6168 by default); about 2 minutes.
 import { acrossLine, collectErrors, demandFinal, launchChrome } from './lib.mjs';
@@ -25,9 +26,8 @@ try {
   await page.waitForTimeout(3000);
   await acrossLine(page, [-73.985, 40.758], 2);
   await acrossLine(page, [-73.985, 40.77], 2);
-  await demandFinal(page, { timeout: 900000, polling: 500, lines: 0 });
   await acrossLine(page, [-73.97, 40.785], 2);
-  await page.waitForFunction(() => window.twDemand.view()?.lines.size > 2, undefined, { timeout: 120000, polling: 20 });
+  await demandFinal(page, { timeout: 900000, polling: 500, lines: 0 });
   const v0 = await page.evaluate((mul) => {
     const H = [4, 6, 4, 4, 6], tw = window.tw;
     const orig = tw.moneyState.value.fares.nodes.map((n) => [...n]);
@@ -56,16 +56,27 @@ try {
   const fv = await page.evaluate(() => window.twDemand.log.find((s) => s.svc?.fare?.nodes?.[0]?.[1] === window.__t.base).version);
   await page.waitForFunction((fv) => { const v = window.twDemand.view(); return v.final && v.version >= fv; }, fv, { timeout: 600000, polling: 50 });
   await page.waitForTimeout(3000);
-  const out = await page.evaluate((fv) => ({ s: window.__t.samples, riders: window.__t.riders(), cash: window.__t.cash(), g: window.tw.clock.now(), local: window.twDemand.log.find((s) => s.version === fv)?.localShown ?? 0 }), fv);
+  const out = await page.evaluate((fv) => {
+    const s = window.twDemand.log.find((x) => x.version === fv);
+    const steps = Array.from(s?.clusterRes?.values() ?? []).reduce((n, e) => n + (e.steps?.shown.length ?? 0), 0);
+    const days = window.twDemand.days();
+    let lines = 0;
+    for (const d of days) lines += d.view?.lines.size ?? 0;
+    return {
+      s: window.__t.samples, riders: window.__t.riders(), income: window.__t.income(), cash: window.__t.cash(),
+      g: window.tw.clock.now(), local: s?.localShown ?? 0, steps, pricedAfter: window.__t.view().priced, linesAfter: lines,
+    };
+  }, fv);
   const early = out.s.filter((x) => x.version < fv && x.priced > 0);
   const before = out.s.filter((x) => x.version < fv);
-  const peak = Math.max(...before.map((x) => x.income), v0.income);
+  const peak = Math.max(...out.s.map((x) => x.income), v0.income);
   const hours = (out.g - v0.g) / 3600, gained = out.cash - v0.cash, bound = 2 * v0.income * hours + 5e6;
-  console.log(`before: income ${v0.income.toExponential(3)}/game hour, riders ${Math.round(v0.riders)}, fare solve v${fv}; ${before.length} samples before its final over ${hours.toFixed(1)} game hours; peak ${peak.toExponential(3)}; cash gained ${gained.toExponential(3)}; riders after ${out.riders.toExponential(2)}`);
-  check('the fare solve showed a local result first', out.local >= 1, `localShown ${out.local}`);
+  console.log(`before: income ${v0.income.toExponential(3)}/game hour, riders ${Math.round(v0.riders)}, fare solve v${fv}; ${before.length} samples before its final over ${hours.toFixed(1)} game hours; peak ${peak.toExponential(3)}; cash gained ${gained.toExponential(3)}; riders after ${out.riders.toExponential(2)}; income after ${out.income.toExponential(2)}`);
+  check('the fare solve showed a pre-final step or local result', out.local + out.steps >= 1, `localShown ${out.local}, stepsShown ${out.steps}`);
   check('no line is priced at the new fares before its final', early.length === 0, early.length ? `${early.length} samples, first on v${early[0].version}, ${early[0].priced} lines` : '');
   check('income never passes 1.05 times what it was', peak <= v0.income * 1.05, `${(peak / v0.income).toFixed(3)}x`);
   check('the cash gained is no more than twice the old income', gained <= bound, `${gained.toExponential(2)} against ${bound.toExponential(2)}`);
+  check('figures settle to the full solve at the new fares', out.pricedAfter === out.linesAfter && out.linesAfter > 0 && out.riders < v0.riders * 0.01 && out.income < v0.income * 0.01, `priced ${out.pricedAfter}/${out.linesAfter}, riders ${out.riders.toExponential(2)}, income ${out.income.toExponential(2)}`);
 } catch (e) {
   console.log('FAILED', e.message);
   failed++;
