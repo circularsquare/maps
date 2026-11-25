@@ -791,8 +791,8 @@ pub struct Service {
 
 /// T-4281: where a rebuilt line's run lies anywhere new: from offset `lo` to `hi` (offsets of the run now); before
 /// `lo` its points are where they were, bit for bit; past `hi` they are the same track's, each moved along it by
-/// at most `drift` metres (the run's length changed by that much before them: a station splitting an edge moves the
-/// pieces' lengths by a few mm). Several rebuilds since a take add up.
+/// at most `drift` metres (the run's length changed by about that much before them: a station splitting an edge moves
+/// the pieces' lengths by a few mm). Several rebuilds since a take add up.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Span {
     pub lo: f64,
@@ -817,17 +817,20 @@ fn span_of(x: &Run, segs: &[u32], off: &[f64], len: f64, touched: &[u32]) -> Opt
     if !shift.is_finite() {
         return None;
     }
-    let mut j = 0;
+    // (the most an entry past the change moved along the run: the length change, give or take `SPAN_EPS_M`)
+    let (mut j, mut drift) = (0, shift.abs());
     while j < n0 - i && j < n1 - i {
         let (a, b) = (n0 - 1 - j, n1 - 1 - j);
-        if segs[a] != x.segs[b] || !same_edge(x.segs[b]) || ((x.seg_off[b] - off[a]) - shift).abs() > SPAN_EPS_M {
+        let moved = x.seg_off[b] - off[a];
+        if segs[a] != x.segs[b] || !same_edge(x.segs[b]) || (moved - shift).abs() > SPAN_EPS_M {
             break;
         }
+        drift = drift.max(moved.abs());
         j += 1;
     }
     let lo = if i < n1 { x.seg_off[i] } else { x.len };
     let hi = if j > 0 { x.seg_off[n1 - j] } else { x.len };
-    (i > 0 || j > 0).then_some(Span { lo, hi: hi.max(lo), drift: shift.abs() })
+    (i > 0 || j > 0).then_some(Span { lo, hi: hi.max(lo), drift })
 }
 
 /// One run of the stops and path its trains run (`line`: the whole plan, or the part of it a
@@ -2320,5 +2323,23 @@ impl LineSvc {
             return vec![];
         }
         self.stop_to_stop(r, lev)
+    }
+}
+
+#[cfg(test)]
+mod span_tests {
+    use super::*;
+
+    /// T-4285: an entry past a station's split that moved by less than `SPAN_EPS_M` while the run's length came out the
+    /// same bit for bit is counted in the span's drift, so the clock worker's kept samples are checked within it
+    #[test]
+    fn drift_covers_every_kept_entry() {
+        let was_segs = [2, 4, 6];
+        let was_off = [0.0, 10.0, 20.0];
+        let moved = 1e-7;
+        let x = Run { segs: vec![2, 8, 10, 6], seg_off: vec![0.0, 10.0, 15.0, 20.0 + moved], len: 30.0, ..Default::default() };
+        let s = span_of(&x, &was_segs, &was_off, 30.0, &[2, 4, 5]).expect("a span");
+        assert_eq!((s.lo, s.hi), (10.0, 20.0 + moved));
+        assert!(s.drift >= (20.0 + moved) - 20.0, "drift {}", s.drift);
     }
 }

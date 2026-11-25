@@ -679,7 +679,7 @@ export function carryLod(rnd: NetworkRenderer, old: StrokeVao, now: StrokeVao, s
     const b = p.strokes, f = p.first, m = b.count, runsB = madeAgain(b, p.runs);
     const wm = lines ? bandWmul(rnd, f) : null, fu = bandFull(rnd, b, f, 0, m, lines ? rnd.linesFull : null);
     const list: { del: () => void }[] = [];
-    const vao = strokes(rnd, b, list, { old: band.vao, runs: runsB }, { wmul: wm, full: fu, fullKept: true, room: true });
+    const vao = strokes(rnd, b, list, { old: band.vao, runs: runsB }, { wmul: wm, full: fu, fullKept: true, room: BAND_ROOM });
     let res = band.res;
     if (vao !== band.vao) { for (const r of band.res) r.del(); res = list; }
     let upTo = m;
@@ -707,8 +707,9 @@ export function carryLod(rnd: NetworkRenderer, old: StrokeVao, now: StrokeVao, s
       if (!sameBits(w.first, nb.first)) off.push("first" as never);
       if (off.length) console.error(`T-4274 check: the simplified copy for zoom ${bz} carried through the edit differs from a whole one in ${off.join(", ")}`);
       checkStrokes(rnd, `zoom ${bz} copy`, nb.vao, nb.strokes);
-      // (a copy's widths and marks are its network's once current: else they are written whole before it is drawn)
-      if (!lines || nb.v === -2) checkFull(rnd, nb.vao, nb.strokes, nb.fu ?? bandFull(rnd, nb.strokes, nb.first, 0, nb.first.length, null), lines ? nb.wm ?? plainWmul(nb.strokes.count) : undefined);
+      // (a lines copy's widths and marks are checked once the network's are set, `setNetwork`: kept from before, they are
+      // its network's only once current, else written whole before it is drawn)
+      if (!lines) checkFull(rnd, nb.vao, nb.strokes, nb.fu ?? bandFull(rnd, nb.strokes, nb.first, 0, nb.first.length, null));
     }
   }
   return carried;

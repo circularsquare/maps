@@ -759,6 +759,8 @@ export class NetworkRenderer {
     // a copy carried with the marks and plain widths it had, which were written, holds this network's
     for (const b of carried) if (b.v === -2) b.v = full.kept && !this.linesWmul && !wmulWas ? this.perSegV : -1;
     if (patch && this.checkPatch) {
+      // (T-4274: a lines copy carried with its widths and marks current; the others are written whole before drawn)
+      for (const b of carried) if (b.fu && b.v === this.perSegV) checkFull(this, b.vao, b.strokes, b.fu, b.wm ?? plainWmul(b.strokes.count));
       checkStrokes(this, "track", this.track, n.track);
       checkStrokes(this, "lines", this.lines, n.lines);
       checkFull(this, this.track, n.track);
@@ -791,8 +793,9 @@ export class NetworkRenderer {
     const names = patch && was && touched && !touched.all ? trainNames(was, n, touched, patch, bendsWere, this.bendSlots!) : null;
     this.trainNamed = names ? { paths: touched!.paths.length, phases: touched!.phases.length, stretches: patch!.stretches.length, lanes: patch!.lanes.length } : null;
     for (const name of ["samples", "bendAt", "bends", "phases", "stretch"] as const) this.putTrain(name, n, names?.[name]);
-    const sw = this.slotTex.samples!.wrote, tw = this.slotTex.stretch!.wrote;
-    this.trainsWrote = sw === "all" || tw === "all" ? "all" : new Set([...sw, ...tw]);
+    const sw = this.slotTex.samples!.wrote, tw = this.slotTex.stretch!.wrote, stale = this.fillStale ? this.trainsWrote : null;
+    // (two networks before a frame, as two staged states due at once: the lines either wrote)
+    this.trainsWrote = sw === "all" || tw === "all" || stale === "all" ? "all" : new Set([...(stale ?? []), ...sw, ...tw]);
     put("lines", null, () => [slottedLineTable(n.lineTable.length ? n.lineTable : new Float32Array(4), base, this.sampleSlots!), "rgba32f", LINES_W]);
     if (!(this.phaseSlots === phasesWere && same.has("meta") && this.tex.meta)) this.putTexture("meta", slottedMeta(n.meta.length ? n.meta : new Float32Array(4), this.phaseSlots!), "rgba32f", TEX_W);
     // the Traffic view's bands were the last network's
@@ -990,7 +993,7 @@ export class NetworkRenderer {
   bendSlots: SlotLayout | null = null;
   phaseSlots: SlotLayout | null = null;
   slotTex: Partial<Record<SlotName, SlotTex>> = {};
-  /** the keys the last network's samples and stretches were written for, or "all" (`freshFill`) */
+  /** the keys the networks' samples and stretches were written for since the fill was last put or blanked, or "all" (`freshFill`) */
   trainsWrote: Set<number> | "all" = "all";
   /** T-4274: bytes sent to each network texture since the page opened (`gpuBytes.up`, by texture) */
   texSent: Record<string, number> = {};
