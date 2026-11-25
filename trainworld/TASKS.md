@@ -178,6 +178,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
+- T-4311 [P1] {L:edit-speed} Fix the review's findings on track runs sent at their clicks (taking, 2026-11-25, agent fixes22)
+  - Context: T-4214 stages D-E (11-25) send a run's next segment at its click, from the end of the one before. Review22 (artifacts/trainworld/gemini/batch22/review.md) found four holes: a wait that never ends, touch taps that skip it, undo mid-run starting from a gone end, Backspace on a refused segment ending the run.
+  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
+  - Other: notes/T-4311.md
 - T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
   - Context: You, 11-23: "this is the entire issue". Stage 7 (tree netcut): cut lines' samples and band samples kept by entry. Your Asia save, Node, a station on a three-line trunk: network build about 255 to 190 ms (first click 350 to 280), lines block 140 to 80. Left: cut lines' runs and steps, corridors, train speeds, whole-save passes.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
@@ -433,7 +437,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On the Tokyo real-network start on an emulated iPhone the solving worker's WASM is now 261 MB (330 before stage 6, figures identical). Left: the page (about 200), the clock worker (170) and the worker's held results (142). You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones."
   - Goal: The next biggest of those cut, rail trips unchanged, measured on a production build on an emulated iPhone.
   - Other: notes/T-3160.md, stage 6.
-- T-4187 [P2] {L:memory} {after:T-4153 stage 2 lands} The clock worker's drawing cache on big player networks
+- T-4187 [P2] {L:memory} {after:T-4153 stage 2 lands} The clock worker's drawing cache on big player networks (taking, 2026-11-25, agent drawmem)
   - Context: From T-4184: on a Community Tokyo save (t9gksxmu, 375 MB clock worker on a phone) the extra is the drawing state for the player's track: draw cache 46 MB, line bands' memo and orders 25, posted 14. The cuts (about 20-25 MB, exact) touch code editnetwork changes.
   - Goal: Those cuts made with figures identical, measured on t9gksxmu on an emulated iPhone.
   - Other: notes/T-4184.md
@@ -935,10 +939,6 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Design approved 11-24: 9 stages. Stages 1-7 done 11-25: an edit during a whole re-solve gets a quick side calculation for its cities, shown until the whole result replaces it (NYC: an edited line's figures in 17 s instead of 53). Left: stage 8, "Use more cores" on; stage 9, measuring on your Asia save.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
-- T-4307 [P1] {L:solve-speed} Fix the review's findings on quick figures during a re-solve (taking, 2026-11-25, agent fixes20)
-  - Context: A code review of T-4220 stages 6-7 (the quick side calculation for edits made during a whole re-solve) raised possible faults: an old edit's figures left on screen, the zone-in-view refine blocked, side figures read as final. Review: artifacts/trainworld/gemini/batch20/review.md.
-  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
-  - Other: notes/T-4307.md
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
   - Context: A train can lose minutes behind slower ones, but it shows only in the line panel, never on the map or trouble list. You 2026-11-16: this goes in the detailed crowding panel when it is built.
   - Goal: The loss shows in the detailed crowding panel.

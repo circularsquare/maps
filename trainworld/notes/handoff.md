@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 12:34 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 12:48 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -15,9 +15,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    T-4299 + those lows) running; T-4300 next); T-4214 done (D-E landed 4a2ab2d37, review22: 2 medium; fixes22, Opus, T-4311, on it); T-4294 done (a bench
    fault). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
    Not edit speed: T-4080 bus stop names done and archived (081dcb203); connections are T-4083.
-2. T-4220 stages 6-7 landed together 4ffd70e86 (NYC edited line's figures 17 s instead of 53); review20 found 6 (stale quick
-   figures over a newer network, no early figures when refused, side figures read as final); fixes20 (Opus, T-4307). Until it lands:
-   no publish from master and 8800 stays on 6c1cfb8ac (before T-4220 s6-7). Left: stage 8 (Use more cores on), 9.
+2. T-4220 stages 6-7 landed together 4ffd70e86 (NYC edited line's figures 17 s instead of 53); review20 fixed (T-4307,
+   landed). Until fixes22 lands: no publish from master; 8800 stays on 6c1cfb8ac. Left: stage 8 (Use more cores on), 9.
    rowsdelta (Opus, T-4291). Briefs: my scratch <agent>/brief.md.
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1-2, T-4283, T-4220 s4-5, T-4285,
    T-4153 s7, T-4080 s3 + review fixes, T-4293, T-4284 s3, T-4297. 8800 = 6c1cfb8ac, smoke passed 11:3x.
