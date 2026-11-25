@@ -64,7 +64,7 @@ fn gaps(w: &TrackWorld, l: usize, from_h: f64, to_h: f64) -> Vec<f64> {
 
 /// A corridor with a headway line (rush or morning every 5 minutes, evening 10, night 20) and a
 /// count line on part of it, far from full, in a game of `rows` rows.
-fn corridor(rows: u8) -> (TrackWorld, usize, usize) {
+pub(super) fn corridor(rows: u8) -> (TrackWorld, usize, usize) {
     let (mut w, ns) = super::tests::corridor(6);
     super::tests::terminals_at_dead_ends(&mut w);
     let h = super::tests::new_line(&mut w, &ns, [8, 4, 2]);

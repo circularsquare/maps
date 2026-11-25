@@ -3,7 +3,7 @@
 import { toMerc01 } from "../map/geo";
 import type { ClockState, EditOp, ToClock } from "./protocol";
 import { forget, game, localOf, sendRows, sendState, shiftFrom, stateSteps } from "./clockMain";
-import { isPanic, MODEL_RESTORED, recover } from "./clockPanic";
+import { isPanic, MODEL_RESTORED, modelDown, recover } from "./clockPanic";
 import { diagramOn, postDiagram, posted } from "./clockPost";
 import { api, messages, packLngLat, putMessages, putTiming, send, timing } from "./clockState";
 import { loadsOwed, scheduleSnapshot } from "./clockDemand";
@@ -234,9 +234,17 @@ let keptMsgs: Kept[] = [];
 let onStateWent: ((msgs: Kept[]) => void) | null = null;
 export function keepUntilState(m: ToClock) { keptMsgs.push({ m, game }); }
 /** T-4281: work that needs a waiting follow-up's state before it (trips are drawn on the runs of the state before them),
- * done once none waits instead of running that state whole; dropped if another game opened meanwhile */
+ * done once none waits instead of running that state whole; dropped if another game opened meanwhile or the model is
+ * down, and a panic in it recovered, as a message's (T-4297) */
 let afterState: (() => void)[] = [];
 export function whenNoneWaits(fn: () => void) { afterState.push(fn); }
+async function guardedAfter(fn: () => void, g: number) {
+  if (g !== game || modelDown) return;
+  try { fn(); } catch (err) {
+    if (isPanic(err)) await recover(err, "trips after an edit's state", MODEL_RESTORED, performance.now()); // i18n-ignore
+    else send({ kind: "error", message: String(err) });
+  }
+}
 /** `cb` takes the kept messages once no follow-up waits (into the message queue, in order, each dropped there if its
  * game is gone) */
 export function whenStateWent(cb: (msgs: Kept[]) => void) { onStateWent = cb; }
@@ -246,7 +254,7 @@ function stateWent() {
     const fs = afterState, g = game;
     afterState = [];
     // (each in the message queue, as the kept messages after them, so an edit queued meanwhile still goes first)
-    for (const fn of fs) putMessages(messages.then(() => { if (g === game) fn(); }).catch((err) => send({ kind: "error", message: String(err) })));
+    for (const fn of fs) putMessages(messages.then(() => guardedAfter(fn, g)).catch((err) => send({ kind: "error", message: String(err) })));
   }
   if (!keptMsgs.length) return;
   const msgs = keptMsgs;

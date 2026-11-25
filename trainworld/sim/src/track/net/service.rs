@@ -185,9 +185,15 @@ impl Network {
     /// T-3542: what a settle keeps a line by in slot `s` (`settle_kept`): its trains there, or where
     /// its hours mix places a hash of their counts, so another count there is another state.
     pub fn trains_key(&self, l: usize, s: usize) -> u32 {
-        match (self.mixed(l, s), self.trains_of(l)) {
-            (Some(w), Some(t)) => (0..5).filter(|&k| w[k] > 0.0).fold(0x811c9dc5u32, |h, k| (h ^ t[k] ^ (k as u32) << 28).wrapping_mul(0x01000193)),
-            _ => self.trains_at(l, s),
+        self.trains_of(l).map_or(0, |t| self.mix_key(l, s, t))
+    }
+    /// T-3542, T-4297: a value of line `l`'s five places `p` (trains, headways) as slot `s` runs them: its
+    /// place's, or where its hours mix places there a hash of every one's, so another value at any of them is
+    /// another key (`running_trains` reads each).
+    pub fn mix_key(&self, l: usize, s: usize, p: [u32; 5]) -> u32 {
+        match self.mixed(l, s) {
+            Some(w) => (0..5).filter(|&k| w[k] > 0.0).fold(0x811c9dc5u32, |h, k| (h ^ p[k] ^ (k as u32) << 28).wrapping_mul(0x01000193)),
+            None => p[self.place(l, s)],
         }
     }
     /// T-4239: `trains_key` as `settle_kept` holds it: where line `l`'s hours mix places in slot

@@ -288,15 +288,16 @@ struct Ahead {
 }
 
 /// T-3655: a line's fleet at a level: its headway, or a count line's trains (a headway line's trains follow from its
-/// headway, and an edit setting it sends them anew).
+/// headway, and an edit setting it sends them anew); T-4297: in a slot its hours share between places, every one's
+/// (`mix_key`), as `trains_key` reads every one's trains.
 fn fleet_key(net: &Network, l: usize, s: usize) -> (u32, Option<u32>) {
-    match net.auto_at(l, s) { Some(a) => (u32::MAX, Some(a)), None => (net.trains_key(l, s), None) }
+    match net.auto_of(l) { Some(a) => (u32::MAX, Some(net.mix_key(l, s, a))), None => (net.trains_key(l, s), None) }
 }
 
-/// T-4283: line `l`'s weekend headways per slot, as `swap_in_weekend` puts them in `line_auto`.
+/// T-4283: line `l`'s weekend headways per slot, as `swap_in_weekend` puts them in `line_auto` and `fleet_key` reads them.
 fn rest_auto(net: &Network, l: usize) -> [Option<u32>; SLOTS] {
     let a = net.weekend_auto(l);
-    std::array::from_fn(|s| a.map(|a| a[net.place(l, s)]))
+    std::array::from_fn(|s| a.map(|a| net.mix_key(l, s, a)))
 }
 
 impl Ahead {
@@ -2337,7 +2338,7 @@ impl TrackWorld {
         {
             let net = &self.net;
             let gone: Vec<(u32, usize)> = net.settle_kept.iter()
-                .filter(|e| net.line_ok(e.0) && a.keys.get(e.0 as usize).copied().flatten().is_some_and(|k| k[e.1].1 != net.auto_at(e.0 as usize, e.1)))
+                .filter(|e| net.line_ok(e.0) && a.keys.get(e.0 as usize).copied().flatten().is_some_and(|k| k[e.1].1 != fleet_key(net, e.0 as usize, e.1).1))
                 .map(|e| (e.0, e.1))
                 .collect();
             let gone_rest: Vec<(u32, usize)> = net.settle_kept_rest.iter()
@@ -3194,6 +3195,59 @@ mod circle_tests {
         assert!(!w.net.settle_kept_rest.iter().any(|e| e.0 == local && e.1 == HIGH), "weekend kept entry dropped");
         assert!((w.net.line_tph_rest[l][HIGH] - 3600.0 / 640.0).abs() < 1e-3, "{} tph", w.net.line_tph_rest[l][HIGH]);
         assert_eq!(w.net.line_tph[l][HIGH], 6.0);
+    }
+
+    /// T-4297: a row with no slot of its own (midday 12-14, inside the 10-16 period, whose main row is the morning) given
+    /// another headway with the same trains: what a settle kept that slot by no longer holds, weekdays and weekends, and the
+    /// line runs that slot as a settle without the hold has it.
+    #[test]
+    fn t4297_a_shared_slots_other_row_given_another_headway_drops_its_hold() {
+        let world = || {
+            let (mut w, l, _) = crate::track::hours_tests::corridor(5);
+            w.apply(Op::Hours { line: None, cuts: [6, 12, 14, 20, 24] }).unwrap();
+            let m = w.net.mix(l).unwrap();
+            assert!(m.mixed[1] && m.main[1] == 0 && m.w[1][3] > 0.0, "the midday row runs inside slot 1 only, the morning its main row");
+            (w, l)
+        };
+        // the midday row's headway (place 3) on weekdays, or on weekends with the weekday trains
+        let midday = |w: &mut TrackWorld, l: usize, h: u32, weekend: bool| {
+            let d = w.net.line_data(l as u32).unwrap();
+            let op = if weekend {
+                Op::Batch(vec![Op::Weekend { id: l as u32, weekend: Weekend { share: 100, counts: d.trains, headways: d.auto.unwrap() } }, Op::Extra { id: l as u32, x: Extra { weekend_counts: d.x.trains, weekend_headways: [h, d.x.auto[1]], ..d.x } }])
+            } else {
+                Op::Extra { id: l as u32, x: Extra { auto: [h, d.x.auto[1]], ..d.x } }
+            };
+            w.apply(op).unwrap();
+        };
+        // weekdays: the edit keeps the trains, which a headway line's settle then sizes to the new headway
+        let (mut fresh, l) = world();
+        midday(&mut fresh, l, 330, false);
+        let (mut w, _) = world();
+        let (tph, trip) = (w.net.line_tph[l][1], w.svc.lines[l].round_trip[1]);
+        w.net.settle_kept.push((l as u32, 1, tph.to_bits(), trip.to_bits(), w.net.kept_key(l, 1)));
+        midday(&mut w, l, 330, false);
+        eprintln!("weekdays: slot 1 {tph} tph, then {} (without the hold {})", w.net.line_tph[l][1], fresh.net.line_tph[l][1]);
+        assert!(!w.net.settle_kept.iter().any(|e| e.0 == l as u32 && e.1 == 1), "the weekday hold went");
+        assert_ne!(fresh.net.line_tph[l][1], tph, "the midday's headway moves slot 1");
+        assert_eq!(w.net.line_tph[l][1].to_bits(), fresh.net.line_tph[l][1].to_bits());
+        assert_eq!(w.net.trains_of(l), fresh.net.trains_of(l));
+        // weekends: a weekend of their own first, then its midday headway again
+        let (mut fresh, _) = world();
+        midday(&mut fresh, l, 600, true);
+        midday(&mut fresh, l, 900, true);
+        let (mut w, _) = world();
+        midday(&mut w, l, 600, true);
+        let (tph, trip) = (w.net.line_tph_rest[l][1], w.svc_rest.as_ref().unwrap().lines[l].round_trip[1]);
+        // (the key as the weekend settle reads it: its rates in `line_tph`, its trains the weekdays')
+        std::mem::swap(&mut w.net.line_tph, &mut w.net.line_tph_rest);
+        let key = w.net.kept_key(l, 1);
+        std::mem::swap(&mut w.net.line_tph, &mut w.net.line_tph_rest);
+        w.net.settle_kept_rest.push((l as u32, 1, tph.to_bits(), trip.to_bits(), key));
+        midday(&mut w, l, 900, true);
+        eprintln!("weekends: slot 1 {tph} tph, then {} (without the hold {})", w.net.line_tph_rest[l][1], fresh.net.line_tph_rest[l][1]);
+        assert!(!w.net.settle_kept_rest.iter().any(|e| e.0 == l as u32 && e.1 == 1), "the weekend hold went");
+        assert_ne!(fresh.net.line_tph_rest[l][1], tph, "the weekend midday's headway moves slot 1");
+        assert_eq!(w.net.line_tph_rest[l][1].to_bits(), fresh.net.line_tph_rest[l][1].to_bits());
     }
 }
 
