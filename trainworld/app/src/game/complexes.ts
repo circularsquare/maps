@@ -87,6 +87,8 @@ export function polylineGap(ax: number, ay: number, a: ArrayLike<number>, bx: nu
 }
 
 export interface Complexes {
+  /** Both maps of a `ComplexBuilder`'s handle are the builder's own, changed in place by its later patches: an old handle
+   * reads the newest answers, so compare handles by identity or use `complexChanges`, never read old values from one. */
   /** station id -> its complex's number: the node number of its first station */
   of: ReadonlyMap<StationId, number>;
   /** per complex number, its stations' ids in node order (never changed once handed out) */

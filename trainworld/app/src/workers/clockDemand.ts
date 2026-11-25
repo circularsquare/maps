@@ -727,7 +727,8 @@ export function complexOfNodes(): Uint32Array {
   const a = api!, c = complexInputs(a);
   // T-4299: between an edit and its state the stations it touched are read from the model in their place (review21);
   // after a read that left regions for the next one (a rows state's focus: review25) every station is
-  const t = a.peek_touched(), whole = stateRows.behind || t[0] === 0xffffffff;
+  // (?patch=0 has no builder to patch: every station, as complexesOf builds them)
+  const t = a.peek_touched(), whole = stateRows.behind || t[0] === 0xffffffff || patchMode === "0";
   let cx: Complexes;
   if (whole) {
     const ni = a.nodes_info(), geo: StationGeo[] = [];
