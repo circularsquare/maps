@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c006",
+      "text": "fixed \"Loading data\" showing a full bar for minutes while trips were calculated",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4359",
+      "by": "loadstuck",
+      "at": "2026-11-25T21:35:29Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
       "id": "c005",
       "text": "placing a station or deleting track on a line with trains running shows up faster",
       "edited": null,

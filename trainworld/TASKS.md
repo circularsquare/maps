@@ -238,13 +238,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4348: a 44-year save is 1.6 MB, 1.46 MB of it the regions' day ledgers, so each autosave takes 60-100 ms more than a new game's; a click landing on it waits. At most about 5% of an edit's wait.
   - Goal: Autosave waits for a quiet moment or gzips off the clock worker (about 1-2 h); smaller ledgers later.
   - Other: notes/T-4348.md
-- T-4359 [P1] {L:loading} A load stuck on loading data with the bar full (taking, 2026-11-25, agent loadstuck)
-  - Context: You, 11-25: "my current save is stuck on loading data and the bar is 100% full visually... stuck trying to load foshan for a couple minutes now"; a reload loaded fine, and most cities load fine. Your diagnostics: artifacts/trainworld/diag/anita-1125-foshan-stuck.json.
-  - Goal: The cause found from the diagnostics and code, and fixed so a load never sits on a full bar.
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
+- T-4361 [P3] {L:loading} Time left on a whole re-solve runs out too early
+  - Context: From T-4359: a whole solve's first units set the rate, and the gaps between units (set-ups, the market between rounds) are in no unit, so the time left reads 259 ms where 1.85 s is taken. T-4359 holds the bar meanwhile.
+  - Goal: Time left within about 30% of the real wait, with the gaps timed (the worker could send its mean gap).
+  - Other: notes/T-4359.md
+- T-4362 [P3] {L:loading} A load keeps every zone looked at open
+  - Context: From T-4359: a load adds each zone viewed while it runs and keeps it open until the load ends (Lantian 208 s in your session); a game load's card still does. At a save's load the default zone (New York) kept a "Loading city data" bar for 7 s after the view left it.
+  - Goal: A zone viewed during a load opens and closes on its own.
+  - Other: notes/T-4359.md
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.

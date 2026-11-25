@@ -14,9 +14,10 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 3. Edit bench baseline on master 65f0134b (11-25 20:31 UTC, quiet): Asia station built 341 ms, click run later 100;
    NYC station 76. T-4149 closed (d441fb19f; rows 11-53 ms on Asia; leftovers T-4360). Running (Opus): netcut9
    (tree netcut9, 6149, T-4153 s9: cut lines' bands near the cut); today3 (tree today3, 6151, T-4281 s3: `today`
-   while the clock runs, then the page's later-click hold); loadstuck (tree loadstuck, 6150, T-4359: her load stuck
-   on a full bar at Foshan; her diag in artifacts/trainworld/diag/). Batch review of d441fb19f + netcut9 + today3
-   before the next publish (Claude reviewer). Then T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
+   while the clock runs, then the page's later-click hold). T-4359 landed (914f564e6: her "stuck" load was a mid-game
+   load of Haeju waiting 4.7 min on an edit's re-solve, bar full; T-4361, T-4362 filed). Batch review of d441fb19f,
+   914f564e6, netcut9, today3 before the next publish (Claude reviewer); 8800 rebuild after netcut9 and today3 land.
+   Then T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 5. Standby: maps-3a is the next cycle's (notes/standby.txt); none left: ask her relay session for one. Gemini's quota
    is out until about 11-30: Claude reviewers meanwhile.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
