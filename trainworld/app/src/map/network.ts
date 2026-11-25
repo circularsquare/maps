@@ -16,6 +16,7 @@ import { anchor, kAtY, toLocal, type Anchor } from "./geo";
 import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_RAMPEND, M_REPEAT, MARK_STRIDE, rampMarks } from "./markData";
 import { repeatedEdge } from "../game/repeatTrack";
 import { newFacilityCache, placeFacilities, type FacilityCache } from "./facilityPlace";
+import { fault } from "./selfTest";
 import { buildingsDrawn, newEdgeBoxes, type BuildingDraw, type EdgeBoxes } from "./buildingNet";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, bandWork, KNOT, lineBands, newBandState, profileInto, shiftKept, type BandProfile, type BandState } from "./lineBands";
 export { bandWork };
@@ -639,10 +640,11 @@ function lineChanges(was: readonly LineRow[], now: readonly LineRow[]): [LineRow
 }
 /** T-4153: the node ids whose rows differ from `was`'s, came or went (null with no `was`), and each id's index in `now`
  * (`wasIdx`: in `was`) */
-function nodeChanges(was: readonly NodeRow[] | undefined, wasIdx: Int32Array | undefined, now: readonly NodeRow[], slots: Map<number, number>): { changed: Set<number> | null; idx: Int32Array } {
+function nodeChanges(was: readonly NodeRow[] | undefined, wasIdx: Int32Array | undefined, now: readonly NodeRow[], oldSlots: Map<number, number>): { changed: Set<number> | null; idx: Int32Array; slots: Map<number, number> } {
+  let slots = oldSlots;
   const out = new Set<number>();
   if (was && wasIdx) {
-    if (was === now) return { changed: out, idx: wasIdx };
+    if (was === now) return { changed: out, idx: wasIdx, slots };
     if (was.length === now.length) {
       let i = 0;
       for (; i < now.length; i++) {
@@ -651,11 +653,14 @@ function nodeChanges(was: readonly NodeRow[] | undefined, wasIdx: Int32Array | u
         if (w.id !== n.id) break;
         out.add(n.id);
       }
-      if (i === now.length) return { changed: out, idx: wasIdx };
+      if (i === now.length) return { changed: out, idx: wasIdx, slots };
       out.clear();
     }
   }
-  // (node ids can be far apart: each has a slot of its own, `slots`, kept with the cache, and `idx` is by slot)
+  // (node ids can be far apart: each has a slot of its own, `slots`, kept with the cache, and `idx` is by slot; slots of
+  // nodes long gone are dropped by numbering the live ones again, `wasIdx` then read through the old numbers)
+  const compact = !!wasIdx && slots.size > 2 * now.length + 64;
+  if (compact) slots = new Map();
   const slotOf = (id: number) => {
     let k = slots.get(id);
     if (k === undefined) slots.set(id, (k = slots.size));
@@ -666,14 +671,14 @@ function nodeChanges(was: readonly NodeRow[] | undefined, wasIdx: Int32Array | u
   const idx = new Int32Array(slots.size).fill(-1);
   let matched = 0;
   for (let i = 0; i < now.length; i++) {
-    const n = now[i], s = ks[i], j = wasIdx && s < wasIdx.length ? wasIdx[s] : -1, w = j >= 0 ? was![j] : undefined;
+    const n = now[i], s = ks[i], ws = compact ? oldSlots.get(n.id) : s, j = wasIdx && ws !== undefined && ws < wasIdx.length ? wasIdx[ws] : -1, w = j >= 0 ? was![j] : undefined;
     idx[s] = i;
     if (w) matched++;
     if (w !== n) out.add(n.id);
   }
-  if (!was || !wasIdx) return { changed: null, idx };
-  if (matched < was.length) for (const w of was) if (idx[slots.get(w.id)!] < 0) out.add(w.id);
-  return { changed: out, idx };
+  if (!was || !wasIdx) return { changed: null, idx, slots };
+  if (matched < was.length) for (const w of was) { const k = slots.get(w.id); if (k === undefined || idx[k] < 0) out.add(w.id); }
+  return { changed: out, idx, slots };
 }
 /** each line row's stops, once each, its return run's own too */
 const stopsOfRow = new WeakMap<object, number[]>();
@@ -1024,7 +1029,7 @@ function patchLegShifts(prev: Map<number, LegShift>, edges: readonly ClockEdge[]
     const i = indexOf(id), e = i >= 0 ? edges[i] : undefined;
     const sh = e && isLeg(e) ? legShift(e, i, edges, parts, endsAt) : null;
     if (sh) own().set(id, sh);
-    else if (out.has(id)) own().delete(id);
+    else if (out.has(id) && fault !== "legs") own().delete(id);
   }
   return out;
 }
@@ -2447,6 +2452,16 @@ export const netWork = { edges: 0, lines: 0, entries: 0, samples: 0, kept: 0, st
 let lapT = 0;
 const lap = (k: string) => { const t = performance.now(); netLaps[k] = (netLaps[k] ?? 0) + t - lapT; lapT = t; };
 export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): Generator<void, NetworkBuffers, void> {
+  try {
+    return yield* networkStepsFrom(s, cache, deferStrokes);
+  } catch (e) {
+    // (T-4153: a kept structure a patch left half made, as a broken invariant does, would throw again at every build)
+    console.warn("network build threw; the kept state is dropped and the next build is whole", e);
+    Object.assign(cache, newNetCache());
+    throw e;
+  }
+}
+function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean): Generator<void, NetworkBuffers, void> {
   for (const k in netLaps) delete netLaps[k];
   netWork.edges = netWork.lines = netWork.entries = netWork.samples = netWork.kept = netWork.stations = netWork.speeds = 0;
   lapT = performance.now();
@@ -2474,7 +2489,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   // T-3212: single track splits into two through a station; where it does, double track meets two
   // (T-4153: worked out again only for the stations whose walks read a node or edge that changed)
   const endsAtRows = (node: number) => nodeEnds.get(node)?.ids.map((id) => edgeEnds.get(id)!) ?? [];
-  const nodeAt = (id: number) => { const k = cache.nodeSlots.get(id); return k === undefined || k >= nodesNow.idx.length ? -1 : nodesNow.idx[k]; };
+  const nodeAt = (id: number) => { const k = nodesNow.slots.get(id); return k === undefined || k >= nodesNow.idx.length ? -1 : nodesNow.idx[k]; };
   let splitState: SplitState;
   if (edgesSame && nodesSame && kept0?.split) splitState = kept0.split;
   else if (kept0?.split && diff && nodeDiff) {
@@ -2482,7 +2497,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     const rowMoved = new Set<number>(diff.rows);
     for (const e of diff.removed) rowMoved.add(e.id);
     const nodeMoved = (n: number) => nodeDiff.has(n) || !!tch?.has(n), edgeMoved = (e: number) => rowMoved.has(e);
-    for (const [id, sp] of kept0.split.by) if (!redo.has(id) && (sp.nodes.some(nodeMoved) || sp.edges.some(edgeMoved))) redo.add(id);
+    if (fault !== "splits") for (const [id, sp] of kept0.split.by) if (!redo.has(id) && (sp.nodes.some(nodeMoved) || sp.edges.some(edgeMoved))) redo.add(id);
     splitState = patchSplits(kept0.split, redo, (id) => { const i = nodeAt(id); return i >= 0 ? s.nodes[i] : undefined; }, endsAtRows, nodeAt);
   } else splitState = splitsWhole(s.edges, s.nodes, { get: endsAtRows });
   const splits = splitState.res;
@@ -2990,7 +3005,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       changed.add(n);
     };
     if (kl.side !== side) for (const n of side.touched!) look(n);
-    for (const e of counted.edges) {
+    if (fault !== "lined") for (const e of counted.edges) {
       const x = edgeEnds.get(e);
       if (x) { look(x.a); look(x.b); }
     }
@@ -3125,7 +3140,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
     for (const id of rowsNew) endsOf(id);
     for (const e of diff.removed) d.add(e.a).add(e.b);
     for (const n of waysNew) d.add(n);
-    for (const n of linedNew) d.add(n);
+    if (fault !== "st-lined") for (const n of linedNew) d.add(n);
     if (!stationTrust) for (const n of counted.stops) d.add(n);
     if (splits !== kept0.splits) {
       for (const n of splits.stations) if (!kept0.splits.stations.has(n)) d.add(n);
@@ -3365,7 +3380,9 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   cache.side = side;
   side.input = { rows: s.edges, parts, speedParts, idx: diff?.idx ?? edgeIndex(s.edges) };
   cache.nodes = { rows: s.nodes, idx: nodesNow.idx, st, jn, stationIds };
-  cache.loop = loopSame ? kept0 : { side, splits, split: splitState, edgePts, splitEdge, trackOrder, ramps };
+  cache.nodeSlots = nodesNow.slots;
+  // (a patched split state is kept even when no piece changed: its read lists are of the walks as just made)
+  cache.loop = loopSame ? (splitState === kept0!.split ? kept0 : { ...kept0!, splits, split: splitState }) : { side, splits, split: splitState, edgePts, splitEdge, trackOrder, ramps };
   cache.counts = { rows: s.lines, counts: onEdge, served };
   cache.stArr = stArr;
   cache.ways = { side, counts: onEdge, ways: waysAt };

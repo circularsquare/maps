@@ -15,6 +15,10 @@
 //     change reaches, and the same station must fail the check
 //   --self-test=stations: a station's numbers are kept unless its own node's row changed, and a copy of the line sharing
 //     the most track (its stops then served by one more line) must fail the check
+//   --self-test=<pass> (a patched pass with one input left out, each with its own edits: splits, legs, lined, facilities,
+//     corridors, buildings, and st-lined, one input of the stations' dirty set; the check must fail. Not planted: the
+//     dirty set's other inputs (the edges' ends, the removed edges, the nodes whose ways were sorted again, the splits,
+//     the outside records), which cover one another or a station's own row, which carries its heading)
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
@@ -23,10 +27,12 @@ import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 globalThis.postMessage = (m, o) => { for (const b of o?.transfer ?? []) if (b instanceof ArrayBuffer && !b.detached && b.byteLength) b.transfer(); };
 globalThis.self ??= globalThis;
 globalThis.location ??= { search: '', hash: '', href: 'http://localhost/' };
-const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, spliceSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest, stationSelfTest } from '@app/src/map/network.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
+const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, spliceSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest, stationSelfTest } from '@app/src/map/network.ts'; export { setFault } from '@app/src/map/selfTest.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
 await app.initSim({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 
-const SELF = process.argv.includes('--self-test') ? 'orders' : process.argv.includes('--self-test=strokes') ? 'strokes' : process.argv.includes('--self-test=splice') ? 'splice' : process.argv.includes('--self-test=stations') ? 'stations' : '';
+const FAULTS = ['splits', 'legs', 'lined', 'facilities', 'corridors', 'buildings', 'st-lined'];
+const faultArg = process.argv.find((a) => a.startsWith('--self-test=') && FAULTS.includes(a.slice(12)))?.slice(12) ?? '';
+const SELF = faultArg ? 'fault' : process.argv.includes('--self-test') ? 'orders' : process.argv.includes('--self-test=strokes') ? 'strokes' : process.argv.includes('--self-test=splice') ? 'splice' : process.argv.includes('--self-test=stations') ? 'stations' : '';
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const SEEDS = Number(args[0] ?? 2), STEPS = Number(args[1] ?? 12), SAVE = args[2] ?? 'asia';
 const raw = gunzipSync(readFileSync(SAVE === 'asia' ? ARTIFACTS + 't3600-asianita-1852.save' : REAL_SAVE));
@@ -39,6 +45,7 @@ if (SELF === 'orders') app.bandSelfTest(true);
 if (SELF === 'strokes') app.netSelfTest(true);
 if (SELF === 'splice') app.spliceSelfTest(true);
 if (SELF === 'stations') app.stationSelfTest(true);
+if (SELF === 'fault' && !process.env.NOFAULT) app.setFault(faultArg);
 
 function rng(seed) {
   let s = seed >>> 0;
@@ -90,7 +97,24 @@ function ops(api, rnd) {
   };
   const free = (x, y) => [0, 0, x, y, 0];
   const near = (m) => { const n = pick(m.nodes), t = rnd() * 2 * Math.PI, d = 150 + rnd() * 2500; return [n.x + Math.cos(t) * d, n.y + Math.sin(t) * d]; };
-  return {
+  // a piece of track from within 20-120 units of (bx, by), 1.5 km out, and in two cases of five a station on it
+  const trackAt = (m, bx, by) => {
+    const t = rnd() * 2 * Math.PI, d = 20 + rnd() * 100, x = bx + Math.cos(t) * d, y = by + Math.sin(t) * d, u = rnd() * 2 * Math.PI;
+    if (api.add_route(new Float64Array([...free(x, y), ...free(x + Math.cos(u) * 1500, y + Math.sin(u) * 1500)]), new Float64Array(), rnd() < 0.3 ? 1 : 2, false) !== 0) return -1;
+    if (rnd() < 0.6) return 0;
+    const m2 = model(), at2 = new Map(m2.nodes.map((q) => [q.id, q]));
+    let best = null, bd = Infinity;
+    for (const e of m2.edges) {
+      const a = at2.get(e.a), b = at2.get(e.b);
+      if (!a || !b) continue;
+      const dd = Math.hypot((a.x + b.x) / 2 - x, (a.y + b.y) / 2 - y);
+      if (dd < bd) { bd = dd; best = { e, a, b }; }
+    }
+    return best ? api.add_station(2, best.e.id, (best.a.x + best.b.x) / 2, (best.a.y + best.b.y) / 2, 160, 'Elm') : -1;
+  };
+  const self = {};
+  const around = (m) => self.__around(m);
+  return Object.assign(self, {
     routeFree: (m) => { const [x, y] = near(m), [x2, y2] = near(m); return api.add_route(new Float64Array([...free(x, y), ...free(x2, y2)]), new Float64Array(), rnd() < 0.3 ? 1 : 2, false); },
     routeFromNode: (m) => { const n = pick(m.nodes); return api.add_route(new Float64Array([1, n.id, 0, 0, 0, ...free(n.x + (rnd() - 0.5) * 3000, n.y + (rnd() - 0.5) * 3000)]), new Float64Array(), 2, false); },
     stationAtNode: (m) => { const c = m.nodes.filter((n) => n.ports === 2 && !n.platform); return c.length ? api.add_station(1, pick(c).id, 0, 0, pick([120, 200, 300]), 'Alder') : -1; },
@@ -108,7 +132,61 @@ function ops(api, rnd) {
     breakLine: (m) => { const l = pick(m.rail); if (!l) return -1; const p = api.line_path(l.id); return p.length ? api.delete_edge(p[Math.floor(rnd() * p.length)] >> 1) : -1; },
     moveNode: (m) => { const n = pick(m.nodes); return api.move_node(n.id, n.x + (rnd() - 0.5) * 120, n.y + (rnd() - 0.5) * 120); },
     link: (m) => { const a = pick(m.stations), b = m.stations.filter((s) => s !== a).sort((p, q) => Math.hypot(p.x - a.x, p.y - a.y) - Math.hypot(q.x - a.x, q.y - a.y))[0] ?? a; return rnd() < 0.7 ? api.link_stations(a.id, b.id) : api.unlink_stations(a.id, b.id); },
-    upgrade: (m) => api.set_station_upgrade(Uint32Array.from([pick(m.stations).id]), pick([1, 2, 4]), rnd() < 0.7),
+    upgrade: (m) => api.set_station_upgrade(Uint32Array.from([pick(m.stations).id]), pick([1, 2, 4, 8]), rnd() < 0.7),
+    // (T-4153 stage 8 review: a station building round a station, and track and stations within its reach)
+    building: (m) => {
+      for (let t = 0; t < 12; t++) {
+        const n = pick(m.stations), h = 40 + rnd() * 40;
+        if (api.add_building(new Float64Array([n.x - h, n.y - h, n.x + h, n.y - h, n.x + h, n.y + h, n.x - h, n.y + h]), '') === 0) return 0;
+      }
+      return -1;
+    },
+    byBuilding: (m) => {
+      const bi = api.buildings_info(), at = [];
+      for (let i = 0; i + 1 < bi.length; i += 2 + bi[i + 1] * 2) {
+        let x = 0, y = 0;
+        for (let k = 0; k < bi[i + 1]; k++) { x += bi[i + 2 + k * 2] / bi[i + 1]; y += bi[i + 3 + k * 2] / bi[i + 1]; }
+        at.push([x, y]);
+      }
+      return at.length ? trackAt(m, ...pick(at)) : -1;
+    },
+    // a node's id by its place (a route's end), after the route is drawn
+    nodeAt: (x, y) => model().nodes.filter((n) => Math.hypot(n.x - x, n.y - y) < 30).sort((p, q) => Math.hypot(p.x - x, p.y - y) - Math.hypot(q.x - x, q.y - y))[0],
+    // a line that runs through a station without stopping there, removed or copied (a station's ways and its line through it change, its stops do not)
+    passLine: (m) => {
+      const at = new Map(m.edges.map((e) => [e.id, e]));
+      for (let t = 0; t < 40; t++) {
+        const l = pick(m.rail);
+        if (!l) return -1;
+        const stops = new Set(api.line_stops(l.id)), nodes = new Set();
+        for (const p of api.line_path(l.id)) { const e = at.get(p >> 1); if (e) nodes.add(e.a).add(e.b); }
+        if (m.stations.some((n) => nodes.has(n.id) && !stops.has(n.id))) return rnd() < 0.7 ? api.remove_line(l.id) : api.copy_line(l.id, api.new_line_id(), 'Copy');
+      }
+      return -1;
+    },
+    // a piece of track starting within a hundred units of a station, and often a station on it
+    byStation: (m) => { const n = pick(m.stations); return n ? trackAt(m, n.x, n.y) : -1; },
+    // an edit on the track at a station or at the far end of its edge: a station on it, it cut, doubled, one-way or a node a station
+    aroundStation: (m) => around(m),
+    __around: (m) => {
+      const s = pick(m.stations);
+      if (!s) return -1;
+      const at = new Map(m.nodes.map((q) => [q.id, q]));
+      let node = s;
+      for (let hop = rnd() < 0.5 ? 0 : 1; hop >= 0; hop--) {
+        const es = m.edges.filter((e) => e.a === node.id || e.b === node.id);
+        if (!es.length) return -1;
+        const e = pick(es);
+        if (hop) { node = at.get(e.a === node.id ? e.b : e.a) ?? node; continue; }
+        const a = at.get(e.a), b = at.get(e.b), far = e.a === node.id ? b : a, what = pick(['station', 'station', 'delete', 'double', 'oneway', 'node']);
+        if (what === 'delete') return api.delete_edge(e.id);
+        if (what === 'double') return api.double_up(e.id);
+        if (what === 'oneway') return e.tracks === 1 ? api.set_edge_oneway(e.id, pick([0, 1, 2, 3])) : -1;
+        if (what === 'node') return far && far.ports === 2 && !far.platform ? api.add_station(1, far.id, 0, 0, pick([120, 200, 300]), 'Ash') : -1;
+        return a && b ? api.add_station(2, e.id, (a.x + b.x) / 2, (a.y + b.y) / 2, 160, 'Oak') : -1;
+      }
+      return -1;
+    },
     oneWay: (m) => { const es = m.edges.filter((e) => e.tracks === 1); return es.length ? api.set_edge_oneway(pick(es).id, pick([0, 1, 2, 3])) : -1; },
     // (the edit bench's: a piece of track off a node, then a station on it, which cuts it in two)
     trackStation: (m) => {
@@ -170,15 +248,103 @@ function ops(api, rnd) {
     undo: () => (api.can_undo() ? api.undo() : -1),
     redo: () => api.redo(),
     model,
-  };
+    near,
+  });
 }
-const weights = { nearChange: 3, shortShared: 2, trunkStation: 3, stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2, trackStation: 3, routeFromNode: 2, deleteEdge: 2, doubleUp: 2, moveNode: 2, construct: 2, oneWay: 2 };
+/** a planted fault's own edits: each makes its setup on the save and returns the steps (each then built and compared), or null */
+const F = (p) => [0, 0, p[0], p[1], 0], Nn = (id) => [1, id, 0, 0, 0];
+/** a straight run of `n` pieces of track `len` units long from (x, y) heading `h`, nodes joined in turn: {ids, at, h} */
+function lay(api, o, rnd, n, len, tracks, from, heading) {
+  const [x, y] = from ?? o.near(o.model()), h = heading ?? rnd() * 2 * Math.PI, at = (k) => [x + Math.cos(h) * len * k, y + Math.sin(h) * len * k];
+  if (api.add_route(new Float64Array([...F(at(0)), ...F(at(1))]), new Float64Array(), tracks, false) !== 0) return null;
+  for (let k = 2; k <= n; k++) {
+    const last = o.nodeAt(...at(k - 1));
+    if (!last || api.add_route(new Float64Array([...Nn(last.id), ...F(at(k))]), new Float64Array(), tracks, false) !== 0) return null;
+  }
+  const ids = Array.from({ length: n + 1 }, (_, k) => o.nodeAt(...at(k))?.id);
+  return ids.every((i) => i !== undefined) ? { ids, at, h } : null;
+}
+const SCENES = {
+  // a short station on a plain node of single track, then a branch from the plain node two nodes along its track (its walk
+  // reads it, its own row and edges do not change), and that undone
+  splits: (api, o, rnd) => {
+    const [x, y] = o.near(o.model()), h = rnd() * 2 * Math.PI, at = (k) => [x + Math.cos(h) * 45 * k, y + Math.sin(h) * 45 * k];
+    if (api.add_route(new Float64Array([...F(at(0)), ...F(at(1))]), new Float64Array(), 1, false) !== 0) return null;
+    for (let k = 1; k < 5; k++) {
+      const n = o.nodeAt(...at(k));
+      if (!n || api.add_route(new Float64Array([...Nn(n.id), ...F(at(k + 1))]), new Float64Array(), 1, false) !== 0) return null;
+    }
+    const mid = o.nodeAt(...at(3)), next = o.nodeAt(...at(1));
+    if (!mid || !next || api.add_station(1, mid.id, 0, 0, 80, 'Pine') !== 0) return null;
+    return [() => api.add_route(new Float64Array([...Nn(next.id), ...F([next.x + Math.cos(h + 1.2) * 300, next.y + Math.sin(h + 1.2) * 300])]), new Float64Array(), 1, false), () => api.undo(), () => api.undo()];
+  },
+  // a station on single track that a line runs through without stopping, the line removed (the station's line through it
+  // goes, its stops do not change), and that undone
+  'st-lined': (api, o, rnd) => {
+    const c = lay(api, o, rnd, 4, 500, 1);
+    if (!c) return null;
+    const [a, s, b] = [c.ids[1], c.ids[2], c.ids[3]], id = api.new_line_id();
+    for (const n of [a, s, b]) if (api.add_station(1, n, 0, 0, 120, 'Birch') !== 0) return null;
+    if (api.set_line_with_trains(id, Uint32Array.from([a, b]), 2, 2, 2, 30, 60, 8, 0xff0000, 'Pass') !== 0) return null;
+    return [() => api.remove_line(id), () => api.undo()];
+  },
+  // a station with a waiting room and a car park, then a track laid across the ground beside it, and that undone
+  facilities: (api, o, rnd) => {
+    const c = lay(api, o, rnd, 4, 500, 1);
+    if (!c) return null;
+    if (api.add_station(1, c.ids[2], 0, 0, 200, 'Birch') !== 0) return null;
+    for (const k of [4, 2]) if (api.set_station_upgrade(Uint32Array.from([c.ids[2]]), k, true) !== 0) return null;
+    const [sx, sy] = c.at(2), cross = (d) => () => api.add_route(new Float64Array([...F([sx + Math.cos(c.h) * d + Math.cos(c.h + 1.5708) * 200, sy + Math.sin(c.h) * d + Math.sin(c.h + 1.5708) * 200]), ...F([sx + Math.cos(c.h) * d - Math.cos(c.h + 1.5708) * 200, sy + Math.sin(c.h) * d - Math.sin(c.h + 1.5708) * 200])]), new Float64Array(), 1, false);
+    return [cross(0), cross(60), () => api.undo(), () => api.undo()];
+  },
+  // a line on a track, a second line laid on a track beside it (new pieces with lines), then the first's track moved a little,
+  // which the corridors' index must find the new pieces for, and that undone
+  corridors: (api, o, rnd) => {
+    const [x, y] = o.near(o.model()), h = rnd() * 2 * Math.PI;
+    const a = lay(api, o, rnd, 4, 500, 1, [x, y], h);
+    if (!a) return null;
+    for (const k of [1, 3]) if (api.add_station(1, a.ids[k], 0, 0, 120, 'Birch') !== 0) return null;
+    if (api.set_line_with_trains(api.new_line_id(), Uint32Array.from([a.ids[1], a.ids[3]]), 2, 2, 2, 30, 60, 8, 0xff0000, 'L') !== 0) return null;
+    const p = o.model().nodes.find((n) => n.id === a.ids[2]);
+    const beside = () => {
+      const b = lay(api, o, rnd, 4, 500, 1, [x + Math.cos(h + 1.57) * 14, y + Math.sin(h + 1.57) * 14], h);
+      if (!b) return -1;
+      for (const k of [1, 3]) if (api.add_station(1, b.ids[k], 0, 0, 120, 'Cedar') !== 0) return -1;
+      return api.set_line_with_trains(api.new_line_id(), Uint32Array.from([b.ids[1], b.ids[3]]), 2, 2, 2, 30, 60, 8, 0x0000ff, 'M');
+    };
+    return [beside, () => api.move_node(p.id, p.x + Math.cos(h + 1.57) * 6, p.y + Math.sin(h + 1.57) * 6), () => api.undo()];
+  },
+  // two single tracks leaving the end of a double track (each takes a leg's shift from the join the model gives it), then
+  // the double deleted, which ends both legs, and that undone
+  legs: (api, o, rnd) => {
+    const [x, y] = o.near(o.model()), h = rnd() * 2 * Math.PI, at = (d, a) => [x + Math.cos(h + a) * d, y + Math.sin(h + a) * d];
+    if (api.add_route(new Float64Array([...F([x, y]), ...F(at(500, 0))]), new Float64Array(), 2, false) !== 0) return null;
+    const n = o.nodeAt(...at(500, 0));
+    if (!n) return null;
+    for (const a of [0.5, -0.5]) if (api.add_route(new Float64Array([...Nn(n.id), ...F(at(1000, a))]), new Float64Array(), 1, false) !== 0) return null;
+    const double = o.model().edges.find((e) => e.tracks === 2 && (e.a === n.id || e.b === n.id));
+    if (!double) return null;
+    return [() => api.delete_edge(double.id), () => api.undo()];
+  },
+};
+// (the lined pass's own fault, the changed edges' ends left unlooked at, shows in the same edit)
+SCENES.lined = SCENES['st-lined'];
+const weights = { building: 2, byBuilding: 4, byStation: 3, aroundStation: 4, nearChange: 3, shortShared: 2, trunkStation: 3, stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2, trackStation: 3, routeFromNode: 2, deleteEdge: 2, doubleUp: 2, moveNode: 2, construct: 2, oneWay: 2 };
 
 let builds = 0, dropped = 0, rowsStates = 0, moves = 0, failures = 0;
 const applied = {};
 for (let seed = 1; seed <= SEEDS && !failures; seed++) {
   const api = load(), rnd = rng(seed * 7919), o = ops(api, rnd);
-  const pool = Object.keys(o).filter((k) => k !== 'model').flatMap((k) => Array(weights[k] ?? 1).fill(k));
+  // (a planted fault is looked for with the edits that reach it)
+  const POOLS = { buildings: ['byBuilding', 'byBuilding', 'building'] };
+  const pool = SELF === 'fault' ? POOLS[faultArg] : Object.keys(o).filter((k) => k !== 'model' && k !== '__around' && k !== 'near' && k !== 'nodeAt').flatMap((k) => Array(weights[k] ?? 1).fill(k));
+  state();
+  // (two station buildings to begin with, so the patched buildings pass runs on every save)
+  const made = [0, 1].map(() => o.building(o.model()));
+  if (process.env.VERBOSE) console.log('seed', seed, 'buildings', made.join(), 'listed', api.buildings_info().length);
+  const plan = SELF === 'fault' && SCENES[faultArg] ? SCENES[faultArg](api, o, rnd) : null;
+  if (SELF === 'fault' && SCENES[faultArg] && !plan) { console.log(`FAIL  seed ${seed}: the ${faultArg} scene could not be set up`); process.exit(2); }
+  app.forget();
   state();
   if (SELF === 'strokes' || SELF === 'splice') {
     // (a station on track the longest line shares, in its middle: the knots of its band after it move a little)
@@ -203,13 +369,13 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
     state();
     if (errors.length) { console.log(`detected  seed ${seed}, line ${best.id} copied: ${errors[0].slice(0, 300)}`); failures++; break; }
   }
-  for (let step = 0; step < STEPS && !failures; step++) {
-    const kind = pool[Math.floor(rnd() * pool.length)];
+  for (let step = 0; step < (plan?.length ?? STEPS) && !failures; step++) {
+    const kind = plan ? 'scene' + step : pool[Math.floor(rnd() * pool.length)];
     let r;
-    try { r = o[kind](o.model()); } catch (e) { console.log(`FAIL  seed ${seed} step ${step} ${kind}: the model threw ${e.message}`); failures++; break; }
+    try { r = plan ? plan[step]() : o[kind](o.model()); } catch (e) { console.log(`FAIL  seed ${seed} step ${step} ${kind}: the model threw ${e.message}`); failures++; break; }
     app.forget();
     if (r === 0) applied[kind] = (applied[kind] ?? 0) + 1;
-    const x = rnd();
+    const x = plan ? 0.5 : rnd();
     // (a build dropped part way, its edit's follow-up begun when the next edit came: the cache is as the last finished one left it)
     if (x < 0.25) { state(1 + Math.floor(rnd() * 6)); dropped++; continue; }
     if (x < 0.35 && app.sendRows()) rowsStates++;
@@ -222,8 +388,8 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
 }
 console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}; line entries' strokes copied: ${app.netWork.entriesAll}, line samples copied: ${app.netWork.keptAll}; band builds that followed the network's changed edges: ${app.bandWork.followed}; lines worked out again in part: ${app.bandWork.splicedAll} (their entries worked out ${app.bandWork.sweptAll}, copied ${app.bandWork.copiedAll})`);
 if (SELF) {
-  const what = SELF === 'strokes' ? "lines' entries are copied whatever their knots" : SELF === 'splice' ? 'only the entries that changed are worked out again' : SELF === 'stations' ? "stations' numbers are kept unless their own node changed" : 'the kept orders are trusted';
-  console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test (${SELF}): ${failures ? `the check fails when ${what}` : `the check did not notice when ${what}`}`);
+  const what = SELF === 'fault' ? `the ${faultArg} pass leaves out one input` : SELF === 'strokes' ? "lines' entries are copied whatever their knots" : SELF === 'splice' ? 'only the entries that changed are worked out again' : SELF === 'stations' ? "stations' numbers are kept unless their own node changed" : 'the kept orders are trusted';
+  console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test (${SELF === 'fault' ? faultArg : SELF}): ${failures ? `the check fails when ${what}` : `the check did not notice when ${what}`}`);
   process.exit(failures ? 0 : 1);
 }
 console.log(`${failures ? 'FAIL' : 'PASS'}  t4153 net (${SAVE}): every build from the cache equals one from scratch`);

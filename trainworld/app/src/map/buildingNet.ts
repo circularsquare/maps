@@ -10,6 +10,7 @@ import { layoutBuilding, type Rect } from "../game/buildingLayout";
 import { PLATFORM_POINTS, ST_ROOM } from "./stationGeometry";
 import { roomRect } from "./facilityPlace";
 import { toLocal } from "./geo";
+import { fault } from "./selfTest";
 import type { BuildingInput } from "../game/types";
 
 /** A station building as drawn, local units of the network's anchor. */
@@ -90,7 +91,9 @@ function edgeBoxesFor(ix: EdgeBoxes, edgePts: ReadonlyMap<number, Float32Array>,
   if (changed && ix.map && ix.map === changed.pts) {
     for (const id of changed.edges) {
       const p = edgePts.get(id);
-      if (p && ix.boxes.get(id) === boxOfPts.get(p)) continue;
+      // (a new id has no box here yet and its points no box of their own: both undefined must not read as the same)
+      const had = ix.boxes.get(id);
+      if (p && (had || fault === "buildings") && had === boxOfPts.get(p)) continue;
       drop(id);
       if (p) add(id, p);
     }

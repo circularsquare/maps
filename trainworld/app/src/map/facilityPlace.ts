@@ -6,6 +6,7 @@
 // nearest spot along one of the complex's platforms that overlaps no box, track, waiting room, other
 // lot or the label, shrinking if none does, and the least bad spot if nothing fits.
 
+import { fault } from "./selfTest";
 import { ShapeGrid } from "./shapeGrid";
 import { PLATFORM_POINTS, ST_FLIP, ST_ONE, ST_ONE_NEG, ST_PARK, ST_ROOM } from "./stationGeometry";
 
@@ -247,7 +248,7 @@ export function placeFacilities(
     // (T-4153: the edges the network says may have changed, the rest as they were)
     for (const id of edgesChanged.edges) {
       const p = edgePts.get(id), e = cache.edges.get(id);
-      if (e?.pts === p) continue;
+      if (e?.pts === p || (fault === "facilities" && !e)) continue;
       if (e) drop(e.segs);
       if (!p) { cache.edges.delete(id); continue; }
       const segs: number[] = [];

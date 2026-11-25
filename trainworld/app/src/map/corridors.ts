@@ -5,6 +5,7 @@
 // makes the ribbon at each place from it and smooths it along each line.
 
 import { kAtY } from "./geo";
+import { fault } from "./selfTest";
 
 /** edges this close (m, centre line to centre line) run side by side */
 export const CORRIDOR_M = 20;
@@ -152,6 +153,12 @@ function ixTop(ix: BoxIx): number {
 }
 /** the ids of `cache`'s edges whose boxes may come within `pad` of box `b` (each once) */
 function ixNear(ix: BoxIx, b: Prep["box"], pad: number, out: Set<number>) {
+  const s = ix.size, w = Math.floor((b[2] + pad) / s) - Math.floor((b[0] - pad) / s) + 1, h = Math.floor((b[3] + pad) / s) - Math.floor((b[1] - pad) / s) + 1;
+  // (a box over more cells than there are edges, a long edge's or two far-apart changes': the edges' own boxes are tested instead)
+  if (w * h > cache.size) {
+    for (const [id, r] of cache) if (overlaps(r.prep.box, b, pad)) out.add(id);
+    return;
+  }
   for (const id of ix.wide) out.add(id);
   ixCells(ix, b, pad, (k) => { for (const id of ix.cells.get(k) ?? []) out.add(id); });
 }
@@ -409,7 +416,7 @@ function besideChanged(changes: { edges: Iterable<number>[]; has: (id: number) =
     const o = was.get(g)?.prep, p = cache.get(g)?.prep;
     if (o === p) continue;
     if (o) ixDrop(ix, o);
-    if (p) ixAdd(ix, p);
+    if (p && fault !== "corridors") ixAdd(ix, p);
   }
   const remake = seersMoved(redone, (g) => was.get(g), (g) => cache.get(g));
   const oldSums = new Map<number, Map<number, [number, number, number]> | undefined>();
