@@ -218,17 +218,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4299: a state's money and lists are kept per record now, 24 to about 5.5 ms a state on your Asia save. Still whole: the track limits, with the fleet needs, markers and turn limits built on them (about 2 ms), and profile_meta's copy (0.4 ms). The capacity has no index from a line to the track it shares.
   - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
   - Other: notes/T-4299.md
-- T-4348 [P1] {L:edit-speed} Slow edits on a player's 44-year Poland save (taking, 2026-11-25, agent year44)
-  - Context: You, 11-25: "someone is having big editing issues still, they're wondering if it has to do with the fact that they're on year 44... if nothing pops up no need to chase forever". Their save: Downloads/trainsworld-polska-day-15922.save (day 15,922, 311 KB).
-  - Goal: Find whether anything an edit does grows with game days; fix it if small, else file it. About 1.5 h at most.
 - T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-25, agent buytrains)
   - Context: Your 11-25 yes is built (tree buytrains): stations and deletes on running lines' track are answered too, their trains bought right after. Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest is the worker busy with other pieces.
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
-- T-4339 [P3] {L:edit-speed} Stop clicks' rows hold the services a station click owes
+- T-4339 [P3] {L:edit-speed} Stop clicks' rows hold the services a station click owes (taking, 2026-11-25, agent buyfix)
   - Context: From T-4281: the stop clicks' rows (`rowsOwed`) skip working out what a station or delete on unused track owes, unlike other rows answering an edit. Only reachable when such a click gets no map patch between a stop click and its rows; a planned line's figures lag a few tasks.
   - Goal: Those rows work out owed services first, as `standAside`'s do; for whoever has T-4272's files.
   - Other: notes/T-4281.md
+- T-4350 [P3] {L:edit-speed} {after:T-4272} Autosaves on old games cost an edit less
+  - Context: From T-4348: a 44-year save is 1.6 MB, 1.46 MB of it the regions' day ledgers, so each autosave takes 60-100 ms more than a new game's; a click landing on it waits. At most about 5% of an edit's wait.
+  - Goal: Autosave waits for a quiet moment or gzips off the clock worker (about 1-2 h); smaller ledgers later.
+  - Other: notes/T-4348.md
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
@@ -363,7 +364,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
-- T-4337 [P3] {L:small-fixes} A new game can open with old groups closed
+- T-4337 [P3] {L:small-fixes} A new game can open with old groups closed (taking, 2026-11-25, agent groupsopen)
   - Context: From T-4329: closed line groups are kept per save slot by group number, and a new game in the same slot numbers its groups again from the start, so a group can start closed.
   - Goal: A new game in a slot starts with every group open.
 - T-3457 [P3] {L:checks} Slim the standing checks
@@ -486,6 +487,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail.
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
   - Other: notes/T-4328.md
+- T-4351 [P2] {L:translations} Station upgrade panel partly in English (taking, 2026-11-25, agent upgradetr)
+  - Context: A Turkish player on 0.4.6.1, 11-25: "There are parts in the station upgrade section that are not in Turkish." Likely the same in other languages.
+  - Goal: Every string in the station upgrades shown in each of the 12 languages; any other stale or untranslated keys found on the way done too.
 - T-4327 [P3] {L:translations} Key hints in Japanese and Chinese hovers
   - Context: Found while adding R to the station rename hover (11-25): ja, zh-Hans and zh-TW write a hover's key in full-width brackets ("バス路線を描く（U）"). The hover styles only ASCII brackets, so those keys are not lettered in the accent, and on phones they stay although there is no keyboard.
   - Goal: Full-width bracketed keys get the same hint styling, and go on phones, as ASCII ones.
@@ -1058,6 +1062,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
+- T-4349 [P2] {L:track-speed} A ramp's speed limit shown over a tighter curve's (taking, 2026-11-25, agent slopespeed)
+  - Context: You, 11-25: "if i have a tight curve thats limited by curvature to 80kph but its limited by slope to like 150kph itll show 150, i think." The ramp limit is T-3027's rule.
+  - Goal: Track shows, and trains run at, the lowest of its curve and slope limits.
 - T-4345 [P3] {L:fares} A fee to use a station's park and ride
   - Context: You, 11-25: "i think there probably also are some people having issues with parking lots with non tram lines. but yeah we can just do this for now. can maybe file like charging a fee to use parking lot as a task, could be fun". A rail station's lot costs US$40k a day and earns nothing.
   - Goal: A design for a parking fee that earns money and puts some drivers off, shown to you before it is built.

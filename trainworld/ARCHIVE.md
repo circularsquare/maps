@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4348 [P1] {L:edit-speed} Slow edits on a player's 44-year Poland save (2026-11-25): not the game's age: autosave grows 60-100 ms by year 44 (at most about 5% of an edit's wait); the slow part is reworking running lines, T-4272/T-4097 work. notes/T-4348.md.
 - T-4347 [P1] {L:loading} A time left from the start of a load (2026-11-25): Belgrade, 2 cores: a time left from 15-19 s (13 min shown, about 20 real), was blank for minutes; it rises once at a later round (13 to 17 min at 500 s). notes/T-4347.md.
 - T-4344 [P1] {L:fares} Waiting room upkeep back to 0.2% and smaller tram stop parking (2026-11-25): Waiting rooms back to 0.2% (05bf5508a reverted); tram stop park and ride US$5M via TRAM_PARK_RIDE_COST; Rust 1045 pass; NYC game: tram lot $5.00M / $10k a day, rail $20.0M / $40k, waiting room $5.00M / $10k. notes/T-4342.md.
 - T-4343 [P2] {L:loading} Load time left runs high early in a big load (2026-11-25): Watchdog waits out a period (8f835656e); time left sized and timed per round: New York on one worker 2 min shown with about 2 min real, was 8 min with 3 min real. notes/T-4343.md.

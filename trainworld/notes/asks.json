@@ -1,16 +1,1 @@
-[
-  {
-    "id": "a-2026-11-25-14",
-    "title": "Cloudflare analytics beacon blocked on the game page",
-    "text": "The live game's console shows Cloudflare's Web Analytics script (static.cloudflareinsights.com/beacon.min.js) blocked by the page's Content Security Policy, so Cloudflare's visitor stats don't count the game page. Players see nothing. Either allow that script in the CSP or turn the beacon off for anita.garden/trainsworld in Cloudflare. I'd turn it off (the game has its own play counts).",
-    "since": "2026-11-25",
-    "by": "maps-96"
-  },
-  {
-    "id": "a-2026-11-25-15",
-    "title": "Purge two old R2 data versions",
-    "text": "R2 storage is 24.4 GB against the free 10 GB (about $0.22 a month past it). r2_purge.py 2026-11-18b 2026-11-19 removes the two oldest game data versions, about 8 GB; the newest three (11-20, 11-24, 11-25) stay, and the live one is refused anyway. Purge them? I would.",
-    "since": "2026-11-25",
-    "by": "maps-96"
-  }
-]
+[]

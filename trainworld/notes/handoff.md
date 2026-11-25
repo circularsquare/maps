@@ -1,25 +1,29 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session a79cb0e8-7f65-4078-93d4-689df5d0c8b6, name maps-96 [c6b101], since 2026-11-25 16:42 UTC
-Updated: 2026-11-25 18:51 UTC (handing over to standby maps-d6 for her remote access). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 554327b9-cb26-4c02-abcf-41d74d42cf79, name maps-d6 [79008c], since 2026-11-25 18:52 UTC
+Updated: 2026-11-25 19:19 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 1. 0.4.7 published 18:42 UTC (R2 version 2026-11-25, website 0497af6, export b89a791; bench marked published). Live
-   smoke: every game check passes; its one console error is Cloudflare's analytics beacon blocked by the page's CSP
-   (asked her). Old trees: hotfix461 can go.
-2. Running: year44 (Opus, T-4348): a player's slow edits on a 44-year save (Downloads/trainsworld-polska-day-15922.save,
-   player's: stays on this machine); tree year44; time-boxed about 1.5 h; "if nothing pops up no need to chase forever".
-3. buyfix: a fresh agent on the buytrains tree: review30's finding 1 (edits.rs:84, a shortfall's cars free), findings
-   2, 4, 7, and a short notice for trains bought after a click, like other money notices (her yes). Then land T-4272
-   (also does T-4339). Review: artifacts/trainworld/reviews/review30-buytrains.md.
-4. Then T-4337; on the quiet machine `edit_bench.mjs --save asia,nyc --baseline` (T-4293). Player reports on 0.4.7
-   first. Edit-speed stages (T-4309, T-4314/T-4315, T-4153, T-4149 s3, T-4281), T-4220 s9, T-4230, T-3160 wait for
+   smoke passed. Player reports since: none new on 0.4.7 (checked 19:15 UTC).
+2. T-4348 done (year44): not the game's age; autosave grows 60-100 ms by year 44 (filed T-4350, P3, after T-4272); the
+   slow part is reworking running lines. Tell her, for the player; only she answers players.
+3. Running: upgradetr (Sonnet, tree upgradetr, port 6143, T-4351: a Turkish player's station upgrades in English; all 12
+   languages) and groupsopen (Sonnet, tree groupsopen, port 6144, T-4337). 4 agents = her week's max.
+   Running: buyfix (Opus, tree buytrains, port 6141): review30's findings 1, 2, 4, 7 and a notice for trains bought
+   after a click (her yes); 5 and 6 go to notes/T-4272.md "Left" for me to file. Then land T-4272 and T-4339 (own review
+   first: money and saves). Review: artifacts/trainworld/reviews/review30-buytrains.md.
+   Running: slopespeed (Opus, tree slopespeed, port 6142, T-4349): her 11-25 report, a tight curve on a ramp shows the
+   ramp's higher limit; fix to the lowest of the two, figure diff on NYC if trains run differently.
+4. Then on the quiet machine `edit_bench.mjs --save asia,nyc --baseline` (T-4293). Edit-speed stages (T-4309, T-4314/T-4315, T-4153, T-4149 s3, T-4281), T-4220 s9, T-4230, T-3160 wait for
    her return. Up next: T-3160, T-3838.
 5. Standby: maps-3a is the next cycle's (notes/standby.txt); none left: ask her relay session for one. Gemini's quota
    is out until about 11-30: Claude reviewers meanwhile.
-6. Resources 11-25: Resend over (her: nothing), R2 storage 24.4 GB (purge of 2026-11-18b, 2026-11-19 asked), Class A
-   91% of the free million projected. Class B and the repo size are known to her.
+6. Resources 11-25: Resend over (her: nothing), R2: 2026-11-18b and 2026-11-19 purged on her yes
+   (11-25 14:14 her time); 11-20, 11-24, 11-25 left. Class A 91% of the free million projected. Class B and the repo size are known to
+   her. Cloudflare visitor stats: kept for her site; her Configuration Rule (URI path starts with /trainsworld, Disable RUM)
+   leaves the game out, checked 11-25: no beacon on the game page, still on / and privacy.html.
 
 ## Her words
 - 11-25 ~12:50: "ok, ship." 0.4.7 (via standby maps-d6, after Belgrade setup +23% over her one-time 20% threshold).
@@ -46,9 +50,10 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 - DECISIONS.md holds buytrains' two T-4272 entries uncommitted: commit them with its landing.
 - Uncommitted on purpose: TODO.md (hers), notes/asks-log.jsonl, notes/board-live.json, changelog/roadmap.json,
   maps .claude/settings.json, notes/T-3397.md, tools/ops/archive_bad_saves.py.
-- Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), hotfix461 (0.4.6.1 as shipped,
-  branch pushed; remove with agent-tree.mjs remove --force when done with it), buytrains (unlanded).
-- reserve_cores: maps-96's loop (task bqimpnxwn); it dies with this tab: the successor starts its own.
+- Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed). hotfix461 removed 11-25 (branch on
+  origin).
+- reserve_cores: maps-96's loop (task bqimpnxwn) still holds the mutex while its tab runs year44, so maps-d6's exited;
+  start it again once year44 reports and that tab closes.
 - notes/T-4214.md: stage A's section (stationclick, 11-25) sits uncommitted, not ours; keep it.
 - `land` (not `finish`) conflicts on changelog/next.json when the tree has items: use `finish` (it moves them).
   `finish` drops a tree's edits to existing changelog items: redo them in the main tree.
