@@ -182,10 +182,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-23: "this is the entire issue". Stage 8 (tree netcut8): stations, buildings, facilities, splits, band orders and corridors redo only what an edit changed. Your Asia save, Node, a station on a three-line trunk: network build about 190 to 150 ms (first click 260 to 185). Left: cut lines' bands (about 30 ms), train speeds (20), per-line passes (20).
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 7 "What is left"
-- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2 (taking, 2026-11-25, agent rows3)
-  - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
-  - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
-  - Other: notes/T-4149.md
 - T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
@@ -206,7 +202,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent today3)
   - Context: Stage 2 (11-25, tree followcut2): questions and timer trips no longer run the previous click's follow-up in one block. Click run on your Asia save: first 212 ms, later 360, 278, 144 (stage 1: 618, 1,538, 2,156). Left: each click's own apply (T-4272's question) and the page holding it until the one before is confirmed.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
@@ -222,6 +218,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 landed 11-25: stations and deletes on running lines' track are answered at the click, their trains bought right after (your yes). Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest waits on the worker's other pieces (T-4281).
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
+- T-4360 [P3] {L:edit-speed} The worker's rows step, what's left
+  - Context: T-4149 met its goal (11-25): rows 11-53 ms for any edit on your Asia save in Node. Left: edges compared (3-20 ms), line stamps (1-13), phase tables (2-10), bus rows read 25 times on some station edits (3-5), `take_moved_spans` 5-14 ms on the first edit after a load.
+  - Goal: Each by what the edit touched, when edit speed's bigger costs are gone.
+  - Other: notes/T-4149.md "Stage 3"
 - T-4358 [P3] {L:edit-speed} {after:T-4272} Trips dropped when an edit settles a click's services
   - Context: From review31 of T-4272: a track segment, blueprint delete or rename that comes before a station click's services are worked out settles them, and `settle` clears `settled_running`, so those lines' trips aren't sent. Narrow.
   - Goal: Trips are sent for those lines whichever edit settles them.
@@ -238,6 +238,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4348: a 44-year save is 1.6 MB, 1.46 MB of it the regions' day ledgers, so each autosave takes 60-100 ms more than a new game's; a click landing on it waits. At most about 5% of an edit's wait.
   - Goal: Autosave waits for a quiet moment or gzips off the clock worker (about 1-2 h); smaller ledgers later.
   - Other: notes/T-4348.md
+- T-4359 [P1] {L:loading} A load stuck on loading data with the bar full (taking, 2026-11-25, agent loadstuck)
+  - Context: You, 11-25: "my current save is stuck on loading data and the bar is 100% full visually... stuck trying to load foshan for a couple minutes now"; a reload loaded fine, and most cities load fine. Your diagnostics: artifacts/trainworld/diag/anita-1125-foshan-stuck.json.
+  - Goal: The cause found from the diagnostics and code, and fixed so a load never sits on a full bar.
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
