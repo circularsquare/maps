@@ -1,9 +1,9 @@
 [
   {
-    "id": "a-2026-11-24-14",
-    "title": "Fare cap text",
-    "text": "New in-game text from T-4253, under the fare control when a multiple would push the base fare over the limit: \"Base fare can be at most $1,000\". OK?",
+    "id": "a-2026-11-24-16",
+    "title": "PR 21 and 24 closing comments",
+    "text": "Closing comments for PRs #21 and #24 (both already in the game), to post and close on your OK. #21 (CinnamonVII): \"Thank you for this, and for rebasing it with the fixes from #12. It no longer applied to current code, so we ported it manually with you as co-author on the commit, and partly built lines now run their longest built stretch in the game. Closing this one since it's in. Thanks again!\" #24 (caelum418): \"Closing this now that the port is in the game (it shipped in 0.4.5, as the reply above says). Thanks again for the speedup and the write-up!\"",
     "since": "2026-11-24",
-    "by": "maps-3e"
+    "by": "maps-c5"
   }
 ]

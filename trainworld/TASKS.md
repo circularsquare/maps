@@ -166,10 +166,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: A player, 11-22: a line with 21 one-way platforms is "extremely laggy", once 40 minutes for the stops to register. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Tree onewaylag has a memo making stop_tiers 2.3x faster (uncommitted). Notes/T-4045.md.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
-- T-4256 [P2] {L:buses} Port PR 30, Auto bus catchments stop at rail-linked stops (taking, 2026-11-24, agent pr30port)
-  - Context: Leni-Vienne's PR 30 (11-22): an Auto bus stop's catchment no longer runs past stops linked to rail (one counted a 9.6 km road past 9 rail stations as a short walk). You, 11-25: "yes can port". Gemini: easy; its doc says 100 m where ours is now 500 m.
-  - Goal: Ported with credit; a bus save's riders before and after, and the lines that move most.
-  - Other: notes/pr-survey-2026-11-25.md
 - T-4257 [P2] {L:buses} Bus routes take the fastest road, not the shortest
   - Context: xoaninc's PR 32 weights trunk roads and motorways at a flat 1.4x. You, 11-25: "it shouldnt be 1.4x cuz we changed the ratio, but shouldnt we still make it take the fastest route rather than the shortest?" Today a route follows streets by length plus a turn penalty; busways (60 km/h) count as plain streets.
   - Goal: The route tool picks the quickest path by the sim's own bus speeds on each road, busways included; credit to xoaninc.
@@ -197,15 +193,15 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor"; on your Asia save a station shows up in 1-3 s, a removal in about 4 s. Parts: T-4153 (drawn network), T-4214 (clickable map), T-4149 (worker rows), T-4150 (page).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-24, agent cutstretch2)
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent cutstretch3)
   - Context: You, 11-23: "this is the entire issue". Stage 5 (tree cutstretch2): the bands follow only the edges an edit changed; a cut line's later strokes are copied. Asia network build in Node, CPU: a station on a long line's track 0.41 to 0.32 s, a line removed 0.23 to 0.12 s. Left: each cut line's bands worked out whole.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 5 "What is left"
-- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2 (taking, 2026-11-24, agent rowsedit)
-  - Context: Stage 1 landed 11-24 (6d7c50c5): the day's figures -77% and line periods -58% on Asia, money posted in 1-2 ms. Left: rows first for every full-path edit, trips and boarding per touched line, demand snapshot per cluster.
-  - Goal: Those redone for what an edit touched. Tree editworker kept.
-  - Other: notes/T-4144.md
-- T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2 (taking, 2026-11-24, agent pageedit)
+- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2
+  - Context: Stage 2 in tree rowsedit (11-25): lines an edit re-times no longer each cost two passes over the whole network, and only lines that moved are drawn again. Your Asia save, the worker's rows: a station 615 to 266 ms, a stop click 519 to 131, undo 544 to 103.
+  - Goal: Rows under 100 ms for any edit on Asia: a moved line redrawn only from the cut, bus lines kept when unmoved, trips per touched line.
+  - Other: notes/T-4149.md
+- T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2
   - Context: Stage 1 (tree pageedit): on your Asia save the page's own work after a station edit went from 104-117 ms to 65-69 ms, cleanup from 45-110 ms to 8-10 ms, about 4-10% of the wait. Left: achievements, fare income's line checks, the track's line lists, station labels, and the change list itself walking every node and edge.
   - Goal: Under 20 ms of the page's own work for a station on Asia; then the demand layers and the delete tool's hover per change; 3-4 h.
   - Other: T-3804 (today answers 125-445 ms) still open; notes/T-4150.md "Left, by stage"
@@ -213,6 +209,21 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
   - Other: notes/T-4196.md
+- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save
+  - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
+  - Goal: A checked design with stages, to you before anything is built.
+  - Other: a repeat (notes/repeats.md); notes/T-4267.md
+- T-4270 [P1] {L:checks} Smoke fails three node checks on master
+  - Context: Smoke on 57eb2dbdd: t133-picking-check, t144-check and t3192-varyings exit with "errors: [Getter/Setter]"; all three passed on a17111304. Between: T-4150 stage 1, T-4239, T-4256, T-4220 stage 3, T-4255, T-4247, T-4266.
+  - Goal: The three pass on master, fixed at the cause.
+- T-4263 [P1] {L:loading} A focused city's trips wait minutes at 90% (taking, 2026-11-24, agent slowfocus)
+  - Context: You, 11-25: "fills to 90% and then stops ... i have to wait minutes for the demand", any city sometimes fast, sometimes slow, larger ones more. Caught on Shenyang in your Asia save, diagnostics in artifacts/trainworld/diag/shenyang-90-1125/. Gemini: the wait is a whole slow solve in every worker, picked by the state at that moment.
+  - Goal: Focusing a city never waits minutes for its trips; why the slow path was taken, from your diagnostics.
+  - Other: a repeat (notes/repeats.md); Gemini's read artifacts/trainworld/gemini/ask-0226/loadbar.md; notes/T-4263.md
+- T-4264 [P1] {L:loading} {after:T-4263} Loading bars that never sit still
+  - Context: Nine fixes since 10-21 kept one design: a time guess, a 95-99% cap and a bar that never backs up, so any wait the guess misses freezes it near 90%. The top bar's "Loading data" never got your 11-22 half-bar shift.
+  - Goal: Every bar moves only on counted work or creeps under a low cap; none sits still for minutes.
+  - Other: a repeat (notes/repeats.md); takes in T-344; Gemini's read artifacts/trainworld/gemini/ask-0226/loadbar.md
 - T-4199 [P2] {L:loading} {after:0.4.6} Corridors and corridor book built with the packs
   - Context: You, 11-24: no bit-exact rule, say when figures change, most riders within 1%. Stage 1 in tree corridors, not landed: Montana's trips wait 7.6 to 2.3 s; New York no gain; +32 MB demand memory on NYC unexplained.
   - Goal: Small games' trips about 70% faster on load, no memory rise; stage 2 about 2-3 h.
@@ -227,11 +238,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
-- T-4249 [P2] {L:edit-speed} Every bus line rebuilt for each station edit (taking, 2026-11-24, agent stationclick)
+- T-4249 [P2] {L:edit-speed} Every bus line rebuilt for each station edit (taking, 2026-11-25, agent busrebuild)
   - Context: The station check no longer runs a whole trial (T-4214 stage A, 11-25: 0.1-0.3 s down to about 20 ms on your Asia save). Left: any station edit rebuilds all 25 bus lines and 6 ways back, so its apply costs 0.1-0.25 s there and its trips are always sent again.
   - Goal: A station edit rebuilds only the bus lines near it; trips not sent again when no line changed.
   - Other: notes/T-4240.md
-- T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map (taking, 2026-11-24, agent stationclick)
+- T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map
   - Context: Stages A and C done: a station is sent at its click, its name after it, and stations placed or removed on a line's track patch the clickable map too (tree stationclick, 11-25). You, 11-24: "something like a silo approach". Left: a track run's next segment waits on placing (D), drawings at the click (E).
   - Goal: No placing wait between a run's segments; what is drawn at the click is the patched map's.
   - Other: notes/T-4214.md
@@ -667,7 +678,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
-- T-4258 [P2] {L:line-rates} Port PR 34, capacity sections through one-way pairs
+- T-4258 [P2] {L:line-rates} Port PR 34, capacity sections through one-way pairs (taking, 2026-11-24, agent pr34port)
   - Context: xoaninc's PR 34 (11-24): a capacity section runs on through a one-way pair (and flat crossings with the same lines) instead of queueing again at each end. You, 11-25: "yes can look into it". Gemini: applies cleanly.
   - Goal: Ported with credit after an NYC figure diff (total, lines that move most); a big shift goes to you first.
   - Other: notes/pr-survey-2026-11-25.md
@@ -938,12 +949,8 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4239 [P1] {L:solve-speed} Train counts that never settle on shared track (taking, 2026-11-24, agent settlestop)
-  - Context: You, 11-24: players' saves of about 900 stations "completely bricked", maybe from lots of interlining. T-4188 found on a Tokyo community save that 10-13 lines sharing full track trade rates every round and never hold still, so every load and edit runs all 80 settle rounds (edits 5-35 s natively), and each bus zone adds another settle.
-  - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
-  - Other: notes/T-4188.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-24, agent aside1)
-  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-2 done: a snapshot of the figures on screen at each whole re-solve (New York: 10 MB, under 20 ms), and read-only stand-ins for untouched cities; figures unchanged. Next: stage 3, the side calculation's plan. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-3 done: a snapshot of the figures on screen at each whole re-solve, read-only stand-ins for untouched cities, and the side calculation's plan (which cities it recalculates, or why not); figures unchanged. Next: stage 4, the calculation itself. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
@@ -1041,9 +1048,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-4247 [P2] {L:trams} Parking at tram stops
-  - Context: You, 11-24: "lets just allow parking at tram stops and include it in the list." Today the line view's "Add parking at all stations" adds parking at tram stops, but a tram stop's improvements list has no parking, so it can't be removed.
-  - Goal: A tram stop lists parking with its improvements, added and removed like a station's.
 - T-4248 [P3] {L:track-drawing} Track across the 180th meridian
   - Context: A player building a Bering Strait line (your scratch pad, 11-24) gets "Too far for one piece of track" for any piece crossing 180°: the flat map measures it the long way around. Today crossing is refused (docs/world.md "The plane's edges"). You, 11-25: "if people want to build it, they should ideally be able to."
   - Goal: Track that crosses 180° and works like any other. Gemini's scope: 5 stages, the map's drawing across world copies the hardest (13-20 h of about 30-45).
@@ -1072,10 +1076,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-4255 [P2] {L:open-source} Port PR 29, cached paths in stop-marker scans (taking, 2026-11-24, agent pr29port)
-  - Context: Leni-Vienne's PR 29 (11-22): the stop-marker scan keeps shortest-path trees instead of redoing them. Gemini's survey (11-25): two small conflicts (keep edge_barred for busways and the 3-argument carry_worth); adds up to 19 MiB of WASM heap on the small-device setting.
-  - Goal: Ported with credit, those kept, its heap capped; faster stop markers on big networks, measured.
-  - Other: notes/pr-survey-2026-11-25.md; T-4045
 - T-3523 [P3] {L:open-source} Make the public repo the real one
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.

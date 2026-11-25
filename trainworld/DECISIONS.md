@@ -54,7 +54,7 @@ artifacts/trainworld/T-4120/.
 
 ## Lines and scheduling
 - 2026-11-24 (Anita, T-4220): Edits made during a whole re-solve get quick figures from a second worker that re-solves only the touched cities against the figures on screen (lie: up to about 4.5 min on Asia); off on phones and short memory. notes/T-4220.md
-- 2026-11-24 (Anita, T-4239): The train-count settle need not be exact (her call). A line circling across a jump in its round trip (passing-track waits, following loss) is settled on the side its fleet falls short: the lie, up to 3% more trains an hour than its fleet runs. notes/T-4239.md
+- 2026-11-24 (Anita, T-4239): The train-count settle need not be exact. A line circling across a jump in its round trip (passing-track waits, following loss) is held: counts where its fleet falls short (lie: up to 3% more trains an hour than it runs), headways under one train spare. notes/T-4239.md
 - 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
 - 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md
 - 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a line's end: each way counts half a turn (the lie: trains turn there twice a round trip). The reversal icon shows only where the turn limits the line. notes/T-4178.md
@@ -240,13 +240,14 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-25 (Anita, T-4267): Edit speed is built to one design: the track model lists what each edit changed and every later layer redoes only that; answer first, the map in pieces, trips after. Approved pending Gemini's and Fable's adversarial reviews. notes/T-4267.md
+- 2026-11-25 (Anita, T-4255): Edit speed may cost memory up to about 30 MB in total on a big save (all edit-speed work together, contributors' ports included); past that it goes to Anita. So far: T-4153 stage 1 +6 MB on Asia, PR 29's path trees +8 MB on small devices.
 - 2026-11-24 (T-4240): An edit's state and trips wait only for the boarding accounts of lines whose service it changed. Lie: while new riders are worked through (a few seconds on Asia), other lines' trains show their last riders' loads, as they did before the edit.
 - 2026-11-24 (, T-4199): Fare weights and income groups are fareBits.json's (Chrome's last bits) in every browser, so one corridor file serves all; New York's book is the file's plus its two-lands rows. Lie: other engines' last bits; no trip moved on New York or Montana. notes/T-4199.md
 - 2026-11-24 (T-4204): An idle demand worker over its need restarts only when the pool's memory passes 95% of the budget, since its restart recalculates the whole game (6 minutes on Asia); up to a few hundred MB a worker stay held meanwhile.
 - 2026-11-24 (Anita, T-4202): After an update, a save opens with the last version's kept trip figures while the new ones calculate; the lie is a few minutes of old figures, for opening at about map time.
 - 2026-11-24 (T-4202): A stand-in needs the same packs as the new build; a pack rebuilt in the update means a full load, since its cells or the market's places could be renumbered under the kept figures.
 - 2026-11-24 (Anita, T-4157): Coarse demand stays off by default on desktop for now, though it takes about 23% off a Tokyo load with trips moving about 0.006%; on by default on phones.
-- 2026-11-24 (Anita, T-4144): Edit speed may cost memory up to about 10 MB in total on a big save (the T-4144 work together); past that it goes to Anita. Stage 1 of T-4153 was +6 MB on Asia, fine by her.
 - 2026-11-23 (Anita, T-4126): 8800 serves master only; the track branch is behind ?track with its own saves storage and no account, so a newer-format save never reaches master or her account.
 
 - 2026-11-23 (Anita, T-3940, T-4089): Community View opens without calculating trips, money frozen (Anita, 11-21; running costs drained about $5B a game day). Phones reporting no memory warn at 1,600+ stations; a game that died loading gets a warning, never open-without-trips (her 11-23). notes/T-3940.md
@@ -309,6 +310,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
+- 2026-11-25 (Anita, T-4269): The game stays at anita.garden. Google shows one icon per host, so its search result keeps the website's leaf icon; a separate address for the game would leave players' browser saves behind ("it is what it is").
 - 2026-11-25 (Anita, T-4252): Gemini code agents run commands unattended inside their own worktree (tools/gemini_agent.py), limited by agy's allow and deny rules; with no OS sandbox here, an allowed check runs whatever the tree holds. Their first three runs are asked about permissions.
 - 2026-11-25 (Anita): Claude usage runs out before Gemini's, so Gemini takes most reading and review (docs/orchestrator.md "Tools"), and Gemini Neon agents are to make code changes like Claude subagents (T-4252). Replaces 11-24's "Gemini sparingly".
 - 2026-11-24 (T-4166): The AWS bench installs Node, Chrome and Rust on each machine instead of keeping an image (6-8 minutes, under a cent, against a snapshot billing every month) and ships only the files the save reads. Its numbers never go in the home ledgers (Linux, SwiftShader).

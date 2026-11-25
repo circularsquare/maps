@@ -1,33 +1,34 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 8e9c7c49-010f-4c78-a0db-d5be0797af3f, name maps-3e [111c39], since 2026-11-24 23:50 UTC
-Updated: 2026-11-25 02:20 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session caa91e48-7288-4753-9895-c2b79ad5e3d9, name maps-c5 [fde5f5], since 2026-11-25 02:20 UTC
+Updated: 2026-11-25 02:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5. Core cap 10 since 00:52 UTC (her: "for a few hours", "be fairly aggressive
 about 10 core cap"); put it back to 14 around 04:00 UTC and tell her. Start more when agents + claimed cores / 2 < 8.
 
 ## Next
 0. Usage (her 11-25): Claude runs out before Gemini. Claude agents take P1/P2 code work; small clear tasks and PR ports
-   go to Gemini code agents (`tools/gemini_agent.py start <name> --brief <f> --task T-x --new-tree --cores 1`; briefs
-   say git grep with separate -e patterns); reading and batch or design review go to `gemini_audit.py`.
-1. Running in maps-3e's tab (briefs in its scratch <agent>/brief.md; reports arrive in the inbox): settlefix (Opus,
-   T-4239 on tree settlestop: checks Gemini's t4239-review.md, then `finish settlestop --task T-4239`), cutstretch3
-   (T-4153 s6), rowsedit (T-4149), uploadedit (T-4262 renderer upload), busrebuild (T-4249 bus lines per station
-   edit), aside3 (T-4220 s3). Gemini: pr30port (T-4256), pr29port (T-4255); land with `finish --coauthor`
-   (Leni-Vienne: look up the noreply id with `gh api users/Leni-Vienne`), then a closing comment for her OK.
-   Multi-stage tasks (T-4153, T-4220, T-4150, T-4214, T-4149) land with `land` + `remove`.
-2. 8800: rebuild to a17111304 + smoke running in maps-3e's tab at 02:16 (scratch snapbuild4.log, smoke-a17111304*.log).
-   When done, tell her it's ready for the test list she was given 02:16 (Asia station place/remove timing, line delete
-   and undo, passage removal, undo loads, fare multiple to 10x, Apply to all weekend, bus save loading). T-4150 s1
-   (5facb68f6) landed after it: next rebuild.
-3. Gemini batch review due over what landed after batch14: T-4231, T-4253, T-4254, T-4153 s5, T-4214 A, T-4260, T-4220
-   s2, T-4150 s1 (template artifacts/trainworld/gemini/batch14/brief.md). Fixes go to one Claude fix agent (as T-4260).
-4. Next starts: T-4150 s2 (page: achievements, edgesOf, labels), T-4214 D/E, T-4257 (bus routes by speed), T-4251
-   (busways), T-4243 speedometer, T-3742 once settlestop lands, corridors3 (T-4199 s2), T-4080 s3-6, T-4230, T-4187,
-   T-3160, T-4233, T-4242 design. Gemini: T-4247, T-4258 (NYC figure diff), T-4259 (UI: needs a screenshot, T-4261).
-5. Waiting on her: asks.py list (fare cap text); T-4223's loop refusals not text-acked; T-4250 (smooth fade, waits);
-   T-4248 (keep P3, fix the "too far" message now?). PRs #21 and #24: draft thankful closing comments for her OK.
+   go to Gemini code agents (`tools/gemini_agent.py start <name> --brief <f> --task T-x --new-tree --cores 1`); reading
+   and batch or design review go to `gemini_audit.py`. Stay light (notes/repeats.md): briefs in files, report heads only.
+1. Running (briefs in my scratch <agent>/brief.md): slowfocus (Opus, T-4263 why a focused city waits minutes; then T-4264
+   the bars, as a follow-up), fixes15 (Opus, T-4266 batch15 review findings), editdesign (Opus, T-4267 the edit design
+   for her; also her new-line/delete-line and PR 29 questions), tramparking (Sonnet, T-4247), Gemini pr34port (T-4258).
+   Adopted from maps-3e: cutstretch3 (T-4153 s6), uploadedit (T-4262), busrebuild (T-4249); multi-stage, `land` +
+   `remove`. No new edit-speed stages until her answer on T-4267's design.
+2. Landing queue: aside3 (T-4220 s3, `land`), pr29port (T-4255 finish --coauthor Leni-Vienne
+   <71212417+Leni-Vienne@users.noreply.github.com>), then PRs #29/#30 closed with her OK'd comments (chained in REPL).
+   rowsedit (T-4149 stage, `land` + `remove`) waits on Gemini's pre-landing review artifacts/trainworld/gemini/t4149/.
+   Landed today: T-4239 (3cc8c5a0d), T-4256 (b6b8bcfdd). Then rebuild 8800 (has a17111304; T-4150 s1 onward missing).
+3. Batch review over T-4239, T-4256, T-4255, T-4220 s3, T-4149 when landed; smoke on master after the batch.
+4. Next starts (not edit speed): T-4257 (bus routes by speed), T-4251 (busways), T-4243 speedometer, corridors3
+   (T-4199 s2), T-4080 s3-6, T-4230, T-4187, T-3160, T-4233, T-4242 design. Gemini: T-4259 (UI, needs a screenshot).
+5. Waiting on her: a-2026-11-24-16 (PR #21/#24 comments); T-3742 after she asks; T-4250 (smooth fade); T-4248.
+6. Core cap 10 until about 04:00 UTC, then back to 14 (her "for a few hours") and tell her. reserve_cores: maps-3e's
+   loop still holds the mutex; start mine (`-All -Loop 30`) once its tab closes.
 
 ## Her words
+- 11-25 02:2x-02:4x: the 90% bar and ~1 s edits are repeats (notes/repeats.md); don't ask her to test either until we think
+  it feels responsive on 8800, mention progress only. New line and line delete should be instant, from the general
+  design. Edit-speed memory budget 30 MB (DECISIONS T-4255). Game stays at anita.garden (T-4269).
 - 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
   kinda just flavor. we should mostly be focusing on isolating the changes and cutting out the impacts on the broader
   map." (DECISIONS T-4097; T-4149, T-4150, T-4262 at P1.) Asia: station adds 1-3 s, removal about 4 s.

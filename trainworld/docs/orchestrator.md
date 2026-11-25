@@ -14,7 +14,8 @@ These come before everything below; the first two are her two top priorities (11
 - **Before each agent start, count** what runs, the files those agents hold and what the cores are doing, so agents
   never overbook or collide. Keep 2-8 agents, run by load ("Running agents" below); below 2 with startable work is a
   slip to fix at once.
-- **When she asks for something**, it goes on the queue (a task, its place in the order) unless there is room for it
+- **When she asks for something**, first grep `notes/repeats.md` and ARCHIVE.md for it: a match is a repeat, handled as
+  that file's top says (her 11-25). Then it goes on the queue (a task, its place in the order) unless there is room for it
   now: her asking is not a start (11-24). If it doesn't fit, tell her what it is queued behind, or offer what to pause.
 - **Before going outside a limit, ask her.** Going above 8 agents, or keeping more than 8 running, is asked first
   (11-24). The core cap changes only on her explicit word (11-24): never raise it on your own, not back to a daytime
