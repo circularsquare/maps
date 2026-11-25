@@ -1,26 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 09:11 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 09:21 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 0. Usage: Claude runs out before Gemini; Gemini for reviews (gemini_audit.py) and small clear code. Stay light: briefs
    in files, report heads only, review findings go to fix agents unread. Overnight (her): calm pace, 2-4 agents.
 1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Running: netcut (Opus, T-4153
-   rest: the network's lines block, 127-160 ms of the 430 ms follow-up a later click waits behind), pagestage3 (Opus,
-   T-4284, page work after an edit: 27 ms placed / 49 removed now). Next: T-4281 stage 2 (passes over every edge, line
-   and station plus the post, about 150 ms; the today and blueprintQuote questions run the whole follow-up in one
-   block) once netcut's files are known; T-4149 rest (rows, about 60 ms). On her yes to a-2026-11-25-4: T-4272 rest.
-2. aside5 (Gemini code agent, T-4220 stage 5, the Node equality check; stage 4 landed b47119edb; its checks/INDEX.md
-   edit needs the patch dance at landing). fixes17 (Opus, T-4285: batch17 review findings;
-   ones in pagestage3's or netcut's files come under "For ..." in its notes: pass them on). T-4283 landed f6489a0d2.
-   Briefs: my scratch <agent>/brief.md.
-3. Landed this round: T-4282, T-4276 (look A; ask a-2026-11-25-5), T-4150 s2 (3d899ba02), T-4281 s1 (eab8c1aa7).
-   8800 = 73160a08f (without T-4281), smoke passed 08:37. Gemini batch17 review done (artifacts/trainworld/gemini/
-   batch17/review.md), fixes17 on it. Next batch review: T-4283 (sim), netcut, pagestage3. Owed once the machine is quieter:
-   1 edit_bench NYC on master (followcut and pageedit2 both saw NYC rows 30-160% slower than older runs, e.g. undo 133
-   to 612 ms, a rename too: noise or a regression from T-4272/T-4274/T-4280?), then 8800 rebuild + smoke.
+   rest: the network's lines block, 127-160 ms of the 430 ms follow-up; also has fixes17's return-run cache finding),
+   followcut2 (Opus, T-4281 stage 2: the passes over every edge, line and station plus the post, and today and
+   blueprintQuote forcing the whole follow-up), pagestage3 (Opus, T-4284, page work after an edit; also has fixes17's
+   two worldDiff findings). Next: T-4149 rest (rows, about 60 ms). On her yes to a-2026-11-25-4: T-4272 rest.
+2. aside5 (Gemini, T-4220 stage 5, the Node equality check) hit Gemini's quota 09:11; retry after 09:57 UTC:
+   `gemini_agent.py start aside5 --brief <my scratch>/aside5/brief.md --task T-4220` (tree kept). Its checks/INDEX.md
+   edit needs the patch dance at landing. Briefs: my scratch <agent>/brief.md.
+3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1, T-4283, T-4220 s4 (b47119edb),
+   T-4285 (f27974de5, batch17 review fixes). 8800 = 73160a08f, smoke passed 08:37. Next batch review: T-4283, T-4220
+   s4, T-4285 with netcut, pagestage3, followcut2. Owed on a quieter machine: 1 edit_bench NYC on master (followcut and
+   pageedit2 saw NYC rows 30-160% slower than older runs, e.g. undo 133 to 612 ms: noise or a regression from
+   T-4272/T-4274/T-4280?), then 8800 rebuild + smoke.
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
 5. Next: T-4080 s3 (Sonnet, now pageedit2 is done), T-4153 rest and T-4149 rest after followcut's step table, T-4199
    s2, T-3160, T-4187.

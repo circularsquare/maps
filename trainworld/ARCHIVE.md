@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4285 [P1] {L:checks} Fix the review's findings on the batch17 landings (2026-11-25): 7 findings real: 4 fixed (renderer fill, carried copy check and room, span drift); return-run caches by moving slot passed to netcut; worldDiff's sameBuilt and PerLine passed to pagestage3. notes/T-4285.md.
 - T-4283 [P1] {L:solve-speed} Weekend held count kept after a weekend headway change (2026-11-25): Ahead keeps the weekend headways; settle_kept and settle_kept_rest each dropped by their own day; new test fails before, passes after; Rust 796 + 1029 pass. notes/T-4283.md.
 - T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2 (2026-11-25): Page's own work for a station placed on Asia 65-69 to 27 ms (readers 11-29 ms, median 18); removals 29-78 ms; figures identical; stage 1's memo leak fixed; stage 3 filed as T-4284. notes/T-4150.md.
 - T-4276 [P2] {L:timetables} Timetable for a whole line group (2026-11-25): Look A built (one table, branches as blocks); B and C on the sheet behind groupLook; group button reuses Detailed schedule; real NYC 4/5/6/6X group 36 to 81 rows. notes/T-4276.md.

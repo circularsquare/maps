@@ -198,10 +198,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4285 [P1] {L:checks} Fix the review's findings on the batch17 landings (taking, 2026-11-25, agent fixes17)
-  - Context: Gemini's review of T-4274 and T-4280 (per-line train slots), T-4281 stage 1, T-4150 stage 2 and T-4282 (artifacts/trainworld/gemini/batch17/review.md). Each finding is checked against the code first.
-  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
-  - Other: notes/T-4285.md
 - T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
   - Context: Stage 1 (11-25): a cut line's train samples are taken again only around the cut, so the first block after a click went 165 to 118 ms on your Asia save. Click run in my tree: first 199 ms, later 618, 1,538, 2,156. Later clicks still wait up to 1 s for the previous click's follow-up, mostly whole-save work.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
@@ -927,7 +923,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-25, agent aside5)
   - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-4 done: a snapshot of the figures on screen, read-only stand-ins for untouched cities, the side calculation's plan and the calculation itself, started only by a dev call; figures unchanged. Next: stage 5, the equality check. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
