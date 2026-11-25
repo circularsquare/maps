@@ -12,8 +12,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    NYC "slower" was noise (T-4293: trees' lone samples are cold first edits; edit_bench now compares first with first).
    Owed on a quiet machine: `node trainworld/tools/edit_bench.mjs --save asia,nyc --baseline` on master (11-24's has no stop rows). Next: T-4291 (rows and
    post: landed 755b1278f, Asia 144 to 59 ms; review21: 3 lows; modelpass (Opus,
-   T-4299 + those lows) running; T-4300 next); T-4214 done (D-E landed 4a2ab2d37, review22 Sonnet on it); T-4294 (Edit stops clicks
-   sending a question and no edit, P2). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
+   T-4299 + those lows) running; T-4300 next); T-4214 done (D-E landed 4a2ab2d37, review22 Sonnet on it); T-4294 done (a bench
+   fault). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
    Not edit speed: T-4080 bus stop names done and archived (081dcb203); connections are T-4083.
 2. T-4220 stages 6-7 landed together 4ffd70e86 (NYC edited line's figures 17 s instead of 53); review20 found 6 (stale quick
    figures over a newer network, no early figures when refused, side figures read as final); fixes20 (Opus, T-4307). Until it lands:
@@ -22,7 +22,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1-2, T-4283, T-4220 s4-5, T-4285,
    T-4153 s7, T-4080 s3 + review fixes, T-4293, T-4284 s3, T-4297. 8800 = 6c1cfb8ac, smoke passed 11:3x.
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
-5. Next (not edit speed): T-4199 s2, T-3160, T-4187, T-4294 (Edit stops clicks lost).
+5. Next (not edit speed): T-4199 s2, T-3160, T-4187, T-4306 (Lines list re-sorting under a press, P3).
 6. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
