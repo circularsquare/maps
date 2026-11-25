@@ -15,6 +15,7 @@ import { blocksIn, masksIn, openNetwork, putTerrainIndexIn, putWorldWaterIn, roa
 import { restart } from "./clockMain";
 import { gameNow } from "./clockMoney";
 import { api, messages, mode, putApi, putHolidaysSent, putMessages, putRowsSent, rowsSent, send, setMode, syncFrame } from "./clockState";
+import { forgetEnds } from "./clockRunEnds";
 
 // ---------------------------------------------------------------- Rust panics (T-1007)
 //
@@ -104,6 +105,7 @@ function replaceModel() {
   newModel();
   masksIn.clear();
   streetsIn.clear();
+  forgetEnds();
   send({ kind: "townClear" });
   putRowsSent(""); putHolidaysSent(rowsSent);
 }

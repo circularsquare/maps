@@ -9,6 +9,11 @@ import type { RouteEnd } from "./protocol";
 const ends = new Map<number, number>();
 const KEEP = 64;
 
+/** T-4311: a new model (a panic's rebuild): its node ids are not those any edit ended at */
+export function forgetEnds() {
+  ends.clear();
+}
+
 /** Route edit `seq` was applied, ending at `node`, or refused (undefined). */
 export function routeEnded(seq: number, node: number | undefined) {
   ends.set(seq, node ?? -1);

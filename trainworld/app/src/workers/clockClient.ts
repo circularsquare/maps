@@ -55,7 +55,7 @@ import { afterPaint, BUSY_MS, expectedMs, hideBusy, learnBusy, showBusy } from "
 import { addTerrainGrid, dropTerrainGrids, groundNet, setTerrainIndex } from "../game/terrain";
 import { addTownOutline, clearTownOutlines } from "../map/townArea";
 import { letterOf } from "../game/lineLetter";
-import { pendingAnswer, pendingClear, pendingPatchIn, pendingSent, pendingTaken, pendingWord } from "../game/pending";
+import { breakRun, pendingAnswer, pendingClear, pendingPatchIn, pendingSent, pendingTaken, pendingWord } from "../game/pending";
 import type { MapPatch } from "./protocol";
 import { clickNetClear, setClickWorld } from "../map/clickMap";
 
@@ -1647,6 +1647,7 @@ export class ClockClient {
       case "recovered":
         console.error("clock worker:", msg.detail);
         this.lastTrouble = msg.detail;
+        breakRun(); // T-4311: a rebuilt model may lack the node a track run goes on from
         if (msg.down) {
           clockWorkerStatus.value = "track model down after a panic"; // i18n-ignore
           modelStopped.value = true; // T-4109: its notice says it

@@ -273,6 +273,8 @@ export function pendingSent(seq: number, op: EditOp, quiet: boolean, stop = fals
   // (after the guess, which reads whether any edit went since its read)
   sentCount++;
   lastSeq = seq;
+  // T-4311: an undo or redo the track run did not send may take away the node it goes on from
+  if ((op.op === "undo" || op.op === "redo") && !runTag) runBreak?.();
 }
 
 /** Whether an edit's show can stand, its price made right first: a price is shown only for an edit sent with no other
@@ -463,6 +465,14 @@ export function asRun<T>(run: number, f: () => T): T {
   runTag = run;
   try { return f(); } finally { runTag = was; }
 }
+/** the track run whose edit is being sent (`asRun`), 0 for none: game/world.ts keeps it across an undo's waits */
+export const sendingRun = () => runTag;
+
+/** T-4311: told when the node a track run goes on from may be gone, and map/tools.ts ends the run: an undo or redo sent
+ * from outside the run, or the worker's model rebuilt after a panic (`breakRun`) */
+let runBreak: (() => void) | null = null;
+export function setRunBreak(f: () => void) { runBreak = f; }
+export function breakRun() { runBreak?.(); }
 
 /** How many edits are out, leaving out those of track run `run` (0: none left out). */
 export function editsOut(run = 0): number {

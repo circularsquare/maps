@@ -16,6 +16,7 @@ import { tidyNodes, type FareNode } from "./fareCurve";
 import { groundDist, groundScale } from "./coords";
 import { busPlaces } from "./busLinks";
 import { noteEdit } from "./editCap";
+import { asRun, sendingRun } from "./pending";
 import { checkPatches, freshly, freshNow, sameBuilt, worldDiff } from "./worldDiff";
 import type { Demand, LineId, LineInput, LineStats, RowFigs, Save, StationInput, WorldView } from "./types";
 import { DEMAND_INDEX, DEMANDS, loopHalves } from "./types";
@@ -150,7 +151,8 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   if (!silent) beforeEdit?.(op);
   if (!sink) return { ok: false, issues: [], charge: 0 };
   // T-3731: an undo or redo takes back the last stop click shown, so it waits for the clicks still out; T-4214: and the
-  // last map click, waiting for the map or being carried out
+  // last map click, waiting for the map or being carried out. T-4311: still sent as the track run that asked (`asRun`)
+  const run = sendingRun();
   if ((op.op === "undo" || op.op === "redo") && stopsQueued.peek() > 0) await afterStopEdits();
   if ((op.op === "undo" || op.op === "redo") && clicksBusy()) await afterClicks();
   noteEdit(op, world.peek());
@@ -158,7 +160,7 @@ export async function edit(op: EditOp, quiet = false, silent = false, early: boo
   // `early` (T-1407): the answer may come before `world` holds the edit (`a.early`); "rows" (T-2766, a stop click):
   // the answer comes with `world` holding the edit, its network a moment later; "click" (T-4214, a station or a delete
   // clicked on the map): the answer may come once the map the tools pick on holds it (map/clickMap.ts), before `world`
-  const a = await sink!(op, early, game);
+  const a = await asRun(run, () => sink!(op, early, game));
   if (!a.ok && !quiet && a.issues.length) say(describeIssues(a.issues, buysOf(op), lineVehicle((op as { line?: number }).line)), true);
   else if (a.ok && !silent) afterEdit?.(op, a);
   return a;

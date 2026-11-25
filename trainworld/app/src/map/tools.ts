@@ -25,7 +25,7 @@ import { t as tr } from "../i18n";
 import { mobileDevice } from "../workers/deviceMemory";
 import { effect } from "@preact/signals";
 import { type Map as MlMap, type MapMouseEvent } from "maplibre-gl";
-import { lngLatToPack } from "../game/coords";
+import { lngLatToPack, packToLngLat } from "../game/coords";
 import { distance, money } from "../game/format";
 import { activeCity, worldFrameEpoch } from "../game/cities";
 import { demandView } from "../game/demand";
@@ -42,14 +42,14 @@ import { clickNet, clickWorld, patchFresh } from "./clickMap";
 import { hidden, levelHidden } from "./visibility";
 import { afterStopEdits, edit, queueStopEdit, say, sendStopEdit, stopsQueued, world } from "../game/world";
 import { hideBusy, showBusy } from "../game/busy";
-import { type RouteEnd } from "../workers/protocol";
+import { type PiInput, type RouteEnd } from "../workers/protocol";
 import { gameStamp, onRoadsLanded, type ClockClient, type PreviewAnswer } from "../workers/clockClient";
 import { roadTileTemplate } from "./busRoads";
 import { kAtY, toLngLat, toLocal } from "./geo";
 import { laneState } from "./renderer";
 import { planStopsOf, type Level } from "../game/types";
 import { endHeading } from "./curveCircle";
-import { ahead, asRun, editsSentCount, lastSentSeq, type Ahead, type Show } from "../game/pending";
+import { ahead, asRun, editsSentCount, lastSentSeq, setRunBreak, type Ahead, type Show } from "../game/pending";
 import { ghostTangent, LOCAL_PX, sameLine, warmGhostLocal, type TangentSpec } from "./ghostLocal";
 import { ghostChevrons, joinedGhost, strokesFromPreview, TAPER_M, type Strokes } from "./network";
 import { type PlatformShape } from "./stationGeometry";
@@ -84,7 +84,8 @@ export class Tools {
   /** a segment being worked out before it is sent (a real or street route found first), or one sent on a refused ghost
    * until its answer: clicks wait for it */
   placing = false;
-  /** T-4214 stage D: the run's segments sent and not yet answered, where each lies as drawn: a click on one waits for it */
+  /** T-4214 stage D: the run's segments sent and not yet answered, where each lies as drawn: a click on one waits for it
+   * (`ownTrackOut`) */
   flying: { seq: number; pts: Float32Array }[] = [];
   /** T-4214: map clicks waiting for the map to hold every edit sent before them, in order (map/toolWait.ts) */
   waitingClicks: WaitingClick[] = [];
@@ -293,6 +294,7 @@ export class Tools {
     this.handle.addEventListener("pointerdown", (e) => dragHandle(this, e));
     Object.assign(touchActions, { confirm: () => { if (!waitClick(this, "confirm", null)) this.carrying(touchConfirm(this)); }, back: () => touchBack(this), stop: () => touchStop(this), drawn: () => placeTouch(this) });
     startClickWait(this);
+    setRunBreak(() => this.dropRun());
     effect(() => {
       tool.value;
       touchInput.value;
@@ -835,7 +837,8 @@ export class Tools {
         return true;
       }
       if (e.key === "Enter") {
-        this.reset();
+        // (after the clicks still waiting, whose segments belong to the run it ends, T-4311)
+        inClickOrder(() => this.reset());
         return true;
       }
     }
@@ -867,6 +870,7 @@ export class Tools {
     // T-2404: the run's segments held for the pointer's rest go now
     if (this.held.length) this.client.placedNow();
     this.held = [];
+    this.flying = [];
     this.start = null;
     this.clicked = null;
     this.chain = [];
@@ -894,17 +898,6 @@ export class Tools {
     if (e.originalEvent.detail >= 2 && (this.placing || this.chain.length)) {
       if (this.placing) this.endRun = true;
       else this.reset();
-      return;
-    }
-    if (this.held.length && this.nearHeld(e.point.x, e.point.y)) {
-      this.held = [];
-      this.client.placedNow();
-      this.carrying(this.heldLanded().then(() => this.trackClick(e)));
-      return;
-    }
-    // T-4214 stage D: a click on a segment of this run still to be answered waits for it (at most 3 s), so its snap finds it
-    if (this.flying.length && this.nearPts(this.flying.map((f) => f.pts), e.point.x, e.point.y)) {
-      this.carrying(this.flyingLanded().then(() => this.trackClick(e)));
       return;
     }
     let s = this.snap(e.point.x, e.point.y, e.lngLat);
@@ -996,8 +989,10 @@ export class Tools {
       p = this.previewKey === JSON.stringify(req) ? this.lastPreview : null;
       // T-1474: heard at the click, not at the worker's answer; not when the ghost already shows a refusal
       if (p?.ok !== false) playBuild("snap");
-      // (where it lies as drawn, for a click on it before its answer: `flying`)
-      pts = p?.pts ?? this.startLocal(s)?.a.pts ?? this.shownPreview?.pts ?? null;
+      // (where it lies as drawn, for a click on it before its answer: `flying`; a route with no ghost of its own, through its
+      // route's points)
+      const [ex, ey] = this.clickEnd(s, rc, sc), route = rc?.kind === "route" ? rc.route : sc?.kind === "route" ? sc.route : null;
+      pts = p?.pts ?? (route ? null : this.startLocal(s)?.a.pts ?? this.shownPreview?.pts) ?? this.sentLine(from, route, ex, ey);
       // T-4208: shown placed at the click, the ghost going on from its end; a ghost already refused stays as it is
       if (p?.ok !== false && !rc && !sc && !this.snapped) {
         const stamp = this.clickAhead(p, s, chain, s.kind === "free" && !by);
@@ -1034,11 +1029,10 @@ export class Tools {
       try {
         a = await sent;
       } finally {
+        // (a click waiting on this segment goes now: its patch, if it has one, came before this answer)
         this.flying = this.flying.filter((f) => f.seq !== seq);
-        if (hold) {
-          this.placing = false;
-          queueMicrotask(() => tryClicks(this));
-        }
+        if (hold) this.placing = false;
+        queueMicrotask(() => tryClicks(this));
       }
       if (a.ok && a.node !== undefined && seq >= 0) noteRunNode(seq, a.node);
       // T-4208: the stand-in kept at the click goes with a refusal. T-4210: otherwise it stays until the network holding the
@@ -1131,9 +1125,9 @@ export class Tools {
 
   /** Backspace while chaining: the last segment undone, drawing on from its start again. */
   async takeBackSegment() {
-    // a segment still being placed is not on the undo stack yet, nor a click waiting (T-4214)
-    if (this.placing || this.waitingClicks.length) return;
-    const prev = this.chain.pop();
+    // a segment still being placed is not on the undo stack yet, nor a click waiting or being carried out (T-4214)
+    if (this.placing || this.waitingClicks.length || this.clicksOut) return;
+    const prev = this.chain[this.chain.length - 1];
     if (!prev) {
       this.reset();
       return;
@@ -1145,7 +1139,11 @@ export class Tools {
       this.placing = false;
       queueMicrotask(() => tryClicks(this));
     });
-    if (!a.ok) return this.reset();
+    // T-4311: refused, nothing was taken back: the segment it meant was refused, and that answer took the run back already.
+    // A run ended or taken back past this segment meanwhile stays as it is.
+    const i = this.chain.indexOf(prev);
+    if (!a.ok || i < 0) return;
+    this.chain.length = i;
     // the undone segment's held state and early node are gone with it
     if (this.held.length) this.client.placedNow();
     this.held = [];
@@ -1428,17 +1426,27 @@ export class Tools {
       }
     return false;
   }
-  /** T-2404: a click near a held segment waits for their state (at most 3 s), so its snap can find them */
-  async heldLanded() {
-    const node = this.earlyNode, until = performance.now() + 3000;
-    while (node >= 0 && !clickWorld()?.nodes.has(node) && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
+  /** T-4311: what of this run's own track at map point `at` the tools' map lacks yet, which a click there waits for in the
+   * click queue (map/toolWait.ts) so its snap finds it: a segment sent and not answered ("sent", `flying`), or one answered
+   * ahead of a state the worker holds ("held", T-2404); null for neither */
+  ownTrackOut(at: LngLatish | null): "sent" | "held" | null {
+    if (!at || (!this.flying.length && !this.held.length)) return null;
+    const p = this.map.project([at.lng, at.lat]);
+    if (this.flying.length && this.nearPts(this.flying.map((f) => f.pts), p.x, p.y)) return "sent";
+    return this.held.length && this.nearHeld(p.x, p.y) ? "held" : null;
   }
-  /** T-4214 stage D: the run's segments sent so far answered (at most 3 s), and so in the tools' map (each answer comes
-   * after its patch) */
-  async flyingLanded() {
-    const until = performance.now() + 3000;
-    while (this.flying.length && performance.now() < until) await new Promise((r) => setTimeout(r, 16));
-    await this.heldLanded();
+  /** T-4311: a segment's line from `from` through a real or street route's points (none: straight) to (ex, ey), local x, y, z
+   * (z left 0: only `nearPts` reads it) */
+  private sentLine(from: Placed, r: { first: [number, number]; last: [number, number]; pis: PiInput[] } | null, ex: number, ey: number): Float32Array {
+    const via = r ? [r.first, ...r.pis.map((q) => packToLngLat(q.x, q.y)), r.last].map(([lng, lat]) => toLocal(lng, lat)) : [];
+    return Float32Array.from([toLocal(from.lng, from.lat), ...via, [ex, ey]].flatMap(([x, y]) => [x, y, 0]));
+  }
+  /** T-4311: the node the run goes on from may be gone (game/pending.ts `breakRun`: an undo or redo from outside the run,
+   * the worker's model rebuilt after a panic): the run ends, and the answers still to come for its segments no longer act
+   * on the tool (a refused one would put the run back) */
+  dropRun() {
+    this.run++;
+    if (this.start) this.reset();
   }
 
   /** T-4208: the camera moved: a track or station ghost's end follows the still pointer to the map spot now under it */

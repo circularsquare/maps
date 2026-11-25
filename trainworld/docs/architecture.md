@@ -163,8 +163,8 @@ Web first, so it can be shared as a link.
   the edges the early answer carries (`held`) when no ghost of it was answered
   (`Renderer.addPlaced`). The tool asks for the state at once (`release`) when the run ends and
   when the pointer comes within 24 px of a held segment away from the start, since the snap sees a
-  segment only once its state lands; a click there waits for that state (at most 3 s) before it
-  snaps. The client takes the state after the next paint (`ghostFirst`). **A stop click's rows go
+  segment only once its state lands; a click there waits for that state as a waiting click does
+  (below) before it snaps. The client takes the state after the next paint (`ghostFirst`). **A stop click's rows go
   first** [T-2766]: the line tool's stop clicks ask `rows`; the worker applies the edit, posts a state
   of the rows alone (`rows`: world and money, no network, no trips; the renderer keeps its network)
   and then answers, so a refusal for money comes at its click. The rows go a task after the edit through the message
@@ -229,10 +229,13 @@ Web first, so it can be shared as a link.
   own click from the end of the one before, named by that edit (`RouteEnd` "endOf"), which the worker reads at the apply
   as the node that edit's route ended at (workers/clockRunEnds.ts; edits apply in arrival order); a segment from the end
   of an edit refused or never applied is refused with nothing to say, and the page draws the run on from the refused
-  segment's start. Only a click on one of the run's own segments still unanswered waits for it (at most 3 s). Stop
-  clicks never count. A tool switch the player makes meanwhile (the
-  toolbar, its keys, a panel's tool button, leaving a tool) waits its turn behind the waiting clicks, so each click goes
-  with the tool it was made with (game/ui.ts `inClickOrder`). A waiting click is dropped when its spot has left the
+  segment's start. A click (a tap, the touch bar's confirm) on the run's own track the map lacks yet, a segment still
+  unanswered or a held one (above), waits as any other [T-4311] (`Tools.ownTrackOut`). An undo or redo the run did not
+  send (Backspace's is its own) ends the run at its send, since it may take away the node the run goes on from, and so
+  does a panic's rebuild (game/pending.ts `breakRun`). Stop clicks never count. A tool switch the player makes
+  meanwhile (the toolbar, its keys, a panel's tool button, leaving a tool) waits its turn behind the waiting clicks, as
+  do Enter and the touch bar's stop ending a run, so each click goes with the tool it was made with (game/ui.ts
+  `inClickOrder`). A waiting click is dropped when its spot has left the
   screen, on Escape or a load, and carried out on the map as it is after 5 s. Undo and redo wait for it as
   for stop clicks. Every edit carries the game stamp, so one made before a load or a restart is refused. **A station is
   sent at its click** [T-4214 stage A]: with no name and a ticket, its name (the page's lookup, after the next paint) as

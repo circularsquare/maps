@@ -281,7 +281,8 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   on its node) does the same at any later time: it ends the run, or drops a start that has no
   segment yet [T-707]; a segment never ends where it starts, so no loop is lost. To carry on later, click the loose end
   (on quad, either pair's). Backspace while chaining undoes the last segment and draws on from its
-  start. A segment may turn
+  start; if that segment is refused meanwhile, nothing is undone and the run draws on from there all the same. Any other
+  undo or redo while drawing (Ctrl+Z, the blueprint panel's buttons) ends the run [T-4311]. A segment may turn
   up to 350 degrees, so a loop or hairpin is one click [T-442]. A click whose segment cannot be
   built (a curve under 100 m, a click straight behind the start, water, too little room for a
   ramp) is refused by the edit, its reason at the bottom left; the ghost was red already. No click

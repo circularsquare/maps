@@ -5,10 +5,10 @@
 // Dropped if the spot has left the screen, on Escape or a load; after CLICK_WAIT_MAX_MS it is carried out on the map as it
 // is. The next
 // segment of a track run never waits (stage D: it starts from the end of the one before, which the worker reads as that
-// edit's end node), but for a click on one of the run's own segments still unanswered (`Tools.flying`), and the line
-// tool's stop clicks never count as edits out (T-4114). A click counts as out from the moment it is made, so
-// one whose tool awaits before it sends (a delete's question) holds the clicks after it too; a station sends at once and
-// its name after it (stage A).
+// edit's end node), but a click (a tap, the touch bar's confirm) on the run's own track the map lacks yet does
+// (`Tools.ownTrackOut`, T-4311), and the line tool's stop clicks never count as edits out (T-4114). A click counts as out
+// from the moment it is made, so one whose tool awaits before it sends (a delete's question) holds the clicks after it
+// too; a station sends at once and its name after it (stage A).
 // notes/T-4214.md "Waiting clicks".
 
 import type { MapMouseEvent } from "maplibre-gl";
@@ -60,10 +60,10 @@ export function startClickWait(tk: Tools) {
   setClicksBusy(() => tk.waitingClicks.length > 0 || tk.clicksOut > 0 || tk.placing || namesPending() > 0);
 }
 
-/** Whether a click now would pick on a map that lacks an edit sent before it. */
-function mapBehind(tk: Tools): boolean {
+/** Whether a click now at map spot `at` would pick on a map that lacks an edit sent before it. */
+function mapBehind(tk: Tools, at: LngLatish | null): boolean {
   if (tk.clicksOut > 0) return true;
-  if (tool.peek() === "track") return tk.placing || editsOut(tk.start ? tk.run : 0) > 0;
+  if (tool.peek() === "track") return tk.placing || editsOut(tk.start ? tk.run : 0) > 0 || !!tk.ownTrackOut(at);
   return editsOut() > 0;
 }
 
@@ -78,9 +78,10 @@ export function waitClick(tk: Tools, how: WaitingClick["how"], e: MapMouseEvent 
       return true;
     }
   }
-  if (!q.length && !mapBehind(tk)) return false;
+  const at = e ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : tk.touchAt;
+  if (!q.length && !mapBehind(tk, at)) return false;
   const now = performance.now();
-  q.push({ how, tool: q.some((x) => x.how === "switch") ? null : t, at: e ? { lng: e.lngLat.lng, lat: e.lngLat.lat } : tk.touchAt, shift: !!o?.shiftKey, ctrl: !!o?.ctrlKey, meta: !!o?.metaKey, detail: o?.detail ?? 1, made: now, first: now, double: false, asked: false });
+  q.push({ how, tool: q.some((x) => x.how === "switch") ? null : t, at, shift: !!o?.shiftKey, ctrl: !!o?.ctrlKey, meta: !!o?.metaKey, detail: o?.detail ?? 1, made: now, first: now, double: false, asked: false });
   if (q.length === 1) {
     askNetwork(tk);
     armWait(tk);
@@ -89,10 +90,10 @@ export function waitClick(tk: Tools, how: WaitingClick["how"], e: MapMouseEvent 
 }
 
 /** T-2404: a network the worker holds for the pointer's rest is wanted now by the first waiting click (not one for a
- * track run's own segments: the run goes on without it) */
+ * track run's own segments: the run goes on without it, unless the click is on one whose state is held) */
 function askNetwork(tk: Tools) {
-  const h = tk.waitingClicks[0];
-  if (!h || h.asked || editsOut(tool.peek() === "track" && tk.start ? tk.run : 0) === 0) return;
+  const h = tk.waitingClicks[0], track = tool.peek() === "track";
+  if (!h || h.asked || (editsOut(track && tk.start ? tk.run : 0) === 0 && !(track && tk.ownTrackOut(h.at) === "held"))) return;
   h.asked = true;
   tk.client.placedNow();
 }
@@ -130,7 +131,7 @@ export function tryClicks(tk: Tools) {
         break;
       }
       const late = performance.now() - h.first >= CLICK_WAIT_MAX_MS;
-      if (!late && mapBehind(tk)) {
+      if (!late && mapBehind(tk, h.at)) {
         askNetwork(tk);
         break;
       }

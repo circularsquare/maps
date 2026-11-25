@@ -2,7 +2,7 @@
 
 import { t as tr } from "../i18n";
 import { type MapMouseEvent } from "maplibre-gl";
-import { tool } from "../game/ui";
+import { inClickOrder, tool } from "../game/ui";
 import { hiddenOnGlobe } from "./live";
 import { SAME_TAP_PX, touchCtl, touchInput, type TouchCtl } from "./touch";
 import { TOUCH_GAP_PX, type LngLatish } from "./toolParts";
@@ -73,7 +73,8 @@ export function touchBack(tk: Tools) {
 export function touchStop(tk: Tools) {
   const t = tool.peek();
   if (t === "bus" || t === "ferry" || t === "building") return tk.exit();
-  if (t === "track") return tk.reset();
+  // (a run ends after the taps still waiting, whose segments belong to it, T-4311)
+  if (t === "track") return inClickOrder(() => tk.reset());
   tk.touchAt = null;
   tk.hover = null;
   if (t === "station") freeCancel(tk);
