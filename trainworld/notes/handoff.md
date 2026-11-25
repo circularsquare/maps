@@ -22,7 +22,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1-2, T-4283, T-4220 s4-5, T-4285,
    T-4153 s7, T-4080 s3 + review fixes, T-4293, T-4284 s3, T-4297. 8800 = 6c1cfb8ac, smoke passed 11:3x.
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
-5. Next (not edit speed): T-4199 s2, T-3160, T-4187, T-4306 (Lines list re-sorting under a press, P3).
+5. Not edit speed: drawmem (Opus, T-4187: draw caches on phones, exact). Next: T-4199 s2, T-3160, T-4306 (P3).
 6. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
