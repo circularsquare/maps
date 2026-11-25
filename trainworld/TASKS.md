@@ -202,14 +202,19 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4271 [P2] {L:edit-speed} Patch check flags a hub node after a station on a line
-  - Context: Found by uploadedit (T-4262) with `?patch=check` on New York: "T-4214 check: ... nodes N: hub" after placing a station on a line, so the patched state may differ from a whole build there.
-  - Goal: The cause named; the patch matches a whole build, or the check's rule fixed if the patch is right.
-  - Other: notes/T-4262.md
-- T-4265 [P1] {L:loading} City bubbles wait for an edit's whole solve on big saves (taking, 2026-11-24, agent shownanswer)
-  - Context: After an edit on a joined-up save (your Asia one: one cluster of about 140 zones) the workers no longer hold the figures on screen, so a city whose bubbles were not drawn waits at "Loading data" for the edit's whole solve, 165-300 s.
-  - Goal: A city's bubbles and panels answer from the figures on screen while a whole solve runs.
-  - Other: found in T-4263; notes/T-4263.md
+- T-4276 [P2] {L:timetables} Timetable for a whole line group
+  - Context: A player (X, 11-24): "Currently, the timetable only displays one route at a time. I'd like to be able to display all the routes in a group together." You, 11-24: file it.
+  - Goal: A line group's panel shows one timetable with every line of the group, each line's trains told apart.
+- T-4275 [P1] {L:map-look} Roads and water missing behind tracker blockers (taking, 2026-11-24, agent roadsblock)
+  - Context: Players since 0.4.6 (your scratch pad, 11-24): roads, rivers and water gone from the map, in map and satellite mode; one fixed it by allowing trackers on anita.garden in NordVPN's tracker blocking (artifacts/trainworld/board/20261124-234001-2c5a.png).
+  - Goal: Roads and water load with common tracker blockers on; the hotfix ready for your morning.
+- T-4273 [P2] {L:small-fixes} Keyboard shortcut to rename a station
+  - Context: A player request; you, 11-24: "i think is a good idea, lets add a keyboard shortcut for rename station."
+  - Goal: With a station selected, one key opens its name for editing (F2 unless it's taken), listed with the other shortcuts.
+- T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-24, agent answerfirst)
+  - Context: You, 11-25: "i want to be able to tell within like 100ms whether there's are any conflicts with the click we've made ... any conflicts should be local". Today the worker applies an edit to the whole simulation before it answers.
+  - Goal: Placing a station and deleting track are confirmed or refused from local checks within 100 ms on your Asia save, every click of a run.
+  - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
 - T-4199 [P2] {L:loading} {after:0.4.6} Corridors and corridor book built with the packs
   - Context: You, 11-24: no bit-exact rule, say when figures change, most riders within 1%. Stage 1 in tree corridors, not landed: Montana's trips wait 7.6 to 2.3 s; New York no gain; +32 MB demand memory on NYC unexplained.
   - Goal: Small games' trips about 70% faster on load, no memory rise; stage 2 about 2-3 h.
@@ -472,9 +477,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4243 [P2] {L:small-fixes} Speedometer on a train's panel
-  - Context: A player request (tw-feedback, 11-24). You, 11-24: a round dial, its rim coloured with the speed colours we already use (red slow, purple very fast), a needle turning around a centre circle, and the speed number in the middle, its text colour matching the current speed.
-  - Goal: A running train's panel shows that dial; a screenshot to you.
 - T-4246 [P3] {L:map-look} Tram wires look rough at corners in thickness mode
   - Context: You, 11-24: "trams and their two white wires look a little ugly in demand thickness mode, when they turn around corners. not sure if we could improve this easily."
   - Goal: Tram wires follow corners cleanly at every width.

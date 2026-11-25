@@ -32,10 +32,14 @@ meanwhile.
   network so that nothing scales with the save size ... deleting track still takes like a second to respond". 02:44: "creating a
   new line should really be instant ... ideally it falls out of a general edit speed solution ... nothing is changing
   anywhere on the map. deleting a line also seems like it should be instant."
+- 11-25 04:18, on the hold stage: "i am not fully understanding it i think, but currently i am not a fan of this hold idea. if the finished look doesnt arrive until 500ms after a click or 5s after a click, thats basically not faster edit speed at all ... did we decide that theres no way to just silo off whatevers on screen and just have our edits only depend on the nearby stuff? why does that not work? i want to be able to tell within like 100ms whether there's are any conflicts with the click we've made, and i want it to confirm that the click goes through or it doesnt. any conflicts should be local, so there should only be a bounded amount of things to check. i dont understand why this still has to scale and take on the order of 500ms. if it's not possible, just say its not possible. i dont want you to hide things and say that you'll figure it out if we dont actually have a plan to fix it."
 - Plans and fixes: the T-4144 plan (11-23: show each edit at the click, the checked version in a third of the time);
   DECISIONS T-4097 (11-25: root cause first, drawing at the click deprioritized). Each later stage cut one step
   (T-4240, T-4214 A, T-4153 s1-5, T-4150 s1); the steps left still scale with the save.
-- Why: no design took every step of an edit off the save's size; each stage removed one.
+- Why: no design took every step of an edit off the save's size; each stage removed one. 11-25 the reworked design
+  still put a timer (the hold) first and maps-c5 passed it on as a recommendation; her 04:2x: "i've literally asked as
+  explicitly as i possibly could, that we should *only be targeting the root cause!!!! we should not be doing any of the
+  cheap fixes!!"
 - Now: Gemini's end-to-end design, artifacts/trainworld/gemini/ask-0226/editscale.md, goes to her before building.
 
 ## Orchestrators drift heavy and cycle fast

@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c029",
+      "text": "added a speedometer to a running train's panel",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4243",
+      "by": "speedometer",
+      "at": "2026-11-25T04:34:31Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c028",
+      "text": "fixed a city's bubbles waiting minutes after an edit on big networks",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4265",
+      "by": "shownanswer",
+      "at": "2026-11-25T04:28:50Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
+    },
+    {
       "id": "c027",
       "text": "added renaming a line's stations together from its panel, or by pasting a list of names",
       "edited": null,

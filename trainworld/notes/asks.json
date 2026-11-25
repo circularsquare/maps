@@ -14,34 +14,6 @@
     "by": "maps-c5"
   },
   {
-    "id": "a-2026-11-24-22",
-    "title": "PR 34 closing comment",
-    "text": "Closing comment for xoaninc's PR #34 (ported, landed; NYC figures unchanged), to post and close on your OK: \"Thank you for this! We ported it with you as co-author on the commit; on our New York save it changes no figures, and it stops trains queueing again at each end of a one-way pair. It'll be in the next release, so I'm closing this one.\"",
-    "since": "2026-11-24",
-    "by": "maps-c5"
-  },
-  {
-    "id": "a-2026-11-24-23",
-    "title": "BRT stations while drawing",
-    "text": "A player said \"when creating a BRT line, cant connect BRT stations\". A new bus line is plain until you upgrade it to BRT on its panel, so the BRT stations along its route don't join it while you draw. That's the rules as written. Leave it (I'd say yes), or show the BRT stations the route passes in the draw tag, or add a BRT switch to the draw tool?",
-    "since": "2026-11-24",
-    "by": "maps-c5"
-  },
-  {
-    "id": "a-2026-11-24-24",
-    "title": "Revised edit-speed design",
-    "text": "Revised edit-speed design (T-4267, C:\\Users\\anita\\projects\\maps\\trainworld\\notes\\T-4267.md) after Gemini's and Fable's reviews: first a hold (3-4 h): while you keep placing stations or deleting, the rebuild waits until you stop (500 ms with no click, at most 5 s into a run), so each later click waits only for its own edit (about half off on master, 40-60% once T-4149 stage 2 lands). Costs: the finished look of the map comes at the pause; spots with 7 or more tracks show nothing new until then; a crash mid-run loses at most 5 s of edits. Then measure, land T-4249, cut the per-edit walks the measuring picks, measure again, then the partition parts. About 45-50 h in all, up to 75 if every \"only if\" stage is needed. Build it, hold first? I'd say yes.",
-    "since": "2026-11-24",
-    "by": "maps-c5"
-  },
-  {
-    "id": "a-2026-11-24-25",
-    "title": "GPU copy after edits",
-    "text": "After an edit the renderer now keeps the last drawn network on the GPU for 20 s so it can copy what didn't change instead of rebuilding it (T-4262): on your Asia save about 35 MB more GPU memory for those 20 s, 30 MB less allocated per edit, renderer work 121 to 30 ms for a station. On phones GPU memory is shared with the page. Keep it? I'd say yes.",
-    "since": "2026-11-24",
-    "by": "maps-c5"
-  },
-  {
     "id": "a-2026-11-24-26",
     "title": "Rename stations text",
     "text": "New text from T-4259 (renaming a line's stations together), all new: icon hover \"Rename stations\", then \"Paste a list of names into a box to fill it and the ones below\"; screen-reader labels \"Rename stations\" and \"New name for {name}\"; button \"Rename\" / \"Rename 1 station\" / \"Rename 3 stations\"; button \"Cancel\" (reused). OK?",
@@ -49,9 +21,9 @@
     "by": "maps-c5"
   },
   {
-    "id": "a-2026-11-24-27",
-    "title": "PR 35 closing comment",
-    "text": "Closing comment for omi-key's PR #35 (ported, landed), to post and close on your OK: \"Thank you for this! We ported it with you as co-author on the commit, with a few changes to keep the panel small: the rename opens from an icon next to Related lines, Esc closes only the boxes, and typing is kept if a station goes away while you edit. It'll be in the next release, so I'm closing this one.\"",
+    "id": "a-2026-11-24-29",
+    "title": "Speedometer text",
+    "text": "New text from T-4243 (the speed dial on a train's panel): the dial's hover \"Top speed 160 km/h\" (new). The unit under the number reuses the game's km/h or mph. OK?",
     "since": "2026-11-24",
     "by": "maps-c5"
   }

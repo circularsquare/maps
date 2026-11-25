@@ -1,35 +1,34 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session caa91e48-7288-4753-9895-c2b79ad5e3d9, name maps-c5 [fde5f5], since 2026-11-25 02:20 UTC
-Updated: 2026-11-25 03:19 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
-diary notes/handoff-log.md. Her time UTC-5. Core cap 14 since 03:32 UTC (her word). Start more when agents + claimed cores / 2 < 8.
+Updated: 2026-11-25 04:46 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-- Gemini quota ran out 03:43 UTC, resets about 04:57: then rerun gemini_agent t3303fix (T-4233, tree kept) and the
-  T-4242 design draft (artifacts/trainworld/gemini/t4242/brief.md). Claude agents meanwhile.
-0. Usage (her 11-25): Claude runs out before Gemini. Claude agents take P1/P2 code work; small clear tasks and PR ports
-   go to Gemini code agents (`tools/gemini_agent.py start <name> --brief <f> --task T-x --new-tree --cores 1`); reading
-   and batch or design review go to `gemini_audit.py`. Stay light (notes/repeats.md): briefs in files, report heads only.
-1. Running (briefs in my scratch <agent>/brief.md): slowfocus (Opus, T-4263; then T-4264 the bars as its follow-up),
-   fablereview (Fable at her ask, T-4267 design review to artifacts/trainworld/t4267-fable-review.md; its findings then go
-   to a fresh Opus agent: editdesign is at 411k), rowsmerge (Opus, merges master into tree rowsedit + Gemini's 3
-   findings, then `land rowsedit` + `remove`), smokefix (Sonnet, T-4270: t133, t144, t3192 fail on master), Gemini
-   pr34port (T-4258, NYC figure diff to her before landing). Adopted: cutstretch3 (T-4153 s6), uploadedit (T-4262),
-   busrebuild (T-4249): `land` + `remove`; they become T-4267's first steps.
-2. T-4267 design approved by her pending both reviews (Gemini's answered in its section 10; about 38 h, up to 55). After
-   Fable's is answered: tell her what changed, then start part 1's first stage (P1). No other edit-speed starts.
-3. 8800 = 57eb2dbdd (smoke failed: T-4270 and the wiki, rebuilt). Master fa9105102 + bookkeeping 140252c17, pushed.
-   Smoke again after T-4270 lands. Batch review due over T-4239, T-4256, T-4255, T-4220 s3, T-4266, T-4149 when landed.
-4. Next starts (not edit speed): T-4257 (bus routes by speed), T-4251 (busways), T-4243 speedometer, corridors3
-   (T-4199 s2), T-4080 s3-6, T-4230, T-4187, T-3160, T-4233, T-4242 design. Gemini: T-4259 (UI, needs a screenshot).
-5. Waiting on her: a-2026-11-24-16 (PR #21/#24 comments); T-3742 after she asks; T-4250 (smooth fade); T-4248.
-6. Core cap 14 (her 11-25 03:32). reserve_cores: maps-3e's
-   loop still holds the mutex; start mine (`-All -Loop 30`) once its tab closes.
+0. Usage: Claude runs out before Gemini; Gemini for reading and reviews (gemini_audit.py), small clear code to Gemini
+   agents. Gemini quota hit 03:43 UTC, resets about 04:57: then batch review (template gemini/batch15/brief.md) over
+   T-4149, T-4239, T-4243, T-4249, T-4251, T-4255-T-4259, T-4262-T-4265, T-4266, T-4270, T-4271; rerun gemini_agent
+   t3303fix (T-4233, tree kept); T-4242 design draft (gemini/t4242/brief.md). Stay light: briefs in files.
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097): a click confirmed from local checks, nothing per
+   edit scaling with the save; no holds, timers or trims. Running: answerfirst (Opus, T-4272, station and track delete
+   confirmed within 100 ms on Asia), editmeasure (Opus, T-4267 phases per edit, notes/T-4267-measure.md), gpuslots
+   (Opus, T-4262 s2, GPU work per edit by what changed). Then rework T-4267 to her 100 ms bar with a fresh agent,
+   allowed to say "not possible for X because Y". The hold is rejected.
+2. Running: roadsblock (Opus, T-4275 P1: roads and water missing behind tracker blockers since 0.4.6; the hotfix
+   publish waits for her morning, publish skill).
+3. 8800 = 6b190cb3c (smoke running 04:39). Master 187e4c259 (smaller speed dial after it). Next starts: T-4273 rename
+   shortcut, T-4276 group timetable, T-4080 s3-6, T-4199 s2, T-3160, T-4187. Overnight: calm pace, 2-4 agents.
+4. Waiting on her: asks.py list (PR #21/#24 comments, Asia load on fewer workers, rename and speedometer text);
+   T-3742 after she asks; T-4250; T-4248. Commit bookkeeping and push now and then.
+5. reserve_cores: maps-3e's loop holds the mutex; start mine (`-All -Loop 30`) once its tab closes.
 
 ## Her words
-- 11-25 02:2x-02:4x: the 90% bar and ~1 s edits are repeats (notes/repeats.md); don't ask her to test either until we think
-  it feels responsive on 8800, mention progress only. New line and line delete should be instant, from the general
-  design. Edit-speed memory budget 30 MB (DECISIONS T-4255). Game stays at anita.garden (T-4269).
+- 11-24 evening her time: edit speed's root cause is the main focus ("we should *only be targeting the root cause*",
+  "please dont overindex on what i've said"); away overnight, keep going calmly; usage not high this week. Speed dial
+  smaller (landed). 35 MB GPU copy OK. Use more cores: she plays off; test off, both after big loading changes. Bars:
+  past half only on a bounded time left. Don't ask her to test the bar or edit speed until it feels right on 8800.
+  Repeats tracked in notes/repeats.md. Edit-speed memory budget 30 MB. Game stays at anita.garden.
+- 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
 - 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
   kinda just flavor. we should mostly be focusing on isolating the changes and cutting out the impacts on the broader
   map." (DECISIONS T-4097; T-4149, T-4150, T-4262 at P1.) Asia: station adds 1-3 s, removal about 4 s.
