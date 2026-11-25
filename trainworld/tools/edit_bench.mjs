@@ -26,7 +26,9 @@
 // Actions (times in ms, median of --runs repeats; shows = the first frame that changes, built = the frame that
 // draws the edit as built): ghost trail (px the drawn ghost trails the pointer at a steady speed, and the answer
 // time of each move), a track piece, a station, Construct a line, a stop click (removed, added back), a stop
-// reorder, undo, deleting a line. The ledger is the main tree's notes/edit-ledger.jsonl, from any tree.
+// reorder, undo, deleting a line, and a click run (T-4267: four stations pressed 0.3 s apart on a line's track; each
+// click's confirm is its press to the worker's word or refusal in the page, the first click apart from the later ones,
+// which wait on the ones before). The ledger is the main tree's notes/edit-ledger.jsonl, from any tree.
 //
 // Steady numbers: it claims cores in the root ledger (cores.py) and pins the Chrome and its workers to them, holds
 // a lock so two benches never run together, and records how busy those cores were before it started (`loaded`).
@@ -289,6 +291,51 @@ function PLACES() {
   const n = L.stops.length;
   const pick = (i) => { const st = byId.get(String(L.stops[i])); return { id: st.id, name: st.name, lng: st.lng, lat: st.lat }; };
   return { line: { num: L.num, name: L.name, n, id: L.id }, sites, ghost: at(at(e0, u, 2.0), perp, -1.6), mid: pick(n >> 1), swaps: Array.from({ length: 8 }, (_, k) => Math.min((n >> 1) + 2 * k, n - 3)) };
+}
+
+/** T-4267: up to `n` built edges 3-8 km long on running rail lines other than `skip` (the line the stop actions use),
+ * those on the most lines first, for the click run */
+function CLICK_EDGES([n, skip]) {
+  const w = window.tw.world.value, s = w.save, edges = new Map(w.edges.map((e) => [e.id, e])), on = new Map();
+  for (const l of s.lines) for (const p of w.lineStats[l.id]?.path ?? []) on.set(p >> 1, (on.get(p >> 1) ?? new Set()).add(l.id));
+  const out = [];
+  for (const l of s.lines) {
+    const st = w.lineStats[l.id];
+    if (l.id === skip || st?.status !== 'running' || st.bus) continue;
+    for (const p of st.path ?? []) {
+      const e = edges.get(p >> 1), a = e && w.nodes.get(e.a), b = e && w.nodes.get(e.b);
+      if (!e || !a || !b || !e.built || e.crossover || e.lengthM < 3000 || e.lengthM > 8000 || out.some((x) => x.id === e.id)) continue;
+      out.push({ id: e.id, lines: on.get(e.id)?.size ?? 1, mid: [(a.lng + b.lng) / 2, (a.lat + b.lat) / 2] });
+    }
+  }
+  return out.sort((x, y) => y.lines - x.lines || x.id - y.id).slice(0, n);
+}
+/** T-4267: page px and lon/lat of the point a fraction `f` along edge `id`'s drawn track, for the camera as it is */
+function EDGE_AT([id, f]) {
+  const tk = window.tw.tools, pts = tk.pickNet?.edgePts.get(id);
+  if (!pts || pts.length < 6) return null;
+  const seg = [];
+  let all = 0;
+  for (let k = 3; k < pts.length; k += 3) { const d = Math.hypot(pts[k] - pts[k - 3], pts[k + 1] - pts[k - 2]); seg.push(d); all += d; }
+  let want = all * f, k = 0;
+  while (k < seg.length - 1 && want > seg[k]) { want -= seg[k]; k++; }
+  const q = seg[k] ? want / seg[k] : 0;
+  const [sx, sy] = tk.screen(pts[3 * k] + (pts[3 * k + 3] - pts[3 * k]) * q, pts[3 * k + 1] + (pts[3 * k + 4] - pts[3 * k + 1]) * q);
+  const rect = window.tw.map.getCanvas().getBoundingClientRect();
+  return { x: rect.left + sx, y: rect.top + sy, ll: window.tw.map.unproject([sx, sy]).toArray() };
+}
+/** T-4267: each pressed station's times from its press (the presses in order, as the station tool keeps them): its
+ * edit posted, the worker's word or refusal in (confirm), and its answer */
+function clickRunOf(ev, presses) {
+  const posts = ev.filter((e) => e.k === 'post' && e.kind === 'edit' && (e.op === 'addStation' || e.op === 'addBrtStation'));
+  return presses.map((t0, i) => {
+    const p = posts[i];
+    if (!p) return null;
+    const ans = ev.find((e) => e.k === 'arrive' && e.kind === 'edited' && e.seq === p.seq);
+    const word = ev.find((e) => e.k === 'arrive' && e.kind === 'applied' && e.seq === p.seq);
+    const confirm = word ?? ans;
+    return { post: p.t - t0, confirm: confirm ? confirm.t - t0 : null, answer: ans ? ans.t - t0 : null, ok: ans?.ok ?? null };
+  });
 }
 
 /** pacing: `fn(i)` every 16.7 ms on an absolute clock */
@@ -560,6 +607,49 @@ async function play(g, runs, only, acc, note) {
           await undo();
         }
       }
+    }
+  }
+
+  // T-4267: the click run, four stations pressed 0.3 s apart on a line's track, the clicks not waiting for each other
+  if (want('clickrun')) {
+    const spots = await page.evaluate(CLICK_EDGES, [runs, C.line.id]);
+    if (!spots.length) note('  click run: no built edge 3-8 km long on a running line');
+    for (const [k, sp] of spots.entries()) {
+      await g.act.key('Escape');
+      await g.act.camera(sp.mid, 12);
+      await sleep(800);
+      const m = await page.evaluate(EDGE_AT, [sp.id, 0.5]);
+      if (!m) { note('  click run ' + (k + 1) + ': edge ' + sp.id + ' not drawn'); continue; }
+      await g.act.camera(m.ll, 13.5);
+      await g.act.tool('station');
+      await sleep(1200);
+      const pts = [];
+      for (const f of [0.2, 0.4, 0.6, 0.8]) pts.push(await page.evaluate(EDGE_AT, [sp.id, f]));
+      if (pts.some((p) => !p || p.x < 0 || p.y < 0 || p.x > 1400 || p.y > 900)) { note('  click run ' + (k + 1) + ': a point off the screen'); continue; }
+      await quiet(20000, 1000);
+      const m0 = await mark();
+      await g.driver.move(pts[0].x, pts[0].y, { steps: 4 });
+      await sleep(700);
+      // each click's mouse events sent at its own time, none waiting for the page to take the click before (a player's
+      // clicks queue in the browser while the page is busy; awaited presses would space them out by the page's work)
+      const cdp = await page.context().newCDPSession(page);
+      const fire = (p) => { const b = { x: Math.round(p.x), y: Math.round(p.y), button: 'left', clickCount: 1 }; return Promise.all(['mouseMoved', 'mousePressed', 'mouseReleased'].map((type) => cdp.send('Input.dispatchMouseEvent', type === 'mouseMoved' ? { type, x: b.x, y: b.y } : { type, ...b }))); };
+      await Promise.all(pts.map((p, i) => new Promise((res) => setTimeout(() => res(fire(p)), i * 300))));
+      await cdp.detach().catch(() => {});
+      await quiet(40000, 2000);
+      const x = await page.evaluate((m) => window.__eb.ev.slice(m), m0);
+      const presses = x.filter((e) => e.k === 'input' && e.typ === 'pointerdown').map((e) => e.t).slice(0, 4);
+      if (presses.length < 4) { note('  click run ' + (k + 1) + ': ' + presses.length + ' of 4 presses reached the page'); continue; }
+      const clicks = clickRunOf(x, presses);
+      if (STEPS) note('  click run ' + (k + 1) + ' (edge ' + sp.id + ', ' + sp.lines + ' lines): ' + JSON.stringify(clicks.map((c) => c && Object.fromEntries(Object.entries(c).map(([a, b]) => [a, typeof b === 'number' ? Math.round(b) : b])))));
+      const refused = clicks.filter((c) => c && c.ok === false).length;
+      if (refused) note('  click run ' + (k + 1) + ': ' + refused + ' of 4 refused');
+      for (const [i, c] of clicks.entries()) {
+        if (!c) { note('  click run ' + (k + 1) + ': click ' + (i + 1) + ' sent no edit'); continue; }
+        add(i ? 'click run: confirm, later clicks' : 'click run: confirm, first click', c.confirm);
+        if (i) add('click run: answer, later clicks', c.answer);
+      }
+      await g.act.key('Escape');
     }
   }
 
