@@ -694,11 +694,16 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
             last.id = id;
         }
     }
-    let open: Vec<usize> = (0..stops.len()).filter(|&k| stops[k].station.is_none()).collect();
-    for (j, &k) in open.iter().enumerate() {
+    // In automatic mode, include rail-linked stops when finding neighboring stops.
+    // Riders reach those stops through the station's walking access.
+    let boundaries: Vec<usize> = (0..stops.len()).filter(|&k| !spaced || stops[k].station.is_none()).collect();
+    for (j, &k) in boundaries.iter().enumerate() {
+        if stops[k].station.is_some() {
+            continue;
+        }
         let g = stops[k].s;
-        let a = if j == 0 { 0.0 } else { 0.5 * (g + stops[open[j - 1]].s) };
-        let b = if j + 1 == open.len() { len } else { 0.5 * (g + stops[open[j + 1]].s) };
+        let a = if j == 0 { 0.0 } else { 0.5 * (g + stops[boundaries[j - 1]].s) };
+        let b = if j + 1 == boundaries.len() { len } else { 0.5 * (g + stops[boundaries[j + 1]].s) };
         stops[k].cover = Some(if spaced { [a.max(g - SPACED_COVER_M), b.min(g + SPACED_COVER_M)] } else { [a, b] });
     }
     Plan { stops, street: vec![], len, cum: poly.road.clone(), reach: kept.iter().map(|k| k.1).collect() }

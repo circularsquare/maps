@@ -61,11 +61,11 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
         assert!((k - k.round()).abs() < 1e-6, "a middle stop on the street grid: {c:?}");
     }
     assert!(a.bus_street(b).is_empty());
-    // covers: every ground metre of the route belongs to one stop that is not a station
+    // The linked station bounds the last street stop's corridor.
     let covers: Vec<[f64; 2]> = s.iter().filter(|c| c[6].is_finite()).map(|c| [c[6], c[7]]).collect();
     assert_eq!(covers.len(), s.len() - 1);
     assert_eq!(covers[0][0], 0.0);
-    assert!((covers.last().unwrap()[1] - road).abs() < 1e-6);
+    assert!((covers.last().unwrap()[1] - 0.5 * (s[s.len() - 2][3] + road)).abs() < 1e-6);
     assert!(covers.windows(2).all(|w| (w[0][1] - w[1][0]).abs() < 1e-9));
     // planned: no service yet, no cost, nothing charged
     assert!(!a.w.svc.lines[b as usize].running && a.cash() == cash);
@@ -109,6 +109,22 @@ fn a_feeder_bus_stops_at_the_station_it_reaches_and_runs_at_its_speed() {
     // removing a constructed route is final, as for track
     assert_eq!(a.remove_line(b), 0, "{}", a.issues());
     assert!(!a.can_undo() && !a.is_bus(b));
+}
+
+#[test]
+fn an_automatic_bus_terminal_does_not_cover_the_road_beyond_nearby_stations() {
+    let mut a = api();
+    let (_, stations) = rail(&mut a, 9, 500.0);
+    let line = a.new_line_id();
+    let route = [-500.0, 0.0, 1.0, 9000.0, 0.0, (bus::K_CORNER | bus::K_ROAD) as f64];
+    assert_eq!(a.set_bus_line(line, &route, 480, 600, 1200, 30.0, 120.0, 0x2d7dd2, "B1".into()), 0, "{}", a.issues());
+    let s = stops(&a, line);
+    assert_eq!(s.len(), stations.len() + 1);
+    assert_eq!(s[0][4], KIND_END as f64);
+    assert!(s[1..].iter().all(|stop| stop[4] == KIND_STATION as f64 && stop[6].is_nan()));
+    let catches = a.bus_catches(line);
+    assert_eq!(catches[0], 2.0);
+    assert!((catches[3] + 250.0).abs() < 1e-6, "the terminal's corridor ends halfway to the first station: {catches:?}");
 }
 
 #[test]

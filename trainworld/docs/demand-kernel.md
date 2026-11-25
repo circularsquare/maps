@@ -98,8 +98,8 @@ levels:
    scattering each station over the cells near it. With routes (T-275) each station's walk is
    searched once per position, every station once per worker on opening; an edit searches only
    its new or moved stations (timings: notes/T-275.md). **Bus corridors** (T-1464): a bus stop
-   that is no station is never walked to straight; each of them serves a stretch of its route (the
-   route's points nearer it than any other such stop of the line), and a cell within 500 m (`BUS_REACH_M`; 300 until T-3856, 600 until T-4224) of a
+   that is no station is never walked to straight. On automatic lines its stretch ends halfway to
+   each neighboring stop, including a station stop. A cell within 500 m (`BUS_REACH_M`; 300 until T-3856, 600 until T-4224) of a
    stretch reaches that stop with a walk of its distance to the route plus 100 m (the mean walk
    along it to a street stop). A cell keeps its 6 stations and adds at most 2 such bus stops, the
    nearest, so a bus never hides a station.
