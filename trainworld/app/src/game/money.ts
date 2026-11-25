@@ -31,6 +31,7 @@ import { PERIODS } from "./periods";
 import { pairRows, pairStats, setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
 import { zonesLoaded } from "./zones";
 import type { LineId, LineInput, LineStats, StationInput, WorldView } from "./types";
+import { checkPatches, freshly, freshNow, PerRecord, sameBuilt } from "./worldDiff";
 import type { MoneyState, RegionNow } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
@@ -163,21 +164,37 @@ export const incomeByDay = computed<Income[]>(() => {
   const was = incomeMemo, same = !!was && was.w === w && was.t === t && was.zl === zl;
   if (same && sameList(views, was.views)) return was.out;
   const own = views.map((v, k) => (!kindMade(k, near, rush) ? null : same && v === was.views[k] ? was.out[k] : incomeFor(w, t, v, was?.out[k])));
+  if (checkPatches()) own.forEach((x, k) => { if (x && x !== was?.out[k] && !sameBuilt(x, freshly(() => incomeFor(w, t, views[k], was?.out[k])))) console.error("T-4150 check: the fare income kept per line differs from a whole build"); });
   const out = own.map((x, k) => x ?? own[PLAIN_KIND[k]]!);
   incomeMemo = { w, t, zl, views, out };
   return out;
 });
 
+/** `faresOf` of each fares object priced at (the same object, the same curve) */
+const curves = new WeakMap<Fares, Fares>();
+/** T-4150: values kept per line, one set for each demand view (each kind of day has its own) */
+const NO_VIEW = {};
+export function keptFor<V>(by: WeakMap<object, PerRecord<string, V>>, dv: DemandView | null): PerRecord<string, V> {
+  const k = dv ?? NO_VIEW;
+  let p = by.get(k);
+  if (!p) by.set(k, (p = new PerRecord()));
+  return p;
+}
+const incomeKeptBy = new WeakMap<object, PerRecord<string, { fares: Fares; share: number[]; pkmPaid: number[]; mul: number; fareX: number[] | undefined; rides: number }>>();
+const moneyKeptBy = new WeakMap<object, PerRecord<string, { per: number[]; rode: number[]; money: LineMoney }>>();
+
 function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | null, prev?: Income): Income {
   const perPeriod = PERIODS.map(() => 0), ridesPeriod = PERIODS.map(() => 0);
   const lines = new Map<string, LineMoney>();
   if (!w || !m) return { perHour: perPeriod, rides: ridesPeriod, lines };
-  const curves = new Map<Fares, Fares>();
   const x = m.economy;
   const byId = stopsById(w);
   const boardings = w.save.lines.reduce((a, l) => a + (dv?.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const tripsPerBoarding = dv && boardings > 0 ? Math.min(1, dv.railTripsPerDay / boardings) : 1;
   const baseOf = baseTrips(w, dv, m.fares, byId);
+  const incomeKept = keptFor(incomeKeptBy, dv), moneyKept = keptFor(moneyKeptBy, dv);
+  incomeKept.trim(w.save.lines.length);
+  moneyKept.trim(w.save.lines.length);
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id];
     if (!st || st.status !== "running") continue;
@@ -194,8 +211,15 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       old.rides.forEach((v, p) => { ridesPeriod[p] += v * PERIOD_HOURS[p]; });
       continue;
     }
-    if (dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n) {
-      const g = lineGeo(w, l, byId), km = g.km;
+    if (!(dm && st.stopS[0]?.length === n && st.stopS[1]?.length === n)) {
+      lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: lineRides.map((v, p) => v / PERIOD_HOURS[p]) });
+      continue;
+    }
+    const g = lineGeo(w, l, byId), based = baseOf.get(l.id) ?? 0;
+    // T-4150: a line's own parts are made again only when what they read changed; its money from them and the base share
+    // (network-wide: one line's edit moves every line's) is a few sums a line, done each time as before
+    const own = incomeKept.get(l.id, [l, st, dm, dv, m.fares, g, loads, tripsPerBoarding], () => {
+      const km = g.km;
       // T-1277: a stretch pays its starting stop's fare scale (the base its boarding stop's, in `baseOf`)
       // T-2266: its riders pay the fares they were solved with
       const lf = lineFares(dm, m.fares);
@@ -211,21 +235,26 @@ function incomeFor(w: WorldView | null, m: MoneyTerms | null, dv: DemandView | n
       }
       let total = 0;
       for (const v of pkm) total += v;
-      const rides = dm.ridersPerDay * tripsPerBoarding;
-      const based = baseOf.get(l.id) ?? 0;
       // T-1626, T-2195: a high-speed or ferry line's rides pay its multiplier on the rate, T-3567 times the line's own;
       // demand's extra has it already
       const mul = lineFareMul({ id: l.id, fast: st.fast, ferry: !!st.bus?.ferry, boat: boatOf(st.bus), bus: !!st.bus && !st.bus.ferry, brt: !!st.bus?.brt }, lf);
-      pkm.forEach((pk, p) => {
-        const share = total > 0 ? pk / total : 0;
-        const r = (faresFor(fares, based * share, pkmPaid[p], mul) + (dm.fareX?.[p] ?? 0)) * x;
-        perPeriod[p] += r;
-        linePer[p] += r;
-        ridesPeriod[p] += rides * share;
-        lineRides[p] += rides * share;
+      return { fares, share: pkm.map((pk) => (total > 0 ? pk / total : 0)), pkmPaid, mul, fareX: dm.fareX, rides: dm.ridersPerDay * tripsPerBoarding };
+    });
+    const got = moneyKept.get(l.id, [own, based, x], () => {
+      const per = PERIODS.map(() => 0), rode = PERIODS.map(() => 0);
+      own.share.forEach((share, p) => {
+        per[p] = (faresFor(own.fares, based * share, own.pkmPaid[p], own.mul) + (own.fareX?.[p] ?? 0)) * x;
+        rode[p] = own.rides * share;
       });
+      const money: LineMoney = { perHour: per.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: rode.map((v, p) => v / PERIOD_HOURS[p]) };
+      return { per, rode, money };
+    });
+    // (each period one term a line, added in line order as before)
+    for (let p = 0; p < PERIODS.length; p++) {
+      perPeriod[p] += got.per[p];
+      ridesPeriod[p] += got.rode[p];
     }
-    lines.set(l.id, { perHour: linePer.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: lineRides.map((v, p) => v / PERIOD_HOURS[p]) });
+    lines.set(l.id, got.money);
   }
   return { perHour: perPeriod.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: ridesPeriod.map((v, p) => v / PERIOD_HOURS[p]), lines };
 }
@@ -248,26 +277,41 @@ const BASE_BY_BOARDINGS = 0.5;
  * the same weights. Pool and weights are network-wide, since a trip's own legs are not known on
  * the main thread: a short leg (a feeder bus) gets less than an even share and a long one more.
  * `byBoardings` 1 is the even share per boarding. T-3578: with a line's own fare multiple set, the pool also takes what the`r`n * multiples add past one base (demand's `LineDemand.baseX`), and each line's weights and cap are times its own multiple. */
+/** T-4150: the last `baseTrips` of each demand view (the fares' and the regions' figures both ask it of one world) */
+const baseLast = new WeakMap<DemandView, { w: WorldView; fares: MoneyTerms["fares"]; byId: Map<string, StationInput>; by: number; out: Map<string, number> }>();
+/** T-4150: each line's own part of the base share (its terms in order, so the sums add as before) */
+const baseKeptBy = new WeakMap<object, PerRecord<string, { extra: number[]; pk: number; sc: number; b: number; own: number }>>();
+
 export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms["fares"], byId: Map<string, StationInput>, byBoardings = BASE_BY_BOARDINGS): Map<string, number> {
   const out = new Map<string, number>();
   if (!dv) return out;
+  const was = baseLast.get(dv);
+  if (was && !freshNow() && was.w === w && was.fares === fares && was.byId === byId && was.by === byBoardings) return new Map(was.out);
   const boardingsAll = w.save.lines.reduce((a, l) => a + (dv.lines.get(l.id)?.ridersPerDay ?? 0), 0);
   const perBoarding = boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
   const ids: string[] = [], cap: number[] = [], byB: number[] = [], byKm: number[] = [], own: number[] = [];
   let sumB = 0, sumKm = 0, pool = 0, extra = 0;
+  const kept = keptFor(baseKeptBy, dv);
+  kept.trim(w.save.lines.length);
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id], dm = dv.lines.get(l.id), n = l.stops.length;
     if (!st || st.status !== "running" || !dm || st.stopS[0]?.length !== n || st.stopS[1]?.length !== n) continue;
-    const g = lineGeo(w, l, byId), km = g.km, lf = lineFares(dm, fares as Fares);
-    const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, lf).sc);
-    // T-3578: what the trips riding it paid past one base, in base fares of its curve
-    if (dm.baseX && lf.base > 0) for (const x of dm.baseX) extra += x / lf.base;
-    let pk = 0;
-    for (const seg of lineLoadsFor(dv, l.id, "all", l.stops) ?? dm.loads) if (seg.length === km.length) for (let k = 0; k < seg.length; k++) pk += seg[k] * km[k];
+    const g = lineGeo(w, l, byId);
+    const p = kept.get(l.id, [l, st, dm, fares, g], () => {
+      const km = g.km, lf = lineFares(dm, fares as Fares);
+      const sc = lineBaseScale(dm.boardings, scalesOf(g, l, byId, lf).sc);
+      // T-3578: what the trips riding it paid past one base, in base fares of its curve
+      const ex: number[] = [];
+      if (dm.baseX && lf.base > 0) for (const x of dm.baseX) ex.push(x / lf.base);
+      let pk = 0;
+      for (const seg of lineLoadsFor(dv, l.id, "all", l.stops) ?? dm.loads) if (seg.length === km.length) for (let k = 0; k < seg.length; k++) pk += seg[k] * km[k];
+      return { extra: ex, pk, sc, b: dm.ridersPerDay * sc, own: ownLineFare(lf, l.id) };
+    });
+    for (const x of p.extra) extra += x;
     // a line with no passenger-km takes no fare in `incomeFor`, so none of the pool either
-    if (!(pk > 0)) continue;
-    const b = dm.ridersPerDay * sc;
-    ids.push(l.id); cap.push(b); byB.push(b); byKm.push(pk * sc); own.push(ownLineFare(lf, l.id));
+    if (!(p.pk > 0)) continue;
+    const b = p.b, sc = p.sc, pk = p.pk;
+    ids.push(l.id); cap.push(b); byB.push(b); byKm.push(pk * sc); own.push(p.own);
     sumB += b; sumKm += pk * sc; pool += b * perBoarding;
   }
   // T-3578: a trip pays the base times the largest own multiple of its lines: the pool takes what that adds (or
@@ -295,7 +339,8 @@ export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms
     if (!more) { for (let i = 0; i < ids.length; i++) if (!held[i]) got[i] = c * wt[i]; break; }
   }
   ids.forEach((id, i) => out.set(id, got[i]));
-  return out;
+  if (!freshNow()) baseLast.set(dv, { w, fares, byId, by: byBoardings, out });
+  return new Map(out);
 }
 
 /** What the figures read of a running line with both runs' stop positions: its stretches' km, run
@@ -307,16 +352,27 @@ export interface LineGeo {
   zones: string[];
   scales?: { of: unknown; sc: number[]; from: number[] };
 }
-let geoOf: { w: WorldView; zl: number; lines: Map<string, LineGeo> } | null = null;
+/** each world's geos as read (several worlds are read at once: `moneyWorld`, the stretches' shapes) */
+const geoOf = new WeakMap<WorldView, { zl: number; lines: Map<string, LineGeo> }>();
+/** T-4150: each line's, from world to world while its row, its stop positions and its stops' stations are the same */
+const geoKept = new PerRecord<string, LineGeo>();
 export function lineGeo(w: WorldView, l: LineInput, byId: Map<string, StationInput>): LineGeo {
   const zl = zonesLoaded.peek();
-  if (!geoOf || geoOf.w !== w || geoOf.zl !== zl) geoOf = { w, zl, lines: new Map() };
-  let g = geoOf.lines.get(l.id);
+  let mine = geoOf.get(w);
+  if (!mine || mine.zl !== zl) {
+    geoOf.set(w, (mine = { zl, lines: new Map() }));
+    geoKept.trim(w.save.lines.length);
+  }
+  let g = freshNow() ? undefined : mine.lines.get(l.id);
   if (g) return g;
-  const n = l.stops.length, km: number[] = [], kmAbs: number[] = [];
-  for (const s of w.lineStats[l.id]?.stopS ?? []) for (let k = 0; k + 1 < n; k++) { km.push((s[k + 1] - s[k]) / 1000); kmAbs.push(Math.abs(s[k + 1] - s[k]) / 1000); }
-  const zones = l.stops.map((id) => { const s = byId.get(id); return (s && stationZone(s)) ?? ""; });
-  geoOf.lines.set(l.id, (g = { km, kmAbs, zones }));
+  const stopS = w.lineStats[l.id]?.stopS;
+  g = geoKept.get(l.id, [l, stopS, zl, ...l.stops.map((id) => byId.get(id))], () => {
+    const n = l.stops.length, km: number[] = [], kmAbs: number[] = [];
+    for (const s of stopS ?? []) for (let k = 0; k + 1 < n; k++) { km.push((s[k + 1] - s[k]) / 1000); kmAbs.push(Math.abs(s[k + 1] - s[k]) / 1000); }
+    const zones = l.stops.map((id) => { const s = byId.get(id); return (s && stationZone(s)) ?? ""; });
+    return { km, kmAbs, zones };
+  });
+  mine.lines.set(l.id, g);
   return g;
 }
 /** A line's stops' base fare multipliers (`sc`) and each stretch's rate multiplier, its starting

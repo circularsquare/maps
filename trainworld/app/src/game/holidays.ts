@@ -15,6 +15,8 @@ import { awayNear, awaySoon, dateRange, rushRun, rushSoon, whenAway, whenBack, w
 import { holidayName, kindOfIn, rowOfIn, superPart, superRuns, type HolidayData, type SuperRun } from "./holidayCalendar";
 import { shiftAt, viewShift } from "./localTime";
 import { busStopsById, world } from "./world";
+import { checkPatches, worldDiff } from "./worldDiff";
+import type { TrackNode, WorldView } from "./types";
 import { t, type MessageKey } from "../i18n";
 import { countryName as countryNameIn } from "../i18n/intl";
 
@@ -85,20 +87,48 @@ const placeOf = new Map<number, { lng: number; lat: number; outlines: number; co
 export const railCountries = computed<string[]>(() => {
   const w = world.value;
   if (!w) return [];
-  const out = new Set<string>();
   const outlines = outlinesIn.value;
-  for (const n of w.nodes.values()) {
-    if (n.builtPorts <= 0) continue;
-    let p = placeOf.get(n.id);
-    if (!p || p.lng !== n.lng || p.lat !== n.lat || p.outlines !== outlines) {
-      const z = cityWithin(n.lng, n.lat);
-      p = { lng: n.lng, lat: n.lat, outlines, country: z ? cityById(z).country ?? null : null, shift: shiftAt(n.lng, n.lat) };
-      placeOf.set(n.id, p);
+  const was = railCount, d = was && was.outlines === outlines ? worldDiff(was.w, w) : null;
+  let c: RailCount;
+  if (d) {
+    // T-4150: the counts patched by the nodes that changed
+    c = { ...was!, w };
+    for (const [id, [, n]] of d.nodes) {
+      const old = c.keyOf.get(id), now = n ? railKey(n, outlines) : undefined;
+      if (old === now) continue;
+      if (old !== undefined) { const k = (c.n.get(old) ?? 1) - 1; if (k > 0) c.n.set(old, k); else c.n.delete(old); }
+      if (now !== undefined) { c.n.set(now, (c.n.get(now) ?? 0) + 1); c.keyOf.set(id, now); } else c.keyOf.delete(id);
     }
-    if (p.country) out.add(`${p.country} ${p.shift}`);
-  }
-  return [...out].sort();
+  } else c = railCountOf(w, outlines);
+  railCount = c;
+  const out = [...c.n.keys()].sort();
+  if (checkPatches() && d && out.join("|") !== [...railCountOf(w, outlines).n.keys()].sort().join("|")) console.error("T-4150 check: the rail countries patched differ from a whole count");
+  // the same list as before when no key came or went, so what follows it is not redone
+  return c.out && c.out.join("|") === out.join("|") ? c.out : (c.out = out);
 });
+/** each built node's "country shift" key, and how many nodes have each */
+type RailCount = { w: WorldView; outlines: number; keyOf: Map<number, string>; n: Map<string, number>; out?: string[] };
+let railCount: RailCount | null = null;
+function railKey(n: TrackNode, outlines: number): string | undefined {
+  if (n.builtPorts <= 0) return undefined;
+  let p = placeOf.get(n.id);
+  if (!p || p.lng !== n.lng || p.lat !== n.lat || p.outlines !== outlines) {
+    const z = cityWithin(n.lng, n.lat);
+    p = { lng: n.lng, lat: n.lat, outlines, country: z ? cityById(z).country ?? null : null, shift: shiftAt(n.lng, n.lat) };
+    placeOf.set(n.id, p);
+  }
+  return p.country ? `${p.country} ${p.shift}` : undefined;
+}
+function railCountOf(w: WorldView, outlines: number): RailCount {
+  const c: RailCount = { w, outlines, keyOf: new Map(), n: new Map() };
+  for (const n of w.nodes.values()) {
+    const k = railKey(n, outlines);
+    if (k === undefined) continue;
+    c.keyOf.set(n.id, k);
+    c.n.set(k, (c.n.get(k) ?? 0) + 1);
+  }
+  return c;
+}
 
 export interface HolidaySpan {
   country: string;

@@ -203,6 +203,10 @@ function pairsOf(flat: number[]): [string, string][] {
 const stationViews = new WeakMap<object, StationInput>();
 const lineViews = new WeakMap<object, LineInput>();
 const statsViews = new WeakMap<object, LineStats>();
+/** T-4150: `zoneViews` of a day's figures, for the stars */
+const starViews = new WeakMap<object, { intercity: unknown; views: ReturnType<typeof zoneViews> }>();
+/** T-4150: a node's view kept while its row is the same, so readers can tell changed nodes by identity (game/worldDiff.ts) */
+const nodeViews = new WeakMap<object, TrackNode>();
 let lastStations: StationInput[] = [];
 let lastLines: LineInput[] = [];
 let lastNodeRows: readonly object[] = [];
@@ -424,7 +428,11 @@ function toWorld(s: ClockState, keep = true): WorldView {
   let nodes = lastNodeMap;
   if (!sameObjects(s.nodes, lastNodeRows)) {
     nodes = new Map<number, TrackNode>(
-      s.nodes.map((n) => [n.id, { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}), ...(n.brtStation ? { brtStation: true as const } : {}), ...(n.kind ? { kind: n.kind } : {}) }]),
+      s.nodes.map((n) => {
+        let v = nodeViews.get(n);
+        if (!v) nodeViews.set(n, v = { id: n.id, x: n.x, y: n.y, lng: n.lng, lat: n.lat, level: n.level as any, ports: n.ports, builtPorts: n.builtPorts, flying: n.flying, platform: n.platform, ...(n.bus ? { bus: true as const } : {}), ...(n.port ? { port: true as const } : {}), ...(n.brtStation ? { brtStation: true as const } : {}), ...(n.kind ? { kind: n.kind } : {}) });
+        return [n.id, v];
+      }),
     );
     if (keep) {
       lastNodeRows = s.nodes;
@@ -1028,7 +1036,10 @@ export class ClockClient {
       // from figures before the market's result while the game has one)
       const d = demandByDay.value[AVERAGE_DAY];
       if (!marketIn(d) && !marketOff()) return;
-      for (const g of goalsDue(zoneViews(d), m)) this.post({ kind: "star", ...g });
+      // T-4150: the zones' views once per day's figures, not again with every state's money
+      let zv = d ? starViews.get(d.cities) : undefined;
+      if (d && (!zv || zv.intercity !== d.intercity)) starViews.set(d.cities, zv = { intercity: d.intercity, views: zoneViews(d) });
+      for (const g of goalsDue(zv?.views ?? zoneViews(d), m)) this.post({ kind: "star", ...g });
     });
     // Demand's riders for the boarding account (T-164): each new result, every kind of day's
     // (T-260); the trains and platforms of each hour read their own day's.

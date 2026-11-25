@@ -40,12 +40,13 @@ import { SPEED_LEVEL, speedAt } from "./network";
 import { topSeg } from "./pick";
 import { hidden } from "./visibility";
 import { headingAtPlane } from "./halfDot";
-import { rightHand } from "../game/world";
+import { rightHand, stationsById } from "../game/world";
 import { factRow, headingChevron, lineBullet } from "./trackTagRows";
 import type { TipLine } from "./networkTips";
 import { ARROW_SPREAD, ARROW_ZOOM, ONE_WAY_STEP_M, oneWayEvery } from "./oneWayMarks";
 import { brtJoins, busPlaceOf, busPlaces, busStopLinks } from "../game/busLinks";
 import { dotGroups } from "../game/complexView";
+import { checkPatches, worldDiff } from "../game/worldDiff";
 import { ROW_SLOT, profileOf } from "./profiles";
 import type { BusAhead } from "./busAhead";
 
@@ -495,6 +496,17 @@ export interface BusStyle {
 
 export type BusPaintKind = "speed" | "profit" | "level" | null;
 
+const sameSet = (a: ReadonlySet<number>, b: ReadonlySet<number>) => a === b || (a.size === b.size && [...a].every((x) => b.has(x)));
+/** T-4150: `busStopLinks` again only when a bus line's stops are other objects */
+let stopLinksLast: { lines: { line: number; stops: readonly unknown[] }[]; out: number[] } | null = null;
+function stopLinksOf(lines: Parameters<typeof busStopLinks>[0]): number[] {
+  const was = stopLinksLast;
+  if (was && !checkPatches() && was.lines.length === lines.length && was.lines.every((x, i) => x.line === lines[i].line && x.stops === lines[i].stops)) return was.out;
+  const out = busStopLinks(lines);
+  stopLinksLast = { lines: lines.map((x) => ({ line: x.line, stops: x.stops })), out };
+  return out;
+}
+
 export class BusLayer {
   private gl: WebGL2RenderingContext | null = null;
   private segProg: WebGLProgram | null = null;
@@ -569,8 +581,38 @@ export class BusLayer {
 
   /** Take the world's bus lines; true when what is drawn changed. */
   set(w: WorldView | null, hide: ReadonlySet<number> = new Set()): boolean {
+    const was = this.lastW, wasHide = this.lastHide, groups = dotGroups.peek();
     this.lastW = w;
     this.lastHide = hide;
+    // T-4150: an edit that changed no bus line, no BRT station and no passage, the places and the groups as they were
+    if (w && was && w !== was && !this.over && groups === this.lastGroups && sameSet(hide, wasHide) && busPlaces(w) === busPlaces(was) && !this.drawnChanged(was, w)) {
+      if (checkPatches() && this.rebuilt(w, hide)) console.error("T-4150 check: the bus layer kept differs from a whole build");
+      return false;
+    }
+    this.lastGroups = groups;
+    return this.rebuilt(w, hide);
+  }
+
+  /** the distance groups last drawn from */
+  private lastGroups: unknown = null;
+
+  /** Whether an edit from `a` to `b` changed a bus line, a BRT station or the passages (all the layer reads but the places). */
+  private drawnChanged(a: WorldView, b: WorldView): boolean {
+    const d = worldDiff(a, b);
+    if (!d || d.links) return true;
+    for (const id of d.lines) if (a.lineStats[id]?.bus || b.lineStats[id]?.bus) return true;
+    // (a BRT station's dashed joins read every station of its group: where they are and whether they are built)
+    const groups = dotGroups.peek(), byId = stationsById(b);
+    for (const [x, y] of d.stations.values()) {
+      if (x?.brt || y?.brt) return true;
+      const g = groups?.of.get((y ?? x)!.id);
+      if (g !== undefined && groups!.members[g].some((id) => byId.get(id)?.brt)) return true;
+    }
+    return false;
+  }
+
+  /** The layer's lines from the world; true when what is drawn changed. */
+  private rebuilt(w: WorldView | null, hide: ReadonlySet<number>): boolean {
     const next: BusSource[] = [], nextLinks: LinkSource[] = [];
     if (w) {
       for (const l of w.save.lines) {
@@ -599,7 +641,7 @@ export class BusLayer {
         else next.push(line);
       }
       // T-2992: a plain stop within demand's merge of another line's stop at a train station
-      const links = busStopLinks(w.save.lines.flatMap((l) => { const b = w.lineStats[l.id]?.bus; return b && !b.ferry ? [{ line: l.num, stops: b.stops }] : []; }));
+      const links = stopLinksOf(w.save.lines.flatMap((l) => { const b = w.lineStats[l.id]?.bus; return b && !b.ferry ? [{ line: l.num, stops: b.stops }] : []; }));
       const byNum = new Map(next.map((x) => [x.id, x]));
       for (let i = 0; i + 4 < links.length; i += 5) byNum.get(links[i])?.transfers.push(links[i + 1], links[i + 2], links[i + 3], links[i + 4]);
       // T-3890: the connectors between stops that connect, both lines drawn

@@ -7,7 +7,8 @@
 
 import { DEMAND_MERGE_M } from "./complexes";
 import type { ClockBus } from "../workers/protocol";
-import type { StationInput, WorldView } from "./types";
+import type { LineInput, StationInput, WorldView } from "./types";
+import { checkPatches, sameBuilt, worldDiff } from "./worldDiff";
 
 /** Two bus stops of different lines this near each other (ground m) are one place. */
 export const BUS_XFER_M = DEMAND_MERGE_M;
@@ -103,11 +104,77 @@ export interface BusPlaces {
 
 const placesMemo = new WeakMap<WorldView, BusPlaces>();
 
-/** T-3890: the world's bus stops grouped into places (kept per world). Stops of one line are never
- * merged with each other, nor are two lines' stops on one spot joined by a connector. */
+// rows of `BUS_WALK_M` of latitude, each cut into columns as wide on the ground at its middle
+const CELL = BUS_WALK_M / 111_320;
+const rowOf = (lat: number) => Math.floor(lat / CELL);
+const colOf = (lng: number, row: number) => Math.floor((lng * Math.cos(((row + 0.5) * CELL * Math.PI) / 180)) / CELL);
+/** a cell's key: columns stay within 2^19 of 0 at this size */
+const cellKey = (r: number, c: number) => r * 0x100000 + c;
+/** within a walk, whichever end `groundM` takes its scale from */
+const walkApart = (a: LL, b: LL) => Math.min(groundM(a, b), groundM(b, a)) <= BUS_WALK_M;
+
+const stationCellsOf = new WeakMap<readonly StationInput[], Map<number, number[]>>();
+/** the stations' indices by cell, per stations list */
+function stationCells(stations: readonly StationInput[]): Map<number, number[]> {
+  let g = stationCellsOf.get(stations);
+  if (g) return g;
+  g = new Map();
+  stations.forEach((s, i) => { const r = rowOf(s.lat), k = cellKey(r, colOf(s.lng, r)); (g!.get(k) ?? g!.set(k, []).get(k)!).push(i); });
+  stationCellsOf.set(stations, g);
+  return g;
+}
+/** whether `p` is within a walk of a point of `reach` (points by cell) */
+function inReach(reach: Map<number, LL[]>, p: LL): boolean {
+  const r = rowOf(p[1]);
+  for (let dr = -1; dr <= 1; dr++) {
+    const c = colOf(p[0], r + dr);
+    for (let dc = -2; dc <= 2; dc++) for (const q of reach.get(cellKey(r + dr, c + dc)) ?? []) if (walkApart(p, q)) return true;
+  }
+  return false;
+}
+
+/** T-4150: the last places built, the world they came from, and their reach: the stops and the stations a chain of walks
+ * from a stop reaches (`at`, and every point by cell). No other station can join a place or be a walk from one, so an
+ * edit that changes no bus line, no station within a walk of the reach and no train line stopping in it keeps the places. */
+let lastPlaces: { w: WorldView; out: BusPlaces; reach: Map<number, LL[]>; at: Set<string> } | null = null;
+
+function placesKept(was: NonNullable<typeof lastPlaces>, w: WorldView): boolean {
+  const d = worldDiff(was.w, w);
+  if (!d) return false;
+  if (d.lines.size) {
+    const lines = new Map<string, LineInput[]>();
+    for (const l of [...was.w.save.lines, ...w.save.lines]) if (d.lines.has(l.id)) (lines.get(l.id) ?? lines.set(l.id, []).get(l.id)!).push(l);
+    for (const id of d.lines) {
+      if (was.w.lineStats[id]?.bus || w.lineStats[id]?.bus) return false;
+      for (const l of lines.get(id) ?? []) if (l.stops.some((s) => was.at.has(s))) return false;
+    }
+  }
+  for (const pair of d.stations.values()) for (const s of pair) if (s && inReach(was.reach, [s.lng, s.lat])) return false;
+  return true;
+}
+
+/** T-3890: the world's bus stops grouped into places (kept per world, and from world to world while an edit changes
+ * nothing they read, T-4150). Stops of one line are never merged with each other, nor are two lines' stops on one spot
+ * joined by a connector. */
 export function busPlaces(w: WorldView): BusPlaces {
   const kept = placesMemo.get(w);
   if (kept) return kept;
+  const was = lastPlaces;
+  if (was && placesKept(was, w)) {
+    placesMemo.set(w, was.out);
+    lastPlaces = { ...was, w };
+    if (checkPatches() && !sameBuilt(was.out, buildPlaces(w).out)) console.error("T-4150 check: the bus places kept differ from a whole build");
+    return was.out;
+  }
+  const b = buildPlaces(w);
+  if (checkPatches() && !sameBuilt(b.out, buildPlaces(w, true).out)) console.error("T-4150 check: the bus places from the stops' reach differ from a build over every station");
+  placesMemo.set(w, b.out);
+  lastPlaces = { w, ...b };
+  return b.out;
+}
+
+/** `every`: every station, not only those the stops reach (a check's) */
+function buildPlaces(w: WorldView, every = false): { out: BusPlaces; reach: Map<number, LL[]>; at: Set<string> } {
   type Node = { stop?: PlaceStop; station?: string; p: LL; lines: string[] };
   const nodes: Node[] = [];
   const trainAt = new Map<string, string[]>(), busLines = new Set<string>();
@@ -120,16 +187,30 @@ export function busPlaces(w: WorldView): BusPlaces {
     } else for (const st of new Set(l.stops)) (trainAt.get(st) ?? trainAt.set(st, []).get(st)!).push(l.id);
   }
   const out: BusPlaces = { places: [], placeOf: new Map(), links: [] };
-  placesMemo.set(w, out);
-  if (!nodes.length) return out;
-  for (const st of w.save.stations) nodes.push({ station: st.id, p: [st.lng, st.lat], lines: trainAt.get(st.id) ?? [] });
-  // rows of `BUS_WALK_M` of latitude, each cut into columns as wide on the ground at its middle
-  const cell = BUS_WALK_M / 111_320;
-  const rowOf = (lat: number) => Math.floor(lat / cell);
-  const colOf = (lng: number, row: number) => Math.floor((lng * Math.cos(((row + 0.5) * cell * Math.PI) / 180)) / cell);
-  const grid = new Map<string, number[]>();
+  const reach = new Map<number, LL[]>(), at = new Set<string>();
+  if (!nodes.length) return { out, reach, at };
+  // only the stations the stops reach (`lastPlaces`): the others join no place and are no walk from one
+  const cells = stationCells(w.save.stations);
+  const put = (p: LL) => { const r = rowOf(p[1]), k = cellKey(r, colOf(p[0], r)); (reach.get(k) ?? reach.set(k, []).get(k)!).push(p); };
+  const queue: LL[] = nodes.map((n) => n.p);
+  for (const p of queue) put(p);
+  for (let q = 0; q < queue.length; q++) {
+    const p = queue[q], r = rowOf(p[1]);
+    for (let dr = -1; dr <= 1; dr++) {
+      const c = colOf(p[0], r + dr);
+      for (let dc = -2; dc <= 2; dc++) for (const i of cells.get(cellKey(r + dr, c + dc)) ?? []) {
+        const s = w.save.stations[i], sp: LL = [s.lng, s.lat];
+        if (at.has(s.id) || !walkApart(p, sp)) continue;
+        at.add(s.id);
+        queue.push(sp);
+        put(sp);
+      }
+    }
+  }
+  for (const st of w.save.stations) if (every || at.has(st.id)) nodes.push({ station: st.id, p: [st.lng, st.lat], lines: trainAt.get(st.id) ?? [] });
+  const grid = new Map<number, number[]>();
   nodes.forEach((n, i) => {
-    const r = rowOf(n.p[1]), k = `${r},${colOf(n.p[0], r)}`;
+    const r = rowOf(n.p[1]), k = cellKey(r, colOf(n.p[0], r));
     (grid.get(k) ?? grid.set(k, []).get(k)!).push(i);
   });
   const parent = Int32Array.from(nodes, (_, i) => i);
@@ -144,7 +225,7 @@ export function busPlaces(w: WorldView): BusPlaces {
     const r = rowOf(n.p[1]);
     for (let dr = -1; dr <= 1; dr++) {
       const c = colOf(n.p[0], r + dr);
-      for (let dc = -1; dc <= 1; dc++) for (const j of grid.get(`${r + dr},${c + dc}`) ?? []) {
+      for (let dc = -1; dc <= 1; dc++) for (const j of grid.get(cellKey(r + dr, c + dc)) ?? []) {
         if (j <= i) continue;
         const d = groundM(n.p, nodes[j].p);
         if (d <= BUS_WALK_M) pairs.push([i, j, d]);
@@ -219,7 +300,7 @@ export function busPlaces(w: WorldView): BusPlaces {
       if (d >= 1) out.links.push({ a: nodes[i].stop!, b: nodes[j].stop!, walk: false });
     }
   });
-  return out;
+  return { out, reach, at };
 }
 
 /** T-4079: a BRT station's joins with no passage, which the map draws dashed (a built passage keeps the white

@@ -214,6 +214,11 @@ Web first, so it can be shared as a link.
   stops by station and visit and resolving them against the list the one before left [T-3732]. A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
+  `toWorld` keeps each record's view (station, line, line figures, edge, node) the same object while its row is, so the
+  page reads what an edit changed off identity: `game/worldDiff.ts` `worldDiff` gives the records that differ between any
+  two worlds, and `PerRecord` keeps a reader's value per record while its inputs are the same objects. A reader of
+  `world` that works per record or patches a total goes through these and checks against a whole build under
+  `?patch=check` [T-4150].
   The money record goes with each state and "money" message the same way, as its changes from the last one posted
   (`moneyPatch`, `workers/valuePatch.ts`: key by key, entry by entry; a patch made against a record the page does not
   hold asks for a whole state), since whole it was about 2 MB on the biggest saves, nearly all of it the regions'

@@ -8,7 +8,9 @@
 // They take no presses; the tools and the node drag work on the nodes underneath.
 
 import type { Map as MlMap } from "maplibre-gl";
-import type { TrackEdge } from "../game/types";
+import type { TrackEdge, TrackNode, WorldView } from "../game/types";
+import { checkPatches, worldDiff, type WorldDiff } from "../game/worldDiff";
+import type { NetworkBuffers } from "./network";
 import { display, tool } from "../game/ui";
 import { world } from "../game/world";
 import { effect } from "@preact/signals";
@@ -21,6 +23,9 @@ import type { Overlay } from "./overlay";
 import { marksLayer, onScreen, placeAt } from "./screenPlace";
 
 type Kind = "loose" | "drag" | "track";
+type Pt = { lx: number; ly: number; cls: Cls; stub?: Float32Array };
+/** past this many changed nodes and edges the points are found again everywhere */
+const PATCH_MAX = 2000;
 type Cls = "end-mark" | "pi-mark" | "pi-mark loose";
 const HOT = " hot";
 
@@ -41,7 +46,7 @@ export class EndMarkers {
   private box: HTMLDivElement;
   private marks: HTMLDivElement[] = [];
   /** `stub`: a loose end's track, local units; the ring is left off while it is under `MIN_STUB_PX` long */
-  private pts: { lx: number; ly: number; cls: Cls; stub?: Float32Array }[] = [];
+  private pts: Pt[] = [];
   private scratch = [0, 0, 0, 0];
   private kind: Kind | null = null;
   private version = -1;
@@ -92,39 +97,114 @@ export class EndMarkers {
     return t === "track" ? "track" : t === "station" ? "loose" : t === "select" ? "drag" : null;
   }
 
-  /** The points to mark, found again only when the tool or the world changes. */
+  /** The points to mark, found again only when the tool or the world changes: at the nodes a new world changed and the
+   * ends of the edges it changed (T-4150), everywhere for a new tool, draw anchor or visibility. */
   private refresh(kind: Kind) {
     const w = world.peek(), net = this.overlay.renderer.net;
     const v = w?.version ?? -1, av = anchor().version;
     // the points are in local units, so they go stale when the draw anchor moves
     if (kind === this.kind && v === this.version && net === this.net && av === this.anchorV && hidden.v === this.hiddenV) return;
+    const d = w && kind === this.kind && av === this.anchorV && hidden.v === this.hiddenV ? worldDiff(this.from, w) : null;
+    const netMoved = net !== this.net;
     this.kind = kind;
     this.version = v;
     this.net = net;
     this.anchorV = av;
     this.hiddenV = hidden.v;
-    this.pts = [];
-    if (!w) return;
-    // only where the network draws the track: a mark is never left on its own (T-1485)
-    const edgeAt = new Map<number, TrackEdge>(), drawnAt = new Set<number>();
-    for (const e of w.edges) {
-      if (!net?.edgePts.has(e.id)) continue;
-      drawnAt.add(e.a).add(e.b);
-      edgeAt.set(e.a, e).set(e.b, e);
+    this.from = w;
+    if (!w) {
+      this.pts = [];
+      this.byNode.clear();
+      this.incident.clear();
+      this.edgeBy.clear();
+      this.stale.clear();
+      return;
     }
+    if (d && d.nodes.size + d.edges.size + this.stale.size <= PATCH_MAX) this.patchPts(kind, w, net, d, netMoved);
+    else {
+      this.allPts(kind, w, net);
+      this.stale.clear();
+    }
+    // in the network's node order, as found whole
+    this.pts = [...this.byNode].sort((a, b) => a[0] - b[0]).map(([, p]) => p);
+    if (checkPatches() && d) {
+      const got = this.pts.map((p) => `${p.lx},${p.ly},${p.cls},${p.stub?.length ?? -1}`).join("|");
+      this.allPts(kind, w, net);
+      const whole = [...this.byNode].sort((a, b) => a[0] - b[0]).map(([, p]) => `${p.lx},${p.ly},${p.cls},${p.stub?.length ?? -1}`).join("|");
+      if (got !== whole) console.error("T-4150 check: the end markers patched differ from a whole build");
+    }
+  }
+
+  /** T-4150: the world the points were found for, each marked node's point, the edges at each node (by id) and the edges */
+  private from: WorldView | null = null;
+  private byNode = new Map<number, Pt>();
+  private incident = new Map<number, number[]>();
+  private edgeBy = new Map<number, TrackEdge>();
+  /** the nodes worlds changed since the drawn network last changed: a world comes before its network, and a point is
+   * only where the network draws track, so they are looked at again when it comes */
+  private stale = new Set<number>();
+
+  private allPts(kind: Kind, w: WorldView, net: NetworkBuffers | null) {
+    this.byNode.clear();
+    this.incident.clear();
+    this.edgeBy.clear();
+    for (const e of w.edges) this.addEdge(e);
     for (const n of w.nodes.values()) {
-      if (n.platform > 0 || n.bus || !drawnAt.has(n.id)) continue;
-      // Settings' Show blueprints off: no square on a blueprint-only point, no ring at a blueprint end
-      const square = kind !== "loose" && n.builtPorts === 0 && !hidden.blueprints;
-      let loose = kind !== "drag" && n.ports === 1;
-      // T-1534: not the end of a blueprint that is switched off, which is drawn grey and faint
-      const e = loose ? edgeAt.get(n.id) : undefined;
-      if (loose && (!e || (!e.built && (e.off || hidden.blueprints)))) loose = false;
-      if (!square && !loose) continue;
-      const [lx, ly] = toLocal(n.lng, n.lat);
-      if (square) this.pts.push({ lx, ly, cls: loose ? "pi-mark loose" : "pi-mark" });
-      else this.pts.push({ lx, ly, cls: "end-mark", stub: net?.edgePts.get(e!.id) });
+      const p = this.ptAt(kind, n, net);
+      if (p) this.byNode.set(n.id, p);
     }
+  }
+
+  private patchPts(kind: Kind, w: WorldView, net: NetworkBuffers | null, d: WorldDiff, netMoved: boolean) {
+    const touched = new Set<number>(d.nodes.keys());
+    for (const [id, [a, b]] of d.edges) {
+      if (a) {
+        for (const at of [a.a, a.b]) {
+          const v = this.incident.get(at), i = v ? v.indexOf(id) : -1;
+          if (i >= 0) v!.splice(i, 1);
+          touched.add(at);
+        }
+        this.edgeBy.delete(id);
+      }
+      if (b) {
+        this.addEdge(b);
+        touched.add(b.a).add(b.b);
+      }
+    }
+    for (const id of touched) this.stale.add(id);
+    for (const id of netMoved ? this.stale : touched) {
+      const n = w.nodes.get(id), p = n ? this.ptAt(kind, n, net) : null;
+      if (p) this.byNode.set(id, p);
+      else this.byNode.delete(id);
+    }
+    if (netMoved) this.stale.clear();
+  }
+
+  private addEdge(e: TrackEdge) {
+    this.edgeBy.set(e.id, e);
+    for (const at of e.a === e.b ? [e.a] : [e.a, e.b]) {
+      const v = this.incident.get(at);
+      if (v) v.push(e.id);
+      else this.incident.set(at, [e.id]);
+    }
+  }
+
+  /** A node's point, if it has one: only where the network draws its track, so a mark is never left on its own (T-1485) */
+  private ptAt(kind: Kind, n: TrackNode, net: NetworkBuffers | null): Pt | null {
+    if (n.platform > 0 || n.bus) return null;
+    // (the last drawn edge in the network's order, as a pass over the edges would leave it)
+    let e: TrackEdge | undefined;
+    for (const id of this.incident.get(n.id) ?? []) if (net?.edgePts.has(id) && (!e || id > e.id)) e = this.edgeBy.get(id);
+    if (!e) return null;
+    // Settings' Show blueprints off: no square on a blueprint-only point, no ring at a blueprint end
+    const square = kind !== "loose" && n.builtPorts === 0 && !hidden.blueprints;
+    let loose = kind !== "drag" && n.ports === 1;
+    // T-1534: not the end of a blueprint that is switched off, which is drawn grey and faint
+    if (loose && !e.built && (e.off || hidden.blueprints)) loose = false;
+    if (!square && !loose) return null;
+    const [lx, ly] = toLocal(n.lng, n.lat);
+    if (square) return { lx, ly, cls: loose ? "pi-mark loose" : "pi-mark" };
+    return { lx, ly, cls: "end-mark", stub: net?.edgePts.get(e.id) };
   }
 
   /** Whether a stub of track is `MIN_STUB_PX` or more long on the screen now. */
