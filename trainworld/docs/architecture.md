@@ -285,7 +285,11 @@ Web first, so it can be shared as a link.
   for water or terrain still looks at every record. A line's drawn runs are sampled again only where the
   model says they lie anywhere new on the track (`take_moved_lines`: their entries, offsets or length
   moved, or an edge under them was touched); a settle's new timing, or a rebuild onto the same track, keeps
-  them. Each state names what it holds that the last one posted did not (`ClockState.touched`: the rows
+  them. Where a line's run 0 moved only in a stretch (`take_moved_spans`: the entries from the first unlike one to the
+  last before the alike end, the edges an edit touched counted unlike), only the samples and bends there are taken
+  again (`run_polyline_range`, `run_bends_range`) and the rest kept, after the stretch moved along the track by the
+  run's length change (a few mm for a station on its track); a line's runs are sampled whole once those changes add up
+  past 5 cm (`DRIFT_MAX_M`), when the count of samples changes, or with no stretch known [T-4281]. Each state names what it holds that the last one posted did not (`ClockState.touched`: the rows
   changed or gone, the lines whose run samples or bends differ from the last network's, compared only for
   the lines sampled again, and those whose phase tables differ from the last posted, T-4280), the one list a
   reader patches by (T-4149). The

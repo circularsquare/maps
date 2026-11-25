@@ -162,6 +162,16 @@ impl TrackApi {
         self.w.svc.take_moved()
     }
 
+    /// T-4281: of the lines the last `take_moved_lines` listed, where each run moved, as `[line, run, lo, hi, drift, len]`
+    /// each (`service::Span`: offsets of the run now, m; `len` the run's length now); a listed line's run not here may lie
+    /// anywhere new
+    pub fn take_moved_spans(&mut self) -> Vec<f64> {
+        let spans = self.w.svc.take_spans();
+        let svc = &self.w.svc;
+        let len = |l: u32, r: u8| svc.lines.get(l as usize).map_or(f64::NAN, |ls| ls.runs[r as usize].len);
+        spans.into_iter().flat_map(|(l, r, s)| [l as f64, r as f64, s.lo, s.hi, s.drift, len(l, r)]).collect()
+    }
+
     /// T-4214: `take_touched` without taking: what the edits since the last take touched, for the page's clickable map
     /// patched right after an edit (workers/clockPatch.ts), while the next state still reads them.
     pub fn peek_touched(&self) -> Vec<u32> {

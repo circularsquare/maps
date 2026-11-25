@@ -780,8 +780,54 @@ pub struct Service {
     pub timing_held: Option<Vec<(u32, super::timing::Held)>>,
     /// T-4149: the lines whose runs lie anywhere new on the track since `take_moved` (`update_scoped`), for the clock
     /// worker's drawn runs; None for every line (a service just made, never taken from). Put back after a trial
-    /// (`TrackWorld::trial_with`).
+    /// (`TrackWorld::trial_with`), with `spans`.
     pub(crate) moved: Option<Vec<u32>>,
+    /// T-4281: per moved line and run, where it moved since `take_moved` (`Span`), None where that is not known; put
+    /// back after a trial with `moved`.
+    pub(crate) spans: std::collections::HashMap<(u32, u8), Option<Span>>,
+    /// T-4281: the spans of the lines the last `take_moved` listed (`take_spans`)
+    taken_spans: Vec<(u32, u8, Span)>,
+}
+
+/// T-4281: where a rebuilt line's run lies anywhere new: from offset `lo` to `hi` (offsets of the run now); before
+/// `lo` its points are where they were, bit for bit; past `hi` they are the same track's, each moved along it by
+/// at most `drift` metres (the run's length changed by that much before them: a station splitting an edge moves the
+/// pieces' lengths by a few mm). Several rebuilds since a take add up.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Span {
+    pub lo: f64,
+    pub hi: f64,
+    pub drift: f64,
+}
+
+/// T-4281: how far apart two offsets of the same entry past a change may be and still count as moved by the run's
+/// length change alone, m
+const SPAN_EPS_M: f64 = 1e-6;
+
+/// T-4281: run `x`'s span against what it was (`segs`, `off`, `len`), its edges in `touched` (sorted) counted as
+/// changed; None when nothing past the start is alike.
+fn span_of(x: &Run, segs: &[u32], off: &[f64], len: f64, touched: &[u32]) -> Option<Span> {
+    let same_edge = |p: u32| touched.binary_search(&path_edge(p)).is_err();
+    let (n0, n1) = (segs.len().min(off.len()), x.segs.len().min(x.seg_off.len()));
+    let mut i = 0;
+    while i < n0 && i < n1 && segs[i] == x.segs[i] && off[i].to_bits() == x.seg_off[i].to_bits() && same_edge(x.segs[i]) {
+        i += 1;
+    }
+    let shift = x.len - len;
+    if !shift.is_finite() {
+        return None;
+    }
+    let mut j = 0;
+    while j < n0 - i && j < n1 - i {
+        let (a, b) = (n0 - 1 - j, n1 - 1 - j);
+        if segs[a] != x.segs[b] || !same_edge(x.segs[b]) || ((x.seg_off[b] - off[a]) - shift).abs() > SPAN_EPS_M {
+            break;
+        }
+        j += 1;
+    }
+    let lo = if i < n1 { x.seg_off[i] } else { x.len };
+    let hi = if j > 0 { x.seg_off[n1 - j] } else { x.len };
+    (i > 0 || j > 0).then_some(Span { lo, hi: hi.max(lo), drift: shift.abs() })
 }
 
 /// One run of the stops and path its trains run (`line`: the whole plan, or the part of it a
@@ -1355,24 +1401,50 @@ impl Service {
             });
             if !same {
                 moved.push(l);
+                // T-4281: a train line that stays ok, on edges an edit touched (not a global pass): where each run moved
+                let local = ls.ok && *ok && ls.bus.is_none() && net.route_points(l).is_none();
+                for (r, (segs, off, len)) in runs.iter().enumerate() {
+                    let s = touched.as_ref().filter(|_| local).and_then(|t| span_of(&ls.runs[r], segs, off, *len, t));
+                    let key = (l, r as u8);
+                    let merged = match self.spans.get(&key) {
+                        None => s,
+                        Some(None) => None,
+                        // (the earlier span in the offsets of now: it moved by at most the later drift)
+                        Some(Some(a)) => s.map(|b| Span { lo: a.lo.min(b.lo) - b.drift, hi: a.hi.max(b.hi) + b.drift, drift: a.drift + b.drift }),
+                    };
+                    self.spans.insert(key, merged);
+                }
             }
         }
         if moved.len() > 1 << 16 {
             self.moved = None;
+            self.spans.clear();
         }
     }
 
     /// T-4149: the lines whose runs lie anywhere new on the track since the last call (`note_moved`), ascending;
     /// `[u32::MAX]` for all of them.
     pub fn take_moved(&mut self) -> Vec<u32> {
+        let spans = std::mem::take(&mut self.spans);
         match self.moved.replace(vec![]) {
-            None => vec![u32::MAX],
+            None => {
+                self.taken_spans.clear();
+                vec![u32::MAX]
+            }
             Some(mut v) => {
                 v.sort_unstable();
                 v.dedup();
+                self.taken_spans = spans.into_iter().filter_map(|((l, r), s)| s.map(|s| (l, r, s))).collect();
+                self.taken_spans.sort_unstable_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
                 v
             }
         }
+    }
+
+    /// T-4281: the spans of the runs the last `take_moved` listed that are known (`Span`), by line and run; a listed
+    /// line with no span here may lie anywhere new
+    pub fn take_spans(&mut self) -> Vec<(u32, u8, Span)> {
+        std::mem::take(&mut self.taken_spans)
     }
 
     pub fn note_changed(&mut self, lines: &[u32]) {

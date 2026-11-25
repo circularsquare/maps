@@ -2015,12 +2015,13 @@ impl TrackWorld {
         self.settle_owed();
         let phases = self.phases();
         // T-4149: the rollback leaves every line where it ran, so the lines the trial moved are not the next edit's
-        let moved = self.svc.moved.clone();
+        let (moved, spans) = (self.svc.moved.clone(), self.svc.spans.clone());
         self.svc.timing_held = Some(vec![]);
         let out = self.commit(op).map(|(r, inv)| {
             let value = inspect(self);
             if self.restore(inv).is_ok() {
                 self.svc.moved = moved;
+                self.svc.spans = spans;
             }
             self.set_phases(phases);
             (r, value)

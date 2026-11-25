@@ -31,14 +31,27 @@ fn worst(q: &[P; FINE + 1], parts: usize) -> f64 {
 /// per interval that bends, its index, how many inner points (1, 3, 7, 15 or 31), then the points, x and y
 /// each, the interval's ends excluded. `tol`: ground metres.
 pub fn bends(len: f64, step: f64, tol: f64, pos: impl Fn(f64) -> P) -> Vec<f64> {
+    bends_in(len, step, tol, 0, usize::MAX, pos)
+}
+
+/// T-4281: `bends` of the intervals `from..to` alone (clamped to the run's), the same numbers as the whole run's give
+/// there.
+pub fn bends_in(len: f64, step: f64, tol: f64, from: usize, to: usize, pos: impl Fn(f64) -> P) -> Vec<f64> {
     let mut out = vec![];
     if !(len > 0.0 && step > 0.0) {
         return out;
     }
     let n = (len / step).ceil() as usize;
-    let mut p0 = pos(0.0);
+    let (from, to) = (from.min(n), to.min(n));
+    // (the interval's start as the whole run reaches it: the end of the one before, worked out as there)
+    let mut p0 = if from == 0 {
+        pos(0.0)
+    } else {
+        let d0 = (from - 1) as f64 * step;
+        pos(d0 + ((from as f64 * step).min(len) - d0))
+    };
     let mut q = [(0.0, 0.0); FINE + 1];
-    for k in 0..n {
+    for k in from..to {
         let d0 = k as f64 * step;
         let h = ((k + 1) as f64 * step).min(len) - d0;
         let p1 = pos(d0 + h);

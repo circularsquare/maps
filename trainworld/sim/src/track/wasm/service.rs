@@ -135,6 +135,24 @@ impl TrackApi {
             })
             .collect()
     }
+    /// T-4281: samples `k0..=k1` of `run_polyline` alone (clamped to the run's), x, y each
+    pub fn run_polyline_range(&self, line: u32, run: usize, step: f64, k0: usize, k1: usize) -> Vec<f64> {
+        let Some(l) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
+        let len = l.runs[run].len;
+        let n = (len / step).ceil() as usize;
+        (k0..=k1.min(n))
+            .flat_map(|i| {
+                let (x, y) = self.w.svc.position(&self.w.net, line, run, (i as f64 * step).min(len));
+                [x, y]
+            })
+            .collect()
+    }
+    /// T-4281: `run_bends` of the intervals `k0..k1` alone, as the whole run's give them there
+    pub fn run_bends_range(&self, line: u32, run: usize, step: f64, tol: f64, k0: usize, k1: usize) -> Vec<f64> {
+        let Some(l) = self.w.svc.lines.get(line as usize).filter(|l| l.ok) else { return vec![] };
+        let len = l.runs[run].len;
+        crate::track::service::bends::bends_in(len, step, tol, k0, k1, |s| self.w.svc.position(&self.w.net, line, run, s.min(len)))
+    }
     /// T-4075: where the track bends between a run's samples (`run_polyline`'s, every `step` m), past
     /// `tol` ground metres: per such interval its index, its inner points' count and the points (x, y),
     /// as `service::bends::bends` gives them.

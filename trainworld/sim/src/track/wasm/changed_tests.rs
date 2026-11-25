@@ -189,3 +189,111 @@ fn lines_left_off_the_moved_list_run_where_they_ran() {
     let moved = step(&mut a, "a construct quote", 0);
     assert!(moved.is_empty(), "{moved:?}");
 }
+
+/// T-4281: a station on a line's track moves that line's runs only around it (`take_moved_spans`): outside the span its
+/// samples stay within the span's drift of a whole resample, the ranged calls give the whole run's numbers bit for bit,
+/// and two stations before one take give one span over both.
+#[test]
+fn a_station_on_a_lines_track_moves_its_runs_only_around_it() {
+    const STEP: f64 = 50.0;
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.set_route_tangent(true);
+    // a straight, a 600 m curve, a straight
+    let ends = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 4000.0, 4000.0, 0.0];
+    assert_eq!(a.add_route(&ends, &[4000.0, 0.0, 600.0, 0.0], 2, false), 0, "{}", a.issues());
+    let near = |a: &TrackApi, x: f64, y: f64| {
+        (0..a.w.net.edge_count() as u32)
+            .filter(|&e| a.w.net.edge_ok(e) && !a.w.net.edge_crossover[e as usize])
+            .min_by(|&p, &q| a.w.net.project(p, x, y).1.total_cmp(&a.w.net.project(q, x, y).1))
+            .unwrap()
+    };
+    let station = |a: &mut TrackApi, x: f64, y: f64, name: &str| {
+        let e = near(a, x, y);
+        assert_eq!(a.add_station(2, e, x, y, 120, name.into()), 0, "{}", a.issues());
+        a.settle_owed();
+    };
+    station(&mut a, 300.0, 0.0, "A");
+    station(&mut a, 4000.0, 3700.0, "B");
+    let st = station_nodes(&a);
+    let l = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(l, &st, 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    a.settle_owed();
+    // stations the line passes, so its runs have several entries (a run of one entry split is all new)
+    for (x, y, n) in [(1000.0, 0.0, "P"), (2000.0, 0.0, "Q"), (3000.0, 0.0, "R"), (4000.0, 2000.0, "S")] {
+        station(&mut a, x, y, n);
+    }
+    a.take_moved_lines();
+    a.take_moved_spans();
+    let whole = |a: &TrackApi, r: usize| (a.run_polyline(l, r, STEP), a.run_bends(l, r, STEP, 0.25));
+    let entries = |b: &[f64], keep: &dyn Fn(usize) -> bool| {
+        let (mut out, mut i) = (vec![], 0);
+        while i < b.len() {
+            let m = b[i + 1] as usize;
+            if keep(b[i] as usize) {
+                out.extend_from_slice(&b[i..i + 2 + 2 * m]);
+            }
+            i += 2 + 2 * m;
+        }
+        out
+    };
+    let bits = |x: &[f64]| x.iter().map(|v| v.to_bits()).collect::<Vec<_>>();
+    for r in 0..2 {
+        let (p, b) = whole(&a, r);
+        let n = p.len() / 2 - 1;
+        assert!(!b.is_empty(), "run {r}: the curve bends between samples");
+        for (k0, k1) in [(0, n), (3, 40), (n - 5, n), (40, 90)] {
+            assert_eq!(bits(&a.run_polyline_range(l, r, STEP, k0, k1)), bits(&p[2 * k0..2 * (k1 + 1)]), "run {r}: samples {k0}..={k1}");
+            assert_eq!(bits(&a.run_bends_range(l, r, STEP, 0.25, k0, k1)), bits(&entries(&b, &|k| k >= k0 && k < k1)), "run {r}: bends {k0}..{k1}");
+        }
+    }
+    let check = |a: &mut TrackApi, before: &[(Vec<f64>, Vec<f64>)], at: &[f64], what: &str| {
+        assert_eq!(a.take_moved_lines(), vec![l], "{what}");
+        let spans = a.take_moved_spans();
+        assert_eq!(spans.len(), 12, "{what}: a span for each run: {spans:?}");
+        for s in spans.chunks(6) {
+            let (r, lo, hi, drift) = (s[1] as usize, s[2], s[3], s[4]);
+            let (p, b) = whole(a, r);
+            let n = p.len() / 2 - 1;
+            assert_eq!(p.len(), before[r].0.len(), "{what}");
+            let (k0, k1) = (((lo / STEP).floor() as usize).saturating_sub(1), ((hi / STEP).ceil() as usize + 1).min(n));
+            // (the entries beside a split edge count as touched too)
+            assert!(n - (k1 - k0) >= 30, "{what}: run {r} moved only near the stations, samples {k0}..={k1} of {n}");
+            assert!(drift < 0.01, "{what}: {drift}");
+            // the stations' places, in this run's offsets, inside the span
+            let len = a.w.svc.lines[l as usize].runs[r].len;
+            assert_eq!(s[5].to_bits(), len.to_bits(), "{what}: the run's length");
+            for &x in at {
+                let s = if r == 0 { x - 300.0 } else { len - (x - 300.0) };
+                assert!(s >= lo - STEP && s <= hi + STEP, "{what}: run {r}: a station at {s} m, the span {lo}..{hi}");
+            }
+            for k in (0..=n).filter(|&k| k < k0 || k > k1) {
+                let d = (p[2 * k] - before[r].0[2 * k]).hypot(p[2 * k + 1] - before[r].0[2 * k + 1]);
+                assert!(d <= drift + 1e-9, "{what}: run {r} sample {k} moved {d} m, its span's drift {drift}");
+            }
+            let outside = |k: usize| k + 1 < k0 || k > k1;
+            let (x, y) = (entries(&b, &outside), entries(&before[r].1, &outside));
+            assert_eq!(x.len(), y.len(), "{what}: run {r}: the bends outside the span");
+            for (u, v) in x.iter().zip(&y) {
+                assert!((u - v).abs() <= drift + 1e-9, "{what}: run {r}: a bend outside the span moved {}", (u - v).abs());
+            }
+        }
+    };
+    let before: Vec<_> = (0..2).map(|r| whole(&a, r)).collect();
+    station(&mut a, 1500.0, 0.0, "Mid");
+    check(&mut a, &before, &[1500.0], "a station on the line's track");
+    let before: Vec<_> = (0..2).map(|r| whole(&a, r)).collect();
+    for (x, n) in [(1200.0, "C"), (2200.0, "D")] {
+        let e = near(&a, x, 0.0);
+        assert_eq!(a.add_station(2, e, x, 0.0, 120, n.into()), 0, "{}", a.issues());
+        a.settle_owed();
+    }
+    check(&mut a, &before, &[1200.0, 2200.0], "two stations before one take");
+    // a whole pass knows no span
+    a.w.svc.moved = Some(vec![]);
+    let r = a.undo();
+    assert_eq!(r, 0, "{}", a.issues());
+    a.settle_owed();
+    let moved = a.take_moved_lines();
+    let spans = a.take_moved_spans();
+    assert!(spans.chunks(6).all(|s| moved.contains(&(s[0] as u32))), "{spans:?} of {moved:?}");
+}

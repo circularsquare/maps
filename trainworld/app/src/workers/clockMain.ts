@@ -120,6 +120,8 @@ export function forget(all = false) {
     pathsAllMoved = true;
     // (the model's list of lines that moved starts again with this: every line is sampled anew anyway)
     api?.take_moved_lines();
+    api?.take_moved_spans();
+    drift.clear();
     shiftFrom = null;
     stateRows.reset();
     platformLines.clear();
@@ -131,12 +133,17 @@ export function forget(all = false) {
   // T-4149: a line's runs are sampled again only where they lie anywhere new on the track; the other lines whose profiles
   // were worked out again (a settle's timing: most of a big network's lines on shared track) or that were rebuilt onto the
   // same track run where they ran. A bus or ferry line's runs follow its route and keep the older rule.
-  const moved = a.take_moved_lines();
+  const moved = a.take_moved_lines(), spans = a.take_moved_spans();
   if (moved[0] === 0xffffffff) {
     for (const l of lineMerc.keys()) keepRun0(l);
     for (const l of backDrawn.keys()) keepBack(l);
-    lineDrawn.clear(); lineMerc.clear(); lineBends.clear(); backDrawn.clear();
-  } else for (const l of moved) dropDrawnLine(l);
+    lineDrawn.clear(); lineMerc.clear(); lineBends.clear(); backDrawn.clear(); drift.clear();
+  } else {
+    // T-4281: a run 0 that moved only in a stretch (`take_moved_spans`) is sampled again there alone
+    const near = new Map<number, ArrayLike<number>>();
+    for (let k = 0; k + 5 < spans.length; k += 6) if (spans[k + 1] === 0) near.set(spans[k], spans.subarray(k, k + 6));
+    for (const l of moved) if (!spliceRun0(a, l, near.get(l))) dropDrawnLine(l);
+  }
   for (const l of a.dirty_lines()) if (a.is_bus(l) || a.is_ferry(l)) dropDrawnLine(l);
   // (a way back is not on the edges' lines: any track edit may move one)
   if (edges.length) {
@@ -166,7 +173,51 @@ function resampled(was: { merc: Float64Array; bends: Float32Array } | undefined,
 }
 function dropDrawnLine(l: number) {
   keepRun0(l); keepBack(l);
-  lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); backDrawn.delete(l);
+  lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); backDrawn.delete(l); drift.delete(l);
+}
+/** T-4281: per line, how far (ground m) its kept run 0 samples past a stretch sampled again may lie along the track from
+ * where a whole resample would put them: the summed length changes of the cuts since its last whole sampling (a station
+ * splitting an edge moves the pieces' lengths by a few mm) */
+const drift = new Map<number, number>();
+/** T-4281: the most `drift` a line's samples may carry before they are taken whole again (a train is drawn at most this
+ * far along its track from its place; `BEND_TOL_M` is a train's leeway across it) */
+const DRIFT_MAX_M = 0.05;
+/** T-4281: line `l`'s kept run 0 samples and bends with the stretch of `span` (`[line, run, lo, hi, drift, len]`) sampled
+ * again, as `drawnLine` samples a run whole; false (nothing changed) where it must be sampled whole: none kept, no span,
+ * the drift past `DRIFT_MAX_M` or the count of samples changed */
+function spliceRun0(a: TrackApi, l: number, span: ArrayLike<number> | undefined): boolean {
+  const m = lineMerc.get(l), b = lineBends.get(l);
+  // (`?patch=walk` samples every moved run whole, as before, to time against)
+  if (!m || !b || !span || patchMode === "walk") return false;
+  const [, , lo, hi, moved, len] = Array.from(span);
+  const d = (drift.get(l) ?? 0) + moved, n = Math.ceil(len / SAMPLE_STEP);
+  if (!(d <= DRIFT_MAX_M) || m.length !== (n + 1) * 2) return false;
+  const k0 = Math.max(0, Math.floor(lo / SAMPLE_STEP) - 1), k1 = Math.min(n, Math.ceil(hi / SAMPLE_STEP) + 1);
+  const p = a.run_polyline_range(l, 0, SAMPLE_STEP, k0, k1);
+  if (p.length !== (k1 - k0 + 1) * 2) return false;
+  const merc = m.slice();
+  for (let k = 0; k < p.length; k += 2) merc.set(toMerc01(...packLngLat(p[k], p[k + 1])), k0 * 2 + k);
+  // the bends of every interval with a sample sampled again
+  const b0 = Math.max(0, k0 - 1), b1 = Math.min(n, k1 + 1);
+  const fresh = bendsOf(a.run_bends_range(l, 0, SAMPLE_STEP, BEND_TOL_M, b0, b1), merc);
+  const out: number[] = [];
+  let at = 0, cut = 0;
+  for (; at < b.length && b[at] < b0; at += 2 + 2 * b[at + 1]) cut = at + 2 + 2 * b[at + 1];
+  let tail = at;
+  for (; tail < b.length && b[tail] < b1; tail += 2 + 2 * b[tail + 1]);
+  for (let k = 0; k < cut; k++) out.push(b[k]);
+  for (let k = 0; k < fresh.length; k++) out.push(fresh[k]);
+  for (let k = tail; k < b.length; k++) out.push(b[k]);
+  const bends = new Float32Array(out);
+  let changed = bends.length !== b.length;
+  for (let k = k0 * 2; !changed && k <= k1 * 2 + 1; k++) changed = merc[k] !== m[k];
+  for (let k = cut; !changed && k < cut + fresh.length; k++) changed = bends[k] !== b[k];
+  lineMerc.set(l, merc);
+  lineBends.set(l, bends);
+  lineDrawn.delete(l);
+  if (d > 0) drift.set(l, d);
+  if (changed) pathsMoved.add(l);
+  return true;
 }
 /** T-4149: the lines whose drawn runs moved since the last network was posted (`ClockState.touched.paths`), or all of them;
  * T-4280: a line is named where it was sampled again into other samples or bends than before (`resampled`) */
@@ -188,10 +239,17 @@ function checkSamples(a: TrackApi, lines: readonly ClockLine[]) {
     for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
     return { m, bends: bendsOf(a.run_bends(id, run, SAMPLE_STEP, BEND_TOL_M), m) };
   };
+  // T-4281: run 0 samples kept past a stretch sampled again lie within the line's drift (ground m) of a whole resample
+  const near = (x: Float64Array, y: Float64Array, tol: number) => x.length === y.length && x.every((v, k) => {
+    if (k % 2) return true;
+    const ground = Math.hypot(v - y[k], x[k + 1] - y[k + 1]) * EARTH_C / Math.cosh(Math.PI * (1 - 2 * y[k + 1]));
+    return ground <= tol + 1e-3;
+  });
   for (const l of lines) {
     if (!l.ok) continue;
-    const m = lineMerc.get(l.id), b = backDrawn.get(l.id);
-    if (m) { const f = fresh(l.id, 0); if (!same(m, f.m) || !same(lineBends.get(l.id), f.bends)) bad.push(l.id); }
+    const m = lineMerc.get(l.id), b = backDrawn.get(l.id), tol = drift.get(l.id) ?? 0;
+    if (m && tol > 0) { if (!near(m, fresh(l.id, 0).m, tol)) bad.push(l.id); }
+    else if (m) { const f = fresh(l.id, 0); if (!same(m, f.m) || !same(lineBends.get(l.id), f.bends)) bad.push(l.id); }
     if (b && l.back?.length) { const f = fresh(l.id, 1); if (!same(b.merc, f.m) || !same(b.bends, f.bends)) bad.push(l.id); }
   }
   if (bad.length) console.error(`T-4149 check: the kept run samples of lines ${bad.slice(0, 8).join(", ")} differ from the model's`);
@@ -277,6 +335,7 @@ export function drawnLine(a: TrackApi, id: number): Float32Array {
       lineMerc.set(id, m);
       const bends = bendsOf(a.run_bends(id, 0, SAMPLE_STEP, BEND_TOL_M), m);
       lineBends.set(id, bends);
+      drift.delete(id);
       if (resampled(dropped.get(id), m, bends)) pathsMoved.add(id);
       dropped.delete(id);
     }
