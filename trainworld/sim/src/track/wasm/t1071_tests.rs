@@ -501,3 +501,30 @@ fn an_unrecorded_lowering_is_free_where_the_fleet_is_short() {
     assert_eq!(a.fleet(), 0, "and gives no cars");
     assert_eq!(a.set_train_counts_unrecorded(id, 5, 5, 5), 1, "a rise still pays for its trains");
 }
+
+
+/// T-4149: the weekend reads of many lines at once, the track limits worked out once, are each line's own reads, number
+/// for number: a headway line at a weekend share (which reads the limits), a copy of it, a count line, a line gone.
+#[test]
+fn line_weekends_are_each_lines_own_reads() {
+    let (mut a, id) = line_api();
+    assert_eq!(a.set_auto_headway(id, 120, 120, 120), 0, "{}", a.issues());
+    assert_eq!(a.set_line_weekend_share(id, 50), 0, "{}", a.issues());
+    let copy = a.new_line_id();
+    assert_eq!(a.copy_line(id, copy, "C".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_weekend_share(copy, 150), 0, "{}", a.issues());
+    let count = a.new_line_id();
+    assert_eq!(a.copy_line(id, count, "N".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_train_counts(count, 3, 2, 1), 0, "{}", a.issues());
+    let ids = [id, copy, count, 9999];
+    let mut want = vec![];
+    for &l in &ids {
+        for v in [a.line_weekend(l), a.line_row_weekend(l)] {
+            want.push(v.len() as f64);
+            want.extend(v);
+        }
+    }
+    assert!(want.len() > 12, "the lines read something: {want:?}");
+    let got = a.line_weekends(&ids);
+    assert_eq!(got.iter().map(|x| x.to_bits()).collect::<Vec<_>>(), want.iter().map(|x| x.to_bits()).collect::<Vec<_>>(), "{got:?} against {want:?}");
+}

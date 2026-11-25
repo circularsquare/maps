@@ -11,7 +11,7 @@ import { packCross } from "../map/markData";
 import { type Complexes } from "../game/complexes";
 import { StateRows, upgradesOf, type RowEnv } from "./stateRows";
 import { PlatformLines } from "./platformLines";
-import type { ClockNode, ClockState } from "./protocol";
+import type { ClockLine, ClockNode, ClockState } from "./protocol";
 import { publishSlots, saves } from "./slots";
 import { META_PER_LINE, profileOf } from "../map/profiles";
 import { buildSnapshot, busRow, complexesOf, complexOfNodes, groundK, loadsLater, nodeComplexes, putXferSet, sendTrips, shownBuildings, snapTimer, StationGeo } from "./clockDemand";
@@ -114,17 +114,60 @@ export function forget(all = false) {
     lineMerc.clear();
     lineBends.clear();
     backDrawn.clear();
+    pathsMoved.clear();
+    pathsAllMoved = true;
+    // (the model's list of lines that moved starts again with this: every line is sampled anew anyway)
+    api?.take_moved_lines();
     shiftFrom = null;
     stateRows.reset();
     platformLines.clear();
     postWhole();
     return;
   }
-  const edges = api!.dirty_edges();
+  const a = api!, edges = a.dirty_edges();
   for (const e of edges) { edgeDrawn.delete(e); edgeSpeedDrawn.delete(e); edgeMerc.delete(e); platformLines.forgetEdge(e); }
-  for (const l of api!.dirty_lines()) { lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); backDrawn.delete(l); }
+  // T-4149: a line's runs are sampled again only where they lie anywhere new on the track; the other lines whose profiles
+  // were worked out again (a settle's timing: most of a big network's lines on shared track) or that were rebuilt onto the
+  // same track run where they ran. A bus or ferry line's runs follow its route and keep the older rule.
+  const moved = a.take_moved_lines();
+  if (moved[0] === 0xffffffff) {
+    lineDrawn.clear(); lineMerc.clear(); lineBends.clear(); backDrawn.clear();
+    pathsAllMoved = true;
+  } else for (const l of moved) { dropDrawnLine(l); pathsMoved.add(l); }
+  for (const l of a.dirty_lines()) if (a.is_bus(l) || a.is_ferry(l)) { dropDrawnLine(l); pathsMoved.add(l); }
   // (a way back is not on the edges' lines: any track edit may move one)
   if (edges.length) backDrawn.clear();
+}
+
+function dropDrawnLine(l: number) {
+  lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); backDrawn.delete(l);
+}
+/** T-4149: the lines whose drawn runs moved since the last network was posted (`ClockState.touched.paths`), or all of them */
+export const pathsMoved = new Set<number>();
+export let pathsAllMoved = false;
+/** T-4149: every drawn position moved since the last network was posted (the view's anchor): `touched.all` */
+export let drawnAllMoved = false;
+export function pathsPosted() { pathsMoved.clear(); pathsAllMoved = false; drawnAllMoved = false; }
+/** The view's anchor moved (T-307): every drawn position again, relative to the new anchor */
+export function forgetDrawn() { edgeDrawn.clear(); lineDrawn.clear(); drawnAllMoved = true; }
+
+/** `?patch=check` (T-4149): every line's kept run samples and bends against the model's now. A line whose runs moved and
+ * whose samples were kept anyway draws its trains off its track. */
+function checkSamples(a: TrackApi, lines: readonly ClockLine[]) {
+  const bad: number[] = [];
+  const same = (x: ArrayLike<number> | undefined, y: ArrayLike<number>) => !!x && x.length === y.length && Array.prototype.every.call(y, (v: number, k: number) => Object.is(v, x[k]));
+  const fresh = (id: number, run: number) => {
+    const p = a.run_polyline(id, run, SAMPLE_STEP), m = new Float64Array(p.length);
+    for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
+    return { m, bends: bendsOf(a.run_bends(id, run, SAMPLE_STEP, BEND_TOL_M), m) };
+  };
+  for (const l of lines) {
+    if (!l.ok) continue;
+    const m = lineMerc.get(l.id), b = backDrawn.get(l.id);
+    if (m) { const f = fresh(l.id, 0); if (!same(m, f.m) || !same(lineBends.get(l.id), f.bends)) bad.push(l.id); }
+    if (b && l.back?.length) { const f = fresh(l.id, 1); if (!same(b.merc, f.m) || !same(b.bends, f.bends)) bad.push(l.id); }
+  }
+  if (bad.length) console.error(`T-4149 check: the kept run samples of lines ${bad.slice(0, 8).join(", ")} differ from the model's`);
 }
 
 /** The track model's mark rows (`crossings_info`, `preview_marks`) with x, y moved to local units. */
@@ -276,6 +319,7 @@ function buildState(rowsOnly = false): ClockState {
   platformLines.setLines(lines);
   const tq3 = performance.now(); timing.sLines = tq3 - tq2;
   const w = stateRows.work;
+  timing.sFold = w.foldMs;
   timing.nEdges = w.edges; timing.nNodes = w.nodes; timing.nLines = w.lines; timing.nBuses = w.buses; timing.nRegions = w.leaves; timing.nLeft = w.left;
   if (patchMode === "check") checkRows({ edges, nodes, lines }, a, ups);
   // a bus line's stops that are no station were added to the nodes by its row
@@ -288,6 +332,7 @@ function buildState(rowsOnly = false): ClockState {
   placeLineCountries();
   termEnds = terminalEnds(edges, nodes, lines);
   timing.sEnds = performance.now() - tq3a;
+  const tq3b = performance.now();
   let first: ClockNode | null = null;
   for (let k = 0; k < stationCount; k++) if (nodes[k].stationBuilt && (!first || nodes[k].id < first.id)) first = nodes[k];
   firstBuiltAt = first ? [first.lng, first.lat] : null;
@@ -295,6 +340,7 @@ function buildState(rowsOnly = false): ClockState {
   pinDayShift();
   syncHolidays();
   applyRunFactors();
+  const tq3c = performance.now(); timing.sSync = tq3c - tq3b;
   // Keyframes: phase tables, profile meta, and run 0 of every line resampled; a line whose return run
   // takes its own way back (T-3094) has that run resampled too, in the table's second half (T-3250,
   // network.ts `backSlot`)
@@ -322,9 +368,11 @@ function buildState(rowsOnly = false): ClockState {
     lineTable.set([nSamples, d.length / 2, meta[profileOf(l.id, 1, 0) * 4 + 3] || l.lengthM, SAMPLE_STEP], (nLines + l.id) * 4);
     nSamples += d.length / 2;
   }
+  if (patchMode === "check" && !rowsOnly) checkSamples(a, lines);
   const samples = new Float32Array(nSamples * 2);
   runs.reduce((o, d) => (samples.set(d, o), o + d.length), 0);
   const { sampleBend, bends } = bendTables(nSamples, runBends);
+  const tq3d = performance.now(); timing.sSamples = tq3d - tq3c;
   // T-3542: per period, read once per slot serving periods
   const slots = a.period_slots();
   const bySlot = new Map<number, ClockState["markers"][number]>();
@@ -348,7 +396,7 @@ function buildState(rowsOnly = false): ClockState {
     crossings.set(info.subarray(k, k + 5), j);
     if (info[k + 2] === 0) crossings[j + 3] = packCross(info[k + 3], info[k + 5]);
   }
-  const tq4 = performance.now(); timing.sRest = tq4 - tq3;
+  const tq4 = performance.now(); timing.sRest = tq4 - tq3; timing.sMarks = tq4 - tq3d;
   const fullBySlot = new Map<number, Float64Array>();
   const fullTrack = PERIODS.map((_, p) => fullBySlot.get(slots[p]) ?? fullBySlot.set(slots[p], a.full_track_in(p)).get(slots[p])!);
   const tq4a = performance.now(); timing.sFull = tq4a - tq4;

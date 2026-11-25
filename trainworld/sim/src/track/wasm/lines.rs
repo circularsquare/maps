@@ -3,6 +3,37 @@
 use super::*;
 use crate::track::net::{DayFleet, Extra, ALIGHT_ONLY};
 
+/// T-4149: every line's track limits (`Capacity::line_limits`), worked out once for the reads that share them while
+/// the model stands still (`TrackWorld::weekend_counts_in`).
+pub(super) type Limits = Option<Vec<[(f64, u32); crate::track::params::SLOTS]>>;
+
+impl TrackApi {
+    /// `line_weekend` with the track limits shared (`Limits`).
+    pub(super) fn line_weekend_in(&self, id: u32, most: &mut Limits) -> Vec<f64> {
+        let (net, l) = (&self.w.net, id as usize);
+        if !net.line_ok(id) { return vec![] }
+        let (Some(w), Some(Some(t))) = (net.line_weekend.get(l).copied(), net.line_trains.get(l).copied()) else { return vec![] };
+        let k = if pairs_split(net, id) { 2 } else { 1 };
+        let c = self.w.weekend_counts_in(l, most).map(|c| crate::track::params::unplace(c).0).unwrap_or(t);
+        let h = if w.counts.is_some() { w.headways.map(|h| h / k) } else { [0; 3] };
+        vec![w.share as f64, w.counts.is_some() as u8 as f64, (c[0] * k) as f64, (c[1] * k) as f64, (c[2] * k) as f64, h[0] as f64, h[1] as f64, h[2] as f64]
+    }
+    /// `line_row_weekend` with the track limits shared (`Limits`).
+    pub(super) fn line_row_weekend_in(&self, id: u32, most: &mut Limits) -> Vec<f64> {
+        let (net, l) = (&self.w.net, id as usize);
+        if !net.line_ok(id) { return vec![] }
+        let (Some(w), Some(t)) = (net.line_weekend.get(l).copied(), net.trains_of(l)) else { return vec![] };
+        let k = if pairs_split(net, id) { 2 } else { 1 };
+        let c = self.w.weekend_counts_in(l, most).unwrap_or(t);
+        let h = if w.counts.is_some() { places(w.headways, net.line_x[l].weekend_headways).map(|h| h / k) } else { [0; 5] };
+        let rows = ROW_PLACES[net.rows(l) - ROWS_MIN];
+        let mut out = vec![w.share as f64, w.counts.is_some() as u8 as f64];
+        out.extend(rows.iter().map(|&p| (c[p] * k) as f64));
+        out.extend(rows.iter().map(|&p| h[p] as f64));
+        out
+    }
+}
+
 /// T-2987: the lowest speed limit a rail line can be given, km/h.
 const LINE_LIMIT_MIN: u32 = 40;
 
@@ -779,13 +810,7 @@ impl TrackApi {
     /// whole trains at high, medium and low demand on weekends (the weekdays' where it runs those),
     /// whole-line counts as `set_train_counts` takes them. Empty for no line.
     pub fn line_weekend(&self, id: u32) -> Vec<f64> {
-        let (net, l) = (&self.w.net, id as usize);
-        if !net.line_ok(id) { return vec![] }
-        let (Some(w), Some(Some(t))) = (net.line_weekend.get(l).copied(), net.line_trains.get(l).copied()) else { return vec![] };
-        let k = if pairs_split(net, id) { 2 } else { 1 };
-        let c = self.w.weekend_counts(l).unwrap_or(t);
-        let h = if w.counts.is_some() { w.headways.map(|h| h / k) } else { [0; 3] };
-        vec![w.share as f64, w.counts.is_some() as u8 as f64, (c[0] * k) as f64, (c[1] * k) as f64, (c[2] * k) as f64, h[0] as f64, h[1] as f64, h[2] as f64]
+        self.line_weekend_in(id, &mut None)
     }
     /// T-3521: a line's trains an hour at level `lev` (a row: high, medium, low) on kind of day
     /// `row` (0 weekdays, 1 weekends; `Network::line_tph_on`).
@@ -1069,16 +1094,20 @@ impl TrackApi {
     /// where its counts are set by hand, then its whole trains per row on weekends (whole-line counts)
     /// and the headways stepped to per row (seconds, 0 none), rows in the day's order.
     pub fn line_row_weekend(&self, id: u32) -> Vec<f64> {
-        let (net, l) = (&self.w.net, id as usize);
-        if !net.line_ok(id) { return vec![] }
-        let (Some(w), Some(t)) = (net.line_weekend.get(l).copied(), net.trains_of(l)) else { return vec![] };
-        let k = if pairs_split(net, id) { 2 } else { 1 };
-        let c = self.w.weekend_places(l).unwrap_or(t);
-        let h = if w.counts.is_some() { places(w.headways, net.line_x[l].weekend_headways).map(|h| h / k) } else { [0; 5] };
-        let rows = ROW_PLACES[net.rows(l) - ROWS_MIN];
-        let mut out = vec![w.share as f64, w.counts.is_some() as u8 as f64];
-        out.extend(rows.iter().map(|&p| (c[p] * k) as f64));
-        out.extend(rows.iter().map(|&p| h[p] as f64));
+        self.line_row_weekend_in(id, &mut None)
+    }
+    /// T-4149: `line_weekend` then `line_row_weekend` of each line in `ids`, each as its length and its numbers. Each
+    /// call alone works out every line's track limits (`Capacity::line_limits`, a pass over the whole network); here
+    /// they are worked out once for all of them.
+    pub fn line_weekends(&self, ids: &[u32]) -> Vec<f64> {
+        let mut most = None;
+        let mut out = vec![];
+        for &id in ids {
+            for v in [self.line_weekend_in(id, &mut most), self.line_row_weekend_in(id, &mut most)] {
+                out.push(v.len() as f64);
+                out.extend(v);
+            }
+        }
         out
     }
     /// T-3542: set line `id`'s whole trains on weekends per row by hand (`line_period_count` of them,

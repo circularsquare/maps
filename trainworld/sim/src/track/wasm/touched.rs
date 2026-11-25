@@ -65,7 +65,7 @@ impl Touched {
 impl TrackApi {
     /// T-4113: a line's stamp: everything the clock worker reads of its row and phase tables, through the same
     /// calls (workers/stateRows.ts `heavy`, its own calls, `line_phases`), so equal stamps are equal rows.
-    fn line_stamp(&self, l: u32) -> u64 {
+    fn line_stamp(&self, l: u32, most: &mut super::lines::Limits) -> u64 {
         let mut h = DefaultHasher::new();
         macro_rules! s { ($($e:expr),* $(,)?) => { $( $e.stamp(&mut h); )* }; }
         s!(self.line_part(l), self.line_run_stops(l), self.line_run_path(l), self.line_stops(l), self.line_path(l), self.line_name(l), self.line_symbol(l),
@@ -78,9 +78,9 @@ impl TrackApi {
             self.line_stop_s(l, 0), self.line_stop_s(l, 1), self.line_stretch_speeds(l), self.passed_stations(l), self.line_reversals(l),
             self.line_end_turns(l), self.line_stop_ways(l), self.line_one_stops(l), self.line_stop_only(l), self.line_hand(l), self.line_auto(l),
             self.line_fast(l), self.line_tram(l), self.line_loop(l), self.line_one_way(l), self.line_one_way_by_track(l), self.line_limit(l),
-            self.line_fare_dist(l), self.line_weekend(l), self.line_tph_rest(l), self.line_shift(l), self.line_period_count(l), self.line_periods_own(l),
+            self.line_fare_dist(l), self.line_weekend_in(l, most), self.line_tph_rest(l), self.line_shift(l), self.line_period_count(l), self.line_periods_own(l),
             self.line_tph_by_period(l), self.line_hours(l), self.line_hours_own(l), self.line_row_headways(l), self.line_rows(l), self.line_row_trains(l),
-            self.line_row_weekend(l), self.line_pairs(l), self.line_twin_of(l), self.line_phases(l));
+            self.line_row_weekend_in(l, most), self.line_pairs(l), self.line_twin_of(l), self.line_phases(l));
         h.finish()
     }
 
@@ -90,14 +90,16 @@ impl TrackApi {
         if self.stamps_off {
             return (noted, vec![]);
         }
+        // (T-4149: the track limits the weekend reads take, a pass over the whole network, once for every line stamped)
+        let mut most = None;
         if noted.first() == Some(&u32::MAX) {
-            let all = (0..self.w.net.line_count() as u32).map(|l| (l, self.live_stamp(l))).collect();
+            let all = (0..self.w.net.line_count() as u32).map(|l| (l, self.live_stamp(l, &mut most))).collect();
             return (noted, all);
         }
         let mut out = Vec::with_capacity(noted.len());
         let mut now = Vec::with_capacity(noted.len());
         for l in noted {
-            let s = self.live_stamp(l);
+            let s = self.live_stamp(l, &mut most);
             if s.is_none() || self.stamps.get(l as usize).copied().flatten() != s {
                 out.push(l);
             }
@@ -116,8 +118,8 @@ impl TrackApi {
     }
 
     /// a live train line's stamp; none for a bus or ferry line (whose rows read more) or a line gone
-    fn live_stamp(&self, l: u32) -> Option<u64> {
-        (self.w.net.line_ok(l) && !self.is_bus(l) && !self.is_ferry(l)).then(|| self.line_stamp(l))
+    fn live_stamp(&self, l: u32, most: &mut super::lines::Limits) -> Option<u64> {
+        (self.w.net.line_ok(l) && !self.is_bus(l) && !self.is_ferry(l)).then(|| self.line_stamp(l, most))
     }
 }
 
@@ -139,6 +141,13 @@ impl TrackApi {
     pub fn take_touched(&mut self) -> Vec<u32> {
         let t = std::mem::replace(&mut self.touched, Touched { edges: vec![], nodes: vec![], all: false });
         Self::touched_list(t.edges, t.nodes, t.all)
+    }
+
+    /// T-4149: the lines whose runs lie anywhere new on the track since the last call, ascending, or `[u32::MAX]` for every
+    /// line (`Service::take_moved`). Of `dirty_lines`, only these have runs drawn anywhere new: the others had their
+    /// profiles worked out again (a settle's timing) or were rebuilt onto the same track.
+    pub fn take_moved_lines(&mut self) -> Vec<u32> {
+        self.w.svc.take_moved()
     }
 
     /// T-4214: `take_touched` without taking: what the edits since the last take touched, for the page's clickable map

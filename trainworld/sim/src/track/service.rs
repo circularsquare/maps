@@ -778,6 +778,10 @@ pub struct Service {
     /// T-4132: while a trial times no train (`TrackWorld::trial_with`), the variants each line it
     /// rebuilds had before it, to put back after (`timing::put_back`); None otherwise.
     pub timing_held: Option<Vec<(u32, super::timing::Held)>>,
+    /// T-4149: the lines whose runs lie anywhere new on the track since `take_moved` (`update_scoped`), for the clock
+    /// worker's drawn runs; None for every line (a service just made, never taken from). Put back after a trial
+    /// (`TrackWorld::trial_with`).
+    pub(crate) moved: Option<Vec<u32>>,
 }
 
 /// One run of the stops and path its trains run (`line`: the whole plan, or the part of it a
@@ -1176,6 +1180,11 @@ impl Service {
         let (rebuilt, rescheduled) = (&sorted(rebuilt)[..], &sorted(rescheduled)[..]);
         let mut d = ServiceDirty { rebuilt: rebuilt.to_vec(), ..Default::default() };
         self.lines.resize(net.line_count(), LineSvc::default());
+        // T-4149: what places each rebuilt line's runs on the track, to tell the lines that run anywhere new
+        let old_geo: Vec<(bool, [(Vec<u32>, Vec<f64>, f64); 2])> = rebuilt
+            .iter()
+            .map(|&l| { let ls = &self.lines[l as usize]; (ls.ok, std::array::from_fn(|r| (ls.runs[r].segs.clone(), ls.runs[r].seg_off.clone(), ls.runs[r].len))) })
+            .collect();
         let old_times: Vec<(u32, [Vec<Vec<f64>>; 2])> = rebuilt
             .iter()
             .map(|&l| (l, std::array::from_fn(|r| (0..SLOTS).map(|lev| self.lines[l as usize].stop_to_stop_safe(r, lev)).collect())))
@@ -1213,6 +1222,7 @@ impl Service {
                 demand.push(l);
             }
         }
+        self.note_moved(net, rebuilt, &old_geo, touched.map(|t| t.0));
         // Lines whose holds may have changed: all of them after the global pass; after the
         // incremental one, the owners of resources rebuilt or re-solved, plus every rebuilt or
         // rescheduled line.
@@ -1319,6 +1329,50 @@ impl Service {
     pub fn forget_timing(&mut self) {
         self.timing_keys.clear();
         self.timing_memo.clear();
+    }
+
+    /// T-4149: of the lines just rebuilt (`was`: each one's ok and runs' entries, offsets and length before), those whose
+    /// runs can lie anywhere new: a train line whose entries, offsets or length moved, or with an edge under it in
+    /// `edges` (touched: its shape may have), every bus and ferry line (laid along its route), every line after a global
+    /// pass (`edges` None). An edit rebuilds every bus line and every line with a way back on most edits; most run where
+    /// they ran.
+    fn note_moved(&mut self, net: &Network, rebuilt: &[u32], was: &[(bool, [(Vec<u32>, Vec<f64>, f64); 2])], edges: Option<&[u32]>) {
+        let Some(moved) = self.moved.as_mut() else { return };
+        let mut touched = edges.map(|e| e.to_vec());
+        if let Some(t) = touched.as_mut() {
+            t.sort_unstable();
+            t.dedup();
+        }
+        for (&l, (ok, runs)) in rebuilt.iter().zip(was) {
+            let ls = &self.lines[l as usize];
+            let bits = |a: &[f64], b: &[f64]| a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_bits() == y.to_bits());
+            let same = touched.as_ref().is_some_and(|t| {
+                ls.ok == *ok && ls.bus.is_none() && net.route_points(l).is_none()
+                    && (0..2).all(|r| {
+                        let (x, (segs, off, len)) = (&ls.runs[r], &runs[r]);
+                        x.segs == *segs && x.len.to_bits() == len.to_bits() && bits(&x.seg_off, off) && !x.segs.iter().any(|&p| t.binary_search(&path_edge(p)).is_ok())
+                    })
+            });
+            if !same {
+                moved.push(l);
+            }
+        }
+        if moved.len() > 1 << 16 {
+            self.moved = None;
+        }
+    }
+
+    /// T-4149: the lines whose runs lie anywhere new on the track since the last call (`note_moved`), ascending;
+    /// `[u32::MAX]` for all of them.
+    pub fn take_moved(&mut self) -> Vec<u32> {
+        match self.moved.replace(vec![]) {
+            None => vec![u32::MAX],
+            Some(mut v) => {
+                v.sort_unstable();
+                v.dedup();
+                v
+            }
+        }
     }
 
     pub fn note_changed(&mut self, lines: &[u32]) {

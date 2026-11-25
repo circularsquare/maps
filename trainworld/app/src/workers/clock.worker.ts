@@ -37,7 +37,7 @@ import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLine
 import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, later, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, stale, standAside, startNow, stepThenRun, Waiting } from "./clockFollowUp";
 import { putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
-import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, game, hex, lineDrawn, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
+import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, forgetDrawn, game, hex, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
 import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
 import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
 import { wordAfter, wordBefore } from "./clockWord";
@@ -1362,8 +1362,7 @@ async function handleMessage(msg: ToClock) {
       // T-1170: only positions are in local units; the rows hold none, so they stay as posted and
       // the page keeps its world's rows (labels, complexes and the rest are not rebuilt)
       putShiftWas(shiftFrom ? new Map(edgeDrawn) : new Map());
-      edgeDrawn.clear();
-      lineDrawn.clear();
+      forgetDrawn();
       posted.net = null;
       sender.forget();
       sendState();

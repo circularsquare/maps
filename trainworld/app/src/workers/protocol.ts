@@ -877,6 +877,15 @@ export interface RowsDelta<T> {
   rows: T[];
 }
 
+/** T-4149: `ClockState.touched` */
+export interface EditTouched {
+  all?: true;
+  edges: number[];
+  nodes: number[];
+  lines: number[];
+  paths: number[];
+}
+
 /** T-3803: the money record (the last one posted is `base`) as its changes (workers/valuePatch.ts), null when none */
 export interface MoneyPatch {
   base: number;
@@ -912,6 +921,11 @@ export interface ClockState {
   delta?: { edges: RowsDelta<ClockEdge>; nodes: RowsDelta<ClockNode>; lines: RowsDelta<ClockLine> };
   /** `?patch=check`: the rows in full, for the client to compare its rebuilt ones with */
   checkRows?: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] };
+  /** T-4149: what the edits since the last state posted touched, the one list a reader patches by: the ids of the edges,
+   * nodes and lines whose rows changed or are gone, and the lines whose drawn runs moved since the last network posted
+   * (`paths`). `all`: everything may have changed, the state or its network posted whole (a load, an anchor move,
+   * `?patch=0`). */
+  touched?: EditTouched;
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];
   /** T-4048: stations the player separated: node id pairs, flat */

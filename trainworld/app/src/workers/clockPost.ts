@@ -10,11 +10,11 @@ import { busGraph, stopsIn } from "../diagram/busGraph";
 import { cutLines } from "../diagram/cut";
 import { StrokeSender, strokesOfPieces, type StrokeKind, type StrokeMode } from "../map/strokePost";
 import { NO_CITIES } from "./saveFile";
-import { StateRows } from "./stateRows";
-import type { ClockEdge, ClockLine, ClockNode, ClockState, MoneyPatch, MoneyState } from "./protocol";
+import { StateRows, weekendsOf } from "./stateRows";
+import type { ClockEdge, ClockLine, ClockNode, ClockState, EditTouched, MoneyPatch, MoneyState } from "./protocol";
 import { diffValue } from "./valuePatch";
 import { complexOfNodes } from "./clockDemand";
-import { diagramIn, edgeMerc, rowEnv } from "./clockMain";
+import { diagramIn, drawnAllMoved, edgeMerc, pathsAllMoved, pathsMoved, pathsPosted, rowEnv } from "./clockMain";
 import { diagramCities, diagramInside, frame, send, timing } from "./clockState";
 
 // ---------------------------------------------------------------- the network diagram's graph (T-2159)
@@ -345,6 +345,10 @@ export function checkRows(got: { edges: ClockEdge[]; nodes: ClockNode[]; lines: 
   const keys: ("edges" | "nodes" | "lines")[] = planned ? ["edges", "nodes"] : ["edges", "nodes", "lines"];
   const bad = keys.filter((k) => !sameValue(got[k], full[k]));
   if (bad.length) console.error(`T-1382 check: the ${bad.join(", ")} read from changes differ from a full read`);
+  // T-4149: the weekends read for many lines at once, the track limits shared, against each line's own reads
+  const ids = got.lines.map((l) => l.id), many = weekendsOf(a, ids);
+  const off = ids.filter((id) => { const [w, r] = many.get(id)!; return !sameBytes(w, a.line_weekend(id)) || !sameBytes(r, a.line_row_weekend(id)); });
+  if (off.length) console.error(`T-4149 check: the weekends of lines ${off.slice(0, 8).join(", ")} read together differ from each line's own`);
 }
 
 /** Rows field for field, arrays and typed arrays by value. */
@@ -365,8 +369,8 @@ function sameValue(a: unknown, b: unknown): boolean {
 }
 
 /** The rows that differ from those last posted, with every row's id in order (null when the ids
- * are as last posted); `posted` takes the new rows. */
-function rowsDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids: number[]): { ids: number[] | null; rows: T[] } {
+ * are as last posted), and the ids of those gone; `posted` takes the new rows. */
+function rowsDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids: number[]): { ids: number[] | null; rows: T[]; gone: number[] } {
   const changed: T[] = [];
   let sameIds = rows.length === ids.length;
   for (let i = 0; i < rows.length; i++) {
@@ -380,13 +384,27 @@ function rowsDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids:
     by.set(r.id, r);
   }
   // `by` holds every row now, and only those gone besides: there are some exactly when it holds more
+  const gone: number[] = [];
   if (by.size > rows.length) {
     const now = new Set<number>();
     for (const r of rows) now.add(r.id);
-    for (const id of by.keys()) if (!now.has(id)) by.delete(id);
+    for (const id of by.keys()) if (!now.has(id)) { by.delete(id); gone.push(id); }
   }
-  return { ids: sameIds ? null : rows.map((r) => r.id), rows: changed };
+  return { ids: sameIds ? null : rows.map((r) => r.id), rows: changed, gone };
 }
+
+/** T-4149: a state's `touched` from its rows' deltas and the lines whose runs moved; the drawn runs' list starts again
+ * once a network is posted */
+function touchedOf(s: ClockState, ...d: { rows: { id: number }[]; gone: number[] }[]): EditTouched {
+  // (a line whose row is gone has no drawn runs, also where the model's list of moved lines ran over and said all)
+  for (const id of d[2].gone) pathsMoved.add(id);
+  const [edges, nodes, lines] = d.map((x) => [...x.rows.map((r) => r.id), ...x.gone]);
+  const paths = pathsAllMoved ? [...new Set([...pathsMoved, ...s.lines.map((l) => l.id)])] : [...pathsMoved];
+  const t: EditTouched = drawnAllMoved ? touchedAll() : { edges, nodes, lines, paths };
+  if (s.net) pathsPosted();
+  return t;
+}
+const touchedAll = (): EditTouched => ({ all: true, edges: [], nodes: [], lines: [], paths: [] });
 
 /** Post a state, its edges, nodes and lines as only those that changed since the last state posted
  * (T-648, T-1029: copying them to the main thread and back into objects was most of a state's time
@@ -397,7 +415,8 @@ export function postState(s: ClockState, transfer: Transferable[]) {
     rowsDelta(s.nodes, posted.nodes, posted.nodeIds);
     rowsDelta(s.lines, posted.lines, posted.lineIds);
     posted.edgeIds = s.edges.map((e) => e.id); posted.nodeIds = s.nodes.map((n) => n.id); posted.lineIds = s.lines.map((l) => l.id);
-    send({ kind: "state", state: { ...s, ...moneyPost(s.money!) } }, transfer);
+    if (s.net) pathsPosted();
+    send({ kind: "state", state: { ...s, ...moneyPost(s.money!), touched: touchedAll() } }, transfer);
     return;
   }
   const t0 = performance.now();
@@ -406,10 +425,12 @@ export function postState(s: ClockState, transfer: Transferable[]) {
   if (dn.ids) posted.nodeIds = dn.ids;
   if (dl.ids) posted.lineIds = dl.ids;
   const full = patchMode === "check" ? { edges: s.edges, nodes: s.nodes, lines: s.lines } : undefined;
+  const touched = touchedOf(s, de, dn, dl);
   const t1 = performance.now(), money = moneyPost(s.money!), t2 = performance.now();
   // T-4149: the post's parts, for the edit's answer
   timing.pRows = t1 - t0; timing.pMoney = t2 - t1;
-  send({ kind: "state", state: { ...s, ...money, edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) }, ...(import.meta.env.DEV ? { timing: { ...timing } } : {}) }, transfer);
+  const delta = { edges: { ids: de.ids, rows: de.rows }, nodes: { ids: dn.ids, rows: dn.rows }, lines: { ids: dl.ids, rows: dl.rows } };
+  send({ kind: "state", state: { ...s, ...money, edges: [], nodes: [], lines: [], delta, touched, ...(full ? { checkRows: full } : {}) }, ...(import.meta.env.DEV ? { timing: { ...timing } } : {}) }, transfer);
   timing.pSend = performance.now() - t2;
 }
 export function putDiagramOn(v: typeof diagramOn) { diagramOn = v; }

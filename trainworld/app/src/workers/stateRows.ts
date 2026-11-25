@@ -175,12 +175,29 @@ interface LineRead {
 }
 
 /** T-3542: a line's trains an hour per period and its rows; for four or five rows, its figures per row. */
-function periodsOf(a: TrackApi, id: number): Pick<LineRead, "tphP" | "periods" | "periodsOwn" | "hours" | "hoursOwn" | "rows"> {
+function periodsOf(a: TrackApi, id: number, rowWeekend: ArrayLike<number>): Pick<LineRead, "tphP" | "periods" | "periodsOwn" | "hours" | "hoursOwn" | "rows"> {
   const periods = a.line_period_count(id), periodsOwn = a.line_periods_own(id), tphP = Array.from(a.line_tph_by_period(id));
   const hours = Array.from(a.line_hours(id)), hoursOwn = a.line_hours_own(id).length > 0;
   if (periods <= 3) return { tphP, periods, periodsOwn, hours, hoursOwn, rows: undefined };
   const auto = a.line_row_headways(id);
-  return { tphP, periods, periodsOwn, hours, hoursOwn, rows: { figs: Array.from(a.line_rows(id)), set: Array.from(a.line_row_trains(id)), ...(auto.length ? { auto: Array.from(auto) } : {}), weekend: Array.from(a.line_row_weekend(id)) } };
+  return { tphP, periods, periodsOwn, hours, hoursOwn, rows: { figs: Array.from(a.line_rows(id)), set: Array.from(a.line_row_trains(id)), ...(auto.length ? { auto: Array.from(auto) } : {}), weekend: Array.from(rowWeekend) } };
+}
+
+/** T-4149: `TrackApi.line_weekends` of these lines, by id: each line's `line_weekend` and `line_row_weekend`. One call
+ * for all: each of those alone works out every line's track limits, a pass over the whole network. */
+export function weekendsOf(a: TrackApi, ids: readonly number[]): Map<number, [Float64Array, Float64Array]> {
+  const out = new Map<number, [Float64Array, Float64Array]>();
+  if (!ids.length) return out;
+  const v = a.line_weekends(Uint32Array.from(ids));
+  let k = 0;
+  for (const id of ids) {
+    const n = v[k], w = v.subarray(k + 1, k + 1 + n);
+    k += 1 + n;
+    const m = v[k], r = v.subarray(k + 1, k + 1 + m);
+    k += 1 + m;
+    out.set(id, [w, r]);
+  }
+  return out;
 }
 
 export function upgradesOf(a: TrackApi): Map<number, number> {
@@ -192,6 +209,10 @@ export function upgradesOf(a: TrackApi): Map<number, number> {
 /** a line with no phase tables (`TrackApi.line_phases` of a line with none) */
 const NO_TABLE = new Float32Array(0);
 
+/** a deep line's own calls before they are made (`StateRows.lines` makes them for every deep line after its first pass) */
+const NO_OWN: Omit<LineOwn, "busRow"> = { auto: new Float64Array(0), fast: false, tram: false, loopKind: 0, oneWay: false, oneWayByTrack: false, limit: 0, fareDist: false, weekend: [], restTph: [], shift: 0,
+  tphP: [], periods: 0, periodsOwn: 0, hours: [], hoursOwn: false, rows: undefined, pairs: 0, twinOf: -1 };
+
 const hex = (c: number) => "#" + c.toString(16).padStart(6, "0");
 
 /** `TrackApi.line_auto`: a headway in seconds per level, or null for a line with counts by hand */
@@ -200,9 +221,8 @@ function autoOf(v: ArrayLike<number>): [number, number, number] | null {
 }
 
 /** T-3521: a line's weekends (`TrackApi.line_weekend`), empty where they are the weekdays' at 100%. */
-function weekendOf(a: TrackApi, id: number): number[] {
-  const w = a.line_weekend(id);
-  return w.length === 8 && (w[0] !== 100 || w[1] !== 0) ? [...w] : [];
+function weekendOf(w: ArrayLike<number>): number[] {
+  return w.length === 8 && (w[0] !== 100 || w[1] !== 0) ? Array.from(w) : [];
 }
 
 function sameNumbers(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
@@ -261,7 +281,7 @@ export class StateRows {
    * ways are ordered by the lines on them as the read before left them, `PlatformLines.setLines`) */
   private carry = new Set<number>();
   /** T-4113: what the last read read again, for the notes' work counts */
-  work = { edges: 0, nodes: 0, lines: 0, buses: 0, leaves: 0, left: 0, busWhy: "" };
+  work = { edges: 0, nodes: 0, lines: 0, buses: 0, leaves: 0, left: 0, busWhy: "", foldMs: 0 };
 
   /** Forget every row: the next read is a full one. */
   reset() {
@@ -418,7 +438,7 @@ export class StateRows {
     // (repricing for water or terrain moves edge prices no edit touched: every record is visited then)
     const walk = !StateRows.bounded || all || linesAll;
     this.scope = { all: taken.all || all && (!focus || !StateRows.bounded), walk, linesAll, ei, ni, li, edges, nodes, lines, heavies, fresh, bus, taken, dirty };
-    this.work = { edges: 0, nodes: 0, lines: 0, buses: 0, leaves: taken.leaves, left: taken.left, busWhy: "" };
+    this.work = { edges: 0, nodes: 0, lines: 0, buses: 0, leaves: taken.leaves, left: taken.left, busWhy: "", foldMs: 0 };
   }
 
   /** the read's scope, begun now when `begin` was not called (a caller reading one part) */
@@ -588,9 +608,11 @@ export class StateRows {
     // a station no longer there keeps no name
     if (this.names.size > seen.size) for (const id of this.names.keys()) if (!seen.has(id)) this.names.delete(id);
     // T-4113: no station row new and the links and buildings as before: the names shown are the last read's
+    const tf = performance.now();
     const key = env.complexKey?.(a) ?? "";
-    if (!rebuilt && this.lastNodes && key === this.lastFoldKey) return this.lastNodes.slice();
+    if (!rebuilt && this.lastNodes && key === this.lastFoldKey) { this.work.foldMs = performance.now() - tf; return this.lastNodes.slice(); }
     this.foldNames(out, env.complexes);
+    this.work.foldMs = performance.now() - tf;
     this.lastNodes = out.slice();
     this.lastFoldKey = key;
     return out;
@@ -719,6 +741,7 @@ export class StateRows {
     const kept = this.lineKept;
     const seen = new Set<number>();
     const read: LineRead[] = [];
+    const deepIds: number[] = [];
     const refresh = new Set<number>();
     // a bus line's stops that are no station join the nodes once each, after the model's (T-1464)
     const nodeIds = new Set<number>();
@@ -752,14 +775,20 @@ export class StateRows {
       if (fresh) refresh.add(id);
       const heavy = fresh ? heavies.get(id) ?? this.heavy(a, id, ok) : prev!.heavy;
       const deep = all || !StateRows.bounded || fresh || !prev || deepLines.has(id) || !sameNumbers(raw, prev.raw);
-      if (deep) this.work.lines++;
-      const own: LineOwn = deep ? {
-        auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), oneWay: a.line_one_way(id), oneWayByTrack: a.line_one_way_by_track(id), limit: a.line_limit(id), fareDist: a.line_fare_dist(id), weekend: weekendOf(a, id), restTph: [...a.line_tph_rest(id)], shift: a.line_shift(id),
-        ...periodsOf(a, id),
-        busRow,
-        pairs: bus ? 0 : a.line_pairs(id), twinOf: bus ? -1 : a.line_twin_of(id),
-      } : { ...prev!.own, busRow };
-      read.push({ i, id, ok, running, bus, prev, fresh, heavy, upkeep: upkeepOf.get(id) ?? 0, ...own });
+      if (deep) { this.work.lines++; deepIds.push(id); }
+      read.push({ i, id, ok, running, bus, prev, fresh, heavy, upkeep: upkeepOf.get(id) ?? 0, ...(deep ? NO_OWN : prev!.own), busRow });
+    }
+    // the deep lines' own calls, their weekends read in one call for all of them
+    const weekends = weekendsOf(a, deepIds);
+    for (const r of read) {
+      const w = weekends.get(r.id);
+      if (!w) continue;
+      const id = r.id;
+      Object.assign(r, {
+        auto: a.line_auto(id), fast: a.line_fast(id), tram: a.line_tram(id), loopKind: a.line_loop(id), oneWay: a.line_one_way(id), oneWayByTrack: a.line_one_way_by_track(id), limit: a.line_limit(id), fareDist: a.line_fare_dist(id), weekend: weekendOf(w[0]), restTph: [...a.line_tph_rest(id)], shift: a.line_shift(id),
+        ...periodsOf(a, id, w[1]),
+        pairs: r.bus ? 0 : a.line_pairs(id), twinOf: r.bus ? -1 : a.line_twin_of(id),
+      } satisfies Omit<LineOwn, "busRow">);
     }
     if (this.busKept.size) for (const id of this.busKept.keys()) if (!seen.has(id) || !busOf.get(id)) this.busKept.delete(id);
     const out: ClockLine[] = [];

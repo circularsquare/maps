@@ -1121,7 +1121,7 @@ impl TrackWorld {
 
     /// `weekend_places` with the track's limits per line (`line_limits`) worked out once into `most`
     /// for every line after it.
-    fn weekend_counts_in(&self, l: usize, most: &mut Option<Vec<[(f64, u32); SLOTS]>>) -> Option<[u32; 5]> {
+    pub(crate) fn weekend_counts_in(&self, l: usize, most: &mut Option<Vec<[(f64, u32); SLOTS]>>) -> Option<[u32; 5]> {
         let t = self.net.trains_of(l)?;
         // a headway line runs its weekend headway even on its weekday count of trains, which then
         // stand longer at the ends
@@ -1917,10 +1917,14 @@ impl TrackWorld {
     /// they read otherwise.
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
         let phases = self.phases();
+        // T-4149: the rollback leaves every line where it ran, so the lines the trial moved are not the next edit's
+        let moved = self.svc.moved.clone();
         self.svc.timing_held = Some(vec![]);
         let out = self.commit(op).map(|(r, inv)| {
             let value = inspect(self);
-            let _ = self.restore(inv);
+            if self.restore(inv).is_ok() {
+                self.svc.moved = moved;
+            }
             self.set_phases(phases);
             (r, value)
         });

@@ -233,7 +233,11 @@ Web first, so it can be shared as a link.
   (`workers/regions.ts`, a quadtree that is a function of the station set). A rows state with many regions
   dirty does those of the edit and the view first and leaves the rest for the next read. A noted line
   whose stamp (everything the worker reads of it) is unchanged is left off the list (T-4113). A repricing
-  for water or terrain still looks at every record. The
+  for water or terrain still looks at every record. A line's drawn runs are sampled again only where the
+  model says they lie anywhere new on the track (`take_moved_lines`: their entries, offsets or length
+  moved, or an edge under them was touched); a settle's new timing, or a rebuild onto the same track, keeps
+  them. Each state names what it holds that the last one posted did not (`ClockState.touched`: the rows
+  changed or gone, the lines whose runs moved), the one list a reader patches by (T-4149). The
   run profiles' phase tables are kept per line the same way and laid end to end only when a line's
   differ; what the track model prices (the cost sums, the construct-all quote) asks the water mask
   once for a node while the node and the mask stay as they are (T-1540). The construct-all quote and

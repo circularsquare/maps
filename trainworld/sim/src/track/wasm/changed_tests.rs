@@ -129,3 +129,62 @@ fn weekend_edits_list_lines_whose_rates_do_not_move() {
     assert_eq!(a.set_line_weekend_counts(small, 3, 2, 1), 0, "{}", a.issues());
     assert_eq!(a.take_changed_lines(), vec![small]);
 }
+
+/// T-4149: `take_moved_lines` lists every line whose runs lie anywhere new on the track (a new model: every line), and
+/// a line it leaves out is sampled where it was, bit for bit, whatever was rebuilt or worked out again: a rename at a
+/// stop, a train count, a stop dropped (that line listed, the other not), a station on the other line's track, undo; and
+/// none after the construct-all quote, whose trial (`trial_with`) and rollback leave every line where it ran.
+#[test]
+fn lines_left_off_the_moved_list_run_where_they_ran() {
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.set_route_tangent(true);
+    for (k, y) in [0.0, 5000.0].into_iter().enumerate() {
+        route(&mut a, 0.0, y, 6000.0, y);
+        for (j, x) in [500.0, 3000.0, 5500.0].into_iter().enumerate() {
+            let e = (0..a.w.net.edge_count() as u32)
+                .filter(|&e| a.w.net.edge_ok(e) && !a.w.net.edge_crossover[e as usize])
+                .min_by(|&p, &q| a.w.net.project(p, x, y).1.total_cmp(&a.w.net.project(q, x, y).1))
+                .unwrap();
+            assert_eq!(a.add_station(2, e, x, y, 120, format!("S{k}{j}")), 0, "{}", a.issues());
+        }
+    }
+    let st = station_nodes(&a);
+    let by_name = |a: &TrackApi, n: &str| *st.iter().find(|&&k| a.w.net.node_name[k as usize] == n).unwrap();
+    let first: Vec<u32> = (0..3).map(|j| by_name(&a, &format!("S0{j}"))).collect();
+    let second: Vec<u32> = (0..3).map(|j| by_name(&a, &format!("S1{j}"))).collect();
+    let (l0, l1) = (a.new_line_id(), a.new_line_id());
+    assert_eq!(a.set_line_with_trains(l0, &first, 6, 4, 2, 30.0, 180.0, 0, 0, "A".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_line_with_trains(l1, &second, 6, 4, 2, 30.0, 180.0, 0, 0, "B".into()), 0, "{}", a.issues());
+    assert_eq!(a.take_moved_lines(), vec![ALL], "a new model: every line");
+    let drawn = |a: &TrackApi| [l0, l1].map(|l| (0..2).map(|r| a.run_polyline(l, r, 50.0).iter().chain(&a.run_bends(l, r, 50.0, 0.25)).map(|x| x.to_bits()).collect::<Vec<_>>()).collect::<Vec<_>>());
+    let mut was = drawn(&a);
+    let mut step = |a: &mut TrackApi, what: &str, r: u32| -> Vec<u32> {
+        assert_eq!(r, 0, "{what}: {}", a.issues());
+        let moved = a.take_moved_lines();
+        let now = drawn(a);
+        for (k, l) in [l0, l1].into_iter().enumerate() {
+            if !moved.contains(&l) && !moved.contains(&ALL) { assert_eq!(now[k], was[k], "{what}: line {l} left off the list ({moved:?}) but drawn elsewhere"); }
+        }
+        was = now;
+        moved
+    };
+    let r = a.set_station_props(first[1], 120, "Renamed".into());
+    step(&mut a, "a rename", r);
+    let r = a.set_train_counts(l1, 3, 2, 1);
+    step(&mut a, "a train count", r);
+    let r = a.set_stops(l0, &first[..2]);
+    let moved = step(&mut a, "a stop dropped", r);
+    assert!(moved.contains(&l0) && !moved.contains(&l1), "{moved:?}");
+    let e = (0..a.w.net.edge_count() as u32).filter(|&e| a.w.net.edge_ok(e) && !a.w.net.edge_crossover[e as usize]).min_by(|&p, &q| a.w.net.project(p, 4200.0, 5000.0).1.total_cmp(&a.w.net.project(q, 4200.0, 5000.0).1)).unwrap();
+    let r = a.add_station(2, e, 4200.0, 5000.0, 120, "Mid".into());
+    step(&mut a, "a station on the other line's track", r);
+    let r = a.undo();
+    step(&mut a, "undo", r);
+    let r = a.undo();
+    let moved = step(&mut a, "undo of the stop dropped", r);
+    assert!(moved.contains(&l0), "{moved:?}");
+    assert!(a.w.svc.lines.iter().any(|s| s.ok && !s.running), "the lines are planned, so the quote tries constructing them");
+    assert!(!a.blueprint_cost_items().is_empty());
+    let moved = step(&mut a, "a construct quote", 0);
+    assert!(moved.is_empty(), "{moved:?}");
+}
