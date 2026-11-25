@@ -473,8 +473,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4328 [P2] {L:map-look} OpenFreeMap through our own address as a last route
-  - Context: You, 11-25: "can investigate proxying, but we should only do this in cases we actually need to i think". Used only when both OpenFreeMap addresses fail, before the notice. Draft done.
+- T-4328 [P3] {L:map-look} {after:players still blocked after 0.4.6.1} OpenFreeMap through our own address as a last route
+  - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail.
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
   - Other: notes/T-4328.md
 - T-4246 [P3] {L:map-look} Tram wires look rough at corners in thickness mode

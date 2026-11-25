@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 5930d0ed-8c43-4146-931e-316bd8ffe75e, name maps-76 [78c9fa], since 2026-11-25 13:21 UTC
-Updated: 2026-11-25 15:13 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 15:27 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -13,14 +13,13 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    T-4314/T-4315 (page), T-4153 rest (~50 ms), T-4149 s3, T-4281 rest; review28's lows go with T-4284's next stage.
 2. Owed: edit_bench NYC on master (batch: modelpass's lone samples read slower) once corrfix lands; Asia baseline on a
    quiet machine (`edit_bench.mjs --save asia,nyc --baseline`, T-4293).
-3. 0.4.6.1 hotfix: her yes and text given (asks.jsonl); hotfix461 (Opus) building it from 0.4.6 + 9b4573876 + the
-   dismissable notice; I judge the notice screenshot (her 11-25: get it out faster), then deploy (no changelog
-   review, playtest list or perf_bench: one fallback fix). Master then gets the notice and the v0.4.6.1 updates.ts entry; c030 marked shipped.
+3. 0.4.6.1 published 15:26 UTC (build mww9c849, data 2026-11-24, verified; website a4a8b5d; open source 7d1c0f7;
+   branch tw/hotfix461 a5f84494f, its tree kept; master has the notice, 2038c80ae). Watch for blocked-map reports.
 4. Also running: renameui (Opus: (R) on the rename tooltip, bulk-rename hover text, next stop name below with the speed
    dial right of Next stop; screenshots to her), ofmproxy (Sonnet, research only: OpenFreeMap terms, a Worker draft;
    her "only in cases we actually need to"), caprise (Sonnet: shonei-server MaxTwAccountBytes 64 to 128 MiB,
    committed 493e582, deploy waits for her word; shonei-server's save check is level 39 = live 0.4.6, master is 41
-   (LBK1, LAP1): bump it before the next full release). ofmproxy done: notes/T-4328.md. corrfix landing.
+   (LBK1, LAP1): bump it before the next full release). T-4328 proxy waits for reports of players still blocked after 0.4.6.1 (her call). corrfix landing.
 5. Then: T-4220 s9 (Asia measuring + review24's findings, demand worker now free), T-3160 phone memory, T-4230.
 6. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
 
@@ -43,8 +42,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 - 11-24 18:5x: shipped 0.4.6. She says when to publish (never ask); no "less memory" items when memory is up overall.
 - 11-23: answer her first; agents 2-8 by load; tasks about an hour; you don't investigate, agents do; cycle at 500k;
   no drafted player replies; times as percent of the wait.
-- 11-19: "player complaints take precedent over other new features"; full playtest list before every publish.
-- Standing: every publish, deploy and website push needs her yes, none overnight; advisor only for big design calls.
+- 11-19: player complaints before new features; full playtest list before every publish (not the 0.4.6.1 hotfix).
 
 ## Only a person knows
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
