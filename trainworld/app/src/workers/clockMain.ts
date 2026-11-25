@@ -161,12 +161,14 @@ export function forget(all = false) {
     for (const l of backDrawn.keys()) keepBack(l);
     lineDrawn.clear(); lineMerc.clear(); lineBends.clear(); backDrawn.clear(); drift.clear();
   } else {
-    // T-4281: a run 0 that moved only in a stretch (`take_moved_spans`) is sampled again there alone
+    // T-4281: a run that moved only in a stretch (`take_moved_spans`) is sampled again there alone; T-4149: a way back
+    // too (`note_moved` looks at both runs: their entries and the touched edges under each)
     const near = new Map<number, ArrayLike<number>>();
-    for (let k = 0; k + 5 < spans.length; k += 6) if (spans[k + 1] === 0) near.set(spans[k], spans.subarray(k, k + 6));
-    // T-4291: a way back is sampled again only where its line moved (`note_moved` looks at both runs: their entries and
-    // the touched edges under each), whole
-    for (const l of moved) if (!spliceRun0(a, l, near.get(l))) dropDrawnLine(l); else dropBack(l);
+    for (let k = 0; k + 5 < spans.length; k += 6) near.set(runKey(spans[k], spans[k + 1]), spans.subarray(k, k + 6));
+    for (const l of moved) {
+      if (!spliceRun0(a, l, near.get(runKey(l, 0)))) dropRun0(l);
+      if (!spliceBack(a, l, near.get(runKey(l, 1)))) dropBack(l);
+    }
   }
   for (const l of a.dirty_lines()) if (a.is_bus(l) || a.is_ferry(l)) dropDrawnLine(l);
 }
@@ -191,38 +193,64 @@ function resampled(was: { merc: Float64Array; bends: Float32Array } | undefined,
   return false;
 }
 function dropDrawnLine(l: number) {
-  keepRun0(l); dropBack(l);
-  lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); drift.delete(l);
+  dropRun0(l); dropBack(l);
+}
+function dropRun0(l: number) {
+  keepRun0(l);
+  lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); drift.delete(runKey(l, 0));
 }
 function dropBack(l: number) {
   keepBack(l);
-  backDrawn.delete(l);
+  backDrawn.delete(l); drift.delete(runKey(l, 1));
 }
-/** T-4281: per line, how far (ground m) its kept run 0 samples past a stretch sampled again may lie along the track from
- * where a whole resample would put them: the summed length changes of the cuts since its last whole sampling (a station
- * splitting an edge moves the pieces' lengths by a few mm) */
-const drift = new Map<number, number>();
+const runKey = (l: number, run: number) => l * 2 + run;
+/** T-4281: per run (`runKey`), how far (ground m) its kept samples may lie along the track from where a whole resample
+ * would put them (`m`): the summed length changes of the cuts since its last whole sampling (a station splitting an edge
+ * moves the pieces' lengths by a few mm). T-4149: samples before `from` are a whole resample's, bit for bit (before the
+ * first cut that moved the rest) */
+const drift = new Map<number, { m: number; from: number }>();
 /** T-4281: the most `drift` a line's samples may carry before they are taken whole again (a train is drawn at most this
  * far along its track from its place; `BEND_TOL_M` is a train's leeway across it) */
 const DRIFT_MAX_M = 0.05;
-/** T-4281: line `l`'s kept run 0 samples and bends with the stretch of `span` (`[line, run, lo, hi, drift, len]`) sampled
- * again, as `drawnLine` samples a run whole; false (nothing changed) where it must be sampled whole: none kept, no span,
- * the drift past `DRIFT_MAX_M` or the count of samples changed */
+/** T-4281: line `l`'s kept run 0 samples and bends with the stretch of `span` sampled again (`splice`); false (nothing
+ * changed) where it must be sampled whole */
 function spliceRun0(a: TrackApi, l: number, span: ArrayLike<number> | undefined): boolean {
   const m = lineMerc.get(l), b = lineBends.get(l);
+  const s = m && b && splice(a, l, 0, m, b, span);
+  if (!s) return false;
+  lineMerc.set(l, s.merc);
+  lineBends.set(l, s.bends);
+  lineDrawn.delete(l);
+  if (s.changed) pathsMoved.add(l);
+  return true;
+}
+/** T-4149: the same for a line's own way back (`drawnBack`'s), kept under its path now */
+function spliceBack(a: TrackApi, l: number, span: ArrayLike<number> | undefined): boolean {
+  const c = backDrawn.get(l);
+  const s = c && splice(a, l, 1, c.merc, c.bends, span);
+  if (!s) return false;
+  backDrawn.set(l, { key: a.line_back_path(l).join(), merc: s.merc, bends: s.bends, at: null, d: null });
+  if (s.changed) pathsMoved.add(l);
+  return true;
+}
+/** T-4281: run `run` of line `l`, kept as `m` and `b` (mercator samples, bends), with the stretch of `span`
+ * (`[line, run, lo, hi, drift, len]`) sampled again as a whole resample samples it there, and its drift noted; null where
+ * it must be sampled whole: no span, the drift past `DRIFT_MAX_M` or the count of samples changed */
+function splice(a: TrackApi, l: number, run: 0 | 1, m: Float64Array, b: Float32Array, span: ArrayLike<number> | undefined): { merc: Float64Array; bends: Float32Array; changed: boolean } | null {
   // (`?patch=walk` samples every moved run whole, as before, to time against)
-  if (!m || !b || !span || patchMode === "walk") return false;
+  if (!span || patchMode === "walk") return null;
   const [, , lo, hi, moved, len] = Array.from(span);
-  const d = (drift.get(l) ?? 0) + moved, n = Math.ceil(len / SAMPLE_STEP);
-  if (!(d <= DRIFT_MAX_M) || m.length !== (n + 1) * 2) return false;
+  const was = drift.get(runKey(l, run));
+  const d = (was?.m ?? 0) + moved, n = Math.ceil(len / SAMPLE_STEP);
+  if (!(d <= DRIFT_MAX_M) || m.length !== (n + 1) * 2) return null;
   const k0 = Math.max(0, Math.floor(lo / SAMPLE_STEP) - 1), k1 = Math.min(n, Math.ceil(hi / SAMPLE_STEP) + 1);
-  const p = a.run_polyline_range(l, 0, SAMPLE_STEP, k0, k1);
-  if (p.length !== (k1 - k0 + 1) * 2) return false;
+  const p = a.run_polyline_range(l, run, SAMPLE_STEP, k0, k1);
+  if (p.length !== (k1 - k0 + 1) * 2) return null;
   const merc = m.slice();
   for (let k = 0; k < p.length; k += 2) merc.set(toMerc01(...packLngLat(p[k], p[k + 1])), k0 * 2 + k);
   // the bends of every interval with a sample sampled again
   const b0 = Math.max(0, k0 - 1), b1 = Math.min(n, k1 + 1);
-  const fresh = bendsOf(a.run_bends_range(l, 0, SAMPLE_STEP, BEND_TOL_M, b0, b1), merc);
+  const fresh = bendsOf(a.run_bends_range(l, run, SAMPLE_STEP, BEND_TOL_M, b0, b1), merc);
   const out: number[] = [];
   let at = 0, cut = 0;
   for (; at < b.length && b[at] < b0; at += 2 + 2 * b[at + 1]) cut = at + 2 + 2 * b[at + 1];
@@ -235,12 +263,9 @@ function spliceRun0(a: TrackApi, l: number, span: ArrayLike<number> | undefined)
   let changed = bends.length !== b.length;
   for (let k = k0 * 2; !changed && k <= k1 * 2 + 1; k++) changed = merc[k] !== m[k];
   for (let k = cut; !changed && k < cut + fresh.length; k++) changed = bends[k] !== b[k];
-  lineMerc.set(l, merc);
-  lineBends.set(l, bends);
-  lineDrawn.delete(l);
-  if (d > 0) drift.set(l, d);
-  if (changed) pathsMoved.add(l);
-  return true;
+  // (past the stretch the samples moved along by this cut's length change)
+  if (d > 0) drift.set(runKey(l, run), { m: d, from: moved > 0 ? Math.min(was?.from ?? n + 1, k1 + 1) : was?.from ?? n + 1 });
+  return { merc, bends, changed };
 }
 /** T-4149: the lines whose drawn runs moved since the last network was posted (`ClockState.touched.paths`), or all of them;
  * T-4280: a line is named where it was sampled again into other samples or bends than before (`resampled`) */
@@ -262,18 +287,29 @@ function checkSamples(a: TrackApi, lines: readonly ClockLine[]) {
     for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
     return { m, bends: bendsOf(a.run_bends(id, run, SAMPLE_STEP, BEND_TOL_M), m) };
   };
-  // T-4281: run 0 samples kept past a stretch sampled again lie within the line's drift (ground m) of a whole resample
-  const near = (x: Float64Array, y: Float64Array, tol: number) => x.length === y.length && x.every((v, k) => {
+  // T-4281: samples kept past a stretch sampled again lie within the run's drift (ground m) of a whole resample; T-4149:
+  // those before `from`, and the bends between them, are a whole resample's bit for bit
+  const near = (x: Float64Array, y: Float64Array, tol: number, from: number) => x.length === y.length && x.every((v, k) => {
     if (k % 2) return true;
+    if (k < from * 2) return Object.is(v, y[k]) && Object.is(x[k + 1], y[k + 1]);
     const ground = Math.hypot(v - y[k], x[k + 1] - y[k + 1]) * EARTH_C / Math.cosh(Math.PI * (1 - 2 * y[k + 1]));
     return ground <= tol + 1e-3;
   });
+  const bendsBefore = (b: Float32Array, from: number) => {
+    let k = 0;
+    while (k < b.length && b[k] + 1 < from) k += 2 + 2 * b[k + 1];
+    return b.subarray(0, k);
+  };
+  const kept = (id: number, run: number, m: Float64Array, b: Float32Array | undefined) => {
+    const f = fresh(id, run), d = drift.get(runKey(id, run));
+    if (!d) return same(m, f.m) && same(b, f.bends);
+    return !!b && near(m, f.m, d.m, d.from) && same(bendsBefore(b, d.from), bendsBefore(f.bends, d.from));
+  };
   for (const l of lines) {
     if (!l.ok) continue;
-    const m = lineMerc.get(l.id), b = backDrawn.get(l.id), tol = drift.get(l.id) ?? 0;
-    if (m && tol > 0) { if (!near(m, fresh(l.id, 0).m, tol)) bad.push(l.id); }
-    else if (m) { const f = fresh(l.id, 0); if (!same(m, f.m) || !same(lineBends.get(l.id), f.bends)) bad.push(l.id); }
-    if (b && l.back?.length) { const f = fresh(l.id, 1); if (!same(b.merc, f.m) || !same(b.bends, f.bends)) bad.push(l.id); }
+    const m = lineMerc.get(l.id), b = backDrawn.get(l.id);
+    if (m && !kept(l.id, 0, m, lineBends.get(l.id))) bad.push(l.id);
+    if (b && l.back?.length && !kept(l.id, 1, b.merc, b.bends)) bad.push(l.id);
   }
   if (bad.length) console.error(`T-4149 check: the kept run samples of lines ${bad.slice(0, 8).join(", ")} differ from the model's`);
 }
@@ -350,7 +386,7 @@ export function drawnLine(a: TrackApi, id: number): Float32Array {
       lineMerc.set(id, m);
       const bends = bendsOf(a.run_bends(id, 0, SAMPLE_STEP, BEND_TOL_M), m);
       lineBends.set(id, bends);
-      drift.delete(id);
+      drift.delete(runKey(id, 0));
       if (resampled(dropped.get(id), m, bends)) pathsMoved.add(id);
       dropped.delete(id);
     }
@@ -372,6 +408,7 @@ function drawnBack(a: TrackApi, id: number, back: readonly number[]): Float32Arr
     const was = c ?? droppedBack.get(id);
     droppedBack.delete(id);
     backDrawn.set(id, (c = { key, merc: m, bends: bendsOf(a.run_bends(id, 1, SAMPLE_STEP, BEND_TOL_M), m), at: null, d: null }));
+    drift.delete(runKey(id, 1));
     if (resampled(was, m, c.bends)) pathsMoved.add(id);
   }
   if (!c.d || c.at !== anchor()) {
