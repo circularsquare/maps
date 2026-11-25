@@ -13,8 +13,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    real, which landing, or noise; and whether pagestage3's held tree, T-4284 stage 3, is fit to land). Next, after
    pagestage3 is settled (clockClient overlap): T-4291 (rows and post by what an edit touched, about 144 ms on Asia),
    which also covers T-4149's rest. On her yes to a-2026-11-25-4: T-4272 rest (the train work before each answer).
-   Not edit speed: T-4080 stage 3 landed 2ce35efb4 (bus stop names, c035); keepfix (Gemini) on its stages 1-2 review
-   fixes; then stage 6 (map labels).
+   Not edit speed: T-4080 s3 landed (bus stop names, c035); keepfix (Gemini) on its s1-2 review fixes; then s6 labels.
 2. aside6 (Opus, T-4220 stage 6, start and batch side jobs in play; results shown at stage 7). Stage 5 landed 4f27fcda6
    (checks/t4220-aside-equal.mjs: exact). Gemini batch18 review running (artifacts/trainworld/gemini/batch18/review.md:
    T-4283, T-4220 s4, T-4285, T-4153 s7, T-4281 s2); findings to a fix agent. Briefs: my scratch <agent>/brief.md.
