@@ -219,7 +219,7 @@ svg .stroke2 { stroke-width: 2; }
 @media (hover: hover) { .help-q:hover { color: var(--accent); } }
 .help-q svg { width: 12px; height: 12px; flex: none; }
 .help-q.open svg { transform: rotate(90deg); }
-.help-a { margin: 0 0 6px 16px; }
+.help-a { margin: 0 0 6px 16px; white-space: pre-line; }
 .help-ctl { color: var(--accent); }
 /* T-2264: the explainer opened by the "?" beside the effective time */
 .help-topic p { margin: 0 0 6px; }
