@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c002",
+      "text": "fixed a new game opening with some line groups closed",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4337",
+      "by": "groupsopen",
+      "at": "2026-11-25T19:27:01Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
       "id": "c001",
       "text": "fixed station upgrade hovers showing in English in other languages",
       "edited": null,

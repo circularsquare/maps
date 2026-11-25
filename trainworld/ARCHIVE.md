@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4337 [P3] {L:small-fixes} A new game can open with old groups closed (2026-11-25): closed groups keyed by the oldest line's number and first stop position; a new game in the slot opens all groups; renames keep them. notes/T-4337.md.
 - T-4351 [P2] {L:translations} Station upgrade panel partly in English (2026-11-25): 8 keys missing in all 12 languages (upgrade hovers, upkeep lines, BRT) translated; 109 more keys missing per language and 8 stale filed as T-4354. notes/T-4351.md.
 - T-4348 [P1] {L:edit-speed} Slow edits on a player's 44-year Poland save (2026-11-25): not the game's age: autosave grows 60-100 ms by year 44 (at most about 5% of an edit's wait); the slow part is reworking running lines, T-4272/T-4097 work. notes/T-4348.md.
 - T-4347 [P1] {L:loading} A time left from the start of a load (2026-11-25): Belgrade, 2 cores: a time left from 15-19 s (13 min shown, about 20 real), was blank for minutes; it rises once at a later round (13 to 17 min at 500 s). notes/T-4347.md.

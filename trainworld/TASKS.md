@@ -372,9 +372,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
-- T-4337 [P3] {L:small-fixes} A new game can open with old groups closed (taking, 2026-11-25, agent groupsopen)
-  - Context: From T-4329: closed line groups are kept per save slot by group number, and a new game in the same slot numbers its groups again from the start, so a group can start closed.
-  - Goal: A new game in a slot starts with every group open.
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
