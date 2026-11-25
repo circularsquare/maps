@@ -137,6 +137,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-054): Commute demand leaves out people who work at home: the home end is LODES jobs by home block times (1 - tract work-from-home share), the work end each sector's jobs times its industry's share, so Midtown loses more than the Bronx. notes/T-054.md
 
 ## Fares and money
+- 2026-11-25 (T-4272): Placing a station or deleting track charges no construction, only trains: re-pricing the pieces a split or join leaves ($0.001-$220 on her Asia save) is no purchase, and it made the click a paid edit that waited for its rows. notes/T-4272.md
 - 2026-11-25 (Anita, T-4253): A line's fare multiple may go up to 10x, refused when the base fare times it is over US$1,000.
 - 2026-11-23 (Anita): A new game starts with $10B (older entries said $6B; the code's $10B is right).
 
@@ -182,9 +183,10 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-25 (T-4275): When a tracker list blocks OpenFreeMap's `/planet` (EasyPrivacy, 11-24), the game reads the same tiles as `//planet`, which such a rule misses; unblocked players stay on `/planet` and OpenFreeMap's cache. A proxy on our own host is the durable route. notes/T-4275.md
 - 2026-11-24 (Anita, T-4243): The train panel's speed dial is 68 px wide, right-aligned, its rim 3 px thick and linear from 0 to 320 km/h, each speed colour at its own speed; replaced even steps per colour stop, which spread the slow speeds. notes/T-4243.md
 - 2026-11-25 (T-4259): Rename stations (omi-key's PR 35) is an icon in a rail line's Stops heading, not a text button; the focused box's station takes a stop row's hover light. The PR's pulsing map ring and "Renamed N stations" notice were left out, for a small UI. notes/T-4259.md
-- 2026-11-25 (T-4262): After an edit the renderer keeps the last network's stroke buffers for 20 s and copies the next network into them: on her Asia save about 35 MB more GPU memory while editing, instead of allocating 35 MB per edit (most of the GPU's work after one). notes/T-4262.md
+- 2026-11-25 (T-4262): A network's stroke buffers keep a quarter more slots than segments, spread between and after them, so an edit writes only its own segments: on her Asia save 10 MB more GPU memory, no second copy while editing. Room used up nearby lays the set out afresh. notes/T-4262.md
 - 2026-11-25 (Anita, T-4264): A loading bar goes past about half only on a remaining time we can bound (counted work or a measured pace); without one it stops at about 50%. Aim for a real time-left estimate. No creeping to look busy. notes/repeats.md
 - 2026-11-25 (T-4264): Bounded is the workers' time left with every unit to run at this solve's own pace, none past it; rounds, units done, the round model and remembered loads are guesses. Lie: where the bound lapses a bar above half holds (at most 4 s on New York). notes/T-4264.md
 
@@ -246,6 +248,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-25 (T-4272): A station or track delete that can move no running line's trains is answered from its own checks, its services worked out in the next piece; one on a running line's track still waits for the settle, since the trains it needs are paid at the click. notes/T-4272.md
 - 2026-11-25 (T-4265): During a whole solve a zone's bubbles come from the on-screen final's bubble sums, kept on the page. Lie: figures from before the edit until it ends; a zone not drawn since the load lacks its trips with other places (5.5% of Nanjing's legs). notes/T-4265.md
 - 2026-11-25 (T-4263): A loading save's demand pool is sized by the after-solve memory test on estimates, the aux worker counted (0.03 GB plus 0.15 MB per million trips), so it is not cut and solved again after its first final. Lie: an estimate miss still costs one whole re-solve. notes/T-4263.md
 - 2026-11-25 (Anita, T-4267): Edit speed is built to one design: the track model lists what each edit changed and every later layer redoes only that; answer first, the map in pieces, trips after. Approved pending Gemini's and Fable's adversarial reviews. notes/T-4267.md

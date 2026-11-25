@@ -14,11 +14,14 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    confirmed within 100 ms on Asia), editmeasure (Opus, T-4267 phases per edit, notes/T-4267-measure.md), gpuslots
    (Opus, T-4262 s2, GPU work per edit by what changed). Then rework T-4267 to her 100 ms bar with a fresh agent,
    allowed to say "not possible for X because Y". The hold is rejected.
-2. Running: roadsblock (Opus, T-4275 P1: roads and water missing behind tracker blockers since 0.4.6; the hotfix
+1b. batch16a review done (artifacts/trainworld/gemini/batch16a/review.md, unread by me): its fix agent waits until
+   answerfirst and gpuslots land (same files); then one Opus fix agent as T-4277's brief. batch16b: fixes16b running
+   (T-4277). batch16c review running.
+2. Landed: roadsblock (Opus, T-4275 P1: roads and water missing behind tracker blockers since 0.4.6; the hotfix
    publish waits for her morning, publish skill).
-3. 8800 = 6b190cb3c (smoke running 04:39). Master 187e4c259 (smaller speed dial after it). Next starts: T-4273 rename
-   shortcut, T-4276 group timetable, T-4080 s3-6, T-4199 s2, T-3160, T-4187. Overnight: calm pace, 2-4 agents.
-4. Waiting on her: asks.py list (PR #21/#24 comments, Asia load on fewer workers, rename and speedometer text);
+3. 8800 = 93412fc20, smoke PASSED 05:43 UTC (has the T-4275 roads fix: tell her it's ready for the hotfix publish when
+   she's back; publish skill). Landed overnight: T-4262 s2, T-4273, T-4233, T-4277, T-4279, T-4275, T-4243 dial.
+   Next starts: T-4276 group timetable, T-4080 s3-6, T-4199 s2, T-3160, T-4187. Overnight: calm pace, 2-4 agents.
    T-3742 after she asks; T-4250; T-4248. Commit bookkeeping and push now and then.
 5. reserve_cores: maps-3e's loop holds the mutex; start mine (`-All -Loop 30`) once its tab closes.
 

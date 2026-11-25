@@ -26,5 +26,19 @@
     "text": "New text from T-4243 (the speed dial on a train's panel): the dial's hover \"Top speed 160 km/h\" (new). The unit under the number reuses the game's km/h or mph. OK?",
     "since": "2026-11-24",
     "by": "maps-c5"
+  },
+  {
+    "id": "a-2026-11-25-1",
+    "title": "OpenFreeMap through our own address",
+    "text": "Roads and water (T-4275): since 11-24 23:11 UTC, EasyPrivacy (on by default in uBlock Origin and Brave; NordVPN behaves the same) blocks OpenFreeMap's planet tiles on every site. Master now falls back to an address the rule misses, ready for the hotfix. The lasting fix is serving OpenFreeMap through our own address (a Cloudflare Worker at data.anita.garden/ofm/ with caching; OpenFreeMap's terms checked first), a server change. Set it up? I'd say yes. Also: 11 of your website's maps use OpenFreeMap (korearail, cityhistory, londonriders, flights, languagedots, nycriders, japanrail, religiondots, noritetsu, ancestrydotsna, ancestrydots) and may be blank behind the same rule.",
+    "since": "2026-11-25",
+    "by": "maps-c5"
+  },
+  {
+    "id": "a-2026-11-25-2",
+    "title": "Rename key text",
+    "text": "New text from T-4273: the help panel's Keys list gets \"R  Rename the open station\" (new). R because F2 already hides the interface. OK, or another key?",
+    "since": "2026-11-25",
+    "by": "maps-c5"
   }
 ]

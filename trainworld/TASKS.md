@@ -165,10 +165,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them
   - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
   - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
-- T-4233 [P2] {L:checks} Fare-edit income check after quick city edits (taking, 2026-11-24, agent t3303fix)
-  - Context: From T-2188 (11-24): checks/t3303 fails on master too: a fare edit's income spiked 278x for a moment (quickend fixes it in publishStep, now 1.16x), and the check still assumes a local stage that city edits no longer have.
-  - Goal: t3303 checks the income after a fare edit under the new rule and passes.
-  - Other: notes/T-2188.md
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
@@ -205,15 +201,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4276 [P2] {L:timetables} Timetable for a whole line group
   - Context: A player (X, 11-24): "Currently, the timetable only displays one route at a time. I'd like to be able to display all the routes in a group together." You, 11-24: file it.
   - Goal: A line group's panel shows one timetable with every line of the group, each line's trains told apart.
-- T-4275 [P1] {L:map-look} Roads and water missing behind tracker blockers (taking, 2026-11-24, agent roadsblock)
-  - Context: Players since 0.4.6 (your scratch pad, 11-24): roads, rivers and water gone from the map, in map and satellite mode; one fixed it by allowing trackers on anita.garden in NordVPN's tracker blocking (artifacts/trainworld/board/20261124-234001-2c5a.png).
-  - Goal: Roads and water load with common tracker blockers on; the hotfix ready for your morning.
-- T-4273 [P2] {L:small-fixes} Keyboard shortcut to rename a station
-  - Context: A player request; you, 11-24: "i think is a good idea, lets add a keyboard shortcut for rename station."
-  - Goal: With a station selected, one key opens its name for editing (F2 unless it's taken), listed with the other shortcuts.
-- T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-24, agent answerfirst)
-  - Context: You, 11-25: "i want to be able to tell within like 100ms whether there's are any conflicts with the click we've made ... any conflicts should be local". Today the worker applies an edit to the whole simulation before it answers.
-  - Goal: Placing a station and deleting track are confirmed or refused from local checks within 100 ms on your Asia save, every click of a run.
+- T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches (taking, 2026-11-24, agent answerfirst)
+  - Need from Anita: A station on a running line's track can make headway lines need more trains. Buy them right after the confirm, cash dipping below zero if short? I'd say yes
+  - Context: Stations and deletes on track no running line uses are now confirmed from their own checks, 95-207 ms on your Asia save. On a running line's track they still wait 0.15-0.6 s for the trains they need to be worked out.
+  - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
 - T-4199 [P2] {L:loading} {after:0.4.6} Corridors and corridor book built with the packs
   - Context: You, 11-24: no bit-exact rule, say when figures change, most riders within 1%. Stage 1 in tree corridors, not landed: Montana's trips wait 7.6 to 2.3 s; New York no gain; +32 MB demand memory on NYC unexplained.
@@ -223,9 +214,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
-- T-4262 [P1] {L:edit-speed} The renderer takes only the changed part of the drawn network (taking, 2026-11-24, agent uploadedit)
-  - Context: From T-4150 stage 1 (11-25): on your Asia save the page's biggest cost after an edit is the drawn network going into the renderer, 65-180 ms (texture uploads up to 108 ms), then its frame, 50-220 ms.
-  - Goal: An edit uploads only the strokes and textures that changed; the frame after an edit costs about a normal frame.
+- T-4274 [P1] {L:edit-speed} Line tables in slots of their own on the GPU (taking, 2026-11-25, agent trainslots)
+  - Context: From T-4262 stage 2 (11-25): the drawn track and lines no longer move on the GPU after an edit. The trains' tables (samples, phases, bends) are still in line order, so a line that changes length moves every line after it: on your Asia save 20 MB uploaded per deleted line.
+  - Goal: Deleting a line or editing a station uploads only the changed lines' rows of the trains' tables.
+  - Other: notes/T-4262.md
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
@@ -374,7 +366,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4244 [P3] {L:airports} Airport rail rides against real counts
   - Context: Players keep asking for more airport demand (tw-feedback, 11-24). You, 11-25: later, P3; recent airport work exists (T-2896, T-3502, T-3485, T-3501, T-4020), so build on it, "make sure we dont reinvent the wheel". A change to the numbers is yours.
   - Goal: Our rides beside published counts for 5-10 airports, and a proposal to you.
-- T-4242 [P2] {L:timetables} Weekend riders follow weekend trains
+- T-4242 [P2] {L:timetables} Weekend riders follow weekend trains (taking, 2026-11-25, agent weekenddesign)
   - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
 - T-4250 [P2] {L:route-choice} {waits:Anita} A short line beside a crowded long one stays empty
