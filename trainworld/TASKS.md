@@ -221,17 +221,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
-- T-4260 [P1] {L:checks} Fix the review's findings on today's landings (taking, 2026-11-24, agent fixes14)
-  - Context: Gemini reviewed T-4241, T-4080, T-4240, T-4193, T-4220 stage 1 and T-4048 on master (11-25). Worst: trains showing empty loads after an undo; a dead remove button across a separated pair; a local result not refreshing after reload.
-  - Goal: Each finding checked against the code; the real ones fixed.
-  - Other: artifacts/trainworld/gemini/batch14-review.md
-- T-4249 [P2] {L:edit-speed} A station's own leftover waits on big saves (taking, 2026-11-24, agent stationclick)
-  - Context: From T-4240 (11-25): after its fix a station on your Asia save shows up in 0.75 s. Of the edit's own part, trips are still re-sent after an edit that changes no train's run, and the station check still runs in the worker at the click (most of the 174 ms before the apply).
-  - Goal: Neither paid by an edit that doesn't need it.
+- T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
+  - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
+  - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
+- T-4249 [P2] {L:edit-speed} Every bus line rebuilt for each station edit (taking, 2026-11-24, agent stationclick)
+  - Context: The station check no longer runs a whole trial (T-4214 stage A, 11-25: 0.1-0.3 s down to about 20 ms on your Asia save). Left: any station edit rebuilds all 25 bus lines and 6 ways back, so its apply costs 0.1-0.25 s there and its trips are always sent again.
+  - Goal: A station edit rebuilds only the bus lines near it; trips not sent again when no line changed.
   - Other: notes/T-4240.md
-- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent stationclick)
-  - Context: Waiting clicks landed 11-24 (7ff71c929). The clickable map patched with each edit's pieces (stage C, kept off the panels' world) is built in tree mapcfix, not landed. You, 11-24: work at the root cause, "something like a silo approach". Left: the station name wait, a track run's placing wait, drawings at the click. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
-  - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
+- T-4214 [P1] {L:edit-speed} Track runs chain without waiting, drawings from the patched map (taking, 2026-11-24, agent stationclick)
+  - Context: Stages A and C done: a station is sent at its click, its name after it, and stations placed or removed on a line's track patch the clickable map too (tree stationclick, 11-25). You, 11-24: "something like a silo approach". Left: a track run's next segment waits on placing (D), drawings at the click (E).
+  - Goal: No placing wait between a run's segments; what is drawn at the click is the patched map's.
   - Other: notes/T-4214.md
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
@@ -486,9 +485,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4229 [P3] {L:map-look} Station names stay after zooming in
   - Context: Player report 11-20 (board g170): after zooming in once, station names stay on screen. Reach: few, one report.
   - Goal: Station names follow the map at every zoom.
-- T-4253 [P2] {L:fares} A line's fare multiple up to 10x (taking, 2026-11-24, agent faremult)
-  - Context: Players ask for a higher per-line fare multiple. You, 11-25: "we should raise max allowed to like 10x (we can reject it if the base fare times the mult is like over a thousand dollars i guess)".
-  - Goal: A line's fare multiple goes up to 10x; one whose base fare times the multiple is over US$1,000 is refused with a message.
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
@@ -1073,7 +1069,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-4254 [P2] {L:open-source} Port PR 31, bus trunk stretches kept on edit
+- T-4254 [P2] {L:open-source} Port PR 31, bus trunk stretches kept on edit (taking, 2026-11-24, agent pr31port)
   - Context: xoaninc's PR 31 (11-24): editing a bus route keeps trunk road speeds on the legs the edit didn't touch. Gemini's survey (11-25): applies cleanly, no problems found. A bug fix, not bus tuning.
   - Goal: Ported with credit; an edited bus route keeps its trunk speeds. Replying on the PR is yours.
   - Other: notes/pr-survey-2026-11-25.md

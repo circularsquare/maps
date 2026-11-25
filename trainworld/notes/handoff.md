@@ -1,20 +1,19 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8e9c7c49-010f-4c78-a0db-d5be0797af3f, name maps-3e [111c39], since 2026-11-24 23:50 UTC
-Updated: 2026-11-25 01:07 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 02:08 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5. Core cap 10 from 00:52 UTC (her: "for a few hours"; back to 14 around 04:00 UTC as she asked, say so when doing it). Start more when agents + claimed cores / 2 is under 8 (her 11-24).
 
 ## Next
 0. Usage stance (her 11-25): Claude usage runs out before Gemini's. Claude agents take P1/P2 code work; small clear
    tasks and PR ports go to Gemini code agents (gemini_agent.py, 1 core each at cap 10); reading and review to Gemini.
-1. Running (briefs in maps-3e's scratch <agent>/brief.md): cutstretch3 (T-4153 s6), settlefix (Opus, T-4239 on tree settlestop:
-   Gemini's findings, then land with finish --task T-4239), stationclick (T-4214 A + T-4249 + her station removal), rowsedit (T-4149 worker rows), pageedit
-   (T-4150 page take), fixes14 (Sonnet, T-4260: batch14 findings). Gemini: faremult (T-4253, third try, 1 core).
-   Landed this session: T-4240, T-4220 s1-2, T-4193, T-4048 (save level 41), T-4252 (tools), T-4231 (Gemini, round 1
-   of 3: its permissions note: "|" is refused inside quoted git grep patterns), T-4153 s5 (5ec788b72). 8800 is behind.
-2. 8800 = bb321567e, smoke PASS 01:02. Batch 14 reviewed by Gemini (artifacts/trainworld/gemini/batch14-review.md).
-   T-4220 s2 landed 6b5df61c6 (stages 3-9 left: next agent aside3, Opus). faremult (Gemini) failed twice on a full cap:
-   retry when cores free.
+1. Running (briefs in maps-3e's scratch <agent>/brief.md): settlefix (Opus, T-4239 on tree settlestop: Gemini's
+   findings, then land with finish --task T-4239), cutstretch3 (T-4153 s6), rowsedit (T-4149), pageedit (T-4150),
+   busrebuild (T-4249: every bus line rebuilt per station edit), aside3 (T-4220 s3). Gemini: pr31port (T-4254, round 3).
+   Landed this session: T-4240, T-4220 s1-2, T-4193, T-4048 (level 41), T-4252, T-4231 and T-4253 (Gemini), T-4153 s5,
+   T-4214 A, T-4260. 8800 = bb321567e, behind master: rebuild + smoke after settlefix lands.
+2. Gemini permissions notes (rounds 1-2): "|" refused in quoted git grep; play.mjs's detached server dies with agy's
+   tool call (T-4261). T-4253's string to her: "Base fare can be at most {max}" (new). c015 hidden (bug never shipped).
 3. Gemini code trials next: T-4247, T-4254, T-4255, T-4256, T-4258, T-4259 (3 counted rounds ask about permissions).
    Claude next: T-4257 (bus fastest route), T-4251 (busways), T-4243 speedometer, T-3742 after settlestop lands,
    T-4214 D/E, corridors3 (T-4199 s2), T-4080 s3-6, T-4230, T-4187, T-3160, T-4233, T-4242 design.

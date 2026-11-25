@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4253 [P2] {L:fares} A line's fare multiple up to 10x (2026-11-24): LINE_FARE_MAX 3 to 10; the panel and the worker refuse a multiple whose base fare times it is over US$1,000; t3567-line-fare --quick 10/10. Gemini round 2. notes/T-4253.md.
+- T-4260 [P1] {L:checks} Fix the review's findings on today's landings (2026-11-24): 7 of 9 findings real and fixed (Rust tests, one game run for the two visible ones); T-4080 1 left for its owner; T-4048 3 unreachable. notes/T-4260.md.
 - T-4231 [P2] {L:timetables} Apply to all lines misses some lines' weekend percent (2026-11-24): note_lines now passes the weekend touch to note_changed; t3521-weekends 109/109 at 70%. First Gemini code agent landing. notes/T-4231.md.
 - T-4252 [P2] {L:checks} Gemini agents that make code changes (2026-11-24): tools/gemini_agent.py runs a Gemini Neon agent on a brief in its own worktree (agy allow and deny rules, no OS sandbox on Windows 10), reporting to the inbox; gemini_audit.py fixed (a refused call ended its turn). notes/T-4252.md.
 - T-4193 [P2] {L:loading} Bus zones' streets before the network on load (2026-11-24): Community save jwxidghd opens in 61 s instead of 787 s (92% off): bus zones' street speeds come in before the load, one settle instead of 20. Rail trips -0.0097%; 5 Toyoko lines move over 1% (most -4.2%); bus rates unchanged. notes/T-4193.md.
