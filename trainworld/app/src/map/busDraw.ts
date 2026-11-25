@@ -251,7 +251,10 @@ export class BusDraw {
       const p = { lng: routeLL[2 * i], lat: routeLL[2 * i + 1] };
       if (from >= 0) {
         const road = !!((kinds[i] ?? 0) & K_ROAD);
-        this.legs.push(road ? { pts: routeLL.slice(2 * from, 2 * i + 2), road, ready: true, m: 0 } : this.roads.leg(this.pts[this.pts.length - 1], p));
+        // its trunk stretches as saved (open-source issue 28): a leg is searched again only when one of its
+        // ends moves, so the save that ends this edit writes these back for the legs left alone
+        const fast = road ? Array.from({ length: i - from }, (_, j) => !!((kinds[from + 1 + j] ?? 0) & K_TRUNK)) : [];
+        this.legs.push(road ? { pts: routeLL.slice(2 * from, 2 * i + 2), road, ready: true, m: 0, ...(fast.some(Boolean) ? { fast } : {}) } : this.roads.leg(this.pts[this.pts.length - 1], p));
       }
       this.pts.push(p);
       from = i;
