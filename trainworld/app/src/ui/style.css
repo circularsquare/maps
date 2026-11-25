@@ -812,7 +812,11 @@ svg.junction-map { display: block; margin: 8px auto 2px; width: 112px; height: 1
 .board-bar .fill.over { background: var(--warn); }
 .board-bar .seats { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text); }
 /* T-4243: the train panel's speed dial (ui/inspector/Speedometer.tsx); the rim is a conic gradient under the svg */
-.speedo { position: relative; margin: 6px 0 2px auto; overflow: hidden; }
+/* her 11-25: the next stop's label over its name, two 24 px rows, with the dial beside them at the panel's right */
+.next-stop { display: flex; align-items: center; gap: 8px; margin: 4px 0 2px; }
+.next-stop-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.next-stop-text > div { padding: 2px 0; }
+.speedo { position: relative; flex: none; overflow: hidden; }
 .speedo-rim { position: absolute; left: 0; top: 0; border-radius: 50%; }
 .speedo svg { position: relative; display: block; width: 100%; height: 100%; overflow: visible; stroke: none; }
 .speedo-needle { stroke: var(--text); stroke-width: 2; stroke-linecap: round; }

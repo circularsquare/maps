@@ -600,6 +600,7 @@ with Ctrl, Meta or Alt held]. Each button's or tab's hover shows its key.
 | D | demand bubbles: None, Homes, Destinations, Total and then None again, once the view's demand is ready (`DEMAND_KEY`, T-2338); each of the four buttons' hovers names it | any tab |
 | N, S, G, C | new line, edit the selected line's stops, add every station the selected line passes, construct blueprints (`ACTION_KEYS`) | any tab |
 | E, Delete | E enables the picked blueprints when any is off and disables them when all are on (`SWITCH_PICK_KEY`, T-2338; the Enable hover, and the Disable hover while all are on, name it); Delete removes them | select tool |
+| R | rename the open station: its name box opens (`RENAME_KEY`, T-4273); the pencil's hover names it | a station's panel open |
 | Space, Esc, F1, F2, Ctrl+S/Z/Y, `/`, Ctrl+K | pause, back out, open the help panel, hide the interface, save, undo and redo, search | any tab |
 
 C stays Construct's, so Cities has Y; A opens Stations and S is Edit stops (Anita's pick); add-passed-stations

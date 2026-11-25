@@ -48,12 +48,13 @@ export function TrainInspector({ line, profile, dep }: { line: string; profile: 
       </div>
       <div class="sub muted">{t("trainInspector.towards", { name: name.get(stops[head]) ?? "" })}</div>
       {at ? (
-        <>
-          <ul class="rows">
-            <Row label={t("trainInspector.nextStop")}>{next >= 0 ? name.get(stops[next]) : t("trainInspector.terminus")}</Row>
-          </ul>
+        <div class="next-stop">
+          <div class="next-stop-text">
+            <div>{t("trainInspector.nextStop")}</div>
+            <div>{next >= 0 ? name.get(stops[next]) : t("trainInspector.terminus")}</div>
+          </div>
           <Speedometer profile={profile} dep={dep} />
-        </>
+        </div>
       ) : (
         <p class="muted">{t("trainInspector.finished", { vehicle: vehicleOf(st) })}</p>
       )}

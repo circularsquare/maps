@@ -749,8 +749,9 @@ places the stops again (the stop nearest where it was, within 60 m, the same id 
 station's panel once it is a station's stop).
 ## Trains
 
-- **The speed dial** [T-4243, `ui/inspector/Speedometer.tsx`]: under Next stop, at the panel's right, a running
-  train's speed on a round dial 68 px wide. The rim, 3 px thick, is the Speed view's colours (`SPEED_STOPS`, maroon at a
+- **The speed dial** [T-4243, `ui/inspector/Speedometer.tsx`]: at the panel's right beside Next stop, whose label
+  sits over the stop's name (her 11-25; a long name wraps), the two centred on the dial; a running train's speed on a
+  round dial 68 px wide. The rim, 3 px thick, is the Speed view's colours (`SPEED_STOPS`, maroon at a
   standstill to purple at 320 km/h), linear from 0 to 320 km/h along its 270 degrees with the gap at the bottom, each
   colour at its own speed (DECISIONS 2026-11-24); the needle turns around a centre circle holding the speed in the
   units setting, in the speed's colour kept readable on the shade (`legibleOn`), the unit under it. It reads the

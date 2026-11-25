@@ -114,7 +114,7 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
           <Icon.check />
         </button>
       ) : (
-        <button class="btn icon" data-tip={t("nameEdit.renameTip")} aria-label={t("nameEdit.rename")} onClick={() => setEditing(true)}>
+        <button class="btn icon" data-tip={t("nameEdit.renameTip", { keyed: !!hotkey, key: hotkey?.toUpperCase() ?? "" })} aria-label={t("nameEdit.rename")} onClick={() => setEditing(true)}>
           <Icon.pencil />
         </button>
       )}
