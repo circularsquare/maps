@@ -63,7 +63,7 @@ export function editLeftOf(parts: readonly WorkPart[], now: number, { pace, tail
     if (inHand) {
       const el = Math.max(0, now - p.at);
       // (a unit with no expected time: its size at this solve's ms a population, none before a unit has ended)
-      const rate = p.sizeMs?.[p.stage] ?? 0;
+      const rate = (p.curLate ? p.sizeMsLate?.[p.stage] || 0 : 0) || (p.sizeMs?.[p.stage] ?? 0);
       if (p.cur === null && !rate) return null;
       const exp = p.cur === null ? p.curSize * rate : (p.stage === 1 && p.curQ >= 0 ? kq(p.curQ) : k[p.stage]) * p.cur;
       hand = exp > 0 ? Math.max(exp - el, 0.2 * el) : 0;
@@ -90,11 +90,15 @@ export function editLeftOf(parts: readonly WorkPart[], now: number, { pace, tail
       rest += (s === 1 ? k1 : k[0]) * ahead;
       if (ahead > 0) { any = true; if (!(p.ranN?.[s] ?? 0)) bounded = false; }
       // (`blind` is the size of the units with no expected time, timed as the one in hand is)
+      // (the crowding rounds after the first by their own pace once one of their units has ended, T-4343)
+      const lateAll = (view ? p.viewBlindLate : p.blindLate)?.[s] ?? 0;
+      const inLate = mine && p.cur === null && p.curLate;
       const b = blind[s] - (mine && p.cur === null ? p.curSize : 0);
+      const bLate = Math.min(b, Math.max(0, lateAll - (inLate ? p.curSize : 0)));
       if (b > 0) {
         const rate = p.sizeMs?.[s] ?? 0;
         if (!rate) return null;
-        blindMs += b * rate;
+        blindMs += (b - bLate) * rate + bLate * (p.sizeMsLate?.[s] || rate);
         any = true;
       }
     }

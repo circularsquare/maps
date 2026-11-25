@@ -201,6 +201,8 @@ export type ToDemand =
   | { kind: "close"; ids: CityId[]; markets?: CityId[]; bare?: boolean }
   /** solve every period of this worker on `net`: free flow, then `rounds` crowding rounds */
   | { kind: "solve"; version: number; net: DemandNetwork; rounds: number;
+      /** T-4343: a load's crowding rounds each take this much of the first round's time (the browser's last measured ratio), sizing the units no passes time yet */
+      later?: number;
       /** T-327: start each crowding round only once `go` allows it */
       barrier?: boolean;
       /** T-326 `?perfOff=clusters`: solve the network as one cluster */
@@ -533,13 +535,13 @@ export type FromDemand =
    * stage's mean unit time, ms (0: not known). T-3599: `left`, each stage's units not ended by their
    * expected ms from the last passes; `blind`, the size (populations) of those with none; `cur`, the unit
    * in hand's (null: none), `curSize` its size; `sizeMs`, this solve's ms a population (from its units with
-   * none once one has ended); `ran`, `ranExp` and `ranN`, this solve's units ended with one, their ms as run
+   * none once one has ended); T-4343: `blindLate`, `viewBlindLate`, `curLate` and `sizeMsLate` the same for the units of the crowding rounds after the first, each timed by its own round once one has ended; `ran`, `ranExp` and `ranN`, this solve's units ended with one, their ms as run
    * and as expected and how many; `viewLeft`, `viewBlind` and `curView` the same for the units before the
    * zone in view's figures; `leftQ`, `ranQ`, `expQ`, `nQ` and `curQ` the whole solve's by period */
   /** T-3781: a barrier solve's period `period` of round `round` started here (its `result` ends it); a report's
    * diagnosis names the period a quiet worker is in */
   | { kind: "unit"; version: number; round: number; period: number }
-  | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number }
+  | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; blindLate: [number, number]; viewBlindLate: [number, number]; curLate: boolean; sizeMsLate: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number }
   /** `localHeld` (T-2188): a cluster here holds a period from a local solve no whole solve has replaced since */
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[]; localHeld?: boolean }
   /** T-4220 (`solve.snap`): what this worker holds of the figures on screen, before the whole solve sets any of it up */

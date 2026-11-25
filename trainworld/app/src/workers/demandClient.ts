@@ -4920,7 +4920,7 @@ class DemandClient {
     if (msg.kind === "work") {
       if (i >= this.computeN) return;
       const w = (s.work ??= []);
-      w[i] = { stage: msg.stage, busy: msg.busy, done: msg.done, of: msg.of, unitMs: msg.unitMs, at: performance.now(), left: msg.left, blind: msg.blind, cur: msg.cur, curSize: msg.curSize, sizeMs: msg.sizeMs, ran: msg.ran, ranExp: msg.ranExp, ranN: msg.ranN, viewLeft: msg.viewLeft, viewBlind: msg.viewBlind, curView: msg.curView, leftQ: msg.leftQ, ranQ: msg.ranQ, expQ: msg.expQ, nQ: msg.nQ, curQ: msg.curQ };
+      w[i] = { stage: msg.stage, busy: msg.busy, done: msg.done, of: msg.of, unitMs: msg.unitMs, at: performance.now(), left: msg.left, blind: msg.blind, cur: msg.cur, curSize: msg.curSize, sizeMs: msg.sizeMs, blindLate: msg.blindLate, viewBlindLate: msg.viewBlindLate, curLate: msg.curLate, sizeMsLate: msg.sizeMsLate, ran: msg.ran, ranExp: msg.ranExp, ranN: msg.ranN, viewLeft: msg.viewLeft, viewBlind: msg.viewBlind, curView: msg.curView, leftQ: msg.leftQ, ranQ: msg.ranQ, expQ: msg.expQ, nQ: msg.nQ, curQ: msg.curQ };
       if (!msg.busy && msg.done[0] + msg.done[1] > 0) s.lastUnitAt = w[i].at;
       if (!msg.busy && msg.stage === 0 && msg.done[0] > 0) s.localEndAt = w[i].at;
       if (msg.busy && msg.stage === 1 && s.wholeAt === undefined) s.wholeAt = w[i].at;
@@ -5274,7 +5274,7 @@ class DemandClient {
     // cluster goes ahead of it
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
-    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}), ...(refresh ? { refresh } : {}) };
+    const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, ...(barrier ? { later: loadPace().later } : {}), first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}), ...(refresh ? { refresh } : {}) };
     if (!barrier && this.snapOn()) msg.snap = this.cur.snap = true;
     this.freshParts = false;
     this.postSolve(msg);

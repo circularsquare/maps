@@ -380,7 +380,7 @@ export const demandStep = signal({ done: 0, of: 4 });
  * other solves) */
 export type WorkPart = { stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; at: number;
   /** T-3599 (demandProtocol.ts `work`) */
-  left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number };
+  left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; blindLate?: [number, number]; viewBlindLate?: [number, number]; curLate?: boolean; sizeMsLate?: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number };
 export const demandWork = signal<WorkPart[] | null>(null);
 /** T-3599: a newer network waits for the running edit's solve to end (T-1734), and that solve was sent at
  * `sentAt` (performance.now()); null otherwise */

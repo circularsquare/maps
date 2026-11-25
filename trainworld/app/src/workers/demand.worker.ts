@@ -881,6 +881,13 @@ class Work {
   private sized: [number, number] = [0, 0];
   private sizedMs: [number, number] = [0, 0];
   private blindRan: [boolean, boolean] = [false, false];
+  /** T-4343: the crowding rounds after the first, apart: the part of `blind` and `viewBlind` they are, the unit in hand being one, and
+   * their own ms a population once one has ended (a round's pace is its own: New York's later rounds ran at 0.4 of the first) */
+  private blindLate: [number, number] = [0, 0];
+  private viewBlindLate: [number, number] = [0, 0];
+  private curLate = false;
+  private sizedLate: [number, number] = [0, 0];
+  private sizedLateMs: [number, number] = [0, 0];
   /** this solve's units with an expected ms ended so far: their ms as run and as expected */
   private ran: [number, number] = [0, 0];
   private ranExp: [number, number] = [0, 0];
@@ -903,16 +910,17 @@ class Work {
   constructor(readonly version: number) {}
   /** `exp`: the units' expected ms in all, null when they have none (negative units, `exp` too, take
    * back units planned that will not run); `q` the units' period; `size` each one's populations */
-  plan(stage: 0 | 1, units: number, exp: number | null, view: boolean, q: number, size: number) {
+  plan(stage: 0 | 1, units: number, exp: number | null, view: boolean, q: number, size: number, late = false) {
     this.of[stage] += units;
-    if (exp === null) this.blind[stage] += units * size; else this.left[stage] += exp;
-    if (view || (this.viewAll && stage === 1)) { if (exp === null) this.viewBlind[stage] += units * size; else this.viewLeft[stage] += exp; }
+    if (exp === null) { this.blind[stage] += units * size; if (late) this.blindLate[stage] += units * size; } else this.left[stage] += exp;
+    if (view || (this.viewAll && stage === 1)) { if (exp === null) { this.viewBlind[stage] += units * size; if (late) this.viewBlindLate[stage] += units * size; } else this.viewLeft[stage] += exp; }
     if (stage === 1 && q >= 0 && exp !== null) this.leftQ[q] += exp;
   }
-  begin(stage: 0 | 1, exp: number | null, view: boolean, q: number, size: number) {
+  begin(stage: 0 | 1, exp: number | null, view: boolean, q: number, size: number, late = false) {
     this.stage = stage;
     this.cur = exp;
     this.curSize = size;
+    this.curLate = late;
     this.curView = view || (this.viewAll && stage === 1);
     this.curQ = stage === 1 ? q : -1;
     this.t0 = performance.now();
@@ -925,7 +933,10 @@ class Work {
       this.ms[s] += took;
       unitMsLast[s] = this.ms[s] / ++this.done[s];
     } else this.done[s]++;
-    if (ran && this.curSize > 0 && (this.cur === null || !this.blindRan[s])) {
+    if (ran && this.curSize > 0 && this.cur === null && this.curLate) {
+      this.sizedLate[s] += this.curSize;
+      this.sizedLateMs[s] += took;
+    } else if (ran && this.curSize > 0 && (this.cur === null || !this.blindRan[s])) {
       if (this.cur === null && !this.blindRan[s]) { this.blindRan[s] = true; this.sized[s] = this.sizedMs[s] = 0; }
       this.sized[s] += this.curSize;
       this.sizedMs[s] += took;
@@ -933,6 +944,10 @@ class Work {
     if (this.cur === null) {
       this.blind[s] = Math.max(0, this.blind[s] - this.curSize);
       if (this.curView) this.viewBlind[s] = Math.max(0, this.viewBlind[s] - this.curSize);
+      if (this.curLate) {
+        this.blindLate[s] = Math.max(0, this.blindLate[s] - this.curSize);
+        if (this.curView) this.viewBlindLate[s] = Math.max(0, this.viewBlindLate[s] - this.curSize);
+      }
     } else {
       this.left[s] = Math.max(0, this.left[s] - this.cur);
       if (this.curView) this.viewLeft[s] = Math.max(0, this.viewLeft[s] - this.cur);
@@ -945,6 +960,7 @@ class Work {
     }
     this.cur = null;
     this.curSize = 0;
+    this.curLate = false;
     this.curView = false;
     this.curQ = -1;
     this.send(false);
@@ -960,7 +976,7 @@ class Work {
     this.send(false);
   }
   send(busy: boolean) {
-    sendMessage({ kind: "work", version: this.version, stage: this.stage, busy, done: [...this.done], of: [...this.of], unitMs: [...unitMsLast], left: [...this.left], blind: [...this.blind], cur: busy ? this.cur : null, curSize: busy ? this.curSize : 0, sizeMs: [0, 1].map((s) => (this.sized[s] > 0 ? this.sizedMs[s] / this.sized[s] : 0)) as [number, number], ran: [...this.ran], ranExp: [...this.ranExp], ranN: [...this.ranN], viewLeft: [...this.viewLeft], viewBlind: [...this.viewBlind], curView: busy && this.curView, leftQ: [...this.leftQ], ranQ: [...this.ranQ], expQ: [...this.expQ], nQ: [...this.nQ], curQ: busy ? this.curQ : -1 });
+    sendMessage({ kind: "work", version: this.version, stage: this.stage, busy, done: [...this.done], of: [...this.of], unitMs: [...unitMsLast], left: [...this.left], blind: [...this.blind], cur: busy ? this.cur : null, curSize: busy ? this.curSize : 0, sizeMs: [0, 1].map((s) => (this.sized[s] > 0 ? this.sizedMs[s] / this.sized[s] : 0)) as [number, number], blindLate: [...this.blindLate], viewBlindLate: [...this.viewBlindLate], curLate: busy && this.curLate, sizeMsLate: [0, 1].map((s) => (this.sizedLate[s] > 0 ? this.sizedLateMs[s] / this.sizedLate[s] : 0)) as [number, number], ran: [...this.ran], ranExp: [...this.ranExp], ranN: [...this.ranN], viewLeft: [...this.viewLeft], viewBlind: [...this.viewBlind], curView: busy && this.curView, leftQ: [...this.leftQ], ranQ: [...this.ranQ], expQ: [...this.expQ], nQ: [...this.nQ], curQ: busy ? this.curQ : -1 });
   }
 }
 let work: Work | null = null;
@@ -3096,9 +3112,11 @@ async function run() {
       const groupView = (g: number) => !ahead || g === 0;
       const planWhole = (c: JobCluster) => { for (const q of mine) for (let r = 0; r <= job.rounds; r++) work!.plan(1, 1, roundExp(c, q, r), inView(c, 1), q, roundSize(c, r)); };
       // (a load's rounds on the real North America save took 50, 46, 46 and 43 s: a flat decay, not the edits' 0.75)
-      const sizeB = (c: JobCluster, r: number) => c.pops.length * 0.9 ** r;
+      // (T-4343: a later round took 0.4 of the first on New York, 0.26 on all-China and 0.8 on Japan, flat across the rounds: the page sends this browser's last ratio)
+      const later = job.later ?? 0.5;
+      const sizeB = (c: JobCluster, r: number) => c.pops.length * (r === 0 ? 1 : later);
       if (work && job.barrier) {
-        groups.forEach((late, g) => { for (const c of late) for (const q of units) for (let r = 0; r <= job.rounds; r++) work!.plan(1, 1, roundExp(c, q, r), groupView(g), q, sizeB(c, r)); });
+        groups.forEach((late, g) => { for (const c of late) for (const q of units) for (let r = 0; r <= job.rounds; r++) work!.plan(1, 1, roundExp(c, q, r), groupView(g), q, sizeB(c, r), r > 0); });
         work.send(false);
       }
       if (work && !job.barrier) {
@@ -3621,7 +3639,7 @@ async function run() {
         stageRound = -1;
         roundsHeld.fill(-1);
         for (const c of late) setUp(c);
-        if (work) for (const c of late) for (const q of units) if (c.reuse & (1 << q) || !sideOf(c, q)) for (let r = 0; r <= job.rounds; r++) { const x = roundExp(c, q, r); work.plan(1, -1, x === null ? null : -x, groupView(g), q, sizeB(c, r)); }
+        if (work) for (const c of late) for (const q of units) if (c.reuse & (1 << q) || !sideOf(c, q)) for (let r = 0; r <= job.rounds; r++) { const x = roundExp(c, q, r); work.plan(1, -1, x === null ? null : -x, groupView(g), q, sizeB(c, r), r > 0); }
         for (let round = 0; round <= job.rounds && !stale; round++) {
           // T-327: a worker ahead holds its last round until every worker has finished it
           while (round > 0 && units.length && !pending && !goAllows(job.version, g, round)) {
@@ -3653,8 +3671,8 @@ async function run() {
             const est = round === 0 && !!only && !job.exact0 && from !== undefined && from !== q;
             for (const c of late) {
               if (c.reuse & (1 << q) || !sideOf(c, q)) continue;
-              if (est && estimate(c, from, q, new Set())) { estimated = true; work?.begin(1, roundExp(c, q, round), groupView(g), q, sizeB(c, round)); work?.end(false); continue; }
-              work?.begin(1, roundExp(c, q, round), groupView(g), q, sizeB(c, round));
+              if (est && estimate(c, from, q, new Set())) { estimated = true; work?.begin(1, roundExp(c, q, round), groupView(g), q, sizeB(c, round), round > 0); work?.end(false); continue; }
+              work?.begin(1, roundExp(c, q, round), groupView(g), q, sizeB(c, round), round > 0);
               if (!(await step(c, round, q))) { stale = true; break; }
               work?.end();
             }
