@@ -144,6 +144,8 @@ pub struct TrackApi {
     route_junctions: Vec<(u32, [f64; 2])>,
     /// What the last station trial added to the blueprint, US$M (`station_cost`).
     station_cost: f64,
+    /// T-4214: the station nodes the last station edit placed (`last_stations`).
+    last_stations: Vec<u32>,
     /// The building the last `add_building` made (`u32::MAX` if none) and what the last add or
     /// reshape paid, US$M (T-2217).
     building_last: (u32, f64),
@@ -450,6 +452,7 @@ impl TrackApi {
             preview_marks: vec![],
             route_junctions: vec![],
             station_cost: 0.0,
+            last_stations: vec![],
             building_last: (u32::MAX, 0.0),
             rasters: vec![],
             world_water: None,

@@ -11,7 +11,8 @@ import { metresBetween } from "../game/walks";
 import { stationKind, stationOnTram, tool } from "../game/ui";
 import { CORRIDOR_M } from "./busLayer";
 import { newStationName, trackDirection } from "./stationNames";
-import { edit, rightHand, say, stationNames, world } from "../game/world";
+import { clicksMoved, edit, rightHand, say, stationNames, world } from "../game/world";
+import { gameStamp } from "../workers/clockClient";
 import { clickWorld } from "./clickMap";
 import { type ClockEdge, type ClockNode } from "../workers/protocol";
 import { toLngLat, toLocal } from "./geo";
@@ -149,18 +150,15 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
     playBuild("station");
     // T-4146: drawn at the click, gone again if refused
     const shown = ahead({ stations: [{ lx: b.lx, ly: b.ly, ways: b.ways, perM: b.perM, plat: BRT_STATION_PLATFORM, side: 0, tram: false }] });
-    const key = nameKey(tk, e.point.x, e.point.y), named = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
-    tk.named = null;
-    const name = await (named ?? nameFor(tk, e.point.x, e.point.y));
-    const r = await shown.send(() => edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name }, true, true, "click"));
-    if (r.ok) {
-      tk.lastPlaced = toLngLat(b.lx, b.ly);
-      say(tr("tools.blueprintStation", { name: shownNameAt(tk, tk.lastPlaced[0], tk.lastPlaced[1]) ?? name }));
-    } else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
+    const hover = hoverName(tk, e), px = e.point.x, py = e.point.y;
+    const naming = nameLater(tk, () => hover ?? nameFor(tk, px, py));
+    const r = await shown.send(() => edit({ op: "addBrtStation", x: b.x, y: b.y, heading: b.heading, name: "", ticket: naming.ticket }, true, true, "click"));
+    if (r.ok) placedSay(tk, toLngLat(b.lx, b.ly), naming.name);
+    else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
     return;
   }
   // T-3999: on open ground the first click is the platform's first end and the second its direction
-  if (freeStarted()) return freeClick(tk, e, (px, py) => nameFor(tk, px, py));
+  if (freeStarted()) return freeClick(tk, e, (px, py) => nameLater(tk, () => nameFor(tk, px, py)));
   const first = tk.snap(e.point.x, e.point.y, e.lngLat);
   if (first.kind === "free") return freeStart(tk, first);
   // T-671, T-695: the spot the ghost shows, else the first the track model takes of what is under the pointer
@@ -173,11 +171,10 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
   const shown = ahead(box ? { stations: [box] } : {}, { tries: true });
   let tried = 0;
   const tries = [...(v?.ok && v.spot && !v.held ? [v.spot] : []), ...tk.alts];
-  const key = nameKey(tk, e.point.x, e.point.y);
-  const named = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
-  tk.named = null;
-  const name = await (named ?? nameFor(tk, e.point.x, e.point.y));
-  const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...tk.pack(p.lx, p.ly) }, platform: tk.platFor(p), name });
+  // T-4214: sent at once, its name after it (`nameLater`)
+  const hover = hoverName(tk, e), px = e.point.x, py = e.point.y;
+  const naming = nameLater(tk, () => hover ?? nameFor(tk, px, py));
+  const stationAt = (p: Exclude<Snap, { kind: "free" }>) => ({ op: "addStation" as const, at: p.kind === "node" ? { kind: "node" as const, node: p.node } : { kind: "edge" as const, edge: p.edge, ...tk.pack(p.lx, p.ly) }, platform: tk.platFor(p), name: "", ticket: naming.ticket });
   const one = tk.oneAt();
   const stationAt1 = (p: Exclude<Snap, { kind: "free" }>) => { const o = stationAt(p); return { ...o, at: { ...o.at, ...one } }; };
   const r = await firstAccepted(tries, async (p) => {
@@ -186,10 +183,67 @@ export async function stationClick(tk: Tools, e: MapMouseEvent) {
     return a.ok ? null : a.issues;
   }, (p) => roomSnap(tk, p), () => false);
   if (!r.spot) shown.drop();
-  if (r.spot) {
-    tk.lastPlaced = toLngLat(r.spot.lx, r.spot.ly); // T-312: the hover tag's "km from" (found again by position)
-    say(tr("tools.blueprintStation", { name: shownNameAt(tk, tk.lastPlaced[0], tk.lastPlaced[1]) ?? name }));
-  } else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
+  if (r.spot) placedSay(tk, toLngLat(r.spot.lx, r.spot.ly), naming.name);
+  else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
+}
+
+/** the name the hover worked out for the click's spot, if it is the one clicked */
+function hoverName(tk: Tools, e: MapMouseEvent): Promise<string> | null {
+  const key = nameKey(tk, e.point.x, e.point.y), named = tk.named?.key === key && tk.map.areTilesLoaded() ? tk.named.name : null;
+  tk.named = null;
+  return named;
+}
+
+/** T-312: a station placed at `at` is the hover tag's "km from" (found again by position); said by name once it has one */
+export function placedSay(tk: Tools, at: [number, number], name: Promise<string>) {
+  tk.lastPlaced = at;
+  void name.then((n) => say(tr("tools.blueprintStation", { name: shownNameAt(tk, at[0], at[1]) || n })));
+}
+
+// T-4214 stage A: a station goes to the worker at its click with no name and a ticket, its name after it once looked up
+// (place lists and real stations: 10-250 ms), so the click never waits for the lookup (workers/clockNames.ts).
+let tickets = 0;
+/** lookups not yet sent: undo and redo wait for them (map/toolWait.ts), so a name never comes after its station's undo */
+let lookups = 0;
+export const namesPending = () => lookups;
+/** names sent and when, until the world has them: a station looked up meanwhile takes another */
+const namesOut = new Map<string, number>();
+const NAME_OUT_MS = 60_000;
+
+/** The names in use for a new station to avoid: the tools' world's, and those sent and not yet in it. */
+export function takenNames(): Set<string> {
+  const taken = new Set(clickWorld()?.save.stations.map((st) => st.name) ?? []), now = performance.now();
+  for (const [n, at] of namesOut) if (taken.has(n) || now - at > NAME_OUT_MS) namesOut.delete(n); else taken.add(n);
+  return taken;
+}
+
+/** The name `look` finds, sent for the station edits that carry the returned ticket. The lookup starts after the next
+ * paint: its first part runs at once and reads the basemap's tiles (tens of ms with none read yet), which would hold
+ * back the edit's send and the station drawn at the click. A failed lookup takes the fallback "Station N", as
+ * `newStationName` would. */
+export function nameLater(tk: Tools, look: () => Promise<string>): { ticket: number; name: Promise<string> } {
+  const ticket = ++tickets, game = gameStamp.peek();
+  lookups++;
+  const named = new Promise<string>((res) => {
+    let started = false;
+    const go = () => { if (!started) { started = true; res(look()); } };
+    requestAnimationFrame(() => setTimeout(go, 0));
+    // (no frame comes in a hidden tab)
+    setTimeout(go, 100);
+  }).catch(() => "").then((n) => {
+    if (n) return n;
+    const t = takenNames();
+    // i18n-ignore: the default name is saved with the station
+    for (let k = 1; ; k++) if (!t.has(`Station ${k}`)) return `Station ${k}`;
+  });
+  void named.then((n) => {
+    namesOut.set(n, performance.now());
+    tk.client.post({ kind: "stationName", ticket, name: n, game });
+  }).finally(() => {
+    lookups--;
+    clicksMoved();
+  });
+  return { ticket, name: named };
 }
 
 /** Ask for the legs of the demand shown, unless held or asked already (T-412). T-2430: an answer
@@ -279,7 +333,7 @@ export function nameFor(tk: Tools, px: number, py: number): Promise<string> {
   const [lng, lat] = toLngLat(s.lx, s.ly);
   const net = tk.pickNet;
   const track = net ? trackDirection(net, ...toLocal(lng, lat, net.anchor)) : null;
-  return newStationName(tk.map, lng, lat, track, () => new Set(clickWorld()?.save.stations.map((st) => st.name) ?? []));
+  return newStationName(tk.map, lng, lat, track, takenNames);
 }
 
 export function el(tk: Tools, i: number, cls: string): HTMLDivElement {

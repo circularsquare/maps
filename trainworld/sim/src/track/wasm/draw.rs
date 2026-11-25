@@ -998,19 +998,25 @@ impl TrackApi {
 
     /// Whether `add_station` with these arguments would succeed, without doing it (T-311): the
     /// placement ghost's colour. The same code as `add_station` with the edit tried and rolled
-    /// back, so the ghost and the click cannot disagree (cash included). 0 when it would work;
-    /// otherwise `issue_kinds()` says why.
+    /// back, so the ghost and the click agree on every check and on the construction price
+    /// (T-4249: the services as they are, `attempt`). 0 when it would work; otherwise
+    /// `issue_kinds()` says why.
     pub fn preview_station(&mut self, kind: u32, id: u32, x: f64, y: f64, platform: u16) -> u32 {
         self.station_at(kind, id, x, y, platform, String::new(), true)
     }
 
-    /// An edit, or with `dry` a trial of it: checked as a real edit is, then rolled back.
+    /// An edit, or with `dry` a trial of it: checked as a real edit is, then rolled back. T-4249: the
+    /// trial leaves the services as they are (`trial_light`): rebuilding them (every bus line and way
+    /// back on a station, the settle, the retiming) made a station's ghost check cost more than the
+    /// edit itself (25-80 ms on her Asia save), and a click arriving meanwhile waited behind it. The
+    /// lie: a station that makes running lines need more trains than the cash can buy shows as
+    /// placeable, and its click is refused for the money.
     pub(super) fn attempt(&mut self, op: Op, dry: bool) -> u32 {
         if !dry {
             return self.run(op);
         }
         let fleet = self.fleet;
-        match self.w.trial_with(op, |w| trains_to_buy(w, fleet)) {
+        match self.w.trial_light(op, |w| trains_to_buy(w, fleet)) {
             Ok((r, trains)) => {
                 self.station_cost = r.cost_after - r.cost_before;
                 let need = r.charge + trains;
@@ -1098,6 +1104,37 @@ impl TrackApi {
         self.station_cost
     }
 
+    /// T-4214: the station nodes the last `add_station` or `add_free_station` placed (none when refused).
+    pub fn last_stations(&self) -> Vec<u32> {
+        self.last_stations.clone()
+    }
+
+    /// T-4214: name stations placed before their name was known (the page sends a station at its
+    /// click and its name when the name lookup ends): each of `nodes` still a station with no name
+    /// takes `name`, as it would have at its placing (and as its own name where new stations start
+    /// unbound; not a BRT station's or a port's). Outside the undo history: an undo of the placing
+    /// takes the station away whatever it is called, and its redo brings it back as it was then.
+    /// How many it named.
+    pub fn name_new_stations(&mut self, nodes: &[u32], name: String) -> u32 {
+        let mut n = 0;
+        for &node in nodes {
+            let Some(old) = self.w.net.station_data(node) else { continue };
+            if !old.name.is_empty() || name.is_empty() {
+                continue;
+            }
+            let own = if old.own.is_empty() && old.road.is_none() && old.berth.is_none() { self.new_own(&name) } else { old.own.clone() };
+            if self.w.net.set_station(node, Some(StationData { name: name.clone(), own, ..old })).is_ok() {
+                n += 1;
+            }
+        }
+        if n > 0 {
+            // (a name moves no track, platform or service: nothing is derived again, and the next state reads the rows)
+            let _ = self.w.net.take_touch();
+            self.touched.note(&crate::track::world::Dirty { nodes: nodes.to_vec(), ..Default::default() });
+        }
+        n
+    }
+
     pub(super) fn free_station(&mut self, ends: &[f64], tracks: u8, platform: u16, name: String, dry: bool) -> u32 {
         if ends.len() < 10 || ends[0] != 0.0 || ends[5] != 0.0 {
             return self.refuse(Issue::Geom { edge: u32::MAX, issue: GeomIssue::ZeroLeg(0) });
@@ -1174,7 +1211,7 @@ impl TrackApi {
                 }
             }
         }
-        let (mut nodes, mut edges) = (vec![], vec![]);
+        let (mut nodes, mut edges, mut made) = (vec![], vec![], vec![]);
         for (&(e, s), &one) in at.iter().zip(&ones) {
             // T-3740: a new station takes its neighbours' fare zone, in the same edit (one Ctrl+Z)
             let fare = if st.fare != 0 || dry {
@@ -1200,6 +1237,7 @@ impl TrackApi {
                     }
                 }
                 ops.push(Op::Station { node: n, data: Some(st.clone()) });
+                made.push(n);
                 continue;
             }
             // T-3412: within a split's reach of a bare end the platform runs back from it, so the joints
@@ -1210,6 +1248,7 @@ impl TrackApi {
             if let Some(n) = self.joint_at(e, &more, s) {
                 ops.extend(more);
                 ops.push(Op::Station { node: n, data: Some(st.clone()) });
+                made.push(n);
                 continue;
             }
             ops.extend(more);
@@ -1217,6 +1256,7 @@ impl TrackApi {
             nodes.push(node);
             edges.push(new_edge);
             ops.extend([Op::Split { edge: e, s, node, new_edge }, Op::Station { node, data: Some(st.clone()) }]);
+            made.push(node);
         }
         if let Some(inv) = sketched {
             self.w.unsketch(inv);
@@ -1224,6 +1264,9 @@ impl TrackApi {
         let r = self.attempt(Op::Batch(ops), dry);
         if r != 0 || dry {
             self.release(&nodes, &edges);
+        }
+        if !dry {
+            self.last_stations = if r == 0 { made } else { vec![] };
         }
         // a split refused on a ramp is the platform's ramp, said as such (T-1964)
         if r != 0 && self.issues.iter().any(|i| matches!(i, Issue::SplitPoint { .. })) {

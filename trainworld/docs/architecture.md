@@ -159,8 +159,10 @@ Web first, so it can be shared as a link.
   strokes, stations and marks stay the drawn ones). `world`, which the panels, layers and money follow, waits for the
   state: setting it for a patch ran all of them twice per edit (79 ms for a station on New York's save). Whatever reads
   `clickNet` reads `clickWorld`; whatever reads the renderer's network reads `world`. A state taken drops the patches that arrived before it and lays later ones on it again; a network set
-  does the same for the points. None is sent when a line's path moved (which lines run over which edges is the state's),
-  for a service edit or a rename, when everything was touched (a load), past the cap, or with the draw anchor moving.
+  does the same for the points. A line whose path the edits moved with its stops as they were (a station on its track,
+  track it runs over gone) comes with its paths, laid on its row so the edges say what runs on them [T-4214 stage A].
+  None is sent when a line is new, gone, starts or stops running or stops elsewhere, for a service edit or a rename, when
+  everything was touched (a load), past the cap, or with the draw anchor moving.
   A station or delete clicked on the map (`edit`'s "click") whose edit was patched and cost nothing is answered right
   after its word; any other edit once `world` holds it, as before; a paid one after its state, whose world its money's
   split is read off. The client's rows the worker's changes are posted against are never patched. **Clicks wait for the
@@ -168,14 +170,19 @@ Web first, so it can be shared as a link.
   yet in the map the tools pick on waits, the tool's tag showing the spinner after 0.3 s, and is carried out at the same
   map spot once every such edit's patch is laid on or its network set (the same message order; game/pending.ts
   `editsOut`, map/toolWait.ts); waiting clicks go in order, each after the edits the one before sent. Every edit sent arms it (panels, drags and keys too, which never wait themselves); a click counts from the moment
-  it is made until its tool has sent (a station's name, a delete's question); a refusal ends the wait, and so does a
+  it is made until its tool has sent (a delete's question); a refusal ends the wait, and so does a
   word saying no network follows (a service edit, a rename, a fare or loan edit). A waiting click asks the worker for a
   network held for the pointer's rest. A track run's next segment waits only for the answer to the one before (it starts
   from the node the worker answered), and stop clicks never count. A tool switch the player makes meanwhile (the
   toolbar, its keys, a panel's tool button, leaving a tool) waits its turn behind the waiting clicks, so each click goes
   with the tool it was made with (game/ui.ts `inClickOrder`). A waiting click is dropped when its spot has left the
   screen, on Escape or a load, and carried out on the map as it is after 5 s. Undo and redo wait for it as
-  for stop clicks. Every edit carries the game stamp, so one made before a load or a restart is refused. The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
+  for stop clicks. Every edit carries the game stamp, so one made before a load or a restart is refused. **A station is
+  sent at its click** [T-4214 stage A]: with no name and a ticket, its name (the page's lookup, after the next paint) as
+  "stationName" once found; the worker gives it to the station edit if that is still queued, else names the stations
+  that edit placed outside the undo history, in the state its follow-up sends (workers/clockNames.ts). Undo and redo
+  wait for names still being looked up. The station tool's check and the delete question's trial of a removal leave
+  the services as they are (`trial_light`), and the removal's trial goes ahead of a follow-up as previews do. The renderer draws the list (map/lineAhead.ts): a line drawn ahead on its own segments it keeps and
   the track's in its colour on the edges it gained, its network strokes off by a per-line texture; edges off by a
   per-edge texture, or redrawn with their new look; station boxes by a second draw of the station shader; a deleted
   line's colour transparent (a new line's colour drawn opaque past the network's ones). **Pieces** [T-4148]: a track type

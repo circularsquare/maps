@@ -11,6 +11,7 @@ import { metresBetween } from "../game/walks";
 import { portReachM } from "../ferry/route";
 import type { PortSnap } from "../ferry/ferryWater";
 import { newStationName } from "./stationNames";
+import { nameLater, placedSay, takenNames } from "./stationTool";
 import { playBuild } from "./buildSound";
 import { withName } from "./toolParts";
 import type { Tools } from "./tools";
@@ -103,12 +104,10 @@ export async function portClick(tk: Tools, e: MapMouseEvent) {
   const landing = { lng: snap.landing[0], lat: snap.landing[1] };
   if (portNear(tk, landing)) return void say(tr("issues.stationHere"), true);
   playBuild("station");
-  const taken = () => new Set(world.peek()?.save.stations.map((s) => s.name) ?? []);
-  const name = await newStationName(tk.map, landing.lng, landing.lat, null, taken, false).catch(() => tr("ferryDraw.port"));
+  // T-4214: sent at once, its name after it
+  const naming = nameLater(tk, () => newStationName(tk.map, landing.lng, landing.lat, null, takenNames, false).catch(() => tr("ferryDraw.port")));
   const a = lngLatToPack(landing.lng, landing.lat), b = lngLatToPack(snap.berth[0], snap.berth[1]);
-  const r = await edit({ op: "addPort", x: a.x, y: a.y, bx: b.x, by: b.y, name }, true, true, "click");
-  if (r.ok) {
-    tk.lastPlaced = [landing.lng, landing.lat];
-    say(tr("tools.blueprintStation", { name }));
-  } else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
+  const r = await edit({ op: "addPort", x: a.x, y: a.y, bx: b.x, by: b.y, name: "", ticket: naming.ticket }, true, true, "click");
+  if (r.ok) placedSay(tk, [landing.lng, landing.lat], naming.name);
+  else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
 }

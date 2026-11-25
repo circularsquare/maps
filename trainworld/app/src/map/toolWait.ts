@@ -6,7 +6,8 @@
 // is. The next
 // segment of a track run waits only for the answer to the one before (it starts from the node the worker answered), and
 // the line tool's stop clicks never count as edits out (T-4114). A click counts as out from the moment it is made, so
-// one whose tool awaits before it sends (a station's name, a delete's question) holds the clicks after it too.
+// one whose tool awaits before it sends (a delete's question) holds the clicks after it too; a station sends at once and
+// its name after it (stage A).
 // notes/T-4214.md "Waiting clicks".
 
 import type { MapMouseEvent } from "maplibre-gl";
@@ -16,6 +17,7 @@ import { clicksMoved, setClicksBusy } from "../game/world";
 import { type LngLatish, WAIT_MS } from "./toolParts";
 import { evAt, touchConfirm } from "./toolTouch";
 import { showTag } from "./toolMarks";
+import { namesPending } from "./stationTool";
 import type { Tools } from "./tools";
 
 /** A click waits for the map at most this long, ms, then is carried out on the map as it is (a backstop, so the worst case
@@ -53,7 +55,8 @@ export function startClickWait(tk: Tools) {
     tk.waitingClicks.push({ how: "switch", run, tool: null, at: null, shift: false, ctrl: false, meta: false, detail: 1, made: now, first: now, double: false, asked: false });
     return true;
   });
-  setClicksBusy(() => tk.waitingClicks.length > 0 || tk.clicksOut > 0 || tk.placing);
+  // (T-4214 stage A: and a station's name still being looked up, which an undo of its station must not overtake)
+  setClicksBusy(() => tk.waitingClicks.length > 0 || tk.clicksOut > 0 || tk.placing || namesPending() > 0);
 }
 
 /** Whether a click now would pick on a map that lacks an edit sent before it. */

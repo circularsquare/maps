@@ -42,6 +42,7 @@ import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger
 import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
 import { wordAfter, wordBefore } from "./clockWord";
 import { mapPatch, patchMiss } from "./clockPatch";
+import { nameArrived, nameOwed, nameOwedStations, placedNameless, withName } from "./clockNames";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
 import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineNotes, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
 
@@ -546,6 +547,8 @@ onmessage = (e: MessageEvent<ToClock>) => {
     return;
   }
   if (isPreview(msg)) putPreviewAt(performance.now());
+  // T-4214: a station's name, taken by its edit if that still waits in the queue
+  if (msg.kind === "stationName") nameArrived(msg.ticket, msg.name, msg.game);
   putMessages(messages.then(() => processMessage(msg)).then(pumpBlocks).catch(err => send({ kind: "error", message: String(err) })));
 };
 async function processMessage(msg: ToClock) {
@@ -720,6 +723,8 @@ async function processMessage(msg: ToClock) {
     if (!followUp.job) { clearTimeout(followTimer); stepThenRun(followUp); }
     return;
   }
+  // T-4214: a name its stations took when applied (or for a station refused, or another game's) has nothing left to do
+  if (msg.kind === "stationName" && !nameOwed(msg.ticket, game)) return;
   // T-3803: a follow-up's first edit HOLD_MS ago: an edit neither joins it nor goes ahead of it any more, so its state
   // still comes at most then (T-2404, T-2766) however quickly edits keep coming
   const due = !!followUp && msg.kind === "edit" && performance.now() - followUp.ask.at >= HOLD_MS;
@@ -997,6 +1002,7 @@ async function handleMessage(msg: ToClock) {
       api.set_edit_lead(0);
       return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [], charge: 0 });
     }
+    msg.op = withName(msg.op, game);
     const before = wordBefore(api, msg.op, posted);
     const applied = apply(msg.op);
     const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = applied;
@@ -1010,6 +1016,7 @@ async function handleMessage(msg: ToClock) {
     const op = msg.op, seq = msg.seq;
     const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
+    placedNameless(api, msg.op, game);
     // T-4145: what the page can show of the edit, before its rows and network (a stop click's line path, T-4114)
     // T-4170: and whether a network follows (`later`'s `net` below: none for a service edit or a rename sent as rows)
     const noNet = service || (named && !msg.early && !msg.rows && rowsCanGo());
@@ -1088,6 +1095,14 @@ async function handleMessage(msg: ToClock) {
     // a service edit's first step only before its state (T-3655)
     trips && api.has_riders() ? editSteps(service) : undefined,
     hold || stops, stops);
+  } else if (msg.kind === "stationName") {
+    // T-4214: stations placed before their name came take it now, in the state their edit's follow-up sends (it goes ahead
+    // of that state, `goesAhead`), or in a rows state of its own once that state went
+    if (msg.game !== game || !nameOwedStations(api!, msg.ticket, msg.name, game)) return;
+    saves.dirty = saves.edited = true; saves.editAt = Date.now();
+    const patch = mapPatch(api!);
+    send({ kind: "named", ...(patch ? { patch } : {}) });
+    later({ net: false, name: true, service: false, trips: false, early: false, at: performance.now() }, keep, () => {}, null, 0);
   } else if (msg.kind === "clock") {
     putClk({ t: msg.t, rate: msg.rate, at: msg.at });
   } else if (msg.kind === "income") {

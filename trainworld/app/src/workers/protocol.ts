@@ -95,11 +95,12 @@ export type EditOp =
   | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
   | { op: "flying"; node: NodeId; flying: boolean }
   | { op: "stationUpgrade"; nodes: NodeId[]; bit: number; on: boolean }
-  | { op: "addStation"; at: StationAt; platform: number; name: string }
+  /** T-4214: `ticket`, a station sent at its click: `name` is "" and the name follows as "stationName" (workers/clockNames.ts) */
+  | { op: "addStation"; at: StationAt; platform: number; name: string; ticket?: number }
   /** T-3378: a blueprint BRT station at x, y (world metres) on no track, its platform along a road on `heading` (radians) */
-  | { op: "addBrtStation"; x: number; y: number; heading: number; name: string }
+  | { op: "addBrtStation"; x: number; y: number; heading: number; name: string; ticket?: number }
   /** T-3999: a blueprint port on no ferry line, its landing at x, y and its berth at bx, by (world metres) */
-  | { op: "addPort"; x: number; y: number; bx: number; by: number; name: string }
+  | { op: "addPort"; x: number; y: number; bx: number; by: number; name: string; ticket?: number }
   /** a crossover on track `edge` near x, y and the track running beside it (T-338) */
   | { op: "crossover"; edge: EdgeId; x: number; y: number }
   /** an express pair beside double track `edge` and the run it is on, as blueprint (T-708) */
@@ -343,6 +344,8 @@ export type ToClock =
    * started, or waiting for water masks, is answered `stale` at once (T-1039); handled outside
    * the queue */
   | { kind: "previewStale"; seq: number }
+  /** T-4214: the name for the stations sent with `ticket` (workers/clockNames.ts), made in game `game` (`gameStamp`) */
+  | { kind: "stationName"; ticket: number; name: string; game: number }
   /** T-2404: the track tool's segments placed early, their state held while the pointer moves, are
    * wanted now (the run ended, or the pointer came near them) */
   | { kind: "release" }
@@ -989,7 +992,9 @@ export interface NewPiece { edge: number; pts: Float32Array; tracks: 1 | 2; kind
 /** T-4214 stage C: the records the edits since the last state read touched, as the model has them right after an edit
  * (workers/clockPatch.ts): rows as the next state's, each live edge's points in local units at draw anchor `anchor`
  * (its version), and the ids gone. The page patches the map its tools click on with it until the next state. */
-export interface MapPatch { edges: ClockEdge[]; nodes: ClockNode[]; goneEdges: number[]; goneNodes: number[]; pts: Float32Array[]; anchor: number }
+/** `lines`: the paths of lines whose path the edits moved (a station on their track splits an edge), as their rows have them */
+export interface MapPatch { edges: ClockEdge[]; nodes: ClockNode[]; goneEdges: number[]; goneNodes: number[]; pts: Float32Array[]; anchor: number; lines?: PatchLine[] }
+export interface PatchLine { id: number; path: number[]; planPath?: number[]; back?: number[] }
 /** T-4145: what an applied edit changed, as the page draws it (ids are the ones drawn now unless said); every part optional */
 export interface EditWord {
   /** a rail line's strokes now draw these edges (its plan's path and its return run's); null: the line is gone */
@@ -1017,6 +1022,8 @@ export type FromClock =
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
   /** T-4145: an edit applied, sent before anything else it sends (rows, state, answer): what the map and panels can
    * show of it until the first network (or rows) after this message (notes/T-4145.md) */
+  /** T-4214: stations named after their edit (`stationName`), with the clickable map's patch when it can be patched */
+  | { kind: "named"; patch?: MapPatch }
   | { kind: "applied"; seq: number; word: EditWord; /** T-4170: no network follows (a service edit, a rename, a fare or loan edit) */ noNet?: true; /** T-4214: the clickable map's patch, when the edit can be patched */ patch?: MapPatch }
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {

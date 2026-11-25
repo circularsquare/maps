@@ -27,8 +27,9 @@ export function sendStale(seq: number) {
 // previews sees the model ahead of its state. T-3803: its state is built a piece a task, and an
 // edit that comes between the pieces goes ahead (`goesAhead`), the two edits sharing one state.
 
-/** messages answered ahead of an edit's follow-up: they read the model and change nothing */
-export const jumpsAhead = (m: ToClock) => isPreview(m) || m.kind === "previewStation" || m.kind === "previewCrossover";
+/** messages answered ahead of an edit's follow-up: they read the model and change nothing (T-4214: and the delete
+ * question's trial of a removal, which a delete clicked right after an edit waited a whole state for) */
+export const jumpsAhead = (m: ToClock) => isPreview(m) || m.kind === "previewStation" || m.kind === "previewCrossover" || (m.kind === "query" && m.q.what === "removal");
 /** how long an `early` edit's state waits for the ghost the track tool asks on its answer, ms */
 export const EARLY_WAIT_MS = 30;
 /** T-2404: an early edit's follow-up is held while the track tool keeps asking ghosts (the pointer
@@ -143,6 +144,8 @@ function pump(f: FollowUp) {
  * service (a train count's lead is sized to a train count's state, T-1071) when `f` builds the network and its rows can
  * go as a rows state (a network posted, no anchor move pending) */
 export function goesAhead(m: ToClock, f: FollowUp): boolean {
+  // T-4214: a station's name after its edit joins that edit's state, as a rename's rows would
+  if (m.kind === "stationName") return f.ask.net && !!posted.net && !shiftFrom && m.game === game;
   if (m.kind !== "edit" || !f.ask.net || !posted.net || shiftFrom) return false;
   if (m.game !== undefined && m.game !== game) return false;
   return !OWN_STATE_OPS.has(m.op.op) && !isServiceOp(m.op);

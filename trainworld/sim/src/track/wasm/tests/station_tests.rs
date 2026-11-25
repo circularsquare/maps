@@ -26,6 +26,30 @@ fn preview_station_agrees_with_add_station() {
     assert!(seen[0] > 0 && seen[1] > 0, "both answers should occur: {seen:?}");
 }
 
+/// T-4214: a station placed with no name (its name sent after the click) takes the name that comes, once,
+/// outside the undo history: an undo takes the station away and its redo brings it back named.
+#[test]
+fn a_station_placed_before_its_name_takes_it_after() {
+    let (ends, pis) = stroke(&|_| 0);
+    let mut a = api();
+    assert_eq!(a.add_route(&ends, &pis, 2, false), 0, "{}", a.issues());
+    let edge = live_edges(&a)[0];
+    let len = a.w.net.edge_len[edge as usize];
+    let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(edge), len * 0.5);
+    assert_eq!(a.add_station(2, edge, x, y, 200, String::new()), 0, "{}", a.issues());
+    let st = a.last_stations();
+    assert_eq!(st.len(), 1);
+    let node = st[0] as usize;
+    assert_eq!(a.w.net.node_name[node], "");
+    assert_eq!(a.name_new_stations(&st, "Late".into()), 1);
+    assert_eq!(a.w.net.node_name[node], "Late");
+    assert_eq!(a.name_new_stations(&st, "Other".into()), 0, "a named station keeps its name");
+    assert_eq!(a.undo(), 0);
+    assert!(a.w.net.station_data(node as u32).is_none());
+    assert_eq!(a.redo(), 0);
+    assert_eq!(a.w.net.node_name[node], "Late", "its redo brings it back named");
+}
+
 /// T-2797: the short piece past a station's platform cannot be removed (a removal would lay it
 /// back), and says so; removing the station frees it.
 #[test]

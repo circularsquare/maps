@@ -136,7 +136,7 @@ export function freeGhost(tk: Tools, box: (lx: number, ly: number, ways: ArrayLi
 export const freeHint = () => tr(first ? "tools.freeTurn" : "tools.freeStart", { touch: touchInput.peek() });
 
 /** The second click: the station and its own piece of track, one edit. */
-export async function freeClick(tk: Tools, e: MapMouseEvent, nameFor: (px: number, py: number) => Promise<string>) {
+export async function freeClick(tk: Tools, e: MapMouseEvent, nameLater: (px: number, py: number) => { ticket: number; name: Promise<string> }) {
   const h = firstAt();
   if (!h) return;
   tk.pointer = { px: e.point.x, py: e.point.y, lng: e.lngLat.lng, lat: e.lngLat.lat };
@@ -148,10 +148,11 @@ export async function freeClick(tk: Tools, e: MapMouseEvent, nameFor: (px: numbe
   // T-4146: the station and its piece drawn at the click, gone again if refused
   const shown = ahead(bad ? {} : { stations: [{ lx: p.mid.lx, ly: p.mid.ly, ways: p.ways, perM: p.perM, plat: p.plat, side: 0, tram: tram() }], track: [strokesFromParts(p.track, false, false)] });
   tk.place();
-  const name = await nameFor(...tk.screen(p.mid.lx, p.mid.ly));
-  const r = await shown.send(() => edit({ op: "addStation", at: p.stationAt, platform: p.plat, name }, true, true, "click"));
+  // T-4214: sent at once, its name after it
+  const naming = nameLater(...tk.screen(p.mid.lx, p.mid.ly));
+  const r = await shown.send(() => edit({ op: "addStation", at: p.stationAt, platform: p.plat, name: "", ticket: naming.ticket }, true, true, "click"));
   if (r.ok) {
     tk.lastPlaced = toLngLat(p.mid.lx, p.mid.ly);
-    say(tr("tools.blueprintStation", { name }));
+    void naming.name.then((name) => say(tr("tools.blueprintStation", { name })));
   } else if (r.issues.length) say(describeIssues(r.issues, undefined, undefined, true), true);
 }

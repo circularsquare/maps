@@ -1,12 +1,14 @@
 // T-4214 stage C1: right after an edit is applied, the records the edits since the last state read touched, read as the
 // next state will read them, go to the page with the edit's word (workers/clock.worker.ts), a few ms and before the full
-// state, so the page patches the map its tools click on at once (game/mapPatch.ts). None when the page could not take
-// them exactly: a line's row would change (line rows are not patched), more records than PATCH_MAX, everything touched
-// (a load), or the page's network or draw anchor not settled. notes/T-4214.md "Stage C".
+// state, so the page patches the map its tools click on at once (game/mapPatch.ts). A line whose path the edits moved (a
+// station on its track splits an edge, track it runs over goes) has its paths in it, which say what runs on the touched
+// track; its other figures wait for the state. None when the page could not take them exactly: a line new, gone or
+// starting or stopping to run, more records than PATCH_MAX, everything touched (a load), or the page's network or draw
+// anchor not settled. notes/T-4214.md "Stage C" and "Stage A".
 
 import type { TrackApi } from "../wasm/track/sim";
 import { anchor } from "../map/geo";
-import type { MapPatch } from "./protocol";
+import type { MapPatch, PatchLine } from "./protocol";
 import { drawnEdgeNow, rowEnv, rowsCanGo, stateRows } from "./clockMain";
 import { posted } from "./clockPost";
 
@@ -22,10 +24,9 @@ export function mapPatch(api: TrackApi): MapPatch | undefined {
   if (t[0] === ALL) return void (patchMiss = "everything touched");
   const ne = t[0];
   if (t.length - 1 > PATCH_MAX) return void (patchMiss = `${t.length - 1} records`);
-  // (a line whose path moved: which lines run over which edges is the state's to send; a line's other figures, a timetable
-  // a settle moved, stay the last state's in the page until its state, as before)
-  const moved = pathMoved(api);
-  if (moved) return void (patchMiss = moved);
+  // (a line's other figures, a timetable a settle moved, stay the last state's in the page until its state, as before)
+  const lines = movedPaths(api);
+  if (typeof lines === "string") return void (patchMiss = lines);
   const edgeIds = t.subarray(1, 1 + ne), nodeIds = t.subarray(1 + ne);
   const { edges, nodes } = stateRows.touchedRows(api, rowEnv, edgeIds, nodeIds);
   const liveE = new Set(edges.map((e) => e.id)), liveN = new Set(nodes.map((n) => n.id));
@@ -35,20 +36,34 @@ export function mapPatch(api: TrackApi): MapPatch | undefined {
     goneNodes: Array.from(nodeIds).filter((id) => !liveN.has(id)),
     pts: edges.map((e) => drawnEdgeNow(api, e.id).slice()),
     anchor: anchor().version,
+    ...(lines.length ? { lines } : {}),
   };
 }
 
-/** Why the lines' paths may differ from those the page holds (`posted.lines`: its plan's path and its return run's), or "":
- * a line noted since the last state read (`peek_changed_lines`) that is new, gone or runs over other edges. */
-function pathMoved(api: TrackApi): string {
+/** The paths of the lines noted since the last state read (`peek_changed_lines`) that differ from those the page holds
+ * (`posted.lines`), made as the state's rows make them (stateRows.ts `heavy`); why not, when a line is new, gone, starts
+ * or stops counting (its whole track is read again then), changes between one path and a plan's and a run's, or stops
+ * elsewhere (a tool reads the stops: the line tool's next click works from them). */
+function movedPaths(api: TrackApi): PatchLine[] | string {
   const noted = api.peek_changed_lines();
   if (noted[0] === ALL) return "every line noted";
+  if (!noted.length) return [];
+  const out: PatchLine[] = [];
+  let info: Map<number, [number, number]> | null = null;
   for (const id of noted) {
     const row = posted.lines.get(id);
     if (!row) return `line ${id} new`;
-    if (!same(api.line_path(id), row.planPath ?? row.path) || !same(api.line_back_path(id), row.back ?? [])) return `line ${id}'s path`;
+    const plan = api.line_path(id), back = api.line_back_path(id);
+    if (same(plan, row.planPath ?? row.path) && same(back, row.back ?? [])) continue;
+    if (!info) { info = new Map(); const li = api.lines_info(); for (let i = 0; i < li.length; i += 22) info.set(li[i], [li[i + 2], li[i + 3]]); }
+    const now = info.get(id), part = api.line_part(id).length === 4;
+    if (!now) return `line ${id} gone`;
+    if ((now[0] === 1) !== row.ok || (now[1] === 1) !== row.running) return `line ${id} starts or stops running`;
+    if (part !== !!row.planPath) return `line ${id}'s plan`;
+    if (!same(api.line_stops(id), row.planStops ?? row.stops) || !same(api.line_back_stops(id), row.backStops ?? [])) return `line ${id}'s stops`;
+    out.push({ id, path: [...(part ? api.line_run_path(id) : plan)], ...(part ? { planPath: [...plan] } : {}), ...(back.length ? { back: [...back] } : {}) });
   }
-  return "";
+  return out;
 }
 const same = (a: ArrayLike<number>, b: ArrayLike<number>) => {
   if (a.length !== b.length) return false;

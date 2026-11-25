@@ -446,7 +446,9 @@ impl TrackApi {
         let lines: Vec<u32> = (0..net.line_count() as u32).filter(|&l| net.line_ok(l)).collect();
         let was: Vec<bool> = lines.iter().map(|&l| net.line_broken[l as usize]).collect();
         let stopping: Vec<bool> = lines.iter().map(|&l| net.line_stops(l).iter().any(|s| st.binary_search(s).is_ok())).collect();
-        let tried = self.w.trial_with(Op::Batch(ops), |w| lines.iter().map(|&l| w.net.line_broken[l as usize]).collect::<Vec<_>>());
+        // T-4214: the broken flags are the net's (`Network::derive`): the services are left as they are, which on her Asia
+        // save took 0.1-0.3 s before a station's delete was sent
+        let tried = self.w.trial_light(Op::Batch(ops), |w| lines.iter().map(|&l| w.net.line_broken[l as usize]).collect::<Vec<_>>());
         self.release(&nn, &ne);
         let Ok((_, after)) = tried else { return vec![] };
         let mut out = vec![];

@@ -1099,7 +1099,7 @@ export class ClockClient {
   /** T-4214: the last state taken, and its rows as patched since for the tools' world (map/clickMap.ts `clickWorld`;
    * the client's delta base, `rows`, is left as the worker posted it) */
   private taken: ClockState | null = null;
-  private patched: { edges: ClockState["edges"]; nodes: ClockState["nodes"]; n: number } | null = null;
+  private patched: { edges: ClockState["edges"]; nodes: ClockState["nodes"]; lines: ClockState["lines"]; n: number } | null = null;
   /** the patches laid on since the last state taken, and the words that came with none (`p` null), by arrival order: a
    * state taken drops those that came before it (it holds their edits) and lays the rest on its rows again */
   private patchLog: { order: number; p: MapPatch | null }[] = [];
@@ -1216,18 +1216,22 @@ export class ClockClient {
     const st = this.taken;
     if (!st || !world.peek() || p.anchor !== anchor().version) return false;
     // nothing on the map moved (a group or look edit): the tools' map holds the edit as it is
-    if (!p.edges.length && !p.nodes.length && !p.goneEdges.length && !p.goneNodes.length) return true;
-    if (!this.onPatch(new Map(p.edges.map((e, i) => [e.id, p.pts[i]])), p.goneEdges, order, p.anchor)) return false;
+    if (!p.edges.length && !p.nodes.length && !p.goneEdges.length && !p.goneNodes.length && !p.lines?.length) return true;
+    // (a station's name alone moves no edge: the drawn network's points stand)
+    if ((p.edges.length || p.goneEdges.length) && !this.onPatch(new Map(p.edges.map((e, i) => [e.id, p.pts[i]])), p.goneEdges, order, p.anchor)) return false;
     this.patchLog.push({ order, p });
     this.layPatch(p);
     return true;
   }
   /** `p`'s rows laid on the tools' world (the last state's rows, as patched since) */
   private layPatch(p: MapPatch) {
-    const st = this.taken!, base = this.patched ?? { edges: st.edges, nodes: st.nodes, n: 0 };
-    this.patched = { edges: patchRows(base.edges, p.edges, p.goneEdges), nodes: patchRows(base.nodes, p.nodes, p.goneNodes), n: base.n + 1 };
+    const st = this.taken!, base = this.patched ?? { edges: st.edges, nodes: st.nodes, lines: st.lines, n: 0 };
+    // (a line's paths in place of its row's, which say what runs on the touched track: its other figures wait for the state)
+    const paths = new Map((p.lines ?? []).map((l) => [l.id, l]));
+    const lines = paths.size ? base.lines.map((l) => { const q = paths.get(l.id); if (!q) return l; const { back: _b, ...rest } = l; return { ...rest, path: q.path, ...(q.planPath ? { planPath: q.planPath } : {}), ...(q.back ? { back: q.back } : {}) }; }) : base.lines;
+    this.patched = { edges: patchRows(base.edges, p.edges, p.goneEdges), nodes: patchRows(base.nodes, p.nodes, p.goneNodes), lines, n: base.n + 1 };
     // (a version of its own: the tools' caches keyed on it are read again; the next state's is the next whole number)
-    setClickWorld(toWorld({ ...st, edges: this.patched.edges, nodes: this.patched.nodes, version: st.version + this.patched.n / 1000 }, false));
+    setClickWorld(toWorld({ ...st, edges: this.patched.edges, nodes: this.patched.nodes, lines, version: st.version + this.patched.n / 1000 }, false));
   }
 
   /** DEV (T-4214): the rows the patches that arrived before the state taken now (the `order`th message) gave, against that
@@ -1236,8 +1240,9 @@ export class ClockClient {
   private checkPatched(st: ClockState, order: number) {
     const before = this.patchLog.filter((x) => x.order < order);
     if (before.length && before.every((x) => x.p)) {
-      const pr = { edges: new Map<number, object | null>(), nodes: new Map<number, object | null>() };
+      const pr = { edges: new Map<number, object | null>(), nodes: new Map<number, object | null>(), lines: new Map<number, object>() };
       for (const { p } of before) {
+        for (const l of p!.lines ?? []) pr.lines.set(l.id, { path: l.path, planPath: l.planPath, back: l.back ?? [] });
         for (const r of p!.edges) pr.edges.set(r.id, r);
         for (const id of p!.goneEdges) pr.edges.set(id, null);
         for (const r of p!.nodes) pr.nodes.set(r.id, r);
@@ -1253,6 +1258,10 @@ export class ClockClient {
           const fields = Object.keys({ ...x, ...y }).filter((f) => JSON.stringify(x[f]) !== JSON.stringify(y[f]));
           if (fields.length) bad.push(`${k} ${id}: ${fields.join(", ")}`);
         }
+      }
+      for (const [id, l] of pr.lines) {
+        const s = st.lines.find((x) => x.id === id);
+        if (s && JSON.stringify(l) !== JSON.stringify({ path: s.path, planPath: s.planPath, back: s.back ?? [] })) bad.push(`line ${id}'s paths`);
       }
       if (bad.length) console.error(`T-4214 check: the patched rows differ from the state's: ${bad.slice(0, 8).join("; ")}`);
     }
@@ -1632,6 +1641,10 @@ export class ClockClient {
         }
         this.tripsAt = performance.now();
         this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts, msg.bays);
+        break;
+      case "named":
+        // T-4214 stage A: stations named after their edit: the tools' map takes their rows (the state's names follow)
+        if (!(msg.patch && this.takePatch(msg.patch, this.orderOf(msg)))) this.patchLog.push({ order: this.orderOf(msg), p: null });
         break;
       case "applied":
         pendingWord(msg.seq, msg.word, this.orderOf(msg), !!msg.noNet);
