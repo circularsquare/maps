@@ -42,6 +42,8 @@ interface Kept { key: string; draw: BuildingDraw; ids: Map<number, number> }
 const kept = new Map<number, Kept>();
 /** each edge's id, points and box (x0, y0, x1, y1), by the network's points map */
 const boxesOf = new WeakMap<Map<number, Float32Array>, { ids: number[]; pts: Float32Array[]; box: Float64Array }>();
+/** T-4153: each edge's box by its points (an edge whose points are as before keeps its box when the map is new) */
+const boxOfPts = new WeakMap<Float32Array, Float64Array>();
 
 /** The buildings as drawn, and per station the building it is in (an index into them, -1 none). `ll`:
  * each building's corners as lng, lat pairs (the worker's frame). */
@@ -67,12 +69,16 @@ export function buildingsDrawn(
   if (inside && !boxes) {
     const ids: number[] = [], pts: Float32Array[] = [], box = new Float64Array(edgePts.size * 4);
     for (const [id, p] of edgePts) {
-      let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
-      for (let j = 0; j + 2 < p.length; j += 3) {
-        a = Math.min(a, p[j]); c = Math.max(c, p[j]);
-        b = Math.min(b, p[j + 1]); d = Math.max(d, p[j + 1]);
+      let e = boxOfPts.get(p);
+      if (!e) {
+        let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+        for (let j = 0; j + 2 < p.length; j += 3) {
+          a = Math.min(a, p[j]); c = Math.max(c, p[j]);
+          b = Math.min(b, p[j + 1]); d = Math.max(d, p[j + 1]);
+        }
+        boxOfPts.set(p, (e = Float64Array.of(a, b, c, d)));
       }
-      box.set([a, b, c, d], ids.length * 4);
+      box.set(e, ids.length * 4);
       ids.push(id);
       pts.push(p);
     }

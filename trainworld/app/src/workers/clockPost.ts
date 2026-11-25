@@ -4,6 +4,7 @@ import { TrackApi } from "../wasm/track/sim"; // the track model only (T-051)
 import { anchor, EARTH_C, makeAnchor, toMerc01, type Anchor } from "../map/geo";
 import { type NetworkBuffers } from "../map/network";
 import { besideSamples } from "../map/corridors";
+import { sameCorridor } from "../map/lineBands";
 import { bandEdges, diagramGraph, type DiagramGraph } from "../diagram/graph";
 import { nodeLngLat, regionGroups } from "../diagram/regions";
 import { busGraph, stopsIn } from "../diagram/busGraph";
@@ -325,6 +326,11 @@ function checkNet(n: NetworkBuffers, full: NetworkBuffers) {
   for (const k of Object.keys(full) as (keyof NetworkBuffers & string)[]) {
     if (k === "serial" || k === "patch" || k === "anchor") continue;
     const a = n[k], b = full[k];
+    // (T-4153: the Traffic table numbers its ribbons and recipes as they came, a build from scratch as the lines use them)
+    if (k === "corridor") {
+      if (!(a instanceof Float32Array) || !(b instanceof Float32Array) || !sameCorridor(a, b)) bad.push(k);
+      continue;
+    }
     if (k === "edgePts") {
       const x = a as Map<number, Float32Array>, y = b as Map<number, Float32Array>;
       if (x.size !== y.size || [...x.keys()].join() !== [...y.keys()].join() || [...y].some(([id, p]) => !sameBytes(x.get(id), p))) bad.push(k);

@@ -149,7 +149,8 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   const st = useBands(opts?.state), beside = st.beside;
   const o = { ...opts, beside };
   const ends = opts?.ends ?? new Map(edges.map((e) => [e.id, e]));
-  if (!opts?.debug) { bandWork.orders = 0; bandWork.pairs = 0; bandWork.passed = 0; bandWork.lines = 0; bandWork.whole = 0; bandWork.spliced = 0; bandWork.swept = 0; bandWork.copied = 0; }
+  if (!opts?.debug) { for (const k in bandLaps) delete bandLaps[k]; bandT = performance.now(); }
+  if (!opts?.debug) { bandWork.orders = 0; bandWork.pairs = 0; bandWork.passed = 0; bandWork.lines = 0; bandWork.whole = 0; bandWork.spliced = 0; bandWork.swept = 0; bandWork.copied = 0; bandWork.samplesKept = 0; bandWork.samplesMade = 0; }
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length);
   const mode = `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}`;
   // (a fresh pass, for `rule` and the check, lays every path out again)
@@ -214,25 +215,7 @@ export function setBandCheck(on: boolean): void {
 function bandsDiffer(a: LineBands, b: LineBands): string {
   const r4 = (v: number) => v;
   const read = (x: LineBands) => {
-    const t = x.corridor;
-    let o = 0;
-    const ribs: string[] = [], recipes: string[] = [], recs: string[] = [];
-    for (let r = 0, n = t[o++]; r < n; r++) {
-      ribs.push(Array.from(t.subarray(o + 1, o + 1 + 2 * t[o])).join(","));
-      o += 1 + 2 * t[o];
-    }
-    for (let r = 0, n = t[o++]; r < n; r++, o += RECIPE) recipes.push(`${ribs[t[o]]}/${t[o + 1]}/${t[o + 2]}`);
-    for (let r = 0, n = t[o++]; r < n; r++) {
-      let s = Array.from(t.subarray(o, o + 6), r4).join(",");
-      const c = t[o + 5];
-      o += 6;
-      for (let k = 0; k < c; k++) {
-        s += `;${r4(t[o])}:`;
-        for (let i = 0; i < t[o + 1]; i++) s += `${recipes[t[o + 2 + 2 * i]]}*${r4(t[o + 3 + 2 * i])} `;
-        o += 2 + 2 * t[o + 1];
-      }
-      recs.push(s);
-    }
+    const { recipes, recs } = tableRead(x.corridor);
     const prof = new Map<number, string>();
     for (const [id, p] of x.of) {
       const k0 = 2 + p[0];
@@ -245,6 +228,35 @@ function bandsDiffer(a: LineBands, b: LineBands): string {
   const recs = x.recs.length === y.recs.length ? x.recs.filter((s, i) => s !== y.recs[i]).length : -1;
   const order = [...b.order].filter(([e, v]) => a.order.get(e)?.join() !== v.join()).length + (a.order.size === b.order.size ? 0 : 1);
   return lines.length || recs || order ? `lines ${lines.slice(0, 8).join(", ")}${lines.length > 8 ? "..." : ""}; Traffic records ${recs}; edges' orders ${order}` : "";
+}
+
+/** a Traffic table's recipes and records as text, each recipe as what it is (its ribbon, slot and sign), not its number */
+function tableRead(t: Float32Array): { recipes: string[]; recs: string[] } {
+  let o = 0;
+  const ribs: string[] = [], recipes: string[] = [], recs: string[] = [];
+  for (let r = 0, n = t[o++]; r < n; r++) {
+    ribs.push(Array.from(t.subarray(o + 1, o + 1 + 2 * t[o])).join(","));
+    o += 1 + 2 * t[o];
+  }
+  for (let r = 0, n = t[o++]; r < n; r++, o += RECIPE) recipes.push(`${ribs[t[o]]}/${t[o + 1]}/${t[o + 2]}`);
+  for (let r = 0, n = t[o++]; r < n; r++) {
+    let s = Array.from(t.subarray(o, o + 6)).join(",");
+    const c = t[o + 5];
+    o += 6;
+    for (let k = 0; k < c; k++) {
+      s += `;${t[o]}:`;
+      for (let i = 0; i < t[o + 1]; i++) s += `${recipes[t[o + 2 + 2 * i]]}*${t[o + 3 + 2 * i]} `;
+      o += 2 + 2 * t[o + 1];
+    }
+    recs.push(s);
+  }
+  return { recipes, recs };
+}
+/** T-4153 (`?patch=check`): two Traffic tables alike but for how they number their ribbons and recipes, which a kept
+ * one numbers in the order they came, so one left by an edit keeps its number (and one no line uses any more stays) */
+export function sameCorridor(a: Float32Array, b: Float32Array): boolean {
+  const x = tableRead(a).recs, y = tableRead(b).recs;
+  return x.length === y.length && x.every((s, i) => s === y[i]);
 }
 
 /** the last call: the maps it was given, its lines and what it gave */
@@ -392,14 +404,22 @@ interface LineMemo {
   recs: Float32Array;
   recPos: Int32Array;
   nRecords: number;
-  /** its profile in the network's numbering, and that numbering */
-  out?: { map: Int32Array; profile: Float32Array };
-  /** T-4153: where its records were in the last table (`LineBands.corridor`'s), numbered by `map` */
-  tab?: { map: Int32Array; at: number };
+  /** T-4153: its recipes' numbers in the network's table (`BandMemo.net`), and its profile and records numbered so;
+   * `netWas`: the numbers its recipes had, which a line worked out again keeps (its own numbers are kept too) */
+  net?: { map: Int32Array; profile: Float32Array | null; recs: Float32Array };
+  netWas?: Int32Array;
   /** T-4153: what its knots were swept from, and where each entry's record starts in `recs` (-1: none) */
   sweep?: SweepIn;
   recAt?: Int32Array;
+  /** T-4153: per entry whether any of its knots is other than none */
+  nzE?: Uint8Array;
+  /** T-4153: its samples and what each entry's were read from */
+  smp?: LineSamplesMemo;
 }
+/** T-4153: a line's samples (metres along its path, half their spacing, ribbon, slot) and per entry where its samples start
+ * (`js`), its start, whether any is in a ribbon of more than one line, what its ribbons read (edges, pair rules), its
+ * edge's corridor samples and its length */
+interface LineSamplesMemo { js: Int32Array; start: Float64Array; any: Uint8Array; deps: number[][]; rels: (string[] | null)[]; T: (EdgeSamples | undefined)[]; len: Float64Array; M: number[]; H: number[]; R: Ribbon[]; S: number[] }
 /** the ribbon at a sample, the edges it was worked out from and in which call */
 interface RibbonEntry { r: Ribbon; deps: number[]; at: number; /** the pair rules its order was worked out from */ rels?: string[] }
 /** What the last call worked out (T-2238), so an edit works out again only the lines whose bands it
@@ -418,9 +438,13 @@ interface BandMemo {
    * edges changed holds */
   serial: number;
   changedAt: Map<number, number>;
-  /** T-4153: where the records start in the last table, -1 none */
-  recBase: number;
+  /** T-4153: the network's numbers of ribbons and recipes, kept from call to call */
+  net: NetNumbers;
 }
+/** T-4153: the table's ribbons and recipes by key, numbered in the order they first came; never renumbered while the memo
+ * lasts (one no line uses any more stays, unread), so a line's numbers hold while it is not worked out again */
+interface NetNumbers { ribIds: Map<string, number>; recIds: Map<string, number>; ribs: Nums; nRib: number; recs: Nums; nRec: number }
+const newNetNumbers = (): NetNumbers => ({ ribIds: new Map(), recIds: new Map(), ribs: new Nums(), nRib: 0, recs: new Nums(), nRec: 0 });
 let memo: BandMemo | null = null;
 /** T-4153: one edge's order of its lines (`LineBands.order`), with what it was worked out from: its lines (each
  * with its first entry on it and its path), per pair of them the rule's answer and the steps its walks ended at, and
@@ -494,7 +518,11 @@ let selfTest = false;
 export function bandSelfTest(on: boolean) { selfTest = on; }
 /** T-4153: what the last call worked out again (counts, for the network build's work line): orders with any pair of
  * lines walked again, those pairs, and pairs kept whose lines' paths changed within their walks */
-export const bandWork = { orders: 0, pairs: 0, passed: 0, lines: 0, whole: 0, passedAll: 0, followed: 0, spliced: 0, swept: 0, copied: 0, splicedAll: 0, sweptAll: 0, copiedAll: 0 };
+/** T-4153: per stage of the last call, ms (for measuring what an edit's bands still pay for) */
+export const bandLaps: Record<string, number> = {};
+let bandT = 0;
+const blap = (k: string) => { const t = performance.now(); bandLaps[k] = (bandLaps[k] ?? 0) + t - bandT; bandT = t; };
+export const bandWork = { orders: 0, pairs: 0, passed: 0, lines: 0, whole: 0, passedAll: 0, followed: 0, spliced: 0, swept: 0, copied: 0, splicedAll: 0, sweptAll: 0, copiedAll: 0, samplesKept: 0, samplesMade: 0 };
 /** T-4153 self-test: a line worked out again after an edit sweeps only its entries that changed, not those beside them
  * whose knots the change reaches (a station on a long line's shared track must fail the check) */
 let spliceTest = false;
@@ -768,6 +796,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   };
   const linesOf = (e: number) => order.get(e) ?? on.get(e)!.map((x) => x.line.id);
 
+  blap("orders");
   // ---- the ribbon at each place
   const useCorridors = (opts?.corridors ?? CORRIDORS) && on.size > 1;
   // (T-4153: with `delta`, the corridors look again only at the edges that changed or whose lines did)
@@ -793,6 +822,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   // wherever the two meet), -1 right, none: never beside
   // (T-4153: the metres summed as whole PAIR_FIX parts, so the sums are the same whatever order the corridors' records
   // come in, which they keep from call to call)
+  blap("corridors");
   const pairSums = new Map<string, [number, number]>();
   for (const [e, nb] of beside.pair) {
     if (!on.has(e)) continue;
@@ -817,10 +847,11 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     return rel.get(key) ?? 0;
   };
 
+  blap("pairs");
   // ---- T-2238: what changed since the last call, and so the lines to work out again
   const mode = `${useCorridors},${opts?.within ?? ""},${bandMode}`;
   const mmKept = !opts?.debug && !opts?.fresh && !!memo && memo.mode === mode;
-  const mm: BandMemo = mmKept ? memo! : { mode, fp: new Map(), ribbons: new Map(), rel: new Map(), lines: new Map(), serial: 0, changedAt: new Map(), recBase: -1 };
+  const mm: BandMemo = mmKept ? memo! : { mode, fp: new Map(), ribbons: new Map(), rel: new Map(), lines: new Map(), serial: 0, changedAt: new Map(), net: newNetNumbers() };
   if (!opts?.debug && !opts?.fresh) memo = mm;
   /** edges whose part in any line's bands may differ: their points, samples, lines or those lines' directions */
   const changedEdges = new Set<number>();
@@ -865,6 +896,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     for (const [e, v] of on) record(e, v);
     for (const e of [...mm.fp.keys()]) if (!on.has(e)) dropRecord(e);
   }
+  blap("records");
   // a pair rule that is new, gone or changed: only what read it is worked out again
   const relChanged = new Set<string>();
   for (const [k, v] of rel) if (mm.rel.get(k) !== v) relChanged.add(k);
@@ -872,6 +904,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   if (!opts?.debug && !opts?.fresh) bandWork.whole = changedEdges.size;
   if (changedEdges.size > MEMO_EDGES) {
     mm.lines.clear();
+    mm.net = newNetNumbers();
     mm.ribbons.clear();
     mm.changedAt.clear();
   }
@@ -918,6 +951,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   }
 
   if (!opts?.debug && !opts?.fresh) bandWork.lines = redo.size;
+  blap("redo");
   const lenOf = new Map<number, number>();
   const edgeLen = (e: number) => {
     let v = lenOf.get(e);
@@ -1200,8 +1234,8 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   interface Own {
     recipes: OwnRecipe[];
     idx: Map<string, number>;
-    recs: number[];
-    recPos: number[];
+    recs: Nums;
+    recPos: Nums;
     nRecords: number;
     profile: Float32Array | null;
     changes: [string, Change][];
@@ -1213,6 +1247,8 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     aligns?: AlignAt[];
     sweep?: SweepIn;
     recAt?: Int32Array;
+    nzE?: Uint8Array;
+    smp?: LineSamplesMemo;
   }
   const alignOf = (key: string, c: Change): AlignAt => {
     const [px, py] = c.pointAt(c.step.c);
@@ -1307,7 +1343,10 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   for (let li = 0; ; ) {
    for (; li < queue.length; li++) {
     const l = queue[li];
-    const mine: Own = { recipes: [], idx: new Map(), recs: [], recPos: [], nRecords: 0, profile: null, changes: [], later: null, deps: new Set(l.path.map((p) => p >> 1)), rels: new Set(), holds: [] };
+    blap("q.other");
+    // (T-4153: its own recipes numbered as its last bands had them, a new one after them)
+    const lmWas = mmKept ? mm.lines.get(l.id) : undefined;
+    const mine: Own = { recipes: lmWas ? lmWas.recipes.slice() : [], idx: lmWas ? new Map(lmWas.recipes.map((rc, i) => [rc.key, i])) : new Map(), recs: new Nums(), recPos: new Nums(), nRecords: 0, profile: null, changes: [], later: null, deps: new Set(l.path.map((p) => p >> 1)), rels: new Set(), holds: [] };
     owns.set(l.id, mine);
     deps = mine.deps;
     relDeps = mine.rels;
@@ -1318,11 +1357,45 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     const M: number[] = [], H: number[] = [], K: number[] = [], R: Ribbon[] = [], S: number[] = [], dbgF: number[] = [];
     const start = new Float64Array(n + 1);
     let any = false;
+    // T-4153: an entry's samples as the line's last bands had them where nothing they read has changed since (its piece of
+    // track and every edge and pair rule its ribbons were worked out from), moved along by its start's change (the path grid)
+    const was0 = lmWas?.smp && !opts?.debug ? lmWas.smp : null, pd = was0 ? pathDiff(lmWas!.path, l.path) : null;
+    const preK = !was0 ? 0 : pd ? pd.pre : n, sufK = !was0 || !pd ? 0 : pd.suf, grow = pd ? n - pd.was : 0;
+    const smp: LineSamplesMemo = { js: new Int32Array(n + 1), start, any: new Uint8Array(n), deps: new Array(n), rels: new Array(n), T: new Array(n), len: new Float64Array(n), M, H, R, S };
+    const lineDeps = mine.deps, lineRels = mine.rels;
+    const holdsAll = (ds: readonly number[], rs: readonly string[] | null) => ds.every((d) => !changedEdges.has(d)) && (!rs || rs.every((x) => !relChanged.has(x)));
     for (let k = 0; k < n; k++) {
       const p = l.path[k], e = p >> 1, rev = (p & 1) === 1, len = edgeLen(e);
       start[k + 1] = start[k] + len;
+      smp.js[k] = M.length;
+      smp.len[k] = len;
+      smp.deps[k] = [];
+      smp.rels[k] = null;
       if (!on.has(e)) continue;
       const T = samples.get(e), ns = T?.n ?? 1;
+      smp.T[k] = T;
+      const ko = !was0 ? -1 : k < preK ? k : k >= n - sufK ? k - grow : -1;
+      if (ko >= 0 && was0!.T[ko] === T && was0!.len[ko] === len && holdsAll(was0!.deps[ko], was0!.rels[ko])) {
+        const a = was0!.js[ko], b = was0!.js[ko + 1], d = start[k] - was0!.start[ko];
+        for (let j = a; j < b; j++) {
+          M.push(was0!.M[j] + d);
+          H.push(was0!.H[j]);
+          K.push(k);
+          R.push(was0!.R[j]);
+          S.push(was0!.S[j]);
+        }
+        if (was0!.any[ko]) (any = true), (smp.any[k] = 1);
+        smp.deps[k] = was0!.deps[ko];
+        smp.rels[k] = was0!.rels[ko];
+        for (const x of smp.deps[k]) lineDeps.add(x);
+        for (const x of smp.rels[k] ?? []) lineRels.add(x);
+        bandWork.samplesKept += b - a;
+        continue;
+      }
+      // (what the entry's ribbons read, its own edge's lines among it)
+      const ed = new Set<number>([e]), er = new Set<string>();
+      deps = ed;
+      relDeps = er;
       let alone = -1, b1 = start[k];
       for (let s = 0; s < ns; s++) {
         const i = rev ? ns - 1 - s : s;
@@ -1340,7 +1413,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
         let slot = -1;
         for (let q = 0; q < r.lines.length && slot < 0; q++) if (r.lines[q] === l.id && r.edges[q] === e) slot = q;
         if (slot < 0) continue;
-        if (r.lines.length > 1) any = true;
+        if (r.lines.length > 1) (any = true), (smp.any[k] = 1);
         if (opts?.debug) dbgF.push((i + 0.5) / ns);
         alone = T && T.first[i] === T.first[i + 1] ? M.length : -1;
         M.push((b0 + b1) / 2);
@@ -1349,7 +1422,17 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
         R.push(r);
         S.push(slot);
       }
+      deps = lineDeps;
+      relDeps = lineRels;
+      smp.deps[k] = [...ed];
+      smp.rels[k] = er.size ? [...er] : null;
+      for (const x of ed) lineDeps.add(x);
+      for (const x of er) lineRels.add(x);
+      bandWork.samplesMade += M.length - smp.js[k];
     }
+    smp.js[n] = M.length;
+    mine.smp = smp;
+    blap("q.sample");
     if (!any) continue;
     /** the point at path metre m, local units */
     const pointAt = (m: number): [number, number] => {
@@ -1402,6 +1485,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       if (last && last.key === KEY[j]) last.s1 = j;
       else runs.push({ key: KEY[j], s0: j, s1: j, r: R[j] });
     }
+    blap("q.runs");
     const dropped = new Uint8Array(N);
     const lenRun = (u: Run) => M[u.s1] + H[u.s1] - (M[u.s0] - H[u.s0]);
     /** whether every line on the line's own tracks along run u is in the ribbon of run x */
@@ -1442,6 +1526,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       runs.splice(u, 2);
       u--;
     }
+    blap("q.drophold");
     opts?.debug?.set(l.id, { M, f: dbgF, key: KEY, v: [...V], entry: K, dropped: [...dropped], runs: runs.map((u) => [u.key, u.s0, u.s1]), holds });
     // knots in path metres: per run its value, eased into the next over CORRIDOR_EASE_M, or at a
     // node between different lines over BAND_RAMP_M on the side with fewer (T-1799 stage 4)
@@ -1565,6 +1650,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     };
     // (the rest once every line's changes are lined up)
     const sm = bandMode ? smoothKnots(runs.map(piecesOf), runs) : undefined;
+    blap("q.smooth");
     mine.later = () => {
     if (bandMode && !sm) return;
     const sw: SweepOut = { km, kv, kw, kq, ko, kn, kf, nv: new Float64Array(n + 1), nq: new Float64Array(n + 1), nw: new Float64Array(n + 1), no: new Int32Array(n + 1), nn: new Int32Array(n + 1) };
@@ -1608,14 +1694,17 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     }
     // per path entry: its knots (its ends' nodes' and those inside it) and its Traffic record; with a plan, the entries
     // before e0 and from e1 on as the line's last bands had them
-    const knots: number[] = [], starts: number[] = [], recs = mine.recs, recPos = mine.recPos, recAt = new Int32Array(n).fill(-1);
-    const acc = { nonzero: false, records: 0 };
+    const knots = new Nums(), starts = new Nums(), recs = mine.recs, recPos = mine.recPos, recAt = new Int32Array(n).fill(-1), nzE = new Uint8Array(n);
+    const acc = { nonzero: false, records: 0, nzE };
+    // (its recipes numbered as before where its own are, T-4153: the copied knots and records then copied as they are)
+    let same = !!map;
+    for (let i = 0; same && i < map!.length; i++) same = map![i] === i;
     let done = false;
     if (plan && was) {
       if (was.profile) {
-        done = copyEntries(was, 0, plan.e0, map!, 0, knots, starts, recs, recPos, recAt, acc);
+        done = copyEntries(was, 0, plan.e0, map!, same, 0, knots, starts, recs, recPos, recAt, acc);
         entryKnots(l.id, l.path, start, ends, pts, sw, plan.e0, plan.e1, knots, starts, recs, recPos, recAt, acc);
-        done = done && copyEntries(was, plan.e1 - plan.grow, n - plan.grow, map!, plan.e1, knots, starts, recs, recPos, recAt, acc);
+        done = done && copyEntries(was, plan.e1 - plan.grow, n - plan.grow, map!, same, plan.e1, knots, starts, recs, recPos, recAt, acc);
       } else {
         // (its last bands were none anywhere, so the entries it lends are none: it has none now if those worked out are)
         entryKnots(l.id, l.path, start, ends, pts, sw, plan.e0, plan.e1, knots, starts, recs, recPos, recAt, acc);
@@ -1631,6 +1720,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       } else {
         knots.length = starts.length = recs.length = recPos.length = 0;
         recAt.fill(-1);
+        nzE.fill(0);
         acc.nonzero = false;
         acc.records = 0;
         km.length = kv.length = kw.length = kq.length = ko.length = kn.length = kf.length = 0;
@@ -1640,6 +1730,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     if (!done) entryKnots(l.id, l.path, start, ends, pts, sw, 0, n, knots, starts, recs, recPos, recAt, acc);
     mine.nRecords = acc.records;
     mine.recAt = recAt;
+    mine.nzE = nzE;
     if (!acc.nonzero) {
       recs.length = recPos.length = mine.nRecords = 0;
       return;
@@ -1647,8 +1738,8 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     starts.push(knots.length / KNOT);
     const out = new Float32Array(1 + starts.length + knots.length);
     out[0] = n;
-    out.set(starts, 1);
-    out.set(knots, 1 + starts.length);
+    out.set(starts.view(), 1);
+    out.set(knots.view(), 1 + starts.length);
     mine.profile = out;
     };
    }
@@ -1670,6 +1761,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   /** T-2140: every line's ribbon changes by the bigger ribbon's lines, in line order; with those of
    * lines kept that the lines worked out are lined up with, as they were (what they come to is
    * theirs already) */
+  blap("lines");
   const kept = new Map<number, Set<AlignAt>>();
   linked([...owns.values()].flatMap((w) => w.aligns!), (id, c) => {
     if (owns.has(id)) return;
@@ -1689,72 +1781,107 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     else if (s) for (const a of mm.lines.get(l.id)!.changes) if (s.has(a))
       into(a.key, { id: l.id, step: { c: a.c, L: a.L }, prio: a.prio, g: a.g, enter: a.enter, at: [a.x, a.y], pointAt: () => [a.px, a.py], nearM: () => NaN });
   }
+  blap("alignPrep");
   alignChanges(changes);
+  blap("align");
   for (const l of rail) {
     const w = owns.get(l.id);
     if (!w) continue;
     w.later?.();
     mm.lines.set(l.id, {
       path: l.path.slice(), deps: [...w.deps], rels: [...w.rels], holds: w.holds, changes: w.aligns!, recipes: w.recipes,
-      profile: w.profile, recs: Float32Array.from(w.recs), recPos: Int32Array.from(w.recPos), nRecords: w.nRecords, sweep: w.sweep, recAt: w.recAt,
+      profile: w.profile, recs: Float32Array.from(w.recs.view()), recPos: Int32Array.from(w.recPos.view()), nRecords: w.nRecords, sweep: w.sweep, recAt: w.recAt, nzE: w.nzE, smp: w.smp, netWas: mm.lines.get(l.id)?.net?.map,
     });
   }
-  // ---- the network's table and profiles: ribbons and recipes numbered in the order the lines first use them
+  blap("later");
+  // ---- the network's table and profiles. T-4153: ribbons and recipes keep their numbers from call to call (`BandMemo.net`),
+  // a new one numbered after the rest, so a line's profile and records are numbered again only when it is worked out again
+  const reg = mm.net;
+  const numberOf = (rc: OwnRecipe) => {
+    let id = reg.recIds.get(rc.key);
+    if (id !== undefined) return id;
+    let rid = reg.ribIds.get(rc.rk);
+    if (rid === undefined) {
+      reg.ribIds.set(rc.rk, (rid = reg.nRib++));
+      reg.ribs.push(rc.rib.length / 2);
+      for (const x of rc.rib) reg.ribs.push(x);
+    }
+    reg.recs.push(rid);
+    reg.recs.push2(rc.slot, rc.sgn);
+    reg.recIds.set(rc.key, (id = reg.nRec++));
+    return id;
+  };
   const of = new Map<number, BandProfile>(), ownOf = new Map<number, BandProfile>();
-  const tRibbons: number[] = [], tRecipes: number[] = [];
-  const ribIds = new Map<string, number>(), recIds = new Map<string, number>();
-  let nRibbons = 0, nRec = 0, nRecords = 0;
-  const maps = rail.map((l) => {
+  let nRec = 0, nRecords = 0;
+  for (const l of rail) {
     const lm = mm.lines.get(l.id)!;
-    const map = new Int32Array(lm.recipes.length);
-    lm.recipes.forEach((rc, k) => {
-      let id = recIds.get(rc.key);
-      if (id === undefined) {
-        let rid = ribIds.get(rc.rk);
-        if (rid === undefined) {
-          ribIds.set(rc.rk, (rid = nRibbons++));
-          tRibbons.push(rc.rib.length / 2, ...rc.rib);
-        }
-        tRecipes.push(rid, rc.slot, rc.sgn);
-        recIds.set(rc.key, (id = tRecipes.length / RECIPE - 1));
+    let nt = lm.net;
+    if (!nt) {
+      const was = lm.netWas, map = new Int32Array(lm.recipes.length);
+      for (let k = 0; k < map.length; k++) map[k] = was && k < was.length ? was[k] : numberOf(lm.recipes[k]);
+      let profile: Float32Array | null = null;
+      if (lm.profile) {
+        profile = lm.profile.slice();
+        for (let i = 2 + profile[0] + 3; i < profile.length; i += KNOT) if (profile[i] >= 0) profile[i] = map[profile[i]];
       }
-      map[k] = id;
-    });
-    nRec += lm.recs.length;
+      const recs = lm.recs.slice();
+      for (const x of lm.recPos) recs[x] = map[lm.recs[x]];
+      lm.net = nt = { map, profile, recs };
+      lm.netWas = undefined;
+    }
+    if (nt.profile) {
+      of.set(l.id, nt.profile);
+      ownOf.set(l.id, lm.profile!);
+    }
+    nRec += nt.recs.length;
     nRecords += lm.nRecords;
-    if (lm.profile) {
-      if (!lm.out || lm.out.map.length !== map.length || lm.out.map.some((v, k) => v !== map[k])) {
-        const p = lm.profile.slice();
-        for (let i = 2 + p[0] + 3; i < p.length; i += KNOT) if (p[i] >= 0) p[i] = map[p[i]];
-        lm.out = { map, profile: p };
-      }
-      of.set(l.id, lm.out.profile);
-      ownOf.set(l.id, lm.profile);
-    }
-    return map;
-  });
-  // (the records written in place, after the ribbons and recipes)
-  const base = 3 + tRibbons.length + tRecipes.length, corridor = new Float32Array(base + nRec);
-  corridor[0] = nRibbons;
-  corridor.set(tRibbons, 1);
-  corridor[1 + tRibbons.length] = tRecipes.length / RECIPE;
-  corridor.set(tRecipes, 2 + tRibbons.length);
-  corridor[2 + tRibbons.length + tRecipes.length] = nRecords;
-  nRec = 0;
-  // (T-4153: a line's records as the last table had them, numbered alike, are copied from it)
-  const prev = !opts?.debug && !opts?.fresh && last && mm.recBase >= 0 ? last.corridor : null;
-  rail.forEach((l, k) => {
-    const lm = mm.lines.get(l.id)!, map = maps[k], t = lm.tab;
-    if (prev && t && t.map.length === map.length && t.map.every((v, i) => v === map[i])) corridor.set(prev.subarray(mm.recBase + t.at, mm.recBase + t.at + lm.recs.length), base + nRec);
-    else {
-      corridor.set(lm.recs, base + nRec);
-      for (const x of lm.recPos) corridor[base + nRec + x] = map[lm.recs[x]];
-    }
-    lm.tab = { map, at: nRec };
-    nRec += lm.recs.length;
-  });
-  mm.recBase = base;
+  }
+  blap("maps");
+  // (the records after the ribbons and recipes, each line's as its `net` has them)
+  const rb = reg.ribs.view(), rr = reg.recs.view(), base = 3 + rb.length + rr.length, corridor = new Float32Array(base + nRec);
+  corridor[0] = reg.nRib;
+  corridor.set(rb, 1);
+  corridor[1 + rb.length] = reg.nRec;
+  corridor.set(rr, 2 + rb.length);
+  corridor[2 + rb.length + rr.length] = nRecords;
+  let at = base;
+  for (const l of rail) {
+    const r = mm.lines.get(l.id)!.net!.recs;
+    corridor.set(r, at);
+    at += r.length;
+  }
+  blap("table");
   return { of, own: ownOf, order, rule, corridor };
+}
+
+/** T-4153: numbers pushed one at a time or copied a block at a time (a line's knots and records lent from its last
+ * bands), in float64 as a number array holds them */
+class Nums {
+  a = new Float64Array(256);
+  length = 0;
+  room(n: number) {
+    if (this.length + n <= this.a.length) return;
+    const b = new Float64Array(Math.max(this.a.length * 2, this.length + n));
+    b.set(this.a.subarray(0, this.length));
+    this.a = b;
+  }
+  push(x: number) {
+    this.room(1);
+    this.a[this.length++] = x;
+  }
+  push2(x: number, y: number) {
+    this.room(2);
+    this.a[this.length++] = x;
+    this.a[this.length++] = y;
+  }
+  block(src: Float32Array, from: number, to: number) {
+    this.room(to - from);
+    this.a.set(src.subarray(from, to), this.length);
+    this.length += to - from;
+  }
+  view() {
+    return this.a.subarray(0, this.length);
+  }
 }
 
 /** T-4153: what a line's knots are swept from: its entries' starts (path metres, on the path grid), its pieces' values
@@ -2009,24 +2136,29 @@ function recipeMap(was: readonly OwnRecipe[], idx: ReadonlyMap<string, number>):
 
 /** T-4153: entries [a, b) of a line's path, from its sweep: per entry its knots (its first node's value, the knots inside
  * it, its last node's value) onto `knots` (where they start onto `starts`), its Traffic record onto `recs` (where it starts
- * in `recAt`, its recipes' places onto `recPos`); `acc`: whether any knot is other than none, and the records */
-function entryKnots(id: number, path: readonly number[], start: Float64Array, ends: ReadonlyMap<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, o: SweepOut, a: number, b: number, knots: number[], starts: number[], recs: number[], recPos: number[], recAt: Int32Array, acc: { nonzero: boolean; records: number }): void {
+ * in `recAt`, its recipes' places onto `recPos`); `acc`: whether any knot is other than none (and per entry, `nzE`), and
+ * the records */
+function entryKnots(id: number, path: readonly number[], start: Float64Array, ends: ReadonlyMap<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, o: SweepOut, a: number, b: number, knots: Nums, starts: Nums, recs: Nums, recPos: Nums, recAt: Int32Array, acc: { nonzero: boolean; records: number; nzE: Uint8Array }): void {
   const { km, kv, kw, kq, ko, kn, kf, nv, nq, nw, no, nn } = o;
-  let ki = 0, rec = false, nk = 0;
+  let ki = 0, rec = false, nk = 0, k = a;
   const add = (f: number, v: number, w: number, list: readonly number[], o: number, c: number, vm: number) => {
     // (the one recipe when it is one alone, else -1: between two, for `bandPoints`' eases)
-    knots.push(f, v, w, c === 1 && list[o + 1] === 1 ? list[o] : -1, vm);
+    knots.push(f);
+    knots.push(v);
+    knots.push(w);
+    knots.push(c === 1 && list[o + 1] === 1 ? list[o] : -1);
+    knots.push(vm);
     if (rec) {
-      recs.push(f, c);
+      recs.push2(f, c);
       for (let x = o; x < o + 2 * c; x += 2) {
         recPos.push(recs.length);
-        recs.push(list[x], list[x + 1]);
+        recs.push2(list[x], list[x + 1]);
       }
     }
     nk++;
-    if (Math.abs(v) > 1e-6 || w > 0 || Math.abs(vm) > 1e-3) acc.nonzero = true;
+    if (Math.abs(v) > 1e-6 || w > 0 || Math.abs(vm) > 1e-3) (acc.nonzero = true), (acc.nzE[k] = 1);
   };
-  for (let k = a; k < b; k++) {
+  for (; k < b; k++) {
     starts.push(knots.length / KNOT);
     const m0 = start[k], m1 = start[k + 1], len = m1 - m0;
     const p = path[k], e = p >> 1;
@@ -2035,31 +2167,63 @@ function entryKnots(id: number, path: readonly number[], start: Float64Array, en
     nk = 0;
     if (rec) {
       recAt[k] = head;
-      recs.push(id, e, p & 1, P![0], P![1], 0);
+      recs.push2(id, e);
+      recs.push2(p & 1, P![0]);
+      recs.push2(P![1], 0);
     }
     add(0, nv[k], nq[k], kf, no[k], nn[k], nw[k]);
     while (ki < km.length && km[ki] <= m0 + 1e-3) ki++;
     for (; ki < km.length && km[ki] < m1 - 1e-3; ki++) add(len > 0 ? (km[ki] - m0) / len : 0, kv[ki], kq[ki], kf, ko[ki], kn[ki], kw[ki]);
     add(1, nv[k + 1], nq[k + 1], kf, no[k + 1], nn[k + 1], nw[k + 1]);
     if (rec) {
-      recs[head + 5] = nk;
+      recs.a[head + 5] = nk;
       acc.records++;
     }
   }
 }
 
 /** T-4153: a line's entries [a, b) as its last bands had them (`was`), as its entries from `to` on, their recipes numbered as
- * now (`map`), onto the arrays `entryKnots` writes; false when one of their recipes is not the line's now */
-function copyEntries(was: LineMemo, a: number, b: number, map: Int32Array, to: number, knots: number[], starts: number[], recs: number[], recPos: number[], recAt: Int32Array, acc: { nonzero: boolean; records: number }): boolean {
-  const op = was.profile!, om = op[0], or = was.recs, oat = was.recAt!;
+ * now (`map`; `same`: as they were, so its knots and records are copied a block each), onto the arrays `entryKnots`
+ * writes; false when one of their recipes is not the line's now */
+function copyEntries(was: LineMemo, a: number, b: number, map: Int32Array, same: boolean, to: number, knots: Nums, starts: Nums, recs: Nums, recPos: Nums, recAt: Int32Array, acc: { nonzero: boolean; records: number; nzE: Uint8Array }): boolean {
+  if (a >= b) return true;
+  const op = was.profile!, om = op[0], or = was.recs, oat = was.recAt!, onz = was.nzE!;
+  if (same) {
+    const k0 = op[1 + a], base = knots.length / KNOT;
+    for (let j = a; j < b; j++) starts.push(base + op[1 + j] - k0);
+    knots.block(op, 2 + om + k0 * KNOT, 2 + om + op[1 + b] * KNOT);
+    for (let j = a; j < b; j++) if (onz[j]) (acc.nonzero = true), (acc.nzE[to + j - a] = 1);
+    // (the records of entries [a, b) lie one after another: from the first's start to the next one's after b)
+    let h0 = -1;
+    for (let j = a; j < b; j++) {
+      const h = oat[j];
+      if (h < 0) continue;
+      if (h0 < 0) h0 = h;
+      recAt[to + j - a] = recs.length + h - h0;
+      acc.records++;
+    }
+    if (h0 < 0) return true;
+    let h1 = or.length;
+    for (let j = b; j < oat.length; j++) if (oat[j] >= 0) { h1 = oat[j]; break; }
+    const shift = recs.length - h0, P = was.recPos;
+    let lo = 0, hi = P.length;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (P[mid] < h0) lo = mid + 1; else hi = mid; }
+    for (let i = lo; i < P.length && P[i] < h1; i++) recPos.push(P[i] + shift);
+    recs.block(or, h0, h1);
+    return true;
+  }
   for (let j = a; j < b; j++) {
     starts.push(knots.length / KNOT);
     for (let x = op[1 + j]; x < op[2 + j]; x++) {
       const i = 2 + om + x * KNOT, r = op[i + 3], v = op[i + 1], w = op[i + 2], vm = op[i + 4];
       const nr = r < 0 ? -1 : map[r];
       if (r >= 0 && nr < 0) return false;
-      knots.push(op[i], v, w, nr, vm);
-      if (Math.abs(v) > 1e-6 || w > 0 || Math.abs(vm) > 1e-3) acc.nonzero = true;
+      knots.push(op[i]);
+      knots.push(v);
+      knots.push(w);
+      knots.push(nr);
+      knots.push(vm);
+      if (Math.abs(v) > 1e-6 || w > 0 || Math.abs(vm) > 1e-3) (acc.nonzero = true), (acc.nzE[to + j - a] = 1);
     }
     const h = oat[j];
     if (h < 0) continue;
@@ -2068,13 +2232,13 @@ function copyEntries(was: LineMemo, a: number, b: number, map: Int32Array, to: n
     let i = h + 6;
     for (let c = 0, nk = or[h + 5]; c < nk; c++) {
       const cnt = or[i + 1];
-      recs.push(or[i], cnt);
+      recs.push2(or[i], cnt);
       i += 2;
       for (let y = 0; y < cnt; y++, i += 2) {
         const nr = map[or[i]];
         if (nr < 0) return false;
         recPos.push(recs.length);
-        recs.push(nr, or[i + 1]);
+        recs.push2(nr, or[i + 1]);
       }
     }
     acc.records++;
