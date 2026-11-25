@@ -1642,6 +1642,11 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             // outside the world (a frame conversion can do it): skipped, as other blocks skip a bad entry
             let _ = net.set_keep(k as u32, Some(p));
         }
+        // a skipped entry's slot is free for a later kept stop, so no link may point at it
+        let live: Vec<bool> = net.keeps.iter().map(|k| k.is_some()).collect();
+        for p in net.keeps.iter_mut().flatten() {
+            p.links.retain(|l| !matches!(l, KeepLink::Keep(k) if !live.get(*k as usize).copied().unwrap_or(false)));
+        }
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LAP1") {
         r.1 += 4;

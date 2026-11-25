@@ -86,7 +86,7 @@ export function BusStopInspector({ stop, at }: { stop: string; at: [number, numb
   const stations = stationsById(w);
   const name = stationNames(w).get(stop) ?? t("world.busStop");
   const walks = pl.walks.slice(0, WALKS_SHOWN);
-  // T-4080: the name goes to the kept stop this place has, else a new one at this stop (its own place, so nothing moves)
+  // T-4080: the name goes to the kept stop this place has, else a new one at this stop (its own place: the named stop stays, its neighbours on an automatic line can be laid out again)
   const here = busStopsById(w).get(stop);
   const rename = (n: string) => edit({ op: "renameBusStop", stops: [me.id, ...pl.stops.filter((s) => s.station < 0 && s.id !== me.id).map((s) => s.id)], x: here?.x ?? 0, y: here?.y ?? 0, name: n }).then((a) => a.ok);
   return (

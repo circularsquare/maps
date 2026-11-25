@@ -301,7 +301,7 @@ fn a_kept_stop_far_from_every_route_changes_no_stop() {
 }
 
 #[test]
-fn a_connection_to_a_removed_station_ends_and_its_unnamed_stop_is_forgotten_at_the_next_load() {
+fn a_connection_to_a_removed_station_ends_and_its_unnamed_stop_goes_with_it() {
     let mut a = api();
     let b = line(&mut a, &[0.0, 150.0, 1.0, 6000.0, 150.0, 1.0]);
     // a station on no line, 400 m from the route
@@ -315,9 +315,10 @@ fn a_connection_to_a_removed_station_ends_and_its_unnamed_stop_is_forgotten_at_t
     let k = a.last_keep();
     assert_eq!(a.remove_station(n), 0, "{}", a.issues());
     assert!(a.keep_links(k).is_empty() && a.station_keeps(n).is_empty());
-    // for the session it still holds its stop, and an undo brings the connection back
-    assert_eq!(keep_of(&a, b, m[1], m[2]), k);
+    // the bare stop goes in the same edit; an undo brings it and the connection back
+    assert_eq!(keep_of(&a, b, m[1], m[2]), u32::MAX);
     assert_eq!(a.undo(), 0);
+    assert_eq!(keep_of(&a, b, m[1], m[2]), k);
     assert_eq!(a.keep_links(k), vec![0, n]);
     assert_eq!(a.redo(), 0);
     let mut c = api();
@@ -441,4 +442,55 @@ fn an_lbk1_entry_outside_the_world_is_skipped_on_load() {
     assert_eq!((c.keep_name(c0), c.keep_name(c2)), ("Elm St".to_string(), "Oak St".to_string()));
     assert_eq!(c.keep_links(c2), vec![1, c0], "link indices past the skipped entry still resolve");
     assert_eq!(c.keeps().len(), 6, "only the two valid entries loaded");
+}
+
+#[test]
+fn a_link_to_a_skipped_lbk1_entry_is_dropped_so_its_slot_can_be_reused() {
+    let mut a = api();
+    a.w = TrackWorld::new(Network::new_in(FrameKind::Merc, 0.0, 0.0, true));
+    let b = line(&mut a, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0]);
+    assert_eq!(a.name_keep(u32::MAX, 2000.0, 0.0, "Elm St".into()), 0, "{}", a.issues());
+    let k1 = a.w.net.alloc_keep();
+    a.w.net.keeps[k1 as usize] = Some(crate::track::bus::keep::KeptStop { x: 1e9, y: 1e9, name: "Outside".into(), links: vec![] });
+    assert_eq!(a.name_keep(u32::MAX, 2600.0, 0.0, "Oak St".into()), 0, "{}", a.issues());
+    let k2 = a.last_keep();
+    a.w.net.keeps[k2 as usize].as_mut().unwrap().links.push(crate::track::bus::keep::KeepLink::Keep(k1));
+    let bytes = a.save();
+
+    let mut c = api();
+    assert!(c.load(&bytes));
+    let c2 = keep_of(&c, b, 2600.0, 0.0);
+    assert_eq!(c.keep_name(c2), "Oak St");
+    assert!(c.keep_links(c2).is_empty());
+    // a new kept stop takes the free slot; it must not pick up the old link
+    assert_eq!(c.name_keep(u32::MAX, 4000.0, 0.0, "Pine St".into()), 0, "{}", c.issues());
+    assert!(c.keep_links(c2).is_empty(), "the skipped entry's link did not come back");
+    assert!(c.keep_links(c.last_keep()).is_empty());
+}
+
+#[test]
+fn a_kept_stop_its_station_left_bare_goes_in_the_same_edit_and_undo_brings_it_back() {
+    let mut a = api();
+    let b = line(&mut a, &[0.0, 150.0, 1.0, 6000.0, 150.0, 1.0]);
+    let ends = [0.0, 0.0, 2800.0, 550.0, -1.0, 0.0, 0.0, 3200.0, 550.0, -1.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let n = a.route_end();
+    assert_eq!(a.add_station(1, n, 0.0, 0.0, 120, "North".into()), 0, "{}", a.issues());
+    let s = stops(&a, b);
+    let m = s.iter().min_by(|p, q| (p[1] - 3000.0).abs().total_cmp(&(q[1] - 3000.0).abs())).unwrap().clone();
+    assert_eq!(a.connect_keep(u32::MAX, m[1], m[2], 0, n, 0.0, 0.0), 0, "{}", a.issues());
+    let k = a.last_keep();
+    let before = stops(&a, b);
+
+    assert_eq!(a.remove_station(n), 0, "{}", a.issues());
+    assert!(a.keeps().is_empty(), "the bare kept stop went with the station");
+    // a reload agrees with the session
+    let mut c = api();
+    assert!(c.load(&a.save()));
+    assert_eq!(stops(&c, b), stops(&a, b), "session and reload place the line alike");
+
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.keeps().len(), 3, "undo brings the kept stop back");
+    assert_eq!(a.keep_links(k), vec![0, n]);
+    assert_eq!(stops(&a, b), before);
 }

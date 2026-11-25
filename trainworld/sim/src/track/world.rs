@@ -2875,12 +2875,24 @@ impl TrackWorld {
                 let inv = Op::Station { node, data: n.set_station(node, data)? };
                 // T-4048: a station removed takes its links and separated pairs with it
                 let (links, apart) = if gone { n.take_pairs(node) } else { (vec![], vec![]) };
-                if links.is_empty() && apart.is_empty() {
+                // T-4080: a kept stop this leaves with no name and no connection that holds goes in the same edit
+                let bare: Vec<u32> = if gone {
+                    n.keep_ids().filter(|&k| {
+                        let p = n.keep(k).unwrap();
+                        p.links.contains(&super::bus::keep::KeepLink::Station(node)) && p.name.trim().is_empty() && n.keep_links(k).is_empty()
+                    }).collect()
+                } else {
+                    vec![]
+                };
+                if links.is_empty() && apart.is_empty() && bare.is_empty() {
                     inv
                 } else {
                     let mut back = vec![inv];
                     back.extend(links.into_iter().map(|pair| Op::Link { pair, on: true }));
                     back.extend(apart.into_iter().map(|pair| Op::Apart { pair, on: true }));
+                    for k in bare {
+                        back.push(Op::Keep { id: k, data: n.set_keep(k, None)? });
+                    }
                     Op::Batch(back)
                 }
             }
