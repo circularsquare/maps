@@ -92,19 +92,28 @@ impl Network {
     }
 
     /// T-4080: at a load, after every line's stops are placed: the kept stops no bus stop took (`taken`) go, with
-    /// the connections to them. None of them holds a stop, so no line's stops move.
-    pub fn drop_keeps_except(&mut self, taken: &[u32]) -> usize {
-        let gone: Vec<u32> = self.keep_ids().filter(|k| !taken.contains(k)).collect();
-        if !gone.is_empty() {
-            self.keep_epoch = self.keep_epoch.wrapping_add(1);
+    /// the connections to them, and then any kept stop that leaves with no name and no connection that holds, until
+    /// none does (as an edit would). The ones no bus stop took hold no stop; the ids of the others that went are
+    /// returned, for the caller to place the lines near them again.
+    pub fn drop_keeps_except(&mut self, taken: &[u32]) -> Vec<u32> {
+        let mut gone: Vec<u32> = self.keep_ids().filter(|k| !taken.contains(k)).collect();
+        let mut held_gone = vec![];
+        loop {
+            if !gone.is_empty() {
+                self.keep_epoch = self.keep_epoch.wrapping_add(1);
+            }
+            for &k in &gone {
+                self.keeps[k as usize] = None;
+                self.keep_free.push(k);
+            }
+            for p in self.keeps.iter_mut().flatten() {
+                p.links.retain(|l| !matches!(l, KeepLink::Keep(k) if gone.contains(k)));
+            }
+            gone = self.keep_ids().filter(|&k| self.keep(k).is_some_and(|p| p.name.trim().is_empty()) && self.keep_links(k).is_empty()).collect();
+            if gone.is_empty() {
+                return held_gone;
+            }
+            held_gone.extend(&gone);
         }
-        for &k in &gone {
-            self.keeps[k as usize] = None;
-            self.keep_free.push(k);
-        }
-        for p in self.keeps.iter_mut().flatten() {
-            p.links.retain(|l| !matches!(l, KeepLink::Keep(k) if gone.contains(k)));
-        }
-        gone.len()
     }
 }

@@ -324,3 +324,121 @@ fn a_connection_to_a_removed_station_ends_and_its_unnamed_stop_is_forgotten_at_t
     assert!(c.load(&a.save()));
     assert!(c.keeps().is_empty());
 }
+
+#[test]
+fn an_out_and_back_bus_route_holds_a_kept_stop_on_both_passes() {
+    let mut a = api();
+    // loop-back route: stem (0,0)-(2000,0), loop to (3000,0) and back along the stem to (0,0)
+    let route = [
+        0.0, 0.0, 1.0,
+        2000.0, 0.0, 1.0,
+        2500.0, 500.0, 1.0,
+        3000.0, 0.0, 1.0,
+        2500.0, -500.0, 1.0,
+        2000.0, 0.0, 1.0,
+        0.0, 0.0, 1.0,
+    ];
+    let b = line(&mut a, &route);
+    assert_eq!(a.name_keep(u32::MAX, 1100.0, 0.0, "Stem Stop".into()), 0, "{}", a.issues());
+    let k = a.last_keep();
+    let held: Vec<Vec<f64>> = stops(&a, b).into_iter().filter(|s| a.bus_stop_keep(s[0] as u32) == k).collect();
+    assert_eq!(held.len(), 2, "kept stop held on both outbound and return passes: {held:?}");
+    for s in &held {
+        assert!((s[1] - 1100.0).abs() < 1e-3 && s[2].abs() < 1e-3, "{s:?}");
+    }
+    assert!((held[1][3] - held[0][3]).abs() > 1000.0, "one on each pass: {held:?}");
+}
+
+#[test]
+fn a_kept_stop_left_bare_at_load_is_dropped_and_its_line_replans() {
+    let mut a = api();
+    let b1 = line(&mut a, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0]);
+    let b2 = line(&mut a, &[0.0, 500.0, 1.0, 6000.0, 500.0, 1.0]);
+    let s1 = stops(&a, b1);
+    let s2 = stops(&a, b2);
+    let p1 = s1.iter().find(|s| s[4] == KIND_MIDDLE as f64 && s[1] > 1500.0).unwrap().clone();
+    let q = s2.iter().find(|s| s[4] == KIND_MIDDLE as f64 && s[1] > 2300.0).unwrap().clone();
+    // unnamed p1 (on b1) connected only to unnamed q (on b2)
+    assert_eq!(a.connect_keep(u32::MAX, p1[1], p1[2], 1, u32::MAX, q[1], q[2]), 0, "{}", a.issues());
+    // extend b1 so p1 holds its stop, then delete b2 (q is taken by no stop at the next load, so p1 is left bare)
+    let longer = [0.0, 0.0, 1.0, 7300.0, 0.0, 1.0];
+    assert_eq!(a.set_bus_route(b1, &longer), 0, "{}", a.issues());
+    assert_eq!(a.remove_line(b2), 0, "{}", a.issues());
+
+    let mut fresh = api();
+    let fb = line(&mut fresh, &longer);
+    assert_ne!(bits(&a, b1), bits(&fresh, fb), "the held stop moved b1 from its unheld layout");
+
+    let mut c = api();
+    assert!(c.load(&a.save()));
+    assert!(c.keeps().is_empty(), "bare kept stop dropped at load: {:?}", c.keeps());
+    assert!(c.bus_stop_keeps(b1).iter().all(|&v| v == -1.0));
+    assert_eq!(bits(&c, b1), bits(&fresh, fb), "b1 re-planned without the dropped bare kept stop");
+}
+
+#[test]
+fn of_two_kept_stops_within_50m_a_route_holds_the_nearer_one() {
+    let mut a = api();
+    let la = line(&mut a, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0]);
+    let lb = line(&mut a, &[0.0, 45.0, 1.0, 6000.0, 45.0, 1.0]);
+    // K1 on la at (2000, 0), K2 on lb at (2025, 45): hypot(25, 45) = 51.48 m > 50 m (distinct keeps),
+    // but K1 projects onto lb at (2000, 45) (45 m off lb, 25 m earlier than K2 which is 0 m off lb)
+    assert_eq!(a.name_keep(u32::MAX, 2000.0, 0.0, "Alpha".into()), 0, "{}", a.issues());
+    let k1 = a.last_keep();
+    assert_eq!(a.name_keep(u32::MAX, 2025.0, 45.0, "Beta".into()), 0, "{}", a.issues());
+    let k2 = a.last_keep();
+    assert_ne!(k1, k2);
+    assert_eq!(keep_of(&a, la, 2000.0, 0.0), k1, "la holds K1 (0 m off la)");
+    assert_eq!(keep_of(&a, lb, 2025.0, 45.0), k2, "lb holds K2 (0 m off lb), not K1 (45 m off lb)");
+}
+
+#[test]
+fn keep_epoch_moves_when_a_connected_station_is_removed_or_restored() {
+    let mut a = api();
+    let b = line(&mut a, &[0.0, 150.0, 1.0, 6000.0, 150.0, 1.0]);
+    let ends = [0.0, 0.0, 2800.0, 550.0, -1.0, 0.0, 0.0, 3200.0, 550.0, -1.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let n = a.route_end();
+    assert_eq!(a.add_station(1, n, 0.0, 0.0, 120, "North".into()), 0, "{}", a.issues());
+    let s = stops(&a, b);
+    let m = s.iter().min_by(|p, q| (p[1] - 3000.0).abs().total_cmp(&(q[1] - 3000.0).abs())).unwrap().clone();
+    assert_eq!(a.connect_keep(u32::MAX, m[1], m[2], 0, n, 0.0, 0.0), 0, "{}", a.issues());
+
+    let e0 = a.keep_epoch();
+    assert_eq!(a.remove_station(n), 0, "{}", a.issues());
+    let e1 = a.keep_epoch();
+    assert_ne!(e1, e0, "removing a connected station bumps keep_epoch");
+    assert_eq!(a.undo(), 0);
+    let e2 = a.keep_epoch();
+    assert_ne!(e2, e1, "undoing removal of a connected station bumps keep_epoch");
+}
+
+#[test]
+fn an_lbk1_entry_outside_the_world_is_skipped_on_load() {
+    let mut a = api();
+    a.w = TrackWorld::new(Network::new_in(FrameKind::Merc, 0.0, 0.0, true));
+    let b = line(&mut a, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0]);
+    assert_eq!(a.name_keep(u32::MAX, 2000.0, 0.0, "Elm St".into()), 0, "{}", a.issues());
+    let k0 = a.last_keep();
+    // inject an out-of-world entry between two valid entries (as a frame conversion can produce)
+    let k1 = a.w.net.alloc_keep();
+    a.w.net.keeps[k1 as usize] = Some(crate::track::bus::keep::KeptStop {
+        x: 1e9,
+        y: 1e9,
+        name: "Outside".into(),
+        links: vec![],
+    });
+    assert_eq!(a.name_keep(u32::MAX, 2600.0, 0.0, "Oak St".into()), 0, "{}", a.issues());
+    let k2 = a.last_keep();
+    assert_eq!(a.connect_keep(k2, 0.0, 0.0, 1, k0, 0.0, 0.0), 0, "{}", a.issues());
+    let bytes = a.save();
+
+    let mut c = api();
+    assert!(c.load(&bytes), "out-of-world LBK1 entry skipped instead of aborting load");
+    let c0 = keep_of(&c, b, 2000.0, 0.0);
+    let c2 = keep_of(&c, b, 2600.0, 0.0);
+    assert!(c0 != u32::MAX && c2 != u32::MAX && c0 != c2);
+    assert_eq!((c.keep_name(c0), c.keep_name(c2)), ("Elm St".to_string(), "Oak St".to_string()));
+    assert_eq!(c.keep_links(c2), vec![1, c0], "link indices past the skipped entry still resolve");
+    assert_eq!(c.keeps().len(), 6, "only the two valid entries loaded");
+}

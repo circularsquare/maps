@@ -33,8 +33,8 @@ pub struct KeptStop {
 }
 
 /// The kept stops within `KEEP_M` of a route, once per pass (`Poly::project_passes`, as stations): (road m along
-/// it, id), in road order.
-pub(super) fn near_route(net: &Network, poly: &Poly) -> Vec<(f64, u32)> {
+/// it, id, ground m from the route), in road order.
+pub(super) fn near_route(net: &Network, poly: &Poly) -> Vec<(f64, u32, f64)> {
     if net.keeps.is_empty() || poly.pts.len() < 2 {
         return vec![];
     }
@@ -48,7 +48,7 @@ pub(super) fn near_route(net: &Network, poly: &Poly) -> Vec<(f64, u32)> {
         }
         for (s, d) in poly.project_passes(net, k.x, k.y) {
             if d <= KEEP_M {
-                out.push((s, id));
+                out.push((s, id, d));
             }
         }
     }

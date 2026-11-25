@@ -121,6 +121,10 @@ impl Network {
                 self.node_road[i] = d.road;
             }
         }
+        // T-4080: a kept stop's connection to this station starts or stops holding
+        if self.keeps.iter().flatten().any(|k| k.links.contains(&bus::keep::KeepLink::Station(node))) {
+            self.keep_epoch = self.keep_epoch.wrapping_add(1);
+        }
         self.touch.stations.push(node);
         if bus_sees {
             self.touch.station_places.push(([self.node_x[i], self.node_y[i]], built));

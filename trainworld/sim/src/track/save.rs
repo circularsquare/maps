@@ -1639,7 +1639,8 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             keeps.push(KeptStop { x, y, name, links });
         }
         for (k, p) in keeps.into_iter().enumerate() {
-            net.set_keep(k as u32, Some(p)).map_err(|e| format!("{e:?}"))?;
+            // outside the world (a frame conversion can do it): skipped, as other blocks skip a bad entry
+            let _ = net.set_keep(k as u32, Some(p));
         }
     }
     if r.0.get(r.1..r.1 + 4) == Some(b"LAP1") {

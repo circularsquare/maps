@@ -618,14 +618,18 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     let near_keeps = keep::near_route(net, &poly);
     let mut held: Vec<(f64, u32)> = vec![];
     if let (false, Some(&first), Some(&last)) = (matches!(rule, StopRule::Hand(..)), fixed.first(), fixed.last()) {
-        for &(s, id) in &near_keeps {
+        // nearest the route first, so of two kept stops within KEEP_M of each other the one nearer holds
+        let mut order = near_keeps.clone();
+        order.sort_by(|a, b| a.2.total_cmp(&b.2).then(a.0.total_cmp(&b.0)).then(a.1.cmp(&b.1)));
+        for &(s, id, _) in &order {
             if s <= first.0 || s >= last.0 || fixed.len() >= SPACED_MAX_STOPS as usize {
                 continue;
             }
             let (x, y) = poly.at_road(s);
             let near = |f: &(f64, u8, Option<u32>)| {
                 let (px, py) = poly.at_road(f.0);
-                (px - x).hypot(py - y) / net.k_at(y) <= keep::KEEP_M
+                // within STATION_GAP_M along the road too: the other pass of an out-and-back route is a stop of its own
+                (px - x).hypot(py - y) / net.k_at(y) <= keep::KEEP_M && (f.0 - s).abs() <= STATION_GAP_M
             };
             if !fixed.iter().any(near) {
                 fixed.push((s, KIND_KEPT, None));

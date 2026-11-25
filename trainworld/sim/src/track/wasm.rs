@@ -877,7 +877,11 @@ impl TrackApi {
                 // T-4080: the kept bus stops no bus stop took are forgotten; none holds a stop, so nothing moves
                 if self.w.net.keep_ids().next().is_some() {
                     let taken: Vec<u32> = self.w.svc.lines.iter().filter_map(|l| l.bus.as_ref()).flat_map(|p| p.stops.iter().filter_map(|s| s.keep)).collect();
-                    self.w.net.drop_keeps_except(&taken);
+                    let left = self.w.net.drop_keeps_except(&taken);
+                    // a bare one held a stop: its line's stops are placed again without it
+                    if !left.is_empty() {
+                        self.w.reload();
+                    }
                 }
                 // a save made while trains changed over loads with them where they were (T-1071)
                 if let Some((e, phases, wide, hours)) = eras {
