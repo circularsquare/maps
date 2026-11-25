@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 12:12 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 12:20 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -11,7 +11,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    (T-4281 s2), network build 190 ms (T-4153 s7), page 27 ms placed / 45 removed (T-4150 s2, T-4284 s3, all landed).
    NYC "slower" was noise (T-4293: trees' lone samples are cold first edits; edit_bench now compares first with first).
    editbench/baseline.json is 11-24's: take a fresh --baseline on master on a quiet machine. Next: T-4291 (rows and
-   post: landed 755b1278f, Asia 144 to 59 ms; review21 Sonnet on it; T-4299, T-4300 next); trackrun (Opus, T-4214 D-E: track runs, split halves); T-4294 (Edit stops clicks
+   post: landed 755b1278f, Asia 144 to 59 ms; review21: 3 lows; modelpass (Opus,
+   T-4299 + those lows) running; T-4300 next); trackrun (Opus, T-4214 D-E: track runs, split halves); T-4294 (Edit stops clicks
    sending a question and no edit, P2). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
    Not edit speed: T-4080 bus stop names done and archived (081dcb203); connections are T-4083.
 2. T-4220 stages 6-7 landed together 4ffd70e86 (NYC edited line's figures 17 s instead of 53); review20 found 6 (stale quick
