@@ -5,7 +5,9 @@
 // locally on a fresh worker holding B's state: every line's riders, every station's boardings, and every period's
 // seg/board/alight must match within 1e-6. Covers C as a one-level train edit (kept periods) and C as a stop edit
 // (all periods solved, route nodes remapped), both with Boston and Philadelphia as two clusters (frozen market) and
-// joined in one cluster via `oneMarket` (frozen city + frozen market). Stage 4 refuses intercity edits, so C during an
+// joined in one cluster via `oneMarket` (frozen city + frozen market); the joined one again with two main workers
+// ("Use more cores", stage 8), each solving its periods and sending its own snapshot, merged in `ShownStore` by period
+// with one copy of each view kept. Stage 4 refuses intercity edits, so C during an
 // intercity edit's whole solve is omitted here; the T-3925 cut and edit-batching cases belong to stage 6.
 // Run from the maps root: node trainworld/checks/t4220-aside-equal.mjs
 import assert from 'node:assert/strict';
@@ -93,14 +95,23 @@ function layoutOf(net, ids) {
   return out;
 }
 
-async function mainWorker() {
+async function mainWorker(periods = [0, 1, 2, 3, 4]) {
   const k = startWorker(wrapper);
   await k.next((m) => m.kind === 'boot');
-  k.w.postMessage({ kind: 'init', packs: [pack('bos'), pack('phl')], intercity: MARKET, rows: ROWS, periods: [0, 1, 2, 3, 4] });
+  k.w.postMessage({ kind: 'init', packs: [pack('bos'), pack('phl')], intercity: MARKET, rows: ROWS, periods });
   const r = await k.next((m) => m.kind === 'ready' || m.kind === 'failed');
   assert.equal(r.kind, 'ready', r.error);
   return { k, ready: r };
 }
+
+// (each solving worker's periods as the page deals them, `periodsOfWorker` in demandClient.ts)
+const DEALT = { 1: [[0, 1, 2, 3, 4]], 2: [[0, 3, 4], [1, 2]] };
+/** the main pool: n solving workers (no aux worker: nothing here asks it) */
+async function mainPool(n) {
+  const ws = await Promise.all(DEALT[n].map((periods) => mainWorker(periods)));
+  return { ks: ws.map((w) => w.k), ready: ws[0].ready };
+}
+const each = (ks, f) => Promise.all(ks.map(f));
 
 async function sideWorker() {
   const k = startWorker(wrapper);
@@ -111,28 +122,35 @@ async function sideWorker() {
   return k;
 }
 
-async function solveWhole(k, version, net, ids, extra = {}) {
-  const from = k.messages.length;
-  k.w.postMessage({ kind: 'solve', version, net, ids, rounds: ROUNDS, ...extra });
-  k.w.postMessage({ kind: 'whole', version });
-  const d = await k.next((m) => (m.kind === 'done' && m.version === version) || m.kind === 'failed', from);
-  assert.equal(d.kind, 'done', d.error);
-  return d;
+async function solveWhole(ks, version, net, ids, extra = {}) {
+  return each(ks, async (k) => {
+    const from = k.messages.length;
+    k.w.postMessage({ kind: 'solve', version, net, ids, rounds: ROUNDS, ...extra });
+    k.w.postMessage({ kind: 'whole', version });
+    const d = await k.next((m) => (m.kind === 'done' && m.version === version) || m.kind === 'failed', from);
+    assert.equal(d.kind, 'done', d.error);
+    return d;
+  });
 }
 
-async function solveLocalEnd(k, version, net, ids, extra = {}) {
-  const from = k.messages.length;
-  k.w.postMessage({ kind: 'solve', version, net, ids, rounds: ROUNDS, ...extra });
-  const plan = await k.next((m) => (m.kind === 'plan' && m.version === version) || m.kind === 'failed', from);
-  assert.equal(plan.kind, 'plan', plan.error);
-  assert.ok(plan.local > 0 && plan.final, `v${version}: expected city edit ending locally (local=${plan.local}, final=${plan.final})`);
-  k.w.postMessage({ kind: 'endLocal', version });
-  const d = await k.next((m) => (m.kind === 'done' && m.version === version) || m.kind === 'failed', from);
-  assert.equal(d.kind, 'done', d.error);
-  assert.ok(d.localHeld, `v${version}: expected localHeld`);
-  const results = k.messages.slice(from).filter((m) => m.kind === 'result' && m.version === version && m.cluster?.local);
+// (the page's part: `endLocal` once every solving worker's plan says its local result may be final)
+async function solveLocalEnd(ks, version, net, ids, extra = {}) {
+  const from = ks.map((k) => k.messages.length);
+  for (const k of ks) k.w.postMessage({ kind: 'solve', version, net, ids, rounds: ROUNDS, ...extra });
+  await each(ks, async (k, i) => {
+    const plan = await k.next((m) => (m.kind === 'plan' && m.version === version) || m.kind === 'failed', from[i]);
+    assert.equal(plan.kind, 'plan', plan.error);
+    assert.ok(plan.local > 0 && plan.final, `v${version} worker ${i}: expected city edit ending locally (local=${plan.local}, final=${plan.final})`);
+  });
+  for (const k of ks) k.w.postMessage({ kind: 'endLocal', version });
+  const results = (await each(ks, async (k, i) => {
+    const d = await k.next((m) => (m.kind === 'done' && m.version === version) || m.kind === 'failed', from[i]);
+    assert.equal(d.kind, 'done', d.error);
+    assert.ok(d.localHeld, `v${version} worker ${i}: expected localHeld`);
+    return k.messages.slice(from[i]).filter((m) => m.kind === 'result' && m.version === version && m.cluster?.local);
+  })).flat();
   assert.equal(results.length, PERIODS.length, `v${version}: expected ${PERIODS.length} local period results, got ${results.length}`);
-  return { done: d, results: results.sort((a, b) => a.period - b.period) };
+  return { results: results.sort((a, b) => a.period - b.period) };
 }
 
 function reduceCluster(results, net, ids, version, ready) {
@@ -211,24 +229,34 @@ const log = [], fail = [];
 const check = (ok, what) => { const line = `${ok ? 'PASS' : 'FAIL'} ${what}`; log.push(line); console.log(line); if (!ok) fail.push(what); };
 
 const MODES = [
-  { label: 'two clusters', extra: {}, expectLines: 1 },
-  { label: 'shared cluster (frozen phl)', extra: { oneMarket: true }, expectLines: 2 },
+  { label: 'two clusters', extra: {}, expectLines: 1, workers: 1 },
+  { label: 'shared cluster (frozen phl)', extra: { oneMarket: true }, expectLines: 2, workers: 1 },
+  { label: 'shared cluster, two solving workers', extra: { oneMarket: true }, expectLines: 2, workers: 2 },
 ];
 
 for (const mode of MODES) {
-  const { k: main, ready } = await mainWorker();
-  await solveWhole(main, 1, A, IDS_AB, mode.extra);
-  await solveLocalEnd(main, 2, B, IDS_AB, mode.extra);
+  const { ks: mains, ready } = await mainPool(mode.workers);
+  await solveWhole(mains, 1, A, IDS_AB, mode.extra);
+  await solveLocalEnd(mains, 2, B, IDS_AB, mode.extra);
 
-  const refreshFrom = main.messages.length;
-  main.w.postMessage({ kind: 'solve', version: 3, net: B, ids: IDS_AB, rounds: ROUNDS, refresh: true, snap: true, ...mode.extra });
-  const shownMsg = await main.next((m) => (m.kind === 'shown' && m.version === 3) || m.kind === 'failed', refreshFrom);
-  assert.equal(shownMsg.kind, 'shown', shownMsg.error);
+  const refreshFrom = mains.map((k) => k.messages.length);
+  for (const k of mains) k.w.postMessage({ kind: 'solve', version: 3, net: B, ids: IDS_AB, rounds: ROUNDS, refresh: true, snap: true, ...mode.extra });
+  const snaps = await each(mains, async (k, i) => {
+    const m = await k.next((m) => (m.kind === 'shown' && m.version === 3) || m.kind === 'failed', refreshFrom[i]);
+    assert.equal(m.kind, 'shown', m.error);
+    return m.snap;
+  });
   const store = new ShownStore();
-  assert.equal(store.merge(3, 0, shownMsg.snap), 'held', 'snapshot merged into ShownStore');
+  snaps.forEach((snap, i) => assert.equal(store.merge(3, i, snap), 'held', `worker ${i}'s snapshot merged into ShownStore`));
   const shown = store.forAside();
   assert.ok(shown, 'ShownStore.forAside() returned a snapshot');
-  check(true, `${mode.label}: refresh snapshot v3 held (${shown.pops.length} populations, ${shown.zones.length} zones, ${(shownMsg.snap.bytes / 1024).toFixed(0)} KB)`);
+  check(true, `${mode.label}: refresh snapshot v3 held (${shown.pops.length} populations, ${shown.zones.length} zones, ${snaps.map((s) => (s.bytes / 1024).toFixed(0)).join(' and ')} KB sent, ${(store.bytes() / 1024).toFixed(0)} KB held)`);
+  if (mains.length > 1) {
+    // (stage 8: each worker sends its own periods and its own copy of the views: one copy held per population)
+    const copies = shown.pops.map((p) => new Set(p.periods.map((at) => at.on.view ?? at.on.ids)).size);
+    const shared = [...store.sent(3).values()].reduce((a, w) => a + w.shared, 0);
+    check(copies.every((n) => n === 1) && shared > 0, `${mode.label}: one view per population held (copies ${copies.join(',')}), ${(shared / 1024).toFixed(0)} KB of the later worker's not kept`);
+  }
 
   const side = await sideWorker();
   const openedOnSide = new Set();
@@ -291,9 +319,9 @@ for (const mode of MODES) {
 
     // Reference: a fresh worker holding B's state, then solving C locally
     const { k: ref } = await mainWorker();
-    await solveWhole(ref, 1, A, IDS_AB, mode.extra);
-    await solveLocalEnd(ref, 2, B, IDS_AB, mode.extra);
-    const { results: refRes } = await solveLocalEnd(ref, 3, tc.net, tc.ids, mode.extra);
+    await solveWhole([ref], 1, A, IDS_AB, mode.extra);
+    await solveLocalEnd([ref], 2, B, IDS_AB, mode.extra);
+    const { results: refRes } = await solveLocalEnd([ref], 3, tc.net, tc.ids, mode.extra);
     await ref.w.terminate();
 
     const sideView = reduceCluster(sideRes, tc.net, tc.ids, sideVersion, ready);
@@ -316,9 +344,11 @@ for (const mode of MODES) {
     );
   }
 
-  const refreshDone = await main.next((m) => (m.kind === 'done' && m.version === 3) || m.kind === 'failed', refreshFrom);
-  assert.equal(refreshDone.kind, 'done', refreshDone.error);
-  await main.w.terminate();
+  await each(mains, async (k, i) => {
+    const refreshDone = await k.next((m) => (m.kind === 'done' && m.version === 3) || m.kind === 'failed', refreshFrom[i]);
+    assert.equal(refreshDone.kind, 'done', refreshDone.error);
+    await k.w.terminate();
+  });
   await side.w.terminate();
 }
 

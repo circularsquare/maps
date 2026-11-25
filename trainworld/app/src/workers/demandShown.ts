@@ -84,7 +84,9 @@ export interface Snapshot {
   pops: SnapPop[];
   /** the sending worker's periods */
   periods: number[];
-  /** a cluster's populations sent again once its result is shown (a solve of several clusters); else the job's all */
+  /** a part of the job's populations, merged but not counted as the worker's snapshot: a cluster's sent again once its
+   * result is shown (a solve of several clusters), or a local stage's touched ones as they were before it set them up,
+   * when its result is never shown (`whole` came first, several solving workers: stage 8); else the job's all */
   again?: boolean;
   /** the job's zones with their cells' box and level, the market's 6 km zones and the clustering flags, for the
    * newest network's clusters to be made as the main pool makes them (absent with `again`) */
@@ -97,6 +99,10 @@ export interface Snapshot {
   /** past `SNAP_MAX_BYTES` (`bytes` where it stopped): nothing sent */
   over?: boolean;
 }
+
+/** a solving worker's whole snapshot as the store took it: its ms and bytes, and the bytes of views and network ids it
+ * sent that the store already held (T-4220 stage 8) */
+export interface Sent { ms: number; bytes: number; shared: number }
 
 /** T-4220 stage 3: what the page holds of the figures on screen (`ShownStore`), for a side job in the focus pool */
 export interface AsideShown {
@@ -142,6 +148,24 @@ function sameArr(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
   for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) return false;
   return true;
 }
+/** the same values to the bit, NaN where the other has NaN */
+function sameBits(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  for (let k = 0; k < a.length; k++) if (a[k] !== b[k] && (a[k] === a[k] || b[k] === b[k])) return false;
+  return true;
+}
+/** T-4220 stage 8: two copies of one view, as two solving workers send theirs of the same solve */
+function sameViewBits(a: PopView, b: PopView): boolean {
+  if (a === b) return true;
+  if (!sameBits(a.stLocal, b.stLocal) || !sameBits(a.nodeGlobal, b.nodeGlobal) || !sameBits(a.pads, b.pads)) return false;
+  const x = a.net as unknown as Record<string, unknown>, y = b.net as unknown as Record<string, unknown>, keys = Object.keys(x);
+  return keys.length === Object.keys(y).length && keys.every((k) => {
+    const u = x[k], v = y[k];
+    return ArrayBuffer.isView(u) && ArrayBuffer.isView(v) ? sameBits(u as unknown as ArrayLike<number>, v as unknown as ArrayLike<number>) : JSON.stringify(u) === JSON.stringify(v);
+  });
+}
+const sameIdsBits = (a: SnapIds, b: SnapIds) => a === b || (sameBits(a.lineN, b.lineN) && sameBits(a.stops, b.stops) && sameBits(a.tph, b.tph) && sameBits(a.times, b.times) && a.lines.join("\n") === b.lines.join("\n") && a.stations.join("\n") === b.stations.join("\n"));
 /** Two periods' figures solved on the same route nodes: in one cluster, a city's on views of the same inputs (`sameView`), the
  * market's on the same nodes of one network */
 function sameOn(a: SnapOn, b: SnapOn): boolean {
@@ -228,8 +252,9 @@ export class ShownStore {
   zones: Snapshot["zones"] = [];
   marketZones: Float64Array | null = null;
   flags: Snapshot["flags"] = { whole: false, oneMarket: false, wide: false };
-  /** per version, each solving worker's whole snapshot's ms and bytes, as it came */
-  private got = new Map<number, Map<number, { ms: number; bytes: number }>>();
+  /** per version, each solving worker's whole snapshot's ms and bytes, as it came, and the bytes of its views and network
+   * ids not kept since the store held the same (`shared`) */
+  private got = new Map<number, Map<number, Sent>>();
   /** no snapshot of this version or older is taken: a final of it is shown, or the store was emptied after it */
   private floor = -1;
   /** from this version on, what is on screen is not all known (a worker's snapshot or the merged store past the cap):
@@ -241,9 +266,10 @@ export class ShownStore {
   /** worker `i`'s snapshot for solve `version`: "over" when it or the merged store passed the cap (everything held
    * dropped), "ignored" when it is older than what is on screen or what is on screen is not all known */
   merge(version: number, i: number, snap: Snapshot): "held" | "over" | "ignored" {
+    const sent: Sent = { ms: snap.ms, bytes: snap.bytes, shared: 0 };
     if (!snap.again) {
-      const g = this.got.get(version) ?? new Map<number, { ms: number; bytes: number }>();
-      g.set(i, { ms: snap.ms, bytes: snap.bytes });
+      const g = this.got.get(version) ?? new Map<number, Sent>();
+      g.set(i, sent);
       this.got.set(version, g);
       for (const v of this.got.keys()) if (v < version - 8) this.got.delete(v);
     }
@@ -251,6 +277,7 @@ export class ShownStore {
     // (what is on screen is then not all known: a side job would stand on a hole)
     if (snap.over) return this.lose(version);
     if (this.lostFrom !== null && version >= this.lostFrom) return "ignored";
+    sent.shared = this.share(snap);
     let changed = false;
     for (const p of snap.pops) {
       const key = `${p.kind}:${p.key}`, had = this.pops.get(key);
@@ -274,6 +301,39 @@ export class ShownStore {
     if (changed) this.gen++;
     // (each worker's is capped, the page holds them all)
     return this.bytes() > SNAP_MAX_BYTES ? this.lose(version) : "held";
+  }
+
+  /**
+   * T-4220 stage 8: each solving worker sends its own copy of a population's view and of the market's route nodes and
+   * network ids, though it holds only its own periods. Where the store already holds the same to the bit for that
+   * population, the snapshot's periods take the one held, so the page, and the side pool that gets a copy of the store,
+   * hold one per zone however many workers solved its periods ("Use more cores": up to 5). Returns the bytes not kept.
+   */
+  private share(snap: Snapshot): number {
+    const canon = new Map<object, object>();
+    let saved = 0;
+    const one = <T extends object>(x: T, held: (T | undefined)[], same: (a: T, b: T) => boolean, size: (x: T) => number): T => {
+      let c = canon.get(x) as T | undefined;
+      if (!c) {
+        c = held.find((h): h is T => !!h && same(h, x)) ?? x;
+        canon.set(x, c);
+        if (c !== x) saved += size(x);
+      }
+      return c;
+    };
+    for (const p of snap.pops) {
+      const had = this.pops.get(`${p.kind}:${p.key}`)?.pop.periods.filter((at): at is SnapPeriod => !!at);
+      if (!had?.length) continue;
+      for (const at of p.periods) {
+        if (!at) continue;
+        const on = at.on;
+        if (on.view) on.view = one(on.view, had.map((h) => h.on.view), sameViewBits, viewBytes);
+        if (on.nodes) on.nodes = one(on.nodes, had.map((h) => h.on.nodes), sameBits, (n) => n.byteLength);
+        if (on.ids) on.ids = one(on.ids, had.map((h) => h.on.ids), sameIdsBits, idsBytes);
+        if (at.delta) at.delta.ids = one(at.delta.ids, had.map((h) => h.delta?.ids), sameIdsBits, idsBytes);
+      }
+    }
+    return saved;
   }
 
   private lose(version: number): "over" {
@@ -318,7 +378,7 @@ export class ShownStore {
   }
 
   /** the workers' whole snapshots of `version` so far (worker -> ms and bytes) */
-  sent(version: number): ReadonlyMap<number, { ms: number; bytes: number }> {
+  sent(version: number): ReadonlyMap<number, Sent> {
     return this.got.get(version) ?? new Map();
   }
 

@@ -329,6 +329,8 @@ function withinNoise(was: DemandNetwork, now: DemandNetwork): boolean {
 /** T-1733: the page's `whole` for this version: the edit's local results are shown (and a moment
  * has passed for the next edit), so the whole solve may start */
 let wholeGo = -1;
+/** T-4220 stage 8: the last solve whose `whole` came as its plans came in (`early`): none of its local results is shown */
+let wholeEarly = -1;
 /** T-2188: the page's `endLocal` for this version: every worker's local stage is a city edit's, so each ends the
  * solve at its local results instead of waiting for `whole` */
 let endLocalGo = -1;
@@ -1367,6 +1369,7 @@ onmessage = (e: MessageEvent<ToDemand>) => {
     else void opening.then(() => { if (started && !busy) run(); });
   } else if (msg.kind === "whole") {
     wholeGo = Math.max(wholeGo, msg.version);
+    if (msg.early) wholeEarly = Math.max(wholeEarly, msg.version);
     wake?.();
   } else if (msg.kind === "endLocal") {
     endLocalGo = Math.max(endLocalGo, msg.version);
@@ -3306,6 +3309,8 @@ async function run() {
         addOwn(c, a, q, all);
         return [all, toWhole(a.commute_loads(q), map)[0] ?? new Float32Array(3 * jobNodes), ...toWhole(a.everyday_loads(q), map)];
       };
+      // (T-4220 stage 8: each local stage's touched populations as they held the figures on screen, below)
+      const befores: { fresh: Population[]; part: JobCluster["part"]; win: ReturnType<typeof windowShown.get>; snap: ReturnType<typeof snapPops>; ms: number }[] = [];
       // T-1733: every edited cluster's touched cities first, the zone in view's cluster first
       // (`early`'s order), each sent as a local cluster result; the market part read through its
       // route nodes on this network (`marketOn`) meanwhile
@@ -3314,6 +3319,10 @@ async function run() {
         if (!e) continue;
         if (!e.fresh.length) { localKeep.set(c, keptOf(c)); continue; }
         const t0 = performance.now(), whole = c.part ? viewOf(c, c.part) : null, shared = c.part ? sharedMkt.get(c.part) : undefined;
+        // T-4220 stage 8: with several solving workers this local result may never be shown (`whole` sent as the plans came
+        // in, `wholeEarly`), and the set-up below puts the touched populations on this network: what they hold of the
+        // figures on screen is copied first. With one solving worker it is always shown
+        if (job.snap && mine.length < PERIODS.length) befores.push({ fresh: e.fresh, part: c.part, win: c.part ? windowShown.get(c.part) : undefined, snap: snapPops([{ ...c, pops: e.fresh }]), ms: performance.now() - t0 });
         if (c.part && e.market) c.views.set(c.part, { ...whole!, nodeGlobal: e.market, pads: new Uint32Array(0) });
         // T-1735: the market's pairs with an end in a zone a station changed since the market's last
         // whole solve serves, solved with the touched cities on the window's stations alone; the
@@ -3383,6 +3392,15 @@ async function run() {
         while (!pending && wholeGo < job.version && !(ends && endLocalGo >= job.version) && performance.now() < until) await new Promise<void>((r) => { wake = r; setTimeout(r, until - performance.now()); });
         wake = null;
         if (pending) stale = true;
+      }
+      // T-4220 stage 8: `whole` came as the plans came in (a worker solves nothing locally, T-1733), so no local result of
+      // this solve is shown, though one here may have ended before it came: the touched populations are not the figures on
+      // screen, and what they held of those before the local stage goes to the page in their place
+      if (befores.length && !stale && wholeEarly >= job.version) for (const b of befores) {
+        for (const p of b.fresh) shownIntact.delete(p);
+        if (b.part) { if (b.win) windowShown.set(b.part, b.win); else windowShown.delete(b.part); }
+        const s = b.snap, snap: Snapshot = { pops: s.pops, periods: mine.slice(), bytes: s.bytes, ms: b.ms, again: true, ...(s.over ? { over: true } : {}) };
+        if (s.pops.length || s.over) sendMessage({ kind: "shown", version: job.version, snap }, s.transfer);
       }
       // T-2188: a city edit's solve ends here: each edited cluster holds its local result as solved on this network
       // (`held`, so a question about it is answered), each population its periods solved locally as `LOCAL` (a

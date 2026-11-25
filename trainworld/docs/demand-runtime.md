@@ -509,13 +509,17 @@ during one past that point shows its figures when it has landed and the local so
 sooner aside, T-4220, below). A solve with the barrier (a load, a zone just opened) is still cut short by any newer
 network.
 **An edit solved aside** (T-4220, notes/T-4220.md, `?perfOff=editAside` off). A whole solve without the barrier first
-sends what each solving worker holds of the figures on screen (`shown`; the page keeps it in `ShownStore` until a
-final). An edit made during it, held behind it (`firm`, not one taken to go at its local result) or its own network
-when it has no local stage (after a T-3925 cut, or an edit solved whole at once), is solved in a pool of its own
-(`apool`, one worker, up to `ASIDE_MAX_ZONES` 5 zones): its touched zones against stand-ins of the rest made from that
-snapshot, the main pool's solves untouched. It starts `ASIDE_QUIET_MS` (1 s) after the last edit, once the running
-solve's snapshot is in from every solving worker and its time left is known; one at a time, for the newest network,
-so edits arriving together, or during one, share the next. Refused, the wait staying as before: a small or
+sends what each solving worker holds of the figures on screen (`shown`, each worker its own periods; the page keeps it
+in `ShownStore`, merged by population and period with one copy of each view, until a final). With several solving
+workers a local stage first copies its touched populations, and sends that copy in their place when `whole` came as the
+plans did (one worker solves nothing locally, so no local result shows). An edit made during it, held behind it (`firm`,
+not one taken to go at its local result) or its own network when it shows no local result (after a T-3925 cut, an edit
+solved whole at once, or a worker with no local stage sending all to the whole solve), is solved in a pool of its own
+(`apool`, one worker however many solve in the main pool, up to `ASIDE_MAX_ZONES` 5 zones): its touched zones, every
+period they need, against stand-ins of the rest made from that snapshot, the main pool's solves untouched.
+It starts `ASIDE_QUIET_MS` (1 s) after the last edit, once the running solve's snapshot is in from every solving worker
+and its time left is known; one at a time, for the newest network, so edits arriving together, or during one, share the
+next. Refused, the wait staying as before: a small or
 address-limited device, `?split=1`, fares changed since the figures on screen, an intercity edit, more than 5 zones
 fresh, a fresh zone held at another level now, an edit that joins or splits clusters, memory (the pool's worker, the
 snapshot and the fresh zones' `zoneGB` past 95% of the budget, as `memShort` counts), and an expected time (the

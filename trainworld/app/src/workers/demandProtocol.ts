@@ -274,7 +274,10 @@ export type ToDemand =
    * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
   | { kind: "go"; version: number; round: number; group?: number }
   /** T-1733: every worker's local result after an edit is shown and a moment has passed: the whole solve of `version` may start */
-  | { kind: "whole"; version: number }
+  | { kind: "whole"; version: number;
+      /** T-4220 stage 8: sent as the plans came in (a worker solves nothing locally, T-1733): no local result of the
+       * solve is shown */
+      early?: true }
   /** T-2188: every solving worker's local stage of `version` opens no market window (`plan.final`): each ends the
    * solve at its local results, its edited clusters left holding them, with no whole solve after */
   | { kind: "endLocal"; version: number }

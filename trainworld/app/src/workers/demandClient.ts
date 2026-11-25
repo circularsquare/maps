@@ -3455,7 +3455,9 @@ class DemandClient {
 
   /** T-4220: the network a side job is wanted for and the running whole solve it would beat: (a) a network held behind
    * that solve (`firm`; not one taken to go at its local result, `quickHold`), or (b) that solve's own network when it
-   * has no local stage (started again after T-3925's cut, or an edit solved whole at once) */
+   * shows no local result (started again after T-3925's cut, or an edit solved whole at once): every solving worker's
+   * plan is in and one has no local stage, which sends them all to the whole solve at once (T-1733; stage 8: with
+   * several workers one whose populations outlived the cut, or with a smaller share of the edit, can still have one) */
   private asideWanted(): { svc: Service; s: Solve; held: boolean } | null {
     const s = this.cur;
     if (!s || s.barrier !== false || s.rough || s.published >= ROUNDS || this.hold || gameLoadArmed()) return null;
@@ -3463,7 +3465,7 @@ class DemandClient {
     if (w) return w.svc !== s.svc && this.firm() && !this.quickHold(s) ? { svc: w.svc, s, held: true } : null;
     if (s.refresh) return null;
     const plans = Array.from({ length: this.computeN }, (_, k) => s.localPlans?.[k]);
-    return plans.every((v) => v === 0) ? { svc: s.svc, s, held: false } : null;
+    return plans.every((v) => v !== undefined) && plans.some((v) => v === 0) ? { svc: s.svc, s, held: false } : null;
   }
 
   /** T-4220: why no side job may run here now, or null */
@@ -4714,7 +4716,7 @@ class DemandClient {
     const sent = [...this.shownSnap.sent(version).values()];
     if (sent.length < this.computeN) return;
     // i18n-ignore
-    console.info(`T4220 snapshot v${version}: ${this.shownSnap.pops.size} populations, ${this.shownSnap.periods()} periods, ${mb(this.shownSnap.bytes())} MB, ${Math.round(Math.max(...sent.map((w) => w.ms)))} ms (by worker ${sent.map((w) => Math.round(w.ms)).join(" and ")} ms, ${sent.map((w) => mb(w.bytes)).join(" and ")} MB sent)`);
+    console.info(`T4220 snapshot v${version}: ${this.shownSnap.pops.size} populations, ${this.shownSnap.periods()} periods, ${mb(this.shownSnap.bytes())} MB, ${Math.round(Math.max(...sent.map((w) => w.ms)))} ms (by worker ${sent.map((w) => Math.round(w.ms)).join(" and ")} ms, ${sent.map((w) => mb(w.bytes)).join(" and ")} MB sent${sent.some((w) => w.shared) ? `, ${(sent.reduce((a, w) => a + w.shared, 0) / 2 ** 20).toFixed(1)} MB of views and network ids already held` : ""})`);
   }
 
   /** T-4220: a whole solve sends what is on screen where an edit could be solved aside: a focus pool could run here
@@ -4895,7 +4897,7 @@ class DemandClient {
       // (T-4220: a solve with no local stage, its own network solved aside)
       if (all.filter((v) => v !== undefined).length === n) this.asideSoon();
       if (all.filter((v) => v !== undefined).length === n && all.some((v) => v > 0)) {
-        if (all.some((v) => !v)) this.wholeGo(s);
+        if (all.some((v) => !v)) this.wholeGo(s, true);
         else {
           // T-2188: a city edit in every worker: the local results end the solve
           if (s.ends.slice(0, n).every(Boolean) && !perfOff("localEnd")) this.endLocal(s);
@@ -6530,10 +6532,10 @@ class DemandClient {
   }
 
   /** T-1733: the whole solve after an edit's local results may start (once a version) */
-  private wholeGo(s: Solve) {
+  private wholeGo(s: Solve, early = false) {
     if (s !== this.cur || s.wholeSent || s.endLocal) return;
     s.wholeSent = true;
-    for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "whole", version: s.version } satisfies ToDemand);
+    for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "whole", version: s.version, ...(early ? { early: true as const } : {}) } satisfies ToDemand);
   }
 
   /** T-2188: a city edit's solve ends at its local results (once a version, never after `whole`) */
