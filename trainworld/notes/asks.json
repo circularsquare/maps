@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-24-14",
+    "title": "Fare cap text",
+    "text": "New in-game text from T-4253, under the fare control when a multiple would push the base fare over the limit: \"Base fare can be at most $1,000\". OK?",
+    "since": "2026-11-24",
+    "by": "maps-3e"
+  }
+]

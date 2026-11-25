@@ -166,7 +166,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: A player, 11-22: a line with 21 one-way platforms is "extremely laggy", once 40 minutes for the stops to register. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Tree onewaylag has a memo making stop_tiers 2.3x faster (uncommitted). Notes/T-4045.md.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
-- T-4256 [P2] {L:buses} Port PR 30, Auto bus catchments stop at rail-linked stops
+- T-4256 [P2] {L:buses} Port PR 30, Auto bus catchments stop at rail-linked stops (taking, 2026-11-24, agent pr30port)
   - Context: Leni-Vienne's PR 30 (11-22): an Auto bus stop's catchment no longer runs past stops linked to rail (one counted a 9.6 km road past 9 rail stations as a short walk). You, 11-25: "yes can port". Gemini: easy; its doc says 100 m where ours is now 500 m.
   - Goal: Ported with credit; a bus save's riders before and after, and the lines that move most.
   - Other: notes/pr-survey-2026-11-25.md
@@ -205,10 +205,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 1 landed 11-24 (6d7c50c5): the day's figures -77% and line periods -58% on Asia, money posted in 1-2 ms. Left: rows first for every full-path edit, trips and boarding per touched line, demand snapshot per cluster.
   - Goal: Those redone for what an edit touched. Tree editworker kept.
   - Other: notes/T-4144.md
-- T-4150 [P1] {L:edit-speed} The checked version sooner, page side (taking, 2026-11-24, agent pageedit)
-  - Context: From T-4144 stream D: every panel redraws on each state (T-4097 part C); T-3804 today answers 125-445 ms.
-  - Goal: Panels redraw only their own records, issues list and totals patched; 6-10 h.
-  - Other: notes/T-4144.md
+- T-4150 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 2 (taking, 2026-11-24, agent pageedit)
+  - Context: Stage 1 (tree pageedit): on your Asia save the page's own work after a station edit went from 104-117 ms to 65-69 ms, cleanup from 45-110 ms to 8-10 ms, about 4-10% of the wait. Left: achievements, fare income's line checks, the track's line lists, station labels, and the change list itself walking every node and edge.
+  - Goal: Under 20 ms of the page's own work for a station on Asia; then the demand layers and the delete tool's hover per change; 3-4 h.
+  - Other: T-3804 (today answers 125-445 ms) still open; notes/T-4150.md "Left, by stage"
 - T-4198 [P3] {L:checks} Changelog edited mark only for your edits
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
@@ -221,6 +221,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
+- T-4262 [P1] {L:edit-speed} The renderer takes only the changed part of the drawn network (taking, 2026-11-24, agent uploadedit)
+  - Context: From T-4150 stage 1 (11-25): on your Asia save the page's biggest cost after an edit is the drawn network going into the renderer, 65-180 ms (texture uploads up to 108 ms), then its frame, 50-220 ms.
+  - Goal: An edit uploads only the strokes and textures that changed; the frame after an edit costs about a normal frame.
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
@@ -1069,11 +1072,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
-- T-4254 [P2] {L:open-source} Port PR 31, bus trunk stretches kept on edit (taking, 2026-11-24, agent pr31port)
-  - Context: xoaninc's PR 31 (11-24): editing a bus route keeps trunk road speeds on the legs the edit didn't touch. Gemini's survey (11-25): applies cleanly, no problems found. A bug fix, not bus tuning.
-  - Goal: Ported with credit; an edited bus route keeps its trunk speeds. Replying on the PR is yours.
-  - Other: notes/pr-survey-2026-11-25.md
-- T-4255 [P2] {L:open-source} Port PR 29, cached paths in stop-marker scans
+- T-4255 [P2] {L:open-source} Port PR 29, cached paths in stop-marker scans (taking, 2026-11-24, agent pr29port)
   - Context: Leni-Vienne's PR 29 (11-22): the stop-marker scan keeps shortest-path trees instead of redoing them. Gemini's survey (11-25): two small conflicts (keep edge_barred for busways and the 3-argument carry_worth); adds up to 19 MiB of WASM heap on the small-device setting.
   - Goal: Ported with credit, those kept, its heap capped; faster stop markers on big networks, measured.
   - Other: notes/pr-survey-2026-11-25.md; T-4045

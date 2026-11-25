@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c017",
+      "text": "fixed editing a bus route dropping its trunk road speeds",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4254",
+      "by": "pr31port",
+      "at": "2026-11-25T02:14:19Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c016",
       "text": "line fare multiples go up to 10x",
       "edited": null,

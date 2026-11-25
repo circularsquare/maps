@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4254 [P2] {L:open-source} Port PR 31, bus trunk stretches kept on edit (2026-11-24): PR 31 ported verbatim (BusDraw.begin reads K_TRUNK back into each road leg); t3084-bus-edit 17/17. Gemini round 3. Closing the PR with a comment waits for her OK. notes/T-4254.md.
 - T-4253 [P2] {L:fares} A line's fare multiple up to 10x (2026-11-24): LINE_FARE_MAX 3 to 10; the panel and the worker refuse a multiple whose base fare times it is over US$1,000; t3567-line-fare --quick 10/10. Gemini round 2. notes/T-4253.md.
 - T-4260 [P1] {L:checks} Fix the review's findings on today's landings (2026-11-24): 7 of 9 findings real and fixed (Rust tests, one game run for the two visible ones); T-4080 1 left for its owner; T-4048 3 unreachable. notes/T-4260.md.
 - T-4231 [P2] {L:timetables} Apply to all lines misses some lines' weekend percent (2026-11-24): note_lines now passes the weekend touch to note_changed; t3521-weekends 109/109 at 70%. First Gemini code agent landing. notes/T-4231.md.
