@@ -1073,6 +1073,8 @@
   "help.aLoseMoneyIntercity": "Try building feeder lines that connect more population to the intercity line.",
   "help.qLeftBehind": "Riders are left at the stop",
   "help.aLeftBehind": "Add trains, or make them longer. If other portions of the line are mostly empty, consider making another version of the line that short turns. If the track cannot fit more trains, try adding another parallel line.",
+  "help.qInstallApp": "How to download the game as an app",
+  "help.aInstallApp": "On a computer, use Chrome or Edge: click the install icon at the right end of the address bar, or find Install in the browser menu. In Safari 17 or later on a Mac, choose File, then Add to Dock. On an iPhone or iPad, open the game in Safari, tap Share, then Add to Home Screen. On Android, open the game in Chrome, press ⋮ and tap Install app. The app on an iPhone or iPad keeps its own saves, so sign in with an account to get the same games in both.",
   "help.qWeekend": "How to run fewer trains on weekends",
   "help.aWeekend": "Set the weekend share in the line's timetable, which you can open with the button next to the word {schedule} in the line view.",
   "help.qTripMode": "How to tell what mode of transport people will use between two points",

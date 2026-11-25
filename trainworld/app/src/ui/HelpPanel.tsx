@@ -49,6 +49,7 @@ function questions(): [string, string][] {
   const [, deleteName, , deleteKey] = TOOLS.find(([id]) => id === "delete")!;
   const copy = m(t("busInspector.copy"));
   const list: [string, string][] = [
+    [t("help.qInstallApp"), t("help.aInstallApp")],
     [t("help.qBranch"), t("help.aBranch", { copy })],
     [t("help.qExpress"), t("help.aExpress", { copy })],
     [t("help.qLoop"), t("help.aLoop", { touch })],

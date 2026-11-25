@@ -1076,6 +1076,8 @@
   "help.aLoseMoneyIntercity": "Answer to help.qLoseMoneyIntercity, shown under it.",
   "help.qLeftBehind": "A problem players report, listed with the common questions in the help panel: trains arrive full, so some riders waiting at a stop can't board (the line panel's \"Riders left at the stop\").",
   "help.aLeftBehind": "Answer to help.qLeftBehind, shown under it. A short turning version runs only the busy part of the line and turns back before its end.",
+  "help.qInstallApp": "A question players ask, listed first with the common questions in the help panel: how to install the game as an app.",
+  "help.aInstallApp": "Answer to help.qInstallApp, shown under it. Install, File, Add to Dock, Share, Add to Home Screen and Install app are names of browser buttons and menu items: use the names each system shows in this language. ⋮ is Chrome's three-dot menu button. The last sentence: on iPhone and iPad the installed app's saved games are kept apart from Safari's; an account has the same games in both.",
   "help.qWeekend": "A question players ask, listed with the common questions in the help panel: how to run fewer trains on Saturdays and Sundays than on weekdays.",
   "help.aWeekend": "Answer to help.qWeekend, shown under it. schedule: the heading of the line panel's train count section (schedule.title, \"Schedule\"); the timetable opens from the small button beside it.",
   "help.qTripMode": "A question players ask, listed with the common questions in the help panel: how to see which way people travel between two places (train, walking, car), which the trip explorer shows.",
