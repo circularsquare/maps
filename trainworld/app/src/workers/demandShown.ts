@@ -110,8 +110,11 @@ export interface AsideShown {
 
 /** T-4220 stage 3: why no side job can be planned (today's wait stays): no snapshot held, the zones open since it are
  * not its own, the fares changed, the edit joins or splits a cluster it holds, a population it needs is missing or
- * not whole, a frozen one has no full trail of a period to solve, or too many zones are fresh */
-export type AsideRefusal = "snapshot" | "zones" | "fares" | "clusters" | "partial" | "trail" | "many";
+ * not whole, a frozen one has no full trail of a period to solve, or too many zones are fresh. Stage 4: an intercity
+ * edit (the main pool's local stage would open a market window, T-1735, which a side job keeps frozen), a fresh zone not
+ * open in the focus worker at the level the snapshot holds it, or (the page's) held at another level by the main pool
+ * now */
+export type AsideRefusal = "snapshot" | "zones" | "fares" | "clusters" | "partial" | "trail" | "many" | "intercity" | "open" | "level";
 
 /** T-4220 stage 3: the side job's plan for a network against the figures on screen */
 export interface AsideAnswer {
@@ -186,6 +189,8 @@ export class ShownPop {
   commute_loads(q: number): Float32Array { return this.at(q)?.commute ?? NO32; }
   everyday_loads(q: number): Float32Array { return this.at(q)?.everyday ?? NO32; }
   lean_loads(q: number): Float32Array { return this.at(q)?.lean ?? NO32; }
+  /** a market's T-1735 window shown with it in period q (`SnapPeriod.delta`), on the network it was solved on */
+  delta(q: number): SnapPeriod["delta"] { return this.at(q)?.delta; }
 }
 
 /** The typed arrays' bytes of a view (its network's and its maps) */
@@ -217,7 +222,7 @@ function periodBytes(at: SnapPeriod, seen: Set<object>): number {
  */
 export class ShownStore {
   readonly pops = new Map<string, { pop: SnapPop; from: number[] }>();
-  /** bumped whenever what is held may have changed: a focus worker holding this generation's copy needs no other */
+  /** bumped whenever what is held changes: a focus worker holding this generation's copy needs no other */
   gen = 0;
   /** the newest whole snapshot's zones, market zones and flags */
   zones: Snapshot["zones"] = [];
@@ -236,7 +241,6 @@ export class ShownStore {
   /** worker `i`'s snapshot for solve `version`: "over" when it or the merged store passed the cap (everything held
    * dropped), "ignored" when it is older than what is on screen or what is on screen is not all known */
   merge(version: number, i: number, snap: Snapshot): "held" | "over" | "ignored" {
-    this.gen++;
     if (!snap.again) {
       const g = this.got.get(version) ?? new Map<number, { ms: number; bytes: number }>();
       g.set(i, { ms: snap.ms, bytes: snap.bytes });
@@ -247,20 +251,24 @@ export class ShownStore {
     // (what is on screen is then not all known: a side job would stand on a hole)
     if (snap.over) return this.lose(version);
     if (this.lostFrom !== null && version >= this.lostFrom) return "ignored";
+    let changed = false;
     for (const p of snap.pops) {
       const key = `${p.kind}:${p.key}`, had = this.pops.get(key);
-      if (!had) { this.pops.set(key, { pop: p, from: p.periods.map((x) => (x ? version : -1)) }); continue; }
+      if (!had) { this.pops.set(key, { pop: p, from: p.periods.map((x) => (x ? version : -1)) }); changed = true; continue; }
       const take = PERIODS.map((_, q) => !!p.periods[q] && had.from[q] <= version);
       if (!take.some(Boolean)) continue;
       had.pop = { ...p, periods: PERIODS.map((_, q) => (take[q] ? p.periods[q] : had.pop.periods[q]) ?? null) };
       take.forEach((t, q) => { if (t) had.from[q] = version; });
+      changed = true;
     }
     if (!snap.again && version >= this.metaAt) {
       this.metaAt = version;
       this.zones = snap.zones ?? [];
       this.marketZones = snap.marketZones ?? null;
       this.flags = snap.flags ?? this.flags;
+      changed = true;
     }
+    if (changed) this.gen++;
     // (each worker's is capped, the page holds them all)
     return this.bytes() > SNAP_MAX_BYTES ? this.lose(version) : "held";
   }
@@ -273,25 +281,26 @@ export class ShownStore {
 
   /** a final of `version` is shown: every period sent with it or before goes */
   dropTo(version: number) {
-    this.gen++;
     this.floor = Math.max(this.floor, version);
     if (this.lostFrom !== null && version >= this.lostFrom) this.lostFrom = null;
+    let dropped = false;
     for (const [key, e] of this.pops) {
-      e.from.forEach((v, q) => { if (v >= 0 && v <= version) { e.from[q] = -1; e.pop.periods[q] = null; } });
+      e.from.forEach((v, q) => { if (v >= 0 && v <= version) { e.from[q] = -1; e.pop.periods[q] = null; dropped = true; } });
       if (e.from.every((v) => v < 0)) this.pops.delete(key);
     }
+    if (dropped) this.gen++;
     if (!this.pops.size) this.empty();
   }
 
   /** everything goes (another game, or demand stopped), and no snapshot of solve `upTo` or older is taken after */
   clear(upTo: number) {
-    this.gen++;
     this.empty();
     this.floor = Math.max(this.floor, upTo);
     this.lostFrom = null;
   }
 
   private empty() {
+    if (this.pops.size || this.zones?.length || this.marketZones) this.gen++;
     this.pops.clear();
     this.zones = [];
     this.marketZones = null;
@@ -310,10 +319,12 @@ export class ShownStore {
     return this.got.get(version) ?? new Map();
   }
 
-  /** T-4220 stage 3: what a side job is planned against, or null when nothing is held. Its arrays are the store's own:
+  /** T-4220 stage 3: what a side job is planned against, or null unless every population held has every period. Its arrays are the store's own:
    * posted (copied), never transferred, since later snapshots merge into them */
   forAside(): AsideShown | null {
     if (!this.pops.size || !this.zones?.length) return null;
+    // (every period of every population: each solving worker sends its own, T-4277)
+    if (![...this.pops.values()].every((e) => e.pop.periods.every(Boolean))) return null;
     return { gen: this.gen, pops: [...this.pops.values()].map((e) => e.pop), zones: this.zones, marketZones: this.marketZones, flags: this.flags ?? { whole: false, oneMarket: false, wide: false } };
   }
 

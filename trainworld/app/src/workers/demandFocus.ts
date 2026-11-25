@@ -41,7 +41,8 @@ export class FocusPool {
   /** the worker a question for an aux worker goes to: the pool's own aux, else its first solving worker */
   readonly auxAt: number;
 
-  constructor(readonly n: number, periodsOf: number[][], private hooks: FocusHooks, view: ToDemand, withAux: boolean) {
+  /** `maxZones`: zones held at once (T-4220: a side job's up to `ASIDE_MAX_ZONES`) */
+  constructor(readonly n: number, periodsOf: number[][], private hooks: FocusHooks, view: ToDemand, withAux: boolean, private maxZones = FOCUS_MAX_ZONES) {
     this.auxAt = withAux ? n : 0;
     for (let i = 0; i < n + (withAux ? 1 : 0); i++) {
       const w = new Worker(new URL("./demand.worker.ts", import.meta.url), { type: "module" });
@@ -67,7 +68,7 @@ export class FocusPool {
       w.postMessage({ kind: "open", packs: [{ ...pack, bin }], first: true } satisfies ToDemand, [bin]);
     });
     // the oldest zone beyond the cap goes (its figures stay shown; questions about it go to the main pool)
-    while (this.open.length + this.opening.size > FOCUS_MAX_ZONES && this.open.length) this.close(this.open[0]);
+    while (this.open.length + this.opening.size > this.maxZones && this.open.length) this.close(this.open[0]);
   }
 
   close(id: CityId) {
@@ -90,9 +91,22 @@ export class FocusPool {
    * generation already */
   aside(msg: Extract<ToDemand, { kind: "aside" }>) {
     if (this.ended) return;
-    const { shown: _, ...bare } = msg;
-    this.workers[0].postMessage(this.asideGen === msg.gen ? bare : msg);
-    this.asideGen = msg.gen;
+    const { shown, ...bare } = msg;
+    this.workers[0].postMessage(this.snapGoes(msg.gen, !!shown) ? msg : bare);
+  }
+
+  /** T-4220 stage 4: a side job (`solve.aside`) to the first solving worker, the snapshot as `aside` sends it */
+  asideSolve(msg: Extract<ToDemand, { kind: "solve" }> & { aside: NonNullable<Extract<ToDemand, { kind: "solve" }>["aside"]> }) {
+    if (this.ended) return;
+    const { shown, ...bare } = msg.aside;
+    this.workers[0].postMessage(this.snapGoes(bare.gen, !!shown) ? msg : { ...msg, aside: bare });
+  }
+
+  /** a snapshot of generation `gen` goes with a message: there is one to send and that worker does not hold it */
+  private snapGoes(gen: number, has: boolean): boolean {
+    if (!has || this.asideGen === gen) return false;
+    this.asideGen = gen;
+    return true;
   }
 
   /** the next round may start (the solve is sent with the barrier) */

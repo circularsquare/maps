@@ -80,7 +80,7 @@ import {
   demandHeld,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { SNAP_MAX_BYTES, ShownStore, type AsideAnswer, type Snapshot } from "./demandShown";
+import { ASIDE_MAX_ZONES, SNAP_MAX_BYTES, ShownStore, type AsideAnswer, type Snapshot } from "./demandShown";
 import { tracing } from "../game/freezeTrace";
 import { demandNote, startDemandTrace } from "./demandTrace";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad, smallDevice } from "./deviceMemory";
@@ -3384,34 +3384,118 @@ class DemandClient {
     if (demandView.peek()?.final) memoryResolve.value = true;
   }
 
+  /** T-4220, dev server only: the focus pool the side job's dev calls ask (`asidePlan`, `aside`), kept between them so
+   * the zones a side job opened stay open (`fpool` is T-2605's; nothing in play starts a side job yet, stage 6): the
+   * call in hand's taker of its messages, the zones it is opening, the level each zone was posted at */
+  private devPool: FocusPool | null = null;
+  private devTake: ((msg: FromDemand | null) => void) | null = null;
+  private devOpening = new Map<CityId, () => void>();
+  private devLevel = new Map<CityId, number>();
+  private devAsidePool(): FocusPool {
+    if (this.devPool?.alive) return this.devPool;
+    this.devLevel.clear();
+    const woken = () => { for (const r of this.devOpening.values()) r(); this.devOpening.clear(); };
+    return (this.devPool = new FocusPool(1, [periodsOfWorker(0, 1)], {
+      message: (_, msg) => this.devTake?.(msg),
+      opened: (id) => { this.devOpening.get(id)?.(); this.devOpening.delete(id); },
+      failed: (why) => { console.warn(`T4220 aside: ${why}`); this.devTake?.(null); woken(); }, // i18n-ignore
+    }, this.viewMsg(), false, ASIDE_MAX_ZONES));
+  }
+  /** a dev call's exchange with that pool: `send`, then every message to `take` until it answers (null: the pool failed) */
+  private devAsk<T>(send: (p: FocusPool) => void, take: (msg: FromDemand) => T | undefined): Promise<T | null> {
+    const pool = this.devAsidePool();
+    return new Promise<T | null>((done) => {
+      this.devTake = (msg) => {
+        const v = msg ? take(msg) : null;
+        if (v === undefined) return;
+        this.devTake = null;
+        done(v);
+      };
+      send(pool);
+    });
+  }
+  /** the newest network and the snapshot a side job's dev call goes against, or null (logged) */
+  private devAsideOn(what: string) {
+    const svc = this.latest(), shown = this.shownSnap.forAside();
+    // i18n-ignore
+    if (!svc || !shown) { console.info(`T4220 ${what}: no whole snapshot held`); return null; }
+    return { ...packService(svc), shown, version: this.version, cities: CITIES.map((c) => c.id).filter((id) => this.opened.has(id)) };
+  }
+
   /**
    * T-4220 stage 3, dev server only (`?debug=1`, `twDemand.client.asidePlan()`): the side job's plan for the newest
-   * network against the snapshot held, logged and returned. Asked of a focus pool of its own, ended after: `fpool` is
-   * T-2605's, and no side job is started yet (stage 6).
+   * network against the snapshot held, logged and returned.
    */
   async asidePlan(): Promise<AsideAnswer | null> {
     if (!import.meta.env.DEV) return null;
-    const svc = this.latest(), shown = this.shownSnap.forAside();
-    // i18n-ignore
-    if (!svc || !shown) { console.info("T4220 aside plan: no snapshot held"); return null; }
-    const { net, ids } = packService(svc), cities = CITIES.map((c) => c.id).filter((id) => this.opened.has(id)), version = this.version;
-    let pool: FocusPool | null = null;
-    const t0 = performance.now();
-    const plan = await new Promise<AsideAnswer | null>((done) => {
-      pool = new FocusPool(1, [periodsOfWorker(0, 1)], {
-        message: (_, msg) => { if (msg.kind === "asidePlan") done(msg.plan); },
-        opened: () => {},
-        failed: (why) => { console.warn(`T4220 aside plan: ${why}`); done(null); }, // i18n-ignore
-      }, this.viewMsg(), false);
-      pool.aside({ kind: "aside", version, net, ids, rounds: ROUNDS, cities, gen: shown.gen, shown, ...(perfOff("periods") ? { fresh: true } : {}) });
-    });
-    (pool as FocusPool | null)?.end();
+    const on = this.devAsideOn("aside plan"); // i18n-ignore
+    return on && this.devPlan(on);
+  }
+  private async devPlan(on: NonNullable<ReturnType<DemandClient["devAsideOn"]>>): Promise<AsideAnswer | null> {
+    const { net, ids, cities, version, shown } = on, t0 = performance.now();
+    const plan = await this.devAsk((p) => p.aside({ kind: "aside", version, net, ids, rounds: ROUNDS, cities, gen: shown.gen, shown, ...(perfOff("periods") ? { fresh: true } : {}) }), (m) => (m.kind === "asidePlan" ? m.plan : undefined));
     if (!plan) return null;
     const qs = (m: number) => PERIODS.map((_, q) => q).filter((q) => m & (1 << q)).join(",") || "none";
     const s = (ms: number | null) => (ms === null ? "not known" : `${(ms / 1000).toFixed(1)} s`); // i18n-ignore
     // i18n-ignore
     console.info(plan.refused ? `T4220 aside plan v${version} (snapshot ${shown.pops.length} populations): refused, ${plan.refused}: ${plan.why}` : `T4220 aside plan v${version} (snapshot ${shown.pops.length} populations): ${plan.fresh.length ? plan.fresh.map((z) => `${z.id}${z.level === LOD_COARSE ? " coarse" : ""}`).join(",") : "no zone"} fresh of ${shown.zones.length}; ${plan.clusters.map((c) => `cluster ${c.zones.slice(0, 6).join(",")}${c.zones.length > 6 ? ",..." : ""}: periods ${c.solve.join(",") || "none"} solved, ${qs(c.keep)} kept, ${s(c.ms)}`).join("; ") || "nothing to solve"}; expected ${s(plan.ms)}; planned in ${Math.round(plan.planMs)} ms, answered in ${Math.round(performance.now() - t0)} ms`);
     return plan;
+  }
+
+  /**
+   * T-4220 stage 4, dev server only (`?debug=1`, `twDemand.client.aside()`): a side job for the newest network against the
+   * snapshot held, in the dev pool: planned, its fresh zones opened there at the level the snapshot's solve held them
+   * (refused when the main pool holds one at another level now), then solved. Logs `T4220 aside ...` and returns the
+   * plan, its end (`asideDone`), its results by period and bubble sums, and from those results by the page's own reduction
+   * (`dayViews`, the weekday) each of its clusters' lines' riders and stations' boardings, for stage 5 to set beside a
+   * main-pool solve of the same network.
+   */
+  async aside(): Promise<{ plan: AsideAnswer; done?: Extract<FromDemand, { kind: "asideDone" }>; results?: Result[]; sums?: Extract<FromDemand, { kind: "sums" }>[]; lines?: Record<string, number>; stations?: Record<string, number>; openMs?: number; ms?: number } | null> {
+    if (!import.meta.env.DEV) return null;
+    const on = this.devAsideOn("aside"); // i18n-ignore
+    if (!on) return null;
+    const t0 = performance.now(), plan = await this.devPlan(on);
+    if (!plan || plan.refused) return plan && { plan };
+    const { net, ids, layout, cities, version, shown } = on, pool = this.devAsidePool();
+    const off = plan.fresh.filter((z) => (this.levelPosted.get(z.id) ?? LOD_FINE) !== z.level);
+    // i18n-ignore
+    if (off.length) { console.info(`T4220 aside v${version}: refused, level: ${off.map((z) => z.id).join(",")} held at another level now`); return { plan: { ...plan, refused: "level", why: off.map((z) => z.id).join(",") } }; }
+    const tOpen = performance.now();
+    await Promise.all(plan.fresh.map(async ({ id, level }) => {
+      if (pool.open.includes(id) && this.devLevel.get(id) === level) return;
+      if (pool.holds(id)) pool.close(id);
+      const [header, bin] = await this.downloadPack(id);
+      if (!pool.alive) return;
+      const opened = new Promise<void>((r) => this.devOpening.set(id, r));
+      this.devLevel.set(id, level);
+      pool.post({ id, header: new TextDecoder().decode(header), bin: bin.slice().buffer as ArrayBuffer, level });
+      await opened;
+    }));
+    const openMs = performance.now() - tOpen, results: Result[] = [], sums: Extract<FromDemand, { kind: "sums" }>[] = [];
+    const done = await this.devAsk((p) => p.asideSolve({ kind: "solve", version, net, ids, rounds: ROUNDS, ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), aside: { gen: shown.gen, cities, shown } }), (m) => {
+      if (m.kind === "asideDone") return m;
+      if (m.kind === "result" && m.cluster?.aside) results.push(m);
+      else if (m.kind === "sums" && m.aside) sums.push(m);
+      return undefined;
+    });
+    if (!done) return { plan };
+    // each cluster's five periods, its lines' riders and stations' boardings a weekday as the page works them out
+    const lines: Record<string, number> = {}, stations: Record<string, number> = {};
+    const byCluster = new Map<string, Result[]>();
+    for (const r of results) { const k = r.cluster!.cities.join(); byCluster.set(k, [...(byCluster.get(k) ?? []), r]); }
+    for (const rs of byCluster.values()) {
+      const res = PERIODS.map((_, q) => rs.find((r) => r.period === q));
+      if (res.some((r) => !r)) continue;
+      const own = new Set(rs[0].cluster!.lines);
+      const [d] = dayViews({ version, round: ROUNDS, final: true, layout: layout.filter((_, i) => own.has(i)), res: res.map((r) => dayResultOf(r!)), dayTable: this.dayTable, peakHourFactor: PERIODS.map((_, q) => this.periodTable[q * PERIOD_STRIDE + 5] ?? 1), solved: [], places: INTERCITY_PLACES.length, days: [0], noCorridors: true });
+      for (const [id, l] of d.view.lines) lines[id] = l.ridersPerDay;
+      for (const [id, st] of d.view.stations) stations[id] = st.boardings;
+    }
+    const s1 = (ms: number) => `${(ms / 1000).toFixed(1)} s`; // i18n-ignore
+    const solved = [...new Set(results.map((r) => r.period))].sort().join(",");
+    // i18n-ignore
+    console.info(done.plan.refused ? `T4220 aside v${version}: refused, ${done.plan.refused}: ${done.plan.why}` : done.stale ? `T4220 aside v${version}: stale (a newer job came first)` : `T4220 aside v${version} (snapshot gen ${shown.gen}): ${plan.fresh.map((z) => z.id).join(",")} fresh of ${shown.zones.length} zones; ${results.length} results (periods ${solved}); ${Object.keys(lines).length} lines, ${Math.round(Object.values(lines).reduce((a, b) => a + b, 0))} riders; bubble sums of ${done.sums?.join(",") || "none"}; ${s1(done.ms)} in the worker, expected ${plan.ms === null ? "not known" : s1(plan.ms)}, opening ${s1(openMs)}, ${s1(performance.now() - t0)} in all`);
+    return { plan, done, results, sums, lines, stations, openMs, ms: performance.now() - t0 };
   }
 
   /** T-1174, dev server only (`?debug=1`, `twDemand.client.debugPanic`): make worker `i` panic. */
@@ -4137,7 +4221,7 @@ class DemandClient {
     markStep();
     if (msg.kind === "unit") { this.inUnit[i] = { round: msg.round, period: msg.period, at: performance.now() }; return; }
     if (msg.kind === "shown") return this.shownIn(i, msg.version, msg.snap);
-    if (msg.kind === "asidePlan") return; // (a focus pool's alone)
+    if (msg.kind === "asidePlan" || msg.kind === "asideDone") return; // (a focus pool's alone)
     if (msg.kind === "result") this.inUnit[i] = null;
     if (msg.kind === "loads" && msg.to) {
       // T-3373 B: on to the cluster's other holders
