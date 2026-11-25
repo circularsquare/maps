@@ -117,15 +117,15 @@
     {
       "id": "c002",
       "text": "stations and track show up faster on big networks",
-      "edited": "stations, track and deleting lines show up faster on big networks",
+      "edited": "stations, track and deleting lines show up faster on big networks, even while trips are calculating",
       "hidden": false,
       "task": "T-4153",
       "by": "netland",
       "at": "2026-11-24T20:01:50Z",
-      "rev": 2,
+      "rev": 3,
       "area": "performance",
       "fix": false,
-      "changed": "2026-11-24T21:16:34Z"
+      "changed": "2026-11-25T00:00:32Z"
     },
     {
       "id": "c001",

@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4240 [P1] {L:edit-speed} Stations on her Asia save take seconds to show up (2026-11-24): A station on her Asia save shows up in 0.75 s (was 1.88 s), 1.41 s while trips are calculating (was 6.14 s): edits redo only the boarding accounts of lines whose service changed. Leftovers filed as T-4249. notes/T-4240.md.
 - T-4234 [P2] {L:checks} Edit bench's stop click misses on New York (2026-11-24): each stop click pans to the station first; NYC stop click measured (noisy runs); baseline to rewrite in a quiet window.
 - T-4241 [P2] {L:edit-speed} Review findings on the 11-24 edit-speed landings (2026-11-24): all five findings fixed at their cause; typecheck clean; 1 game run. notes/T-4241.md.
 - T-4048 [P3] {L:route-choice} Remove station connections and passageways (2026-11-24): While placing a passage, each passage and connection drawn has a remove button; a removed automatic connection splits the complex there and stays apart through edits, undo and saves (Network::apart, LAP1). notes/T-4048.md.

@@ -10,6 +10,7 @@ artifacts/trainworld/T-4120/.
 
 ## Track
 
+- 2026-11-25 (Anita, T-4248): Track should cross the 180th meridian if players build there ("this is not a game to replicate real world rails"), replacing the refusal in docs/world.md "The plane's edges" once built; scoped first.
 - 2026-11-23 (Anita, T-4085): More tracks are single tracks side by side, up to the model's 16, no game limit, replacing quad as two doubles (T-255); a partner is only the return-run default. Add a track on built track is blueprint, paid on Construct.
 - 2026-11-23 (Anita, T-4037): Line paths span a part of a bundle track between station cuts, not the whole track (Anita's (b)), departing from T-3444's design; placing or removing a station rewrites the paths over its piece.
 - 2026-11-20 (Anita, T-3027): Levels are 8 m apart. A ramp's speed limit is 0.8 km/h per metre per level (Anita: "200m should be anchored to 160"), though real 200 m ramps allow about 65 km/h; older ramps keep no limit.
@@ -36,6 +37,8 @@ artifacts/trainworld/T-4120/.
 
 ## Stations
 
+- 2026-11-24 (T-4048): Remove on a passage, in the station panel or on its map button, also splits the complex there where the distance rule joins the two stations, so one Remove means they no longer connect at that join. notes/T-4048.md
+- 2026-11-24 (Anita, T-4247): Tram stops can have parking, listed with their improvements like a station's ("lets just allow parking at tram stops and include it in the list"). The line view's "Add parking at all stations" already added it with no way to remove it.
 - 2026-11-24 (Anita's ask, T-4048): Removing a connection the distance rule draws splits the complex at that join: every pair the rule links across it is kept apart (saved, free, one Ctrl+Z step), and demand neither merges nor walks those pairs. Passages and buildings still join. notes/T-4048.md
 - 2026-11-23 (Anita, T-4105): Train station stays the Station tool's default; Auto is one click away. Auto takes track, then a road or bus route within 12 px, a ferry route, water or shore, else a train station, so open ground near a street gives BRT.
 - 2026-11-21 (Anita, T-3999): A train or tram station can go on open ground again (reversing T-1820, at players' asking): first click one platform end, second its direction. The Station tool picks its kind, so open ground by a road never places BRT. notes/T-3999.md
@@ -159,6 +162,7 @@ artifacts/trainworld/T-4120/.
 
 ## Buses
 
+- 2026-11-25 (Anita, T-4251): Bus stops and BRT stations can be built on busways ("that should definitely be allowed").
 - 2026-11-24 (T-4080): A kept bus stop no stop takes, or one left with no name and no connection that holds (its station removed), lasts the session, so an undo finds it again, and is forgotten at the next save and load. notes/T-4080.md
 - 2026-11-24 (Anita, T-4052): Riders left behind count once each, at the first train or bus to leave them; riders turned away from a full stop don't (they went another way). Rail counts drop too (NYC save 11%). Kept per departure with a queue, 4 bytes each. notes/T-4052.md
 - 2026-11-24 (T-4052): A bus stop holds at most 200 waiting each way (a bus's 12 m of sidewalk, 5 m deep at 0.3 m² a rider, as a platform's 5,000), a BRT station 667. Boarding account only, so trips and fares don't move. notes/T-4052.md
@@ -231,6 +235,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-24 (T-4240): An edit's state and trips wait only for the boarding accounts of lines whose service it changed. Lie: while new riders are worked through (a few seconds on Asia), other lines' trains show their last riders' loads, as they did before the edit.
 - 2026-11-24 (, T-4199): Fare weights and income groups are fareBits.json's (Chrome's last bits) in every browser, so one corridor file serves all; New York's book is the file's plus its two-lands rows. Lie: other engines' last bits; no trip moved on New York or Montana. notes/T-4199.md
 - 2026-11-24 (T-4204): An idle demand worker over its need restarts only when the pool's memory passes 95% of the budget, since its restart recalculates the whole game (6 minutes on Asia); up to a few hundred MB a worker stay held meanwhile.
 - 2026-11-24 (Anita, T-4202): After an update, a save opens with the last version's kept trip figures while the new ones calculate; the lie is a few minutes of old figures, for opening at about map time.

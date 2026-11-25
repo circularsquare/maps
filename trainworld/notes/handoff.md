@@ -1,29 +1,28 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8e9c7c49-010f-4c78-a0db-d5be0797af3f, name maps-3e [111c39], since 2026-11-24 23:50 UTC
-Updated: 2026-11-24 23:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 00:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5. Core cap 14. Start more when agents + claimed cores / 2 is under 8 (her 11-24).
 
 ## Next
-1. Running in maps-d9's tab (adopt from the inbox; briefs in maps-d9's scratch <agent>/brief.md): settlestop T-4239
-   (Opus: the train-count settle stops once lines hold nearly still; her "fewer rounds", DECISIONS), stationwait
-   T-4240 (Opus: her Asia station wait, step table first), busload T-4193 (Opus: bus streets before the load).
-   T-4080 stages 1-2 landed a958d1870 (save level 40, LBK1); keepreview's findings for stage 3 are in notes/T-4080.md.
-   Tree passx (T-4048) passed review except F1 (sim/src/demand/kernel/search.rs:389: a separated pair rejoined in one
-   complex gets no walk): a fresh agent on tree passx fixes F1 (+ the cheap F2, F4-F7 in its notes), then lands at save
-   level 41 (save.rs LEVEL, saveFile.ts SAVE_LEVEL, the pin to (41, 44), its block after LBK1).
-2. 8800 = 4e8c50f3, smoke PASS. On master since: T-4241 (review13 fixes), T-4234 (bench tool). Rebuild 8800 after the
-   next round of landings (snap8800 + smoke against 8800; await the whole chain in one script).
-3. T-4220 approved 23:46 ("ok, we can build 4220"): build its 9 stages (notes/T-4220.md), stage 1 first, Opus.
-   Waiting on her: T-4223's two loop refusals not yet text-acked. T-4242 filed from her tw-feedback question (P3).
-4. Next when the formula allows: corridors3 (T-4199 stage 2: merge master into tree corridors, its demand worker
-   files moved under T-2188/T-4237/T-4241; then NYC +13 MB), T-4238 (bus weekend headway, read first), T-4080 stages
-   3-6 after busstops lands, T-4214 stages A/D/E, T-4231, T-4149/T-4150, T-4230, T-4187, T-3160, T-4233, T-4222 P3.
-   After that her big three: T-3444 track rework, T-3742 schedule nudging, T-3694 + T-3456.
-5. Rewrite the edit_bench baseline in a quiet window (master Vite, `edit_bench.mjs --save asia,nyc --baseline`): it
-   has no NYC stop click yet. Batches are reviewed by reading plus Gemini (docs/orchestrator.md "Landing").
+1. Running, maps-d9's tab (adopt from the inbox): settlestop T-4239 (settle stops once lines hold still), busload T-4193
+   (bus streets before the load). maps-3e's tab (briefs in its scratch <agent>/brief.md): passfix (tree passx: merge
+   master, review fixes F1, F2, F4-F8, save level 41 after LBK1; T-4048's line was archived early, so land passx with
+   `land` + `remove`, no --task), aside1 (T-4220 stage 1, tree aside1; merges master after passx lands).
+2. Master 67ad112c3 (T-4240 landed 00:08). 8800 rebuild + smoke against it started after that landing (scratch
+   snapbuild.log, smoke-67ad112c3.log). Batch review due over T-4241, T-4234, T-4080 s1-2, T-4240, then passx.
+3. Next when the formula allows: T-4231 (Sonnet, Apply to all weekend bug); T-4153 stage 5 (drawn network for a cut
+   line, P1); T-4214 A/D/E (P1); T-4249 (T-4240's leftovers); T-4250 (relief line empty beside a crowded one, read the
+   code); T-4251 (bus/BRT stations on busways); T-4243 speedometer; T-4247 tram stop parking; T-3742 nudging after
+   settlestop lands (her 11-25: maybe wait for the trip-speed work; my call). Then corridors3 (T-4199 stage 2), T-4238,
+   T-4080 stages 3-6, T-4149/T-4150, T-4230, T-4187, T-3160, T-4233, T-4242 design, T-4248 scope.
+4. Waiting on her: T-4223's two loop refusals not yet text-acked.
+5. Rewrite the edit_bench baseline in a quiet window (master Vite, `edit_bench.mjs --save asia,nyc --baseline`).
 
 ## Her words
+- 11-25 00:03: 180th meridian "if people want to build it, they should ideally be able to" (DECISIONS; T-4248 becomes scope then build). Airports: later, P3, "make sure we dont reinvent the wheel" (T-4244). T-3742: unsure, may wait for nearby trip-speed work; "if you think its fine, we can start it" (my call: after settlestop lands).
+- 11-24 23:56 to 11-25 00:07 scratch pads: filed T-4243 to T-4251; tram stop parking and bus stops on busways allowed (DECISIONS).
+- 11-24 23:55 (in maps-d9's tab): T-4242 weekend riders "p2 at least, its quite visible for some people" (raised to P2; design goes to her before building).
 - 11-24 23:35: "text ack" for T-4048's "Connection between {a} and {b} removed." (T-4223's two loop refusals not yet acked).
 - 11-24 22:4x: "we're maybe relying a bit too much on testing ... you guys get a lot more mileage by thinking about actual
   code than by trying to test. the ways in which you think to test don't really align super well with how people play.
@@ -53,4 +52,4 @@ diary notes/handoff-log.md. Her time UTC-5. Core cap 14. Start more when agents 
 - Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), corridors (T-4199 stage 1).
 - Unmerged branches with no tree, left on purpose: tw/hotfix-10d, tw/release-021, tw/release-031, tw/onegraph-measured.
 - A task with stages left: `agent-tree.mjs land` + `remove`, not `finish`; swap the taking mark by hand.
-- reserve_cores: maps-d9's retry loop (task bpobbmf27) dies with its tab; start one in yours.
+- reserve_cores: maps-3e's retry loop (task b19u3mylb; exits each pass while maps-d9's runs, takes over when that tab closes).

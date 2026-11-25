@@ -162,6 +162,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: A player, 11-22: a line with 21 one-way platforms is "extremely laggy", once 40 minutes for the stops to register. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Tree onewaylag has a memo making stop_tiers 2.3x faster (uncommitted). Notes/T-4045.md.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
+- T-4251 [P2] {L:buses} Bus and BRT stations on busways
+  - Context: A player (via your scratch pad, 11-25): "bus stations cannot be built on busways"; you: "that should definitely be allowed". The same player: "when creating a BRT line, cant connect BRT stations" (unclear; read their report in tw-feedback).
+  - Goal: Bus stops and BRT stations can be placed on busways, and the second complaint named and fixed if it's a bug.
 - T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them
   - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
   - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
@@ -206,6 +209,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
+- T-4249 [P2] {L:edit-speed} A station's own leftover waits on big saves
+  - Context: From T-4240 (11-25): after its fix a station on your Asia save shows up in 0.75 s. Of the edit's own part, trips are still re-sent after an edit that changes no train's run, and the station check still runs in the worker at the click (most of the 174 ms before the apply).
+  - Goal: Neither paid by an edit that doesn't need it.
+  - Other: notes/T-4240.md
 - T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched
   - Context: Waiting clicks landed 11-24 (7ff71c929). The clickable map patched with each edit's pieces (stage C, kept off the panels' world) is built in tree mapcfix, not landed. You, 11-24: work at the root cause, "something like a silo approach". Left: the station name wait, a track run's placing wait, drawings at the click. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
   - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
@@ -348,9 +355,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3485: the airport's pack share counts people across a border at full weight, then the border factor drops what doesn't land: Hong Kong loses 54% of its ground trips, Luton 77%, Basel 71%, Geneva 42%; 0.6M a day worldwide.
   - Goal: Outside people weighed by the border factor in the pack share at the next world rebuild; Hong Kong near its published ground trips.
   - Other: notes/T-3485.md
-- T-4242 [P3] {L:timetables} Weekend riders follow weekend trains
-  - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. True to the rule: weekend riders are scaled from the weekday solve (T-2335, docs/demand-worldwide.md "Timing, weekends").
+- T-4244 [P3] {L:airports} Airport rail rides against real counts
+  - Context: Players keep asking for more airport demand (tw-feedback, 11-24). You, 11-25: later, P3; recent airport work exists (T-2896, T-3502, T-3485, T-3501, T-4020), so build on it, "make sure we dont reinvent the wheel". A change to the numbers is yours.
+  - Goal: Our rides beside published counts for 5-10 airports, and a proposal to you.
+- T-4242 [P2] {L:timetables} Weekend riders follow weekend trains
+  - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
+- T-4250 [P2] {L:route-choice} A short line beside a crowded long one stays empty
+  - Context: A player report (via your scratch pad, 11-25): line B runs a short part of long line A to relieve it, but A stays over 130% there while B sits near 60%. Maybe real (riders going past B's end), maybe riders not weighing A's crowding when picking a train. Reach: some, anyone adding a relief line.
+  - Goal: The code says why; fixed if riders whose trip fits B ignore A's crowding.
+- T-4245 [P3] {L:timetables} Timetables for bus and ferry lines
+  - Context: A player request (tw-feedback, 11-24). You, 11-24: "should be easy i think". The schedule panel's timetable is rail only: the sim keeps no trip timetable for bus and ferry lines, so the sim has to work one out first.
+  - Goal: A bus or ferry line's schedule panel shows its timetable like a rail line's.
 - T-4238 [P3] {L:timetables} Bus weekend rows run more often than weekdays on the same fleet
   - Context: Seen by the batch checker (11-24): a midtown bus line with 25 buses showed a 1 min headway on its weekend rows and 1.5 min on weekdays. May be right (shorter weekend trips) or a slip near T-4227's weekend share-out; not read yet.
   - Goal: The code says why, and it's fixed if it's a slip.
@@ -359,7 +375,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Apply to all lines sets every line's weekend percent; t3521-weekends passes.
   - Other: notes/T-4227.md
 - T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times
-  - Context: You, 11-21: per-row Offset design approved, "we can leave it for now, but good that its planned! will start later". A player, 11-18: "the ability to offset departure times from whatever the game defaults to (like for example +4 minutes or -5 minutes)... to minimise conflicts between lines that share tracks". Design done (agent nudgedesign); strings drafted in the note.
+  - Context: You, 11-21: per-row Offset design approved, "will start later". A player, 11-18: "offset departure times ... (like for example +4 minutes or -5 minutes)". Japanese players keep asking to set the ダイヤ (daiya, Japanese rail's word for the timetable; 11-24). Design done (agent nudgedesign); strings drafted in the note.
   - Goal: Rail lines' rows take an offset from the game's timing that holds through later edits, shown at once on the board, chart and map.
   - Other: notes/T-3742.md
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
@@ -447,6 +463,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4243 [P2] {L:small-fixes} Speedometer on a train's panel
+  - Context: A player request (tw-feedback, 11-24). You, 11-24: a round dial, its rim coloured with the speed colours we already use (red slow, purple very fast), a needle turning around a centre circle, and the speed number in the middle, its text colour matching the current speed.
+  - Goal: A running train's panel shows that dial; a screenshot to you.
+- T-4246 [P3] {L:map-look} Tram wires look rough at corners in thickness mode
+  - Context: You, 11-24: "trams and their two white wires look a little ugly in demand thickness mode, when they turn around corners. not sure if we could improve this easily."
+  - Goal: Tram wires follow corners cleanly at every width.
+  - Other: artifacts/trainworld/board/20261124-184709-a7d6.png
 - T-4228 [P3] {L:map-look} Profit view leaves some track uncoloured
   - Context: Player report 11-21 (board g150): in the profit view some areas show no profit with trains running. Reach: few, one report.
   - Goal: Every segment trains run on gets a profit colour.
@@ -899,14 +922,11 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4240 [P1] {L:edit-speed} Stations on her Asia save take seconds to show up (taking, 2026-11-24, agent stationwait)
-  - Context: You, 11-24: "station placement currently also still feels kinda bad on my asia save, it takes a couple seconds for them to show up". The master baseline (b7b9e4ee, trips final, quiet machine) has a station built in 1.19 s on Asia; T-4153 and T-4214 cut parts of it since.
-  - Goal: Where a station's wait goes on Asia, step by step, and the biggest part cut at its cause.
 - T-4239 [P1] {L:solve-speed} Train counts that never settle on shared track (taking, 2026-11-24, agent settlestop)
   - Context: You, 11-24: players' saves of about 900 stations "completely bricked", maybe from lots of interlining. T-4188 found on a Tokyo community save that 10-13 lines sharing full track trade rates every round and never hold still, so every load and edit runs all 80 settle rounds (edits 5-35 s natively), and each bus zone adds another settle.
   - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
   - Other: notes/T-4188.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-24, agent aside1)
   - Context: Design approved 11-24 ("ok, we can build 4220"): 9 stages, 12-14 h. You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... we need to do some sort of batching". On Asia an edit during the refresh or an intercity re-solve waits 100-250 s; the design gives lone-edit time (8-40 s). Gemini reviewed it.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
@@ -1005,6 +1025,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
+- T-4247 [P2] {L:trams} Parking at tram stops
+  - Context: You, 11-24: "lets just allow parking at tram stops and include it in the list." Today the line view's "Add parking at all stations" adds parking at tram stops, but a tram stop's improvements list has no parking, so it can't be removed.
+  - Goal: A tram stop lists parking with its improvements, added and removed like a station's.
+- T-4248 [P3] {L:track-drawing} Track across the 180th meridian
+  - Context: A player building a Bering Strait line (your scratch pad, 11-24) gets "Too far for one piece of track" for any piece crossing 180°: the flat map measures it the long way around. Today crossing is refused (docs/world.md "The plane's edges"). You, 11-25: "if people want to build it, they should ideally be able to."
+  - Goal: First a scope from the code (geometry, drawing, tiles and zones, trips across the line), then track that crosses 180° and works like any other.
 - T-3692 [P3] {L:track-drawing} Bezier track as a setting
   - Context: Your old TODO: "bezier track placement, toggleable". You, 2026-11-18: "bezier track should be toggleable in settings yes".
   - Goal: A design to you first (how a curve is drawn and edited, what speed rules apply), then a settings toggle for bezier placement.
