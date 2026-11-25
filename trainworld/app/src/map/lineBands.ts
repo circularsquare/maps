@@ -93,6 +93,9 @@ const SMOOTH_KNOTS = 9;
  * SPAN_M across) */
 const HOLD_RUN_M = 2000;
 const HOLD_M = 50;
+/** numbers per box a line looked for tracks in to hold a ribbon (`LineMemo.holds`): x0, y0, x1, y1, and the path entries
+ * of the held stretch's first and last samples */
+const HOLD_STRIDE = 6;
 /** "align" (T-2140): ribbon changes of one ribbon whose places (on each line's track) are within this
  * many metres are one change; a line's curve is moved only to a point of its track within ALIGN_NEAR_M */
 const ALIGN_M = 100;
@@ -153,7 +156,7 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   const o = { ...opts, beside };
   const ends = opts?.ends ?? new Map(edges.map((e) => [e.id, e]));
   if (!opts?.debug) { for (const k in bandLaps) delete bandLaps[k]; bandT = performance.now(); }
-  if (!opts?.debug) { bandWork.orders = 0; bandWork.pairs = 0; bandWork.passed = 0; bandWork.lines = 0; bandWork.whole = 0; bandWork.spliced = 0; bandWork.swept = 0; bandWork.copied = 0; bandWork.samplesKept = 0; bandWork.samplesMade = 0; }
+  if (!opts?.debug) { bandWork.orders = 0; bandWork.pairs = 0; bandWork.passed = 0; bandWork.lines = 0; bandWork.whole = 0; bandWork.spliced = 0; bandWork.swept = 0; bandWork.copied = 0; bandWork.samplesKept = 0; bandWork.samplesMade = 0; bandWork.windowed = 0; bandWork.winSamples = 0; }
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length);
   const mode = `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}`;
   // (a fresh pass, for `rule` and the check, lays every path out again)
@@ -180,8 +183,13 @@ export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[]
   const out = bands(rail, on, ends, pts, { ...o, delta: follow ? { edges: delta!, moved } : undefined });
   if (bandCheck) {
     // (T-4153: the corridors and the lines on each edge from scratch too, or a slip in what is kept is in both)
+    freshMemo = null;
     const bad = bandsDiffer(out, bands(rail, fresh(), ends, pts, { ...o, fresh: true, beside: newBesideState() }));
     if (bad) console.error(`T-2238 check: bands worked out again for an edit differ from a whole pass: ${bad}`);
+    // (T-4153 stage 9: and every line's kept work, which a later edit's window reads where nothing drawn shows it)
+    const badKept = memo && freshMemo ? keptDiffer(memo, freshMemo) : "";
+    if (badKept) console.error(`T-4153 check: the lines' kept band work differs from a whole pass's: ${badKept}`);
+    freshMemo = null;
   }
   // T-3939: kept without `rule`, whose closure holds the whole of `bands`' working set (18 MB on a 13-zone Tokyo game)
   last = { pts, ends, rail, mode, out: { of: out.of, own: out.own, order: out.order, rule, corridor: out.corridor } };
@@ -230,6 +238,36 @@ function bandsDiffer(a: LineBands, b: LineBands): string {
   const recs = x.recs.length === y.recs.length ? x.recs.filter((s, i) => s !== y.recs[i]).length : -1;
   const order = [...b.order].filter(([e, v]) => a.order.get(e)?.join() !== v.join()).length + (a.order.size === b.order.size ? 0 : 1);
   return lines.length || recs || order ? `lines ${lines.slice(0, 8).join(", ")}${lines.length > 8 ? "..." : ""}; Traffic records ${recs}; edges' orders ${order}` : "";
+}
+
+/** T-4153 stage 9 (`?patch=check`): how the lines' kept work (`BandMemo.lines`: the pieces, steps and their entries, the
+ * ribbon changes and their steps, the hold boxes) differs from a whole pass's, "" for not at all; recipes as what they are */
+function keptDiffer(kept: BandMemo, whole: BandMemo): string {
+  const out: string[] = [];
+  const eq = (a: ArrayLike<number> | undefined, b: ArrayLike<number> | undefined) => {
+    if (!a || !b) return !a === !b;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (!Object.is(a[i], b[i])) return false;
+    return true;
+  };
+  const sameAt = (a: AlignAt, b: AlignAt) => a.key === b.key && a.prio === b.prio && a.enter === b.enter && [a.x, a.y, a.r, a.g, a.c, a.L, a.px, a.py].every((v, i) => Object.is(v, [b.x, b.y, b.r, b.g, b.c, b.L, b.px, b.py][i]));
+  for (const [id, w] of whole.lines) {
+    const k = kept.lines.get(id);
+    if (!k) { out.push(`line ${id} not kept`); continue; }
+    const bad: string[] = [];
+    const s = k.sweep, t = w.sweep;
+    if (!s !== !t) bad.push("sweep");
+    else if (s && t) {
+      if (!eq(s.start, t.start)) bad.push("entries' starts");
+      if (!eq(s.pv, t.pv) || !eq(s.pw, t.pw) || !eq(s.pq, t.pq) || s.prc.length !== t.prc.length || s.prc.some((r, i) => k.recipes[r]?.key !== w.recipes[t.prc[i]]?.key)) bad.push("pieces");
+      if (!eq(s.sc, t.sc) || !eq(s.sL, t.sL)) bad.push("steps");
+    }
+    if (!eq(k.pk, w.pk)) bad.push("pieces' entries");
+    if (!eq(k.cs, w.cs) || k.changes.length !== w.changes.length || k.changes.some((a, i) => !sameAt(a, w.changes[i]))) bad.push("ribbon changes");
+    if (!eq(k.holds, w.holds)) bad.push("hold boxes");
+    if (bad.length) out.push(`line ${id}: ${bad.join(", ")}`);
+  }
+  return out.slice(0, 6).join("; ") + (out.length > 6 ? `; ${out.length - 6} more` : "");
 }
 
 /** a Traffic table's recipes and records as text, each recipe as what it is (its ribbon, slot and sign), not its number */
@@ -392,7 +430,7 @@ const sameChange = (a: AlignAt, b: AlignAt) => a.key === b.key && a.prio === b.p
   && Math.abs(a.L - b.L) < ALIGN_SAME && (Object.is(a.px, b.px) || Math.abs(a.px - b.px) < ALIGN_SAME) && (Object.is(a.py, b.py) || Math.abs(a.py - b.py) < ALIGN_SAME);
 /** T-2238: one line's bands as last worked out, with its recipes numbered in the order it first used
  * them, and what they were made from: the edges it read (`deps`), the boxes it looked for tracks in
- * to hold a ribbon across a gap (`holds`, x0, y0, x1, y1 each), and its ribbon changes */
+ * to hold a ribbon across a gap (`holds`, HOLD_STRIDE each), and its ribbon changes */
 interface LineMemo {
   path: number[];
   deps: number[];
@@ -400,6 +438,9 @@ interface LineMemo {
   rels: string[];
   holds: number[];
   changes: AlignAt[];
+  /** T-4153: per ribbon change the step of its sweep it is (`SweepIn.sc`), and per piece the path entry it lies on */
+  cs?: Int32Array;
+  pk?: Int32Array;
   recipes: OwnRecipe[];
   /** its profile and Traffic records with its own recipe numbers; `recPos` where those are in `recs` */
   profile: Float32Array | null;
@@ -419,6 +460,32 @@ interface LineMemo {
   /** T-4153: its samples and what each entry's were read from */
   smp?: LineSamplesMemo;
 }
+/** T-4153: entry k's samples as the line's last bands had them on its entry ko, moved along by d (exact on the path grid),
+ * where nothing they read has changed since (`changed` edges, `relChanged` pair rules); false, nothing written, where
+ * something has. (A module function, so it runs optimized: inside `bands` it ran at V8's baseline speed, stage 6.) */
+function keptSamples(was: LineSamplesMemo, ko: number, k: number, d: number, smp: LineSamplesMemo, K: number[], lineDeps: Set<number>, lineRels: Set<string>, changed: ReadonlySet<number>, relChanged: ReadonlySet<string>): boolean {
+  const ds = was.deps[ko], rs = was.rels[ko];
+  for (let i = 0; i < ds.length; i++) if (changed.has(ds[i])) return false;
+  if (rs) for (let i = 0; i < rs.length; i++) if (relChanged.has(rs[i])) return false;
+  const a = was.js[ko], b = was.js[ko + 1], { M, H, R, S } = smp;
+  for (let j = a; j < b; j++) {
+    M.push(was.M[j] + d);
+    H.push(was.H[j]);
+    K.push(k);
+    R.push(was.R[j]);
+    S.push(was.S[j]);
+  }
+  if (was.any[ko]) smp.any[k] = 1;
+  smp.deps[k] = ds;
+  smp.rels[k] = rs;
+  for (let i = 0; i < ds.length; i++) lineDeps.add(ds[i]);
+  if (rs) for (let i = 0; i < rs.length; i++) lineRels.add(rs[i]);
+  bandWork.samplesKept += b - a;
+  return true;
+}
+/** T-4153 stage 9: a line worked out in a window: its ribbon changes before the window and after it as its last bands had
+ * them (`suf` moved along by the cut's shift), and the window's own as they were and are */
+interface OwnWindow { pre: AlignAt[]; suf: AlignAt[]; oldLive: AlignAt[]; live?: AlignAt[] }
 /** T-4153: a line's samples (metres along its path, half their spacing, ribbon, slot) and per entry where its samples start
  * (`js`), its start, whether any is in a ribbon of more than one line, what its ribbons read (edges, pair rules), its
  * edge's corridor samples and its length */
@@ -525,11 +592,17 @@ export function bandSelfTest(on: boolean) { selfTest = on; }
 export const bandLaps: Record<string, number> = {};
 let bandT = 0;
 const blap = (k: string) => { const t = performance.now(); bandLaps[k] = (bandLaps[k] ?? 0) + t - bandT; bandT = t; };
-export const bandWork = { orders: 0, pairs: 0, passed: 0, lines: 0, whole: 0, passedAll: 0, followed: 0, spliced: 0, swept: 0, copied: 0, splicedAll: 0, sweptAll: 0, copiedAll: 0, samplesKept: 0, samplesMade: 0 };
+export const bandWork = { orders: 0, pairs: 0, passed: 0, lines: 0, whole: 0, passedAll: 0, followed: 0, spliced: 0, swept: 0, copied: 0, splicedAll: 0, sweptAll: 0, copiedAll: 0, samplesKept: 0, samplesMade: 0, windowed: 0, winSamples: 0, windowedAll: 0, winSamplesAll: 0, winMiss: 0, winLinked: 0 };
 /** T-4153 self-test: a line worked out again after an edit sweeps only its entries that changed, not those beside them
  * whose knots the change reaches (a station on a long line's shared track must fail the check) */
 let spliceTest = false;
 export function spliceSelfTest(on: boolean) { spliceTest = on; }
+/** T-4153 stage 9 self-test: a line worked out in a window keeps no hold boxes after the window, which nothing drawn shows
+ * (only a later edit near them would miss the line), so only the check of the lines' kept work can catch it */
+let windowTest = false;
+export function windowSelfTest(on: boolean) { windowTest = on; }
+/** `?patch=check`: the lines' kept work of the last whole pass, for comparing with the kept memo's (`keptDiffer`) */
+let freshMemo: BandMemo | null = null;
 function sameOrderLines(m: OrderMemo, v: readonly { line: BandLine; k: number }[], diffOf: (q: number[], p: number[]) => PathDiff | null): boolean {
   if (m.lines.length !== v.length) return false;
   for (let i = 0; i < v.length; i++) {
@@ -979,7 +1052,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   for (const l of rail) {
     const lm = mm.lines.get(l.id);
     if (!lm || lm.path.length !== l.path.length || l.path.some((p, k) => p !== lm.path[k]) || lm.deps.some((d) => changedEdges.has(d)) || lm.rels.some((k) => relChanged.has(k))) redo.add(l.id);
-    else for (let h = 0; h < lm.holds.length && !redo.has(l.id); h += 4)
+    else for (let h = 0; h < lm.holds.length && !redo.has(l.id); h += HOLD_STRIDE)
       for (let b = 0; b < changedBoxes.length; b += 4)
         if (!(changedBoxes[b + 2] < lm.holds[h] || changedBoxes[b] > lm.holds[h + 2] || changedBoxes[b + 3] < lm.holds[h + 1] || changedBoxes[b + 1] > lm.holds[h + 3])) {
           redo.add(l.id);
@@ -1251,7 +1324,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       perM = kAtY(y);
     }
     const reach = HOLD_M * perM;
-    holdBoxes.push(x0 - reach, y0 - reach, x1 + reach, y1 + reach);
+    holdBoxes.push(x0 - reach, y0 - reach, x1 + reach, y1 + reach, at(j0)[0], at(j1)[0]);
     const near = others.map((id) => (byId.get(id)?.path ?? []).map((q) => q >> 1).filter((g) => {
       const gp = pts.get(g);
       if (!gp || gp.length < 6) return false;
@@ -1285,17 +1358,29 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     deps: Set<number>;
     rels: Set<string>;
     holds: number[];
+    /** the step of its sweep each of `changes` is (in smoothKnots' steps) */
+    chStep: number[];
     /** its ribbon changes as they were before lining up */
     aligns?: AlignAt[];
     sweep?: SweepIn;
     recAt?: Int32Array;
     nzE?: Uint8Array;
     smp?: LineSamplesMemo;
+    cs?: Int32Array;
+    pk?: Int32Array;
+    /** T-4153 stage 9: worked out in a window, `changes` the window's alone (`OwnWindow`) */
+    win?: OwnWindow;
   }
   const alignOf = (key: string, c: Change): AlignAt => {
     const [px, py] = c.pointAt(c.step.c);
     return { key, x: c.at[0], y: c.at[1], r: ALIGN_M * kAtY(c.at[1]), prio: c.prio, enter: c.enter, g: c.g, c: c.step.c, L: c.step.L, px, py };
   };
+  /** a change kept as it was, in its group's lining up: its place and curve as they were, never moved (what it comes to is
+   * its line's already) */
+  const asKept = (id: number, a: AlignAt): Change => ({ id, step: { c: a.c, L: a.L }, prio: a.prio, g: a.g, enter: a.enter, at: [a.x, a.y], pointAt: () => [a.px, a.py], nearM: () => NaN });
+  /** T-4153 stage 9: the changes a window kept as they were, by line; and the lines to work out whole this call */
+  const frozen = new Map<AlignAt, number>();
+  const wholeOnly = new Set<number>();
   /** every ribbon change, of the lines kept as they were and of those worked out as they are now,
    * linked to one of `from` through changes of its group within reach of each other */
   const linked = (from: AlignAt[], visit: (id: number, c: AlignAt) => void) => {
@@ -1414,7 +1499,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     blap("q.other");
     // (T-4153: its own recipes numbered as its last bands had them, a new one after them)
     const lmWas = mmKept ? mm.lines.get(l.id) : undefined;
-    const mine: Own = { recipes: lmWas ? lmWas.recipes.slice() : [], idx: lmWas ? new Map(lmWas.recipes.map((rc, i) => [rc.key, i])) : new Map(), recs: new Nums(), recPos: new Nums(), nRecords: 0, profile: null, changes: [], later: null, deps: new Set(l.path.map((p) => p >> 1)), rels: new Set(), holds: [] };
+    const mine: Own = { recipes: lmWas ? lmWas.recipes.slice() : [], idx: lmWas ? new Map(lmWas.recipes.map((rc, i) => [rc.key, i])) : new Map(), recs: new Nums(lmWas ? lmWas.recs.length + 64 : 256), recPos: new Nums(lmWas ? lmWas.recPos.length + 16 : 256), nRecords: 0, profile: null, changes: [], chStep: [], later: null, deps: new Set(l.path.map((p) => p >> 1)), rels: new Set(), holds: [] };
     owns.set(l.id, mine);
     deps = mine.deps;
     relDeps = mine.rels;
@@ -1431,7 +1516,10 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     const preK = !was0 ? 0 : pd ? pd.pre : n, sufK = !was0 || !pd ? 0 : pd.suf, grow = pd ? n - pd.was : 0;
     const smp: LineSamplesMemo = { js: new Int32Array(n + 1), start, any: new Uint8Array(n), deps: new Array(n), rels: new Array(n), T: new Array(n), len: new Float64Array(n), M, H, R, S };
     const lineDeps = mine.deps, lineRels = mine.rels;
-    const holdsAll = (ds: readonly number[], rs: readonly string[] | null) => ds.every((d) => !changedEdges.has(d)) && (!rs || rs.every((x) => !relChanged.has(x)));
+    // (T-4153 stage 9: the entries not taken as they were, [ea, eb); a path's entries gone with none in their place, the
+    // place between those either side)
+    let ea = n, eb = -1;
+    if (pd && pd.pre === n - pd.suf) (ea = pd.pre), (eb = pd.pre);
     for (let k = 0; k < n; k++) {
       const p = l.path[k], e = p >> 1, rev = (p & 1) === 1, len = edgeLen(e);
       start[k + 1] = start[k] + len;
@@ -1439,27 +1527,19 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       smp.len[k] = len;
       smp.deps[k] = [];
       smp.rels[k] = null;
-      if (!on.has(e)) continue;
-      const T = samples.get(e), ns = T?.n ?? 1;
-      smp.T[k] = T;
       const ko = !was0 ? -1 : k < preK ? k : k >= n - sufK ? k - grow : -1;
-      if (ko >= 0 && was0!.T[ko] === T && was0!.len[ko] === len && holdsAll(was0!.deps[ko], was0!.rels[ko])) {
-        const a = was0!.js[ko], b = was0!.js[ko + 1], d = start[k] - was0!.start[ko];
-        for (let j = a; j < b; j++) {
-          M.push(was0!.M[j] + d);
-          H.push(was0!.H[j]);
-          K.push(k);
-          R.push(was0!.R[j]);
-          S.push(was0!.S[j]);
-        }
-        if (was0!.any[ko]) (any = true), (smp.any[k] = 1);
-        smp.deps[k] = was0!.deps[ko];
-        smp.rels[k] = was0!.rels[ko];
-        for (const x of smp.deps[k]) lineDeps.add(x);
-        for (const x of smp.rels[k] ?? []) lineRels.add(x);
-        bandWork.samplesKept += b - a;
+      if (!on.has(e)) {
+        if (!(ko >= 0 && was0!.len[ko] === len)) (ea = Math.min(ea, k)), (eb = Math.max(eb, k + 1));
         continue;
       }
+      const T = samples.get(e), ns = T?.n ?? 1;
+      smp.T[k] = T;
+      if (ko >= 0 && was0!.T[ko] === T && was0!.len[ko] === len && keptSamples(was0!, ko, k, start[k] - was0!.start[ko], smp, K, lineDeps, lineRels, changedEdges, relChanged)) {
+        if (was0!.any[ko]) any = true;
+        continue;
+      }
+      ea = Math.min(ea, k);
+      eb = Math.max(eb, k + 1);
       // (what the entry's ribbons read, its own edge's lines among it)
       const ed = new Set<number>([e]), er = new Set<string>();
       deps = ed;
@@ -1533,29 +1613,62 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       return bd / kAtY(P[1]) <= ALIGN_NEAR_M ? best : NaN;
     };
     const N = M.length, sgnAt = (j: number) => ((l.path[K[j]] & 1) === 1 ? -1 : 1);
+    // its lines in order left to right of travel at sample j
+    const keyAt = (j: number) => ((l.path[K[j]] & 1) === 1 ? R[j].back : R[j].key);
+    // T-4153 stage 9: a line whose last bands are kept is worked out only over a window round what changed, from inside a
+    // run before it to inside one after it that no run's dropping or holding passes (`windowOf`); its pieces, steps,
+    // ribbon changes and hold boxes outside the window are its last bands' (those after it moved along by the cut's shift)
+    let win: BandWindow | null = null;
+    if (was0 && lmWas!.pk && lmWas!.cs && lmWas!.sweep && bandMode && !wholeOnly.has(l.id)) {
+      // (a box it held a ribbon across near an edge that changed: the stretch held is worked out again)
+      const m = n - grow, hb = lmWas!.holds, toNew = (k: number) => (k < preK ? k : k >= m - sufK ? k + grow : -1);
+      for (let h = 0; h < hb.length; h += HOLD_STRIDE) {
+        let near = false;
+        for (let b = 0; b < changedBoxes.length && !near; b += 4) near = !(changedBoxes[b + 2] < hb[h] || changedBoxes[b] > hb[h + 2] || changedBoxes[b + 3] < hb[h + 1] || changedBoxes[b + 1] > hb[h + 3]);
+        if (!near) continue;
+        const k0 = toNew(hb[h + 4]), k1 = toNew(hb[h + 5]);
+        ea = Math.min(ea, k0 < 0 ? preK : k0);
+        eb = Math.max(eb, k1 < 0 ? n - sufK : k1 + 1);
+      }
+      const oR = was0.R, ojs = was0.js, op = lmWas!.path;
+      const oldKeyAt = (i: number) => {
+        let lo = 0, hi = m - 1;
+        while (lo < hi) {
+          const mid = (lo + hi + 1) >> 1;
+          if (ojs[mid] <= i) lo = mid;
+          else hi = mid - 1;
+        }
+        return (op[lo] & 1) === 1 ? oR[i].back : oR[i].key;
+      };
+      if (ea <= eb) win = windowOf(K, keyAt, M, H, N, start, smp.js, ea, eb, oldKeyAt, was0.M, was0.H, ojs[m]);
+      if (win) (bandWork.windowed++), (bandWork.windowedAll++), (bandWork.winSamples += win.s1 - win.s0 + 1), (bandWork.winSamplesAll += win.s1 - win.s0 + 1);
+    }
+    const j0 = win ? win.s0 : 0, j1 = win ? win.s1 : N - 1;
     // per sample its slot (line widths) and its ribbon's middle (m), left of travel, and the two as
     // one value at BAND_LW_PER_M, which decides what is one piece
     const VS = new Float64Array(N), VM = new Float64Array(N), V = new Float64Array(N), KEY: string[] = new Array(N);
-    for (let j = 0; j < N; j++) {
+    for (let j = j0; j <= j1; j++) {
       const sg = sgnAt(j);
       VS[j] = sg * shiftIn(R[j], S[j]);
       VM[j] = sg * R[j].mid;
       V[j] = VS[j] + VM[j] * BAND_LW_PER_M;
-      // its lines in order left to right of travel
-      KEY[j] = sg > 0 ? R[j].key : R[j].back;
+      KEY[j] = keyAt(j);
     }
     const val = (j: number) => VS[j], valM = (j: number) => VM[j];
-    // runs of one ribbon along the path
-    type Run = { key: string; s0: number; s1: number; r: Ribbon };
+    // runs of one ribbon along the path (`bar`: a run the window starts or ends inside, longer than HOLD_RUN_M, so never
+    // dropped or held, and as long as the curves that read its length need)
+    type Run = { key: string; s0: number; s1: number; r: Ribbon; bar: boolean };
     const runs: Run[] = [];
-    for (let j = 0; j < N; j++) {
+    for (let j = j0; j <= j1; j++) {
       const last = runs[runs.length - 1];
       if (last && last.key === KEY[j]) last.s1 = j;
-      else runs.push({ key: KEY[j], s0: j, s1: j, r: R[j] });
+      else runs.push({ key: KEY[j], s0: j, s1: j, r: R[j], bar: false });
     }
+    if (win && win.jl >= 0) runs[0].bar = true;
+    if (win && win.jr >= 0) runs[runs.length - 1].bar = true;
     blap("q.runs");
     const dropped = new Uint8Array(N);
-    const lenRun = (u: Run) => M[u.s1] + H[u.s1] - (M[u.s0] - H[u.s0]);
+    const lenRun = (u: Run) => (u.bar ? Infinity : M[u.s1] + H[u.s1] - (M[u.s0] - H[u.s0]));
     /** whether every line on the line's own tracks along run u is in the ribbon of run x */
     const keeps = (u: Run, x: Run | undefined) => {
       if (!x) return true;
@@ -1576,6 +1689,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       const a = runs[best - 1], b = runs[best + 1];
       if (a && b && a.key === b.key) {
         a.s1 = b.s1;
+        a.bar ||= b.bar;
         runs.splice(best, 2);
       } else runs.splice(best, 1);
     }
@@ -1591,6 +1705,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       if (sep > HOLD_M) continue;
       for (let j = x.s0; j <= x.s1; j++) dropped[j] = 1;
       a.s1 = b.s1;
+      a.bar ||= b.bar;
       runs.splice(u, 2);
       u--;
     }
@@ -1610,25 +1725,29 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       kn.push(1);
       kf.push(recipeOf(R[j], S[j], sgnAt(j)), 1);
     };
-    const ease: [number, number][] = runs.map(() => [0, start[n]]);
-    for (let u = 0; u + 1 < runs.length; u++) {
-      const a = runs[u], b = runs[u + 1];
-      // the last sample of a and first of b not smoothed away
-      let ja = a.s1, jb = b.s0;
-      while (ja > a.s0 && dropped[ja]) ja--;
-      while (jb < b.s1 && dropped[jb]) jb++;
-      const g0 = M[ja] + H[ja], g1 = M[jb] - H[jb];
-      const la = lenRun(a), lb = lenRun(b);
-      if (g1 - g0 < 0.5 && K[ja] !== K[jb]) {
-        const ra = Math.min(BAND_RAMP_M, la / 2), rb = Math.min(BAND_RAMP_M, lb / 2);
-        ease[u][1] = a.r.lines.length > b.r.lines.length ? g0 : g0 - ra;
-        ease[u + 1][0] = b.r.lines.length > a.r.lines.length ? g1 : g1 + rb;
-      } else {
-        const c = (g0 + g1) / 2, half = Math.max(CORRIDOR_EASE_M, g1 - g0) / 2;
-        ease[u][1] = Math.max(c - half, M[a.s0] - H[a.s0] + la / 2);
-        ease[u + 1][0] = Math.min(c + half, M[b.s1] + H[b.s1] - lb / 2);
+    /** (without "smooth") per run where it eases in and out */
+    const easeOf = () => {
+      const ease: [number, number][] = runs.map(() => [0, start[n]]);
+      for (let u = 0; u + 1 < runs.length; u++) {
+        const a = runs[u], b = runs[u + 1];
+        // the last sample of a and first of b not smoothed away
+        let ja = a.s1, jb = b.s0;
+        while (ja > a.s0 && dropped[ja]) ja--;
+        while (jb < b.s1 && dropped[jb]) jb++;
+        const g0 = M[ja] + H[ja], g1 = M[jb] - H[jb];
+        const la = lenRun(a), lb = lenRun(b);
+        if (g1 - g0 < 0.5 && K[ja] !== K[jb]) {
+          const ra = Math.min(BAND_RAMP_M, la / 2), rb = Math.min(BAND_RAMP_M, lb / 2);
+          ease[u][1] = a.r.lines.length > b.r.lines.length ? g0 : g0 - ra;
+          ease[u + 1][0] = b.r.lines.length > a.r.lines.length ? g1 : g1 + rb;
+        } else {
+          const c = (g0 + g1) / 2, half = Math.max(CORRIDOR_EASE_M, g1 - g0) / 2;
+          ease[u][1] = Math.max(c - half, M[a.s0] - H[a.s0] + la / 2);
+          ease[u + 1][0] = Math.min(c + half, M[b.s1] + H[b.s1] - lb / 2);
+        }
       }
-    }
+      return ease;
+    };
     /** T-2058 "smooth": the pieces' values as steps, each eased over a long S-curve and added up, so
      * changes closer together than their length make one smooth curve rather than steps */
     const smoothKnots = (byRun: [number, number, number, number][][], rs: Run[]) => {
@@ -1678,6 +1797,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
         if (A.run !== B.run && ra !== rb && bandMode.includes("align")) {
           const big = [...(ra > rb ? rs[A.run] : rs[B.run]).r.lines].sort((x, y) => x - y).join(",");
           mine.changes.push([big, { id: l.id, step: steps[steps.length - 1], prio: nodeM >= 0 && oa !== ob ? 3 : node ? 2 : 1, g: (g0 + g1) / 2, enter: rb > ra, at: pointAt((g0 + g1) / 2), pointAt, nearM }]);
+          mine.chStep.push(steps.length - 1);
         }
       }
       // (each piece's values and recipe, for the sweep)
@@ -1718,6 +1838,52 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     };
     // (the rest once every line's changes are lined up)
     const sm = bandMode ? smoothKnots(runs.map(piecesOf), runs) : undefined;
+    // T-4153 stage 9: the window's pieces, steps and ribbon changes between its last bands' before and after it
+    let ws: WindowSplice | null = null;
+    if (win) {
+      const shift = start[n] - lmWas!.sweep!.start[n - grow];
+      ws = sm ? windowSplice(win, sm.pl.map((p) => K[p.first]), sm, sm.steps, lmWas!, grow, shift, K) : null;
+      if (!ws || !sm) {
+        // (its pieces either side of the window not as its last bands had them: worked out whole)
+        bandWork.winMiss++;
+        wholeOnly.add(l.id);
+        queue.push(l);
+        continue;
+      }
+      const { t0, t1, base, P2, cut } = ws, oc = lmWas!.cs!, och = lmWas!.changes, after = base + (t1 - t0 + 1);
+      const pre: AlignAt[] = [], suf: AlignAt[] = [], oldLive: AlignAt[] = [], cs: number[] = [];
+      for (let i = 0; i < och.length; i++) {
+        if (oc[i] < base) (pre.push(och[i]), cs.push(oc[i]));
+        else if (win.jr >= 0 && oc[i] >= P2) suf.push(och[i]);
+        else oldLive.push(och[i]);
+      }
+      const live: [string, Change][] = [];
+      for (let i = 0; i < mine.changes.length; i++) {
+        const s = mine.chStep[i];
+        if (s < t0 || s > t1) continue;
+        live.push(mine.changes[i]);
+        cs.push(s - t0 + base);
+      }
+      for (let i = 0; i < och.length; i++) if (win.jr >= 0 && oc[i] >= P2) cs.push(oc[i] - P2 + after);
+      mine.changes = live;
+      mine.cs = Int32Array.from(cs);
+      mine.win = { pre, suf: suf.map((a) => ({ ...a, g: a.g + shift, c: a.c + shift })), oldLive };
+      // (as the last bands had them, which the lines' last changes list, and as now)
+      for (const a of pre) frozen.set(a, l.id);
+      for (const a of suf) frozen.set(a, l.id);
+      for (const a of mine.win.suf) frozen.set(a, l.id);
+      // (hold boxes: its last bands' before and after the window, those after on its entries now, and the window's own)
+      const hb = lmWas!.holds, hp: number[] = [], hs: number[] = [];
+      for (let h = 0; h < hb.length; h += HOLD_STRIDE) {
+        if (hb[h + 5] < cut[0]) for (let q = 0; q < HOLD_STRIDE; q++) hp.push(hb[h + q]);
+        else if (win.jr >= 0 && hb[h + 4] >= cut[1] - grow && !windowTest) hs.push(hb[h], hb[h + 1], hb[h + 2], hb[h + 3], hb[h + 4] + grow, hb[h + 5] + grow);
+      }
+      mine.holds = holdBoxes = [...hp, ...mine.holds, ...hs];
+      mine.pk = ws.pk;
+    } else if (sm) {
+      mine.cs = Int32Array.from(mine.chStep);
+      mine.pk = Int32Array.from(sm.pl, (p) => K[p.first]);
+    }
     blap("q.smooth");
     mine.later = () => {
     if (bandMode && !sm) return;
@@ -1729,9 +1895,13 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       const { pl, steps } = sm;
       const dbgL = opts?.debug?.get(l.id) as { steps?: number[][] } | undefined;
       if (dbgL) dbgL.steps = steps.map((s, i) => [s.c, s.L, val(pl[i].j0), valM(pl[i].j0), val(pl[i + 1].j0), valM(pl[i + 1].j0)]);
-      const ns = steps.length, sc = new Float64Array(ns), sL = new Float64Array(ns);
-      for (let k = 0; k < ns; k++) (sc[k] = steps[k].c), (sL[k] = steps[k].L);
-      now = { start, pv: sm.pv, pw: sm.pw, pq: sm.pq, prc: sm.prc, sc, sL };
+      if (ws) now = { start, ...spliceSweep(ws, sm, steps, was!.sweep!, start[n] - was!.sweep!.start[n - grow]) };
+      else {
+        const ns = steps.length, sc = new Float64Array(ns), sL = new Float64Array(ns);
+        for (let k = 0; k < ns; k++) (sc[k] = steps[k].c), (sL[k] = steps[k].L);
+        now = { start, pv: sm.pv, pw: sm.pw, pq: sm.pq, prc: sm.prc, sc, sL };
+      }
+      const ns = now.sc.length;
       mine.sweep = now;
       // T-4153: only the entries whose knots this call can change are worked out again, from a quiet place before them
       if (was?.sweep && was.recAt) {
@@ -1742,6 +1912,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       if (plan) sweepKnots(now, plan.k0, plan.k1, plan.e0, plan.e1, plan.first, plan.last, sw);
       else sweepKnots(now, 0, ns, 0, n, true, true, sw);
     } else {
+    const ease = easeOf();
     runs.forEach((u, ui) => {
       const [t0, t1] = ease[ui];
       const pieces = piecesOf(u);
@@ -1762,7 +1933,7 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     }
     // per path entry: its knots (its ends' nodes' and those inside it) and its Traffic record; with a plan, the entries
     // before e0 and from e1 on as the line's last bands had them
-    const knots = new Nums(), starts = new Nums(), recs = mine.recs, recPos = mine.recPos, recAt = new Int32Array(n).fill(-1), nzE = new Uint8Array(n);
+    const knots = new Nums((was?.profile?.length ?? 0) + 256), starts = new Nums(n + 2), recs = mine.recs, recPos = mine.recPos, recAt = new Int32Array(n).fill(-1), nzE = new Uint8Array(n);
     const acc = { nonzero: false, records: 0, nzE };
     // (its recipes numbered as before where its own are, T-4153: the copied knots and records then copied as they are)
     let same = !!map;
@@ -1814,15 +1985,29 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
    // T-2140's lining up pairs only changes of one group within reach of each other, greedily in line
    // order, so it can come out otherwise only among changes linked to a new, gone or moved change
    // through changes within reach: the lines kept with one of those are worked out again
-   for (const w of owns.values()) w.aligns ??= w.changes.map(([k, c]) => alignOf(k, c));
+   // (T-4153 stage 9: a line worked out in a window compares the window's changes alone, the rest being its last bands')
+   for (const w of owns.values()) if (!w.aligns) {
+     const live = w.changes.map(([k, c]) => alignOf(k, c));
+     if (w.win) (w.win.live = live), (w.aligns = [...w.win.pre, ...live, ...w.win.suf]);
+     else w.aligns = live;
+   }
    const front: AlignAt[] = [...goneChanges];
    for (const [id, w] of owns) {
-     const old = mm.lines.get(id)?.changes ?? [];
-     for (const a of w.aligns!) if (!old.some((b) => sameChange(a, b))) front.push(a);
-     for (const b of old) if (!w.aligns!.some((a) => sameChange(a, b))) front.push(b);
+     const old = w.win ? w.win.oldLive : mm.lines.get(id)?.changes ?? [], now = w.win ? w.win.live! : w.aligns!;
+     for (const a of now) if (!old.some((b) => sameChange(a, b))) front.push(a);
+     for (const b of old) if (!now.some((a) => sameChange(a, b))) front.push(b);
    }
    const more = new Set<number>();
-   linked(front, (id) => { if (!owns.has(id)) more.add(id); });
+   // (a change a window kept as it was linked to one that moved: that line is worked out whole)
+   linked(front, (id, c) => {
+     if (!owns.has(id)) more.add(id);
+     else if (owns.get(id)!.win && frozen.get(c) === id) {
+       bandWork.winLinked++;
+       owns.delete(id);
+       wholeOnly.add(id);
+       more.add(id);
+     }
+   });
    if (!more.size) break;
    queue.push(...rail.filter((l) => more.has(l.id)));
   }
@@ -1830,8 +2015,9 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
    * lines kept that the lines worked out are lined up with, as they were (what they come to is
    * theirs already) */
   blap("lines");
+  // (T-4153 stage 9: from the changes worked out now; a window's changes before and after it, as they were, go in whole)
   const kept = new Map<number, Set<AlignAt>>();
-  linked([...owns.values()].flatMap((w) => w.aligns!), (id, c) => {
+  linked([...owns.values()].flatMap((w) => (w.win ? w.win.live! : w.aligns!)), (id, c) => {
     if (owns.has(id)) return;
     let s = kept.get(id);
     if (!s) kept.set(id, (s = new Set()));
@@ -1845,9 +2031,11 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   };
   for (const l of rail) {
     const w = owns.get(l.id), s = kept.get(l.id);
-    if (w) for (const [k, c] of w.changes) into(k, c);
-    else if (s) for (const a of mm.lines.get(l.id)!.changes) if (s.has(a))
-      into(a.key, { id: l.id, step: { c: a.c, L: a.L }, prio: a.prio, g: a.g, enter: a.enter, at: [a.x, a.y], pointAt: () => [a.px, a.py], nearM: () => NaN });
+    if (w) {
+      if (w.win) for (const a of w.win.pre) into(a.key, asKept(l.id, a));
+      for (const [k, c] of w.changes) into(k, c);
+      if (w.win) for (const a of w.win.suf) into(a.key, asKept(l.id, a));
+    } else if (s) for (const a of mm.lines.get(l.id)!.changes) if (s.has(a)) into(a.key, asKept(l.id, a));
   }
   blap("alignPrep");
   alignChanges(changes);
@@ -1857,10 +2045,11 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     if (!w) continue;
     w.later?.();
     mm.lines.set(l.id, {
-      path: l.path.slice(), deps: [...w.deps], rels: [...w.rels], holds: w.holds, changes: w.aligns!, recipes: w.recipes,
+      path: l.path.slice(), deps: [...w.deps], rels: [...w.rels], holds: w.holds, changes: w.aligns!, cs: w.cs, pk: w.pk, recipes: w.recipes,
       profile: w.profile, recs: Float32Array.from(w.recs.view()), recPos: Int32Array.from(w.recPos.view()), nRecords: w.nRecords, sweep: w.sweep, recAt: w.recAt, nzE: w.nzE, smp: w.smp, netWas: mm.lines.get(l.id)?.net?.map,
     });
   }
+  if (opts?.fresh) freshMemo = mm;
   blap("later");
   // ---- the network's table and profiles. T-4153: ribbons and recipes keep their numbers from call to call (`BandMemo.net`),
   // a new one numbered after the rest, so a line's profile and records are numbered again only when it is worked out again
@@ -1932,8 +2121,12 @@ function netRecords(lm: LineMemo, map: Int32Array): Float32Array {
 /** T-4153: numbers pushed one at a time or copied a block at a time (a line's knots and records lent from its last
  * bands), in float64 as a number array holds them */
 class Nums {
-  a = new Float64Array(256);
+  a: Float64Array;
   length = 0;
+  /** (room for about as many as the line's last bands had, rather than doubling up to them) */
+  constructor(room = 256) {
+    this.a = new Float64Array(Math.max(16, room));
+  }
   room(n: number) {
     if (this.length + n <= this.a.length) return;
     const b = new Float64Array(Math.max(this.a.length * 2, this.length + n));
@@ -2200,6 +2393,130 @@ function spliceOf(was: SweepIn, wasPath: readonly number[], now: SweepIn, path: 
     break;
   }
   return { e0, e1, k0, k1, first: k0 === 0, last, grow: n - m, pre, suf };
+}
+
+/** T-4153 stage 9: a run of one ribbon round sample j (`keyAt`) longer than HOLD_RUN_M, which no short run's dropping or
+ * holding passes: what lies before it is worked out the same whatever lies after it, and the other way */
+function longRun(keyAt: (j: number) => string, M: ArrayLike<number>, H: ArrayLike<number>, N: number, j: number): boolean {
+  const key = keyAt(j);
+  let a = j, b = j;
+  while (M[b] + H[b] - (M[a] - H[a]) <= HOLD_RUN_M) {
+    const l = a > 0 && keyAt(a - 1) === key, r = b + 1 < N && keyAt(b + 1) === key;
+    if (!l && !r) return false;
+    if (l) a--;
+    if (r) b++;
+  }
+  return true;
+}
+/** a change's curve can read how many lines each entry within this many metres has (`smoothKnots`' snap) */
+const SNAP_M = SMOOTH_MAX_M / 2;
+/** T-4153 stage 9: where a line is worked out again (samples s0 to s1): from node `jl` to node `jr` (-1: from the path's
+ * start, to its end), with the entry before `jl` and the one from `jr` as context, both on a run longer than HOLD_RUN_M */
+interface BandWindow { s0: number; s1: number; jl: number; ja: number; jr: number; jc: number }
+/** The window round the samples changed ([js[ea], js[eb]), the entries made again): it starts at a node `jl` before them and
+ * ends at a node `jr` after them where each of these holds, now (`keyAt`, M, H) and in the line's last bands (`oldKeyAt`,
+ * oM, oH; the same samples before the change, moved by the change in their number after it):
+ * - the samples from the first of the entry before the node, one before that, to the node's (`jr`: from the one before the
+ *   node to the first of the entry after it) are one run longer than HOLD_RUN_M: a run never dropped or held, which keeps
+ *   the runs either side from reading each other, and the window's pieces from reading past it (a piece lies on one entry,
+ *   and its median reads its entry and the samples next to it);
+ * - the node is SNAP_M or more from the change, as a curve's snap reads how many lines the entries near it carry.
+ * Null when neither side has such a node. */
+function windowOf(K: readonly number[], keyAt: (j: number) => string, M: ArrayLike<number>, H: ArrayLike<number>, N: number, start: Float64Array, js: Int32Array, ea: number, eb: number, oldKeyAt: (i: number) => string, oM: ArrayLike<number>, oH: ArrayLike<number>, oN: number): BandWindow | null {
+  const ja = js[ea], jb = js[eb], m0 = start[ea] - SNAP_M, m1 = start[eb] + SNAP_M, dN = N - oN;
+  let jl = -1, jA = -1;
+  for (let j = ja - 1; j >= 1 && jl < 0; j--) {
+    if (K[j] === K[j - 1] || start[K[j]] > m0) continue;
+    let i = j - 1;
+    while (i > 0 && K[i - 1] === K[j - 1]) i--;
+    if (i < 1) break;
+    const key = keyAt(j);
+    let same = true;
+    for (let s = i - 1; s < j && same; s++) same = keyAt(s) === key;
+    if (same && longRun(keyAt, M, H, N, j) && longRun(oldKeyAt, oM, oH, oN, j)) (jl = j), (jA = i);
+  }
+  let jr = -1, jC = -1;
+  for (let j = jb + 1; j < N && jr < 0; j++) {
+    if (K[j] === K[j - 1] || start[K[j]] < m1) continue;
+    let i = j + 1;
+    while (i < N && K[i] === K[j]) i++;
+    if (i >= N) break;
+    const key = keyAt(j);
+    let same = keyAt(j - 1) === key;
+    for (let s = j + 1; s <= i && same; s++) same = keyAt(s) === key;
+    if (same && longRun(keyAt, M, H, N, j) && longRun(oldKeyAt, oM, oH, oN, j - dN)) (jr = j), (jC = i);
+  }
+  if (jl < 0 && jr < 0) return null;
+  return { s0: jl >= 0 ? jA - 1 : 0, s1: jr >= 0 ? jC : N - 1, jl, ja: jA, jr, jc: jC };
+}
+/** T-4153 stage 9: a window's place among a line's pieces and steps: its pieces [wp0, wp1) of those worked out (from entry
+ * `cut[0]` to before `cut[1]`) between the last bands' [0, P1) and [P2, end); its steps [t0, t1] of those worked out after
+ * the last bands' first `base`; and per piece its entry */
+interface WindowSplice { P1: number; P2: number; wp0: number; wp1: number; t0: number; t1: number; base: number; cut: [number, number]; pk: Int32Array }
+/** the window's splice, or null where the pieces worked out on the entries either side of the window (its context, which
+ * the last bands had too) are not the last bands' own: then the line is worked out whole */
+function windowSplice(win: BandWindow, spk: readonly number[], sm: { pv: Float64Array; pw: Float64Array; pq: Float64Array; prc: Int32Array }, steps: readonly { c: number; L: number }[], old: LineMemo, grow: number, shift: number, K: readonly number[]): WindowSplice | null {
+  const opk = old.pk!, o = old.sweep!, Po = opk.length, np = spk.length;
+  const from = (a: ArrayLike<number>, x: number, n: number, lo = 0) => {
+    let i = lo;
+    while (i < n && a[i] < x) i++;
+    return i;
+  };
+  const lower = (x: number) => {
+    let lo = 0, hi = Po;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (opk[mid] < x) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  };
+  const alike = (p: number, q: number) => sm.pv[p] === o.pv[q] && sm.pw[p] === o.pw[q] && sm.pq[p] === o.pq[q] && sm.prc[p] === o.prc[q];
+  const cut: [number, number] = [win.jl >= 0 ? K[win.jl] : -1, win.jr >= 0 ? K[win.jr] : Infinity];
+  let wp0 = 0, P1 = 0, wp1 = np, P2 = Po;
+  if (win.jl >= 0) {
+    // (the pieces on the entry before the window, and the steps between them, as the last bands had them)
+    const eA = K[win.ja], q0 = from(spk, eA, np), P0 = lower(eA);
+    wp0 = from(spk, cut[0], np, q0);
+    P1 = lower(cut[0]);
+    if (wp0 - q0 !== P1 - P0 || wp0 === q0) return null;
+    for (let i = 0; i < wp0 - q0; i++) if (spk[q0 + i] !== opk[P0 + i] || !alike(q0 + i, P0 + i)) return null;
+    for (let i = 0; i + 1 < wp0 - q0; i++) if (steps[q0 + i].c !== o.sc[P0 + i] || steps[q0 + i].L !== o.sL[P0 + i]) return null;
+  }
+  if (win.jr >= 0) {
+    // (the pieces on the entry the window ends at, and the steps between them, as the last bands had them after the cut)
+    wp1 = from(spk, cut[1], np, wp0);
+    const r1 = from(spk, cut[1] + 1, np, wp1);
+    P2 = lower(cut[1] - grow);
+    const P3 = lower(cut[1] - grow + 1);
+    if (r1 - wp1 !== P3 - P2 || r1 === wp1) return null;
+    for (let i = 0; i < r1 - wp1; i++) if (spk[wp1 + i] !== opk[P2 + i] + grow || !alike(wp1 + i, P2 + i)) return null;
+    for (let i = 0; i + 1 < r1 - wp1; i++) if (steps[wp1 + i].c !== o.sc[P2 + i] + shift || steps[wp1 + i].L !== o.sL[P2 + i]) return null;
+  }
+  const t0 = win.jl >= 0 ? wp0 - 1 : 0, t1 = win.jr >= 0 ? wp1 - 1 : np - 2, base = win.jl >= 0 ? P1 - 1 : 0;
+  const pk = new Int32Array(P1 + (wp1 - wp0) + (Po - P2));
+  pk.set(opk.subarray(0, P1));
+  for (let i = wp0; i < wp1; i++) pk[P1 + i - wp0] = spk[i];
+  for (let i = P2; i < Po; i++) pk[P1 + wp1 - wp0 + i - P2] = opk[i] + grow;
+  return { P1, P2, wp0, wp1, t0, t1, base, cut, pk };
+}
+/** a window's sweep inputs: the last bands' pieces and steps before and after it (those after moved by `shift`), its own
+ * between (its steps as lined up) */
+function spliceSweep(ws: WindowSplice, sm: { pv: Float64Array; pw: Float64Array; pq: Float64Array; prc: Int32Array }, steps: readonly { c: number; L: number }[], o: SweepIn, shift: number): Omit<SweepIn, "start"> {
+  const { P1, P2, wp0, wp1, t0, t1, base } = ws, Po = o.pv.length, P = P1 + (wp1 - wp0) + (Po - P2);
+  const cat = <T extends Float64Array | Int32Array>(out: T, a: T, b: T): T => {
+    out.set(a.subarray(0, P1));
+    out.set(b.subarray(wp0, wp1), P1);
+    out.set(a.subarray(P2), P1 + wp1 - wp0);
+    return out;
+  };
+  const pv = cat(new Float64Array(P), o.pv, sm.pv), pw = cat(new Float64Array(P), o.pw, sm.pw), pq = cat(new Float64Array(P), o.pq, sm.pq), prc = cat(new Int32Array(P), o.prc, sm.prc);
+  const ns = Math.max(0, P - 1), sc = new Float64Array(ns), sL = new Float64Array(ns), after = base + (t1 - t0 + 1);
+  sc.set(o.sc.subarray(0, base));
+  sL.set(o.sL.subarray(0, base));
+  for (let t = t0; t <= t1; t++) (sc[base + t - t0] = steps[t].c), (sL[base + t - t0] = steps[t].L);
+  for (let i = P2; i + 1 < Po; i++) (sc[after + i - P2] = o.sc[i] + shift), (sL[after + i - P2] = o.sL[i]);
+  return { pv, pw, pq, prc, sc, sL };
 }
 
 /** T-4153: per recipe of a line's last bands, its number now (-1: not one of its recipes now) */
