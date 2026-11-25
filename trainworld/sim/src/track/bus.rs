@@ -938,6 +938,14 @@ fn street_bus_kmh(car: f64, trunk: bool) -> f64 {
     street_bus_kmh_at(car, trunk, BUS_LANE_KMH)
 }
 
+/// T-4257: what the drawing tool weighs roads by before any street grid is known: a plain bus's moving speed, km/h,
+/// on local streets, on a trunk road or motorway, and on a constructed busway, where the car's local streets run at
+/// `CAR_TOWN_KMH` (what `Pace::speed_runs` takes with no grid). The same functions as `Pace`, so the tool's idea of a
+/// quick road is the sim's.
+pub fn road_speeds() -> [f64; 3] {
+    [street_bus_kmh_at(CAR_TOWN_KMH, false, BUS_LANE_KMH), street_bus_kmh_at(CAR_TOWN_KMH, true, BUS_LANE_KMH), BUSWAY_KMH]
+}
+
 /// A bus's moving speed on local streets where the car's run at `car`, on a line whose floor is `lane`.
 fn street_bus_kmh_at(car: f64, trunk: bool, lane: f64) -> f64 {
     if trunk { bus_trunk_kmh(car, car, lane) } else { bus_kmh_at(car, lane) }

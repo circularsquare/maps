@@ -22,6 +22,8 @@ const PARALLEL_COS = 0.9;
 export const MOTORWAY = 2;
 /** A road line of exactly this weight is a trunk road (T-2904: a bus runs it at highway speed). */
 export const TRUNK = 1.5;
+/** A constructed busway's weight (`RoadLines.weights`), edge kind 4: a road a bus runs at its own speed */
+export const BUSWAY = 1.25;
 const MOTOR_EXTRA_M = 30;
 
 export const lngOf = (gx: number) => (gx / WORLD) * 360 - 180;
@@ -66,8 +68,11 @@ export class RoadGraph {
   eb = new Int32Array(1024);
   /** ground metres */
   elen = new Float32Array(1024);
-  /** 1 for a motorway (its line's weight 2 or more), 2 for a link (`LINK`), which a bus may drive and a click does not land on, 3 for a trunk road (`TRUNK`), else 0 */
+  /** 1 for a motorway (its line's weight 2 or more), 2 for a link (`LINK`), which a bus may drive and a click does not land on, 3 for a trunk road (`TRUNK`), 4 for a busway (`BUSWAY`), else 0 */
   emotor = new Uint8Array(1024);
+  /** what a metre of each edge kind costs a bus search, in metres of local street (`setBusSpeeds`); all 1 until the speeds are known */
+  private cw = [1, 1, 1, 1, 1];
+  private minCw = 1;
   /** 0 both ways, 1 from `ea` to `eb`, 2 from `eb` to `ea` (OpenMapTiles `oneway`). `path` keeps to it; `turnPath` does not. */
   private eway = new Uint8Array(1024);
   /** whether `path` keeps to `eway`; off (the default), every street runs both ways, as before T-3480 */
@@ -169,6 +174,15 @@ export class RoadGraph {
     return found;
   }
 
+  /** T-4257: a bus's speeds, km/h, on local streets, on trunk roads and motorways, and on busways (the sim's own,
+   * `bus_road_speeds`); `path` then finds the quickest road, a metre of a faster road costing that much less. */
+  setBusSpeeds(street: number, trunk: number, busway: number) {
+    const t = street / trunk, b = street / busway;
+    this.cw = [1, t, 1, t, b];
+    this.minCw = Math.min(1, t, b);
+    this.version++;
+  }
+
   /** Whether a bus runs edge `e` at highway speed: a trunk road or a motorway (links are not). */
   private fastEdge(e: number): boolean {
     return this.emotor[e] === 3 || this.emotor[e] === 1;
@@ -218,7 +232,7 @@ export class RoadGraph {
     const mpu = metresPerUnit(y0 + EXTENT / 2);
     const seg: number[] = [0, 0, 0, 0];
     rl.lines.forEach((line, li) => {
-      const w = rl.weights?.[li] ?? 1, kind = w >= MOTORWAY ? 1 : w === LINK ? 2 : w === TRUNK ? 3 : 0;
+      const w = rl.weights?.[li] ?? 1, kind = w >= MOTORWAY ? 1 : w === LINK ? 2 : w === TRUNK ? 3 : w === BUSWAY ? 4 : 0;
       let pa = -1, pax = NaN, pay = NaN;
       for (let i = 2; i + 1 < line.length; i += 2) {
         if (!clipSegment(line[i - 2] * scale, line[i - 1] * scale, line[i] * scale, line[i + 1] * scale, seg)) continue;
@@ -420,6 +434,7 @@ export class RoadGraph {
   // ---------------------------------------------------------------- search
 
   private g = new Float64Array(0);
+  private gm = new Float64Array(0);
   private from = new Int32Array(0);
   private seen = new Int32Array(0);
   private done = new Int32Array(0);
@@ -527,6 +542,7 @@ export class RoadGraph {
     if (this.g.length < this.nodes) {
       const n = Math.max(this.nodes, this.g.length * 2);
       this.g = new Float64Array(n);
+      this.gm = new Float64Array(n);
       this.from = new Int32Array(n);
       this.seen = new Int32Array(n);
       this.done = new Int32Array(n);
@@ -537,24 +553,27 @@ export class RoadGraph {
     // the guide may overshoot by the hops at either end, and by the farthest other end
     let slack = (2 * HOP_M) / mpu;
     for (const c of alts) slack = Math.max(slack, (2 * HOP_M) / mpu + Math.hypot(c.x - d.x, c.y - d.y));
-    const h = (n: number) => Math.max(0, Math.hypot(this.gx[n] - d.x, this.gy[n] - d.y) - slack) * mpu;
+    const h = (n: number) => Math.max(0, Math.hypot(this.gx[n] - d.x, this.gy[n] - d.y) - slack) * mpu * this.minCw;
     const hopM = (c: Snap) => c.d * mpu;
+    // cost is street-equivalent metres (`cw`); `real` is the road metres, which is what a leg reports
+    const cw = this.cw, wl = (e: number) => this.elen[e] * cw[this.emotor[e]];
     // which snap a start node was entered from, so the road is drawn from the one the search chose
     type Origin = { snap: Snap; via: [number, number] | null; pen: number };
     const viaStart = new Map<number, Origin>();
-    const start = (n: number, off: number, origin: Origin) => {
+    const start = (n: number, off: number, origin: Origin, real: number) => {
       if (this.seen[n] === stamp && this.g[n] <= off) return;
       this.seen[n] = stamp;
       this.g[n] = off;
+      this.gm[n] = real;
       this.from[n] = -1;
       viaStart.set(n, origin);
       this.push(off + h(n), n);
     };
     // leave a snap only toward the ends its street allows
     const startFrom = (c: Snap, hop: number, via: [number, number] | null, snap: Snap, pen: number) => {
-      const l = this.elen[c.edge], origin = { snap, via, pen };
-      if (this.drives(c.edge, false)) start(this.ea[c.edge], pen + hop + c.t * l, origin);
-      if (this.drives(c.edge, true)) start(this.eb[c.edge], pen + hop + (1 - c.t) * l, origin);
+      const l = this.elen[c.edge], w = cw[this.emotor[c.edge]], origin = { snap, via, pen };
+      if (this.drives(c.edge, false)) start(this.ea[c.edge], pen + hop + c.t * l * w, origin, hop + c.t * l);
+      if (this.drives(c.edge, true)) start(this.eb[c.edge], pen + hop + (1 - c.t) * l * w, origin, hop + (1 - c.t) * l);
     };
     const begin = (c: Snap, pen: number, hop: boolean) => {
       startFrom(c, 0, null, c, pen);
@@ -569,44 +588,45 @@ export class RoadGraph {
     for (const c of froms) begin(c, penM(c), false);
     // where the path may end: a node of the destination's road or of the one across from it, and only
     // by running the street's way up to the snap
-    const ends = new Map<number, { off: number; via: [number, number] | null; to: Snap; pen: number }>();
+    const ends = new Map<number, { off: number; real: number; via: [number, number] | null; to: Snap; pen: number }>();
     const endAt = (c: Snap, hop: number, via: [number, number] | null, to = d, pen = 0) => {
-      const l = this.elen[c.edge];
-      const seats: [number, number, boolean][] = [
-        [this.ea[c.edge], pen + hop + c.t * l, true],
-        [this.eb[c.edge], pen + hop + (1 - c.t) * l, false],
+      const l = this.elen[c.edge], w = cw[this.emotor[c.edge]];
+      const seats: [number, number, number, boolean][] = [
+        [this.ea[c.edge], pen + hop + c.t * l * w, hop + c.t * l, true],
+        [this.eb[c.edge], pen + hop + (1 - c.t) * l * w, hop + (1 - c.t) * l, false],
       ];
-      for (const [n, off, towardB] of seats) {
+      for (const [n, off, real, towardB] of seats) {
         if (!this.drives(c.edge, towardB)) continue;
         const had = ends.get(n);
-        if (!had || off < had.off) ends.set(n, { off, via, to, pen });
+        if (!had || off < had.off) ends.set(n, { off, real, via, to, pen });
       }
     };
     endAt(d, 0, null);
     const dAcross = this.across(d);
     for (const c of dAcross) endAt(c, hopM(c), [c.x, c.y]);
     let best = capM, end = -1;
-    let direct: number[] | null = null, directTo = d, directPen = 0;
-    const noteDirect = (pts: number[], m: number, to: Snap, pen: number) => {
-      if (m < best) (best = m), (direct = pts), (directTo = to), (directPen = pen), (end = -1);
+    let direct: number[] | null = null, directTo = d, directReal = 0;
+    const noteDirect = (pts: number[], m: number, to: Snap, real: number) => {
+      if (m < best) (best = m), (direct = pts), (directTo = to), (directReal = real), (end = -1);
     };
+    let endReal = 0;
     // across the road with no junction between: the start crossing straight to the destination's road, or the reverse
     for (const c of sAcross) {
       if (c.edge !== d.edge || !along(d.edge, c.t, d.t)) continue;
-      noteDirect([s.x, s.y, c.x, c.y, d.x, d.y], hopM(c) + Math.abs(c.t - d.t) * this.elen[d.edge], d, 0);
+      noteDirect([s.x, s.y, c.x, c.y, d.x, d.y], hopM(c) + Math.abs(c.t - d.t) * wl(d.edge), d, hopM(c) + Math.abs(c.t - d.t) * this.elen[d.edge]);
     }
     for (const c of dAcross) {
       if (c.edge !== s.edge || !along(s.edge, s.t, c.t)) continue;
-      noteDirect([s.x, s.y, c.x, c.y, d.x, d.y], hopM(c) + Math.abs(c.t - s.t) * this.elen[s.edge], d, 0);
+      noteDirect([s.x, s.y, c.x, c.y, d.x, d.y], hopM(c) + Math.abs(c.t - s.t) * wl(s.edge), d, hopM(c) + Math.abs(c.t - s.t) * this.elen[s.edge]);
     }
     for (const c of alts) {
       const pen = penM(c);
-      if (c.edge === s.edge && along(s.edge, s.t, c.t)) noteDirect([s.x, s.y, c.x, c.y], pen + Math.abs(c.t - s.t) * this.elen[s.edge], c, pen);
+      if (c.edge === s.edge && along(s.edge, s.t, c.t)) noteDirect([s.x, s.y, c.x, c.y], pen + Math.abs(c.t - s.t) * wl(s.edge), c, Math.abs(c.t - s.t) * this.elen[s.edge]);
       else endAt(c, 0, null, c, pen);
     }
     for (const c of froms) {
       const pen = penM(c);
-      if (c.edge === d.edge && along(c.edge, c.t, d.t)) noteDirect([c.x, c.y, d.x, d.y], pen + Math.abs(d.t - c.t) * this.elen[c.edge], d, pen);
+      if (c.edge === d.edge && along(c.edge, c.t, d.t)) noteDirect([c.x, c.y, d.x, d.y], pen + Math.abs(d.t - c.t) * wl(c.edge), d, Math.abs(d.t - c.t) * this.elen[c.edge]);
     }
     while (this.hs > 0) {
       const n = this.pop();
@@ -615,22 +635,23 @@ export class RoadGraph {
       this.done[n] = stamp;
       const gn = this.g[n];
       const te = ends.get(n);
-      if (te && gn + te.off < best) (best = gn + te.off), (end = n), (direct = null), (directTo = d), (directPen = 0);
+      if (te && gn + te.off < best) (best = gn + te.off), (end = n), (direct = null), (directTo = d), (endReal = this.gm[n] + te.real);
       for (let a = this.head[n]; a >= 0; a = this.arcNext[a]) {
         const e = a >> 1, towardB = (a & 1) === 0;
         if (!this.drives(e, towardB)) continue;
         const m = towardB ? this.eb[e] : this.ea[e];
-        const ng = gn + this.elen[e];
+        const ng = gn + wl(e);
         if (this.done[m] === stamp || (this.seen[m] === stamp && this.g[m] <= ng)) continue;
         const f = ng + h(m);
         if (f >= best) continue;
         this.seen[m] = stamp;
         this.g[m] = ng;
+        this.gm[m] = this.gm[n] + this.elen[e];
         this.from[m] = n;
         this.push(f, m);
       }
     }
-    if (direct) return { pts: direct, m: best - directPen, to: directTo };
+    if (direct) return { pts: direct, m: directReal, to: directTo };
     if (end < 0) return null;
     const chain: number[] = [];
     for (let n = end; n >= 0; n = this.from[n]) chain.push(n);
@@ -646,7 +667,7 @@ export class RoadGraph {
     if (e.via) pts.push(e.via[0], e.via[1]), fast.push(false);
     pts.push(e.to.x, e.to.y);
     fast.push(this.fastEdge(e.to.edge));
-    return { pts, m: best - e.pen - origin.pen, to: e.to, fast };
+    return { pts, m: endReal, to: e.to, fast };
   }
 }
 

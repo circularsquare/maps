@@ -1,12 +1,13 @@
 // The roads a bus route follows (T-1465, notes/T-1445.md "Stage 2"). Between two clicked points the
-// route takes the shortest path over the basemap's zoom 14 roads and motorways (`roadGraph.ts`), counting road length
-// as it is and a one-way street only the way it runs; a leg with no such path is refused (T-2451: no road near a point, no path under the detour
+// route takes the quickest path over the basemap's zoom 14 roads and motorways (`roadGraph.ts`), counting road time
+// at the sim's bus speeds (`busSpeeds.ts`) and a one-way street only the way it runs; a leg with no such path is refused (T-2451: no road near a point, no path under the detour
 // cap, or too long to search), and the tool keeps it out of a route. The tiles are fetched here,
 // straight from the basemap's own tile server, because the map holds only the zoom it is showing; they
 // are kept decoded, and the graph is built from them as a leg needs.
 
 import type { Map as MlMap } from "maplibre-gl";
-import { EXTENT, MOTORWAY, RoadGraph, TRUNK, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, thinFlagged, type Snap } from "./roadGraph";
+import { busSpeeds } from "./busSpeeds";
+import { BUSWAY, EXTENT, MOTORWAY, RoadGraph, TRUNK, WORLD, gxOf, gyOf, joinRoads, latOf, lngOf, metresPerUnit, thin, thinFlagged, type Snap } from "./roadGraph";
 import { DRIVE_CLASSES, PEDESTRIAN, decodeRoads, type RoadKeep, type RoadLines } from "./roadTiles";
 import { patientFetch } from "../workers/patientFetch";
 
@@ -124,6 +125,8 @@ export class BusRoads {
   private snaps = new Map<string, Snap | null>();
   private cachedVersion = -1;
   private notify = false;
+  /** T-4257: the sim's bus speeds are in the graph (or could not be loaded: roads then count by length) */
+  private speeds = false;
   /** T-3378: the busways, constructed and planned (lng, lat pairs flat, a line each), roads like any other here */
   private busways: { key: string; lines: number[][] } = { key: "", lines: [] };
   /** where the busways come from, asked before each search (none: no busways) */
@@ -189,6 +192,14 @@ export class BusRoads {
   /** Make sure the tiles over a grid box are loading or loaded; true when every one is in the graph.
    * A tile that failed counts as empty for `RETRY_MS`. */
   private need(x0: number, y0: number, x1: number, y1: number): boolean {
+    if (!this.speeds) {
+      void busSpeeds().then((s) => {
+        if (s) this.graph.setBusSpeeds(...s);
+        this.speeds = true;
+        this.onLoad();
+      });
+      return false;
+    }
     if (this.buswaySource) {
       const b = this.buswaySource();
       this.setBusways(b.key, b.lines);
@@ -235,9 +246,9 @@ export class BusRoads {
     if (!this.busways.lines.length) return rl;
     const ext = rl.extent, k = ext / EXTENT, ox = tx * EXTENT, oy = ty * EXTENT, pad = 0.05 * ext;
     const lines = [...rl.lines], weights = rl.weights ? [...rl.weights] : rl.lines.map(() => 1), levels = rl.levels ? [...rl.levels] : undefined, ways = rl.ways ? [...rl.ways] : undefined;
-    const add = (pts: number[]) => {
+    const add = (pts: number[], weight = 1) => {
       lines.push(Int32Array.from(pts));
-      weights.push(1);
+      weights.push(weight);
       levels?.push(0);
       ways?.push(0);
     };
@@ -248,7 +259,7 @@ export class BusRoads {
       let near = false;
       for (let i = 0; i + 1 < g.length; i += 2) if (inside(g[i], g[i + 1], pad)) near = true;
       if (!near || g.length < 4) continue;
-      add(g);
+      add(g, BUSWAY);
       for (const end of [0, g.length - 2]) {
         const x = g[end], y = g[end + 1];
         if (!inside(x, y)) continue;

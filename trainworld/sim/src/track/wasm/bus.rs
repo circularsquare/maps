@@ -13,6 +13,13 @@ fn points_from(flat: &[f64]) -> (Vec<[f64; 2]>, Vec<u8>) {
     (pts, kinds)
 }
 
+/// T-4257: a plain bus's moving speed, km/h, on local streets, on a trunk road or motorway, and on a busway
+/// (`bus::road_speeds`), which the route tool's search turns into travel time.
+#[wasm_bindgen]
+pub fn bus_road_speeds() -> Vec<f64> {
+    bus::road_speeds().to_vec()
+}
+
 #[wasm_bindgen]
 impl TrackApi {
     /// Add a planned bus line over a route (x, y, kind per point in the network frame), its buses
