@@ -198,9 +198,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor"; on your Asia save a station shows up in 1-3 s, a removal in about 4 s. Parts: T-4153 (drawn network), T-4214 (clickable map), T-4149 (worker rows), T-4150 (page).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
 - T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-24, agent cutstretch2)
-  - Context: You, 11-23: "this is the entire issue". Stage 3 (tree bandorders): band orders kept through a cut path, and a removed line no longer redoes every corridor. Asia network build in Node: a station on its longest trunk 0.62-0.69 to 0.31-0.49 s, a line removed 0.82-0.85 to 0.28-0.36 s. Left: each line whose path is cut is redone whole.
+  - Context: You, 11-23: "this is the entire issue". Stage 5 (tree cutstretch2): the bands follow only the edges an edit changed; a cut line's later strokes are copied. Asia network build in Node, CPU: a station on a long line's track 0.41 to 0.32 s, a line removed 0.23 to 0.12 s. Left: each cut line's bands worked out whole.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
-  - Other: notes/T-4153.md stage 3 "What is left"
+  - Other: notes/T-4153.md stage 5 "What is left"
 - T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2 (taking, 2026-11-24, agent rowsedit)
   - Context: Stage 1 landed 11-24 (6d7c50c5): the day's figures -77% and line periods -58% on Asia, money posted in 1-2 ms. Left: rows first for every full-path edit, trips and boarding per touched line, demand snapshot per cluster.
   - Goal: Those redone for what an edit touched. Tree editworker kept.
@@ -221,6 +221,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
+- T-4260 [P1] {L:checks} Fix the review's findings on today's landings (taking, 2026-11-24, agent fixes14)
+  - Context: Gemini reviewed T-4241, T-4080, T-4240, T-4193, T-4220 stage 1 and T-4048 on master (11-25). Worst: trains showing empty loads after an undo; a dead remove button across a separated pair; a local result not refreshing after reload.
+  - Goal: Each finding checked against the code; the real ones fixed.
+  - Other: artifacts/trainworld/gemini/batch14-review.md
 - T-4249 [P2] {L:edit-speed} A station's own leftover waits on big saves (taking, 2026-11-24, agent stationclick)
   - Context: From T-4240 (11-25): after its fix a station on your Asia save shows up in 0.75 s. Of the edit's own part, trips are still re-sent after an edit that changes no train's run, and the station check still runs in the worker at the click (most of the 174 ms before the apply).
   - Goal: Neither paid by an edit that doesn't need it.
@@ -380,10 +384,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4238 [P3] {L:timetables} Bus weekend rows run more often than weekdays on the same fleet
   - Context: Seen by the batch checker (11-24): a midtown bus line with 25 buses showed a 1 min headway on its weekend rows and 1.5 min on weekdays. May be right (shorter weekend trips) or a slip near T-4227's weekend share-out; not read yet.
   - Goal: The code says why, and it's fixed if it's a slip.
-- T-4231 [P2] {L:timetables} Apply to all lines misses some lines' weekend percent
-  - Context: Found by T-4227 (11-24): checks/t3521-weekends fails one step: after "Apply to all lines", only 48 of 109 lines on the NYC save report 70%. It last passed 11-19 (T-3827). Not caused by T-4227. Reach: some, players using Apply to all.
-  - Goal: Apply to all lines sets every line's weekend percent; t3521-weekends passes.
-  - Other: notes/T-4227.md
 - T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times
   - Context: You, 11-21: per-row Offset design approved, "will start later". A player, 11-18: "offset departure times ... (like for example +4 minutes or -5 minutes)". Japanese players keep asking to set the ダイヤ (daiya, Japanese rail's word for the timetable; 11-24). Design done (agent nudgedesign); strings drafted in the note.
   - Goal: Rail lines' rows take an offset from the game's timing that holds through later edits, shown at once on the board, chart and map.
@@ -486,7 +486,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4229 [P3] {L:map-look} Station names stay after zooming in
   - Context: Player report 11-20 (board g170): after zooming in once, station names stay on screen. Reach: few, one report.
   - Goal: Station names follow the map at every zoom.
-- T-4253 [P2] {L:fares} A line's fare multiple up to 10x
+- T-4253 [P2] {L:fares} A line's fare multiple up to 10x (taking, 2026-11-24, agent faremult)
   - Context: Players ask for a higher per-line fare multiple. You, 11-25: "we should raise max allowed to like 10x (we can reject it if the base fare times the mult is like over a thousand dollars i guess)".
   - Goal: A line's fare multiple goes up to 10x; one whose base fare times the multiple is over US$1,000 is refused with a message.
 - T-3744 [P3] {L:fares} Fare per stop made
@@ -944,7 +944,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
   - Other: notes/T-4188.md
 - T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-24, agent aside1)
-  - Context: Design approved 11-24: 9 stages, 12-14 h. Stage 1 is built in tree aside1: each whole re-solve keeps a snapshot of the figures on screen (real New York save: 10 MB, under 20 ms, figures unchanged). Next is stage 2, stand-ins. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
+  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-2 done: a snapshot of the figures on screen at each whole re-solve (New York: 10 MB, under 20 ms), and read-only stand-ins for untouched cities; figures unchanged. Next: stage 3, the side calculation's plan. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time

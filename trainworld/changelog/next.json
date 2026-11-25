@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c014",
+      "text": "fixed apply to all lines leaving some lines' weekend service unchanged",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4231",
+      "by": "maps-3e",
+      "at": "2026-11-25T01:28:02Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": true
+    },
+    {
       "id": "c013",
       "text": "added remove buttons on passages and station connections while placing a passage",
       "edited": null,

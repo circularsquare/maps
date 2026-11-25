@@ -145,7 +145,8 @@ new standing process.
 - **Data runs, packs, joins, AWS**: read the rules at the top of `docs/world-run.md` first.
 - **Shell**: pin processes from PowerShell or a `.cmd`, never `cmd /c start ...
   /b` through Git Bash. Nothing may open a window on her screen: a process you start from code gets `windowsHide:
-  true` (Node) or `creationflags=subprocess.CREATE_NO_WINDOW` (Python).
+  true` (Node) or `creationflags=subprocess.CREATE_NO_WINDOW` (Python), never `DETACHED_PROCESS` (with no console,
+  the venv's python.exe and every console program under it each open a window; her 11-25).
 - **Advisor** (when your session has one): only for a big design decision nobody has made (her 11-23). Not when
   stuck, not to confirm a cause, not for routine steps, wording, small UI, or a choice already going to Anita. Say in
   your report whether you called it and what changed.

@@ -299,7 +299,9 @@ def start(a):
     if a.trial:
         args.append("--trial")
     out = open(run_dir / "runner-console.txt", "w", encoding="utf-8")
-    flags = 0x8 | 0x200 | 0x01000000      # DETACHED_PROCESS, CREATE_NEW_PROCESS_GROUP, CREATE_BREAKAWAY_FROM_JOB
+    # CREATE_NO_WINDOW, not DETACHED_PROCESS: a detached process has no console, so the venv's python.exe redirector and
+    # every console program the run starts would each open a window on her screen; a hidden console is inherited.
+    flags = 0x08000000 | 0x200 | 0x01000000  # CREATE_NO_WINDOW, CREATE_NEW_PROCESS_GROUP, CREATE_BREAKAWAY_FROM_JOB
     kw = dict(cwd=str(MAPS), stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT, close_fds=True)
     try:
         p = subprocess.Popen(args, creationflags=flags, **kw)

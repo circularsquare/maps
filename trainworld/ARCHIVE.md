@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4231 [P2] {L:timetables} Apply to all lines misses some lines' weekend percent (2026-11-24): note_lines now passes the weekend touch to note_changed; t3521-weekends 109/109 at 70%. First Gemini code agent landing. notes/T-4231.md.
 - T-4252 [P2] {L:checks} Gemini agents that make code changes (2026-11-24): tools/gemini_agent.py runs a Gemini Neon agent on a brief in its own worktree (agy allow and deny rules, no OS sandbox on Windows 10), reporting to the inbox; gemini_audit.py fixed (a refused call ended its turn). notes/T-4252.md.
 - T-4193 [P2] {L:loading} Bus zones' streets before the network on load (2026-11-24): Community save jwxidghd opens in 61 s instead of 787 s (92% off): bus zones' street speeds come in before the load, one settle instead of 20. Rail trips -0.0097%; 5 Toyoko lines move over 1% (most -4.2%); bus rates unchanged. notes/T-4193.md.
 - T-4240 [P1] {L:edit-speed} Stations on her Asia save take seconds to show up (2026-11-24): A station on her Asia save shows up in 0.75 s (was 1.88 s), 1.41 s while trips are calculating (was 6.14 s): edits redo only the boarding accounts of lines whose service changed. Leftovers filed as T-4249. notes/T-4240.md.

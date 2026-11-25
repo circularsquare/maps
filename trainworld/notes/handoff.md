@@ -1,26 +1,28 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 8e9c7c49-010f-4c78-a0db-d5be0797af3f, name maps-3e [111c39], since 2026-11-24 23:50 UTC
-Updated: 2026-11-25 00:52 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 01:07 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5. Core cap 10 from 00:52 UTC (her: "for a few hours"; back to 14 around 04:00 UTC as she asked, say so when doing it). Start more when agents + claimed cores / 2 is under 8 (her 11-24).
 
 ## Next
 0. Usage stance (her 11-25): Claude usage runs out before Gemini's. Claude agents take P1/P2 code work; small clear
-   tasks and PR ports wait for Gemini code agents (T-4252); reading and review go to gemini_audit.py.
-1. Running, maps-d9's tab (adopt from the inbox): settlestop T-4239. maps-3e's tab (briefs in its scratch
-   <agent>/brief.md): geminirun (T-4252; also fixing gemini_audit.py stopping after one turn, then re-running the
-   T-4250 and T-4248 scopes), cutstretch2 (T-4153 s5), aside2 (T-4220 s2), stationclick (T-4214 A + T-4249 + her
-   station removal), rowsedit (T-4149 worker rows by what an edit touched), pageedit (T-4150 page take).
-   Landed this session: T-4240, T-4220 s1, T-4193, T-4048 (bb321567e, save level 41).
-2. 8800 rebuilding to bb321567e (snapbuild3.log; smoke after). Gemini batch review due over T-4241, T-4234, T-4080
-   s1-2, T-4240, T-4193, T-4220 s1, T-4048, once gemini_audit.py works.
-3. Gemini code trials once T-4252 works: T-4231, T-4247, T-4253, T-4254, T-4255, T-4256, T-4258, T-4259. Claude next:
-   T-4257 (bus fastest route), T-4251 (busways), T-4243 speedometer, T-3742 after settlestop, T-4214 D/E, corridors3
-   (T-4199 s2), T-4080 s3-6, T-4149/T-4150, T-4230, T-4187, T-3160, T-4233, T-4242 design, T-4248 after its scope.
-4. Waiting on her: T-4223's two loop refusals not yet text-acked; closing #21 and #24 on GitHub is hers.
+   tasks and PR ports go to Gemini code agents (gemini_agent.py, 1 core each at cap 10); reading and review to Gemini.
+1. Running (briefs in maps-3e's scratch <agent>/brief.md): cutstretch3 (T-4153 s6), settlefix (Opus, T-4239 on tree settlestop:
+   Gemini's findings, then land with finish --task T-4239), stationclick (T-4214 A + T-4249 + her station removal), rowsedit (T-4149 worker rows), pageedit
+   (T-4150 page take), fixes14 (Sonnet, T-4260: batch14 findings). Gemini: faremult (T-4253, third try, 1 core).
+   Landed this session: T-4240, T-4220 s1-2, T-4193, T-4048 (save level 41), T-4252 (tools), T-4231 (Gemini, round 1
+   of 3: its permissions note: "|" is refused inside quoted git grep patterns), T-4153 s5 (5ec788b72). 8800 is behind.
+2. 8800 = bb321567e, smoke PASS 01:02. Batch 14 reviewed by Gemini (artifacts/trainworld/gemini/batch14-review.md).
+   T-4220 s2 landed 6b5df61c6 (stages 3-9 left: next agent aside3, Opus). faremult (Gemini) failed twice on a full cap:
+   retry when cores free.
+3. Gemini code trials next: T-4247, T-4254, T-4255, T-4256, T-4258, T-4259 (3 counted rounds ask about permissions).
+   Claude next: T-4257 (bus fastest route), T-4251 (busways), T-4243 speedometer, T-3742 after settlestop lands,
+   T-4214 D/E, corridors3 (T-4199 s2), T-4080 s3-6, T-4230, T-4187, T-3160, T-4233, T-4242 design.
+4. Waiting on her: T-4223's two loop refusals not yet text-acked; closing #21 and #24 on GitHub is hers; T-4250, T-4248.
 5. Rewrite the edit_bench baseline in a quiet window (master Vite, `edit_bench.mjs --save asia,nyc --baseline`).
 
 ## Her words
+- 11-25 00:54: "when you start pythons, please make sure terminals dont pop up on my screen" (gemini_agent.py used DETACHED_PROCESS; fixed, CLAUDE.md Shell).
 - 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor. we should mostly be focusing on isolating the changes and cutting out the impacts on the broader map." (DECISIONS T-4097; T-4149, T-4150 raised to P1.)
 - 11-25 00:40: "we should not close prs without comment" (orchestrator.md standing calls); #16, #22 closed bare, comments drafted.
 - 11-25: Claude usage runs out before Gemini's: Gemini takes reading and review, Gemini code agents to come (T-4252;
@@ -33,9 +35,6 @@ diary notes/handoff-log.md. Her time UTC-5. Core cap 10 from 00:52 UTC (her: "fo
 - 11-24 22:4x: "we're maybe relying a bit too much on testing ... you guys get a lot more mileage by thinking about actual
   code than by trying to test. the ways in which you think to test don't really align super well with how people play.
   how could we formalize this"; Gemini adversarial review "generally speaking". loopcase not needed (T-4235 closed).
-- 11-24 22:3x: loop fix not trusted for ordinary circles; don't claim it fixed (c004 hidden). Counts once each: yes.
-  Lines past 99 keep numbers (T-4236 landed). Buses: "1.1x bus minute mult, can maybe adjust more later, and do waits
-  at least 2 minutes. and also 500m reach". Bus stop naming design OK. All in DECISIONS.
 - 11-24 20:1x on buses: "bus ridership is just maybe a bit too high overall"; a perceived cost should scale with ride
   time ("the annoying part is being on the bus"); 0.7-minute headways unrealistic. Answered by T-4224 above.
 - 11-24 18:5x: shipped 0.4.6; then "work at the root cause / try something like a silo approach ... deprioritize the
@@ -56,4 +55,5 @@ diary notes/handoff-log.md. Her time UTC-5. Core cap 10 from 00:52 UTC (her: "fo
 - Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), corridors (T-4199 stage 1).
 - Unmerged branches with no tree, left on purpose: tw/hotfix-10d, tw/release-021, tw/release-031, tw/onegraph-measured.
 - A task with stages left: `agent-tree.mjs land` + `remove`, not `finish`; swap the taking mark by hand.
-- reserve_cores: maps-3e's retry loop (task b19u3mylb; exits each pass while maps-d9's runs, takes over when that tab closes).
+- reserve_cores: maps-3e's retry loop (task b19u3mylb, powershell PID 29592 since 01:03). It now follows the ledger's cap
+  (cap 10 = cores 6-15) and pins Gemini runners; a stale 11-24 08:11 copy (old code) was stopped.

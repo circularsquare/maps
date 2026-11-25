@@ -27,7 +27,20 @@ function Get-Tree {
 
 $n = [Environment]::ProcessorCount
 $allMask = ([int64]1 -shl $n) - 1
-$mask = $allMask - (([int64]1 -shl $Reserved) - 1)
+# Without -Reserved, the cores left free follow the ledger's cap each pass (her 11-25: "be fairly aggressive about 10
+# core cap"): everything Claude sessions start runs on the top `cap` cores, so the cap holds even for work that never
+# claimed; at least cores 0-1 stay hers.
+$autoReserved = -not $PSBoundParameters.ContainsKey('Reserved')
+$ledger = Join-Path (Split-Path (Split-Path (Split-Path $PSScriptRoot))) 'cores.json'
+function Update-Mask {
+  if ($autoReserved) {
+    $cap = 0
+    try { $cap = [int]((Get-Content -Raw -LiteralPath $ledger -ErrorAction Stop | ConvertFrom-Json).cap) } catch {}
+    $script:Reserved = if ($cap -gt 0) { [Math]::Max(2, [Math]::Min($n - 2, $n - $cap)) } else { 2 }
+  }
+  $script:mask = $allMask - (([int64]1 -shl $script:Reserved) - 1)
+}
+Update-Mask
 $script:mutex = $null
 if ($All -and $Loop -gt 0) {
   $script:mutex = New-Object System.Threading.Mutex($false, 'Local\trainworld_reserve_cores_all')
@@ -79,8 +92,35 @@ function Invoke-Session($t, [int]$Root, $wtAll) {
   $script:pinned += $done; $script:refused += $failed
 }
 
+# Gemini code agents (tools/gemini_agent.py run) break away from the shell that started them, so no claude.exe is above
+# them: pin each runner and everything under it the same way.
+function Invoke-Runners($t) {
+  $ids = @(Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue |
+    ? { $_.CommandLine -match 'gemini_agent\.py"?\s+run\b' } | % { [int]$_.ProcessId })
+  $queue = New-Object System.Collections.Queue
+  foreach ($i in $ids) { $queue.Enqueue($i) }
+  $seen = @{}
+  while ($queue.Count) {
+    $id = $queue.Dequeue()
+    if ($seen.ContainsKey($id)) { continue }; $seen[$id] = 1
+    $nm = if ($t.byId.ContainsKey($id)) { [string]$t.byId[$id].Name } else { '' }
+    if ($Skip -contains $nm.ToLower()) { continue }
+    if ($WhatIf) { Write-Output ("would pin {0} {1} (gemini runner)" -f $id, $nm) }
+    elseif ($nm) {
+      try {
+        $pr = Get-Process -Id $id -ErrorAction Stop
+        if ([int64]$pr.ProcessorAffinity -band (([int64]1 -shl $Reserved) - 1)) { $pr.ProcessorAffinity = [IntPtr]$mask }
+        if ($pr.PriorityClass -ne 'BelowNormal' -and $pr.PriorityClass -ne 'Idle') { $pr.PriorityClass = 'BelowNormal' }
+        $script:pinned++
+      } catch { $script:refused++ }
+    }
+    if ($t.kids.ContainsKey($id)) { foreach ($k in $t.kids[$id]) { if ($k -ne $id) { $queue.Enqueue($k) } } }
+  }
+}
+
 try {
   while ($true) {
+    Update-Mask
     $wt = @(Get-Process -Name WindowsTerminal -ErrorAction SilentlyContinue | % { [int]$_.Id })
     if ($All) { $roots = @($t.byId.Keys | ? { $t.byId[$_].Name -eq 'claude.exe' } | sort) }
     else {
@@ -89,6 +129,7 @@ try {
     }
     $script:pinned = 0; $script:refused = 0
     foreach ($r in $roots) { Invoke-Session $t $r $wt }
+    if ($All) { Invoke-Runners $t }
     $done = $script:pinned; $failed = $script:refused
     if ($Loop -le 0) {
       Write-Output ("{0} claude.exe above normal on all cores ({1}); {2} processes under them on cores {3}-{4} at below normal ({5} gone or refused)" -f $roots.Count, ($roots -join ','), $done, $Reserved, ($n - 1), $failed)

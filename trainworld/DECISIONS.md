@@ -54,7 +54,7 @@ artifacts/trainworld/T-4120/.
 
 ## Lines and scheduling
 - 2026-11-24 (Anita, T-4220): Edits made during a whole re-solve get quick figures from a second worker that re-solves only the touched cities against the figures on screen (lie: up to about 4.5 min on Asia); off on phones and short memory. notes/T-4220.md
-- 2026-11-24 (Anita, T-4239): The train-count settle need not be exact (her call). A line circling across a jump in its round trip (passing-track waits, following loss) is settled once it circles, on the side its fleet falls short: the lie, up to 3% more trains an hour than its fleet runs. notes/T-4239.md
+- 2026-11-24 (Anita, T-4239): The train-count settle need not be exact (her call). A line circling across a jump in its round trip (passing-track waits, following loss) is settled on the side its fleet falls short: the lie, up to 3% more trains an hour than its fleet runs. notes/T-4239.md
 - 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
 - 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md
 - 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a line's end: each way counts half a turn (the lie: trains turn there twice a round trip). The reversal icon shows only where the turn limits the line. notes/T-4178.md
@@ -182,6 +182,7 @@ artifacts/trainworld/T-4120/.
 
 ## Map and UI
 
+- 2026-11-25 (T-4153): Bands: a line alone on its track has one recipe everywhere (no Traffic shift on any edge); knot places are unrounded, so a cut changes no later knot. Lie: pair-rule offsets are summed in 1/1024 m, so a pair's side can differ within 1 mm of the threshold.
 - 2026-11-25 (Anita, T-4097): Edit speed works at the root cause, the game reworking the whole network after each edit ("everything else is kinda just flavor"): every step of an edit costs what it touched, not the whole map. Drawing results at the click is deprioritized. notes/T-4153.md
 - 2026-11-24 (T-4214): An edit's patch goes only to the map the tools pick on (`clickWorld`, `clickNet`); `world`, which panels, layers and money follow, waits for the state. Setting `world` per patch ran them all twice per edit (79 ms for a station on New York). notes/T-4214.md
 - 2026-11-24 (T-4214): A map click made before an earlier edit reaches the clickable map waits (spinner, at most 5 s), then acts at its spot; the map takes the edit's patch with its word, or its network when none is sent. Track run segments and stop clicks never wait. notes/T-4214.md
