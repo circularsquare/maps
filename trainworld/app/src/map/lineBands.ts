@@ -96,6 +96,8 @@ const HOLD_M = 50;
 /** "align" (T-2140): ribbon changes of one ribbon whose places (on each line's track) are within this
  * many metres are one change; a line's curve is moved only to a point of its track within ALIGN_NEAR_M */
 const ALIGN_M = 100;
+/** T-4153: past this many changes in a group, they are found by a grid of their places */
+const ALIGN_GRID = 32;
 const ALIGN_NEAR_M = 80;
 
 interface BandLine { id: number; ok: boolean; path: number[]; bus?: unknown }
@@ -554,6 +556,8 @@ function stepsOf(d: PathDiff, k: number, fwd: boolean): [number, number, number]
   const w0 = d.pre, w1 = d.was - d.suf, n = d.p.length - d.suf - d.pre;
   return fwd ? [w0 - k, w1 - k, n] : [k - w1 + 1, k - w0 + 1, n];
 }
+/** T-4153: the kept orders' pairs' walks worked out in place */
+let pairScratch = new Int32Array(64);
 /** past this many edges changed, every line is worked out again */
 const MEMO_EDGES = 400;
 /** T-4153: a line's path metres in its bands lie on a grid of 1/1024 m (its edges' lengths, its entries' starts, its
@@ -720,9 +724,8 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       order.set(edge, was.order);
       continue;
     }
-    if (keepOrders) orderReads = [];
     // (T-4187: the two in one buffer, as most edges have a few pairs and an array of its own costs more than its numbers)
-    const m = v.length, nPairs = (m * (m - 1)) / 2, pairBuf = new ArrayBuffer(9 * nPairs), walks = new Int32Array(pairBuf, 0, 2 * nPairs), sign = new Int8Array(pairBuf, 8 * nPairs, nPairs);
+    const m = v.length, nPairs = (m * (m - 1)) / 2;
     // per line, where it is in the kept order (-1: not there, or its pairs walked again) and how its path changed
     const from = new Int32Array(m).fill(-1), dif: (PathDiff | null)[] = new Array(m).fill(null);
     if (!fresh) for (let i = 0, o = 0; i < m; i++) {
@@ -736,7 +739,39 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
       dif[i] = d;
     }
     const om = was?.lines.length ?? 0;
+    // (T-4153: the same lines, each pair's answer kept: the same order, the kept one changed in place to the paths now,
+    // with no arrays made, as most edges along a cut line are)
+    if (!fresh && m === om && keepOrders) {
+      let same = true;
+      for (let i = 0; i < m && same; i++) same = from[i] === i;
+      if (same) {
+        if (pairScratch.length < 2 * nPairs) pairScratch = new Int32Array(4 * nPairs);
+        let passed = 0;
+        for (let i = 0, p = 0; i < m && same; i++) for (let j = i + 1; j < m; j++, p++) {
+          let n1 = was!.walks[2 * p], n2 = was!.walks[2 * p + 1];
+          if (dif[i] || dif[j]) {
+            const ki = was!.ks[i], kj = was!.ks[j], fy = (was!.paths[j][kj] & 1) === (was!.paths[i][ki] & 1);
+            n1 = walkNow(n1, dif[i], ki, true, dif[j], kj, fy);
+            n2 = n2 < 0 || !n1 ? n2 : walkNow(n2, dif[i], ki, false, dif[j], kj, !fy);
+            if (n1 && n2) passed++;
+          }
+          if (!n1 || !n2) { same = false; break; }
+          pairScratch[2 * p] = n1;
+          pairScratch[2 * p + 1] = n2;
+        }
+        if (same) {
+          for (let i = 0; i < m; i++) { was!.lines[i] = v[i].line; was!.ks[i] = v[i].k; was!.paths[i] = v[i].line.path; }
+          was!.walks.set(pairScratch.subarray(0, 2 * nPairs));
+          bandWork.passed += passed;
+          bandWork.passedAll += passed;
+          order.set(edge, was!.order);
+          continue;
+        }
+      }
+    }
     let walked = 0;
+    if (keepOrders) orderReads = [];
+    const pairBuf = new ArrayBuffer(9 * nPairs), walks = new Int32Array(pairBuf, 0, 2 * nPairs), sign = new Int8Array(pairBuf, 8 * nPairs, nPairs);
     for (let i = 0, p = 0; i < m; i++) for (let j = i + 1; j < m; j++, p++) {
       const oi = from[i], oj = from[j];
       if (oi >= 0 && oj >= 0) {
@@ -1164,8 +1199,13 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
   /** the point a share f of the way along edge e, a to b, local units */
   const pointOn = (e: number, f: number): [number, number] => {
     const p = pts.get(e)!, c = cum(e), want = f * c[c.length - 1];
-    let i = 0;
-    while (i < c.length - 2 && c[i + 1] < want) i++;
+    // (T-4153: the first i with c[i + 1] >= want, at most c.length - 2, found by halves: the distances only grow)
+    let i = 0, hi = Math.max(0, c.length - 2);
+    while (i < hi) {
+      const mid = (i + hi) >> 1;
+      if (c[mid + 1] < want) i = mid + 1;
+      else hi = mid;
+    }
     const sl = c[i + 1] - c[i], t = sl > 0 ? Math.max(0, Math.min(1, (want - c[i]) / sl)) : 0;
     return [p[i * 3] + (p[i * 3 + 3] - p[i * 3]) * t, p[i * 3 + 1] + (p[i * 3 + 4] - p[i * 3 + 1]) * t];
   };
@@ -1311,12 +1351,38 @@ function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, Ba
     for (const list of all.values()) {
       if (list.length < 2) continue;
       const used = new Uint8Array(list.length);
+      // (T-4153: a long list by a grid of its changes' places, cells as wide as the widest reach, so each looks only at
+      // those in the cells round it, in list order; one with no finite place is looked at by all, and looks at all)
+      let near: ((i: number) => number[]) | null = null;
+      if (list.length > ALIGN_GRID) {
+        let cell = 0;
+        for (const c of list) cell = Math.max(cell, ALIGN_M * kAtY(c.at[1]));
+        const grid = new Map<number, number[]>(), loose: number[] = [];
+        const keyOf = (x: number, y: number) => Math.floor(x / cell) * 1_000_003 + Math.floor(y / cell);
+        const finite = (c: Change) => Number.isFinite(c.at[0]) && Number.isFinite(c.at[1]);
+        list.forEach((c, i) => {
+          if (!finite(c) || !(cell > 0) || !Number.isFinite(cell)) { loose.push(i); return; }
+          const k = keyOf(c.at[0], c.at[1]), v = grid.get(k);
+          if (v) v.push(i);
+          else grid.set(k, [i]);
+        });
+        if (Number.isFinite(cell) && cell > 0) near = (i) => {
+          const a = list[i];
+          if (!finite(a)) return Array.from({ length: list.length - i - 1 }, (_, q) => i + 1 + q);
+          const out: number[] = [];
+          for (const j of loose) if (j > i) out.push(j);
+          const cx = Math.floor(a.at[0] / cell), cy = Math.floor(a.at[1] / cell);
+          for (let u = -1; u <= 1; u++) for (let w = -1; w <= 1; w++) for (const j of grid.get((cx + u) * 1_000_003 + cy + w) ?? []) if (j > i) out.push(j);
+          return out.sort((p, q) => p - q);
+        };
+      }
       for (let i = 0; i < list.length; i++) {
         if (used[i]) continue;
         used[i] = 1;
         const a = list[i], grp = [a], ids = new Set([a.id]), reach = ALIGN_M * kAtY(a.at[1]);
-        for (let j = i + 1; j < list.length; j++) {
-          const b = list[j];
+        const js = near ? near(i) : null;
+        for (let q = 0, n = js ? js.length : list.length - i - 1; q < n; q++) {
+          const j = js ? js[q] : i + 1 + q, b = list[j];
           if (used[j] || ids.has(b.id) || Math.hypot(b.at[0] - a.at[0], b.at[1] - a.at[1]) > reach) continue;
           used[j] = 1;
           ids.add(b.id);

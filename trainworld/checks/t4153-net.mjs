@@ -13,6 +13,8 @@
 //     on shared track in the middle of the longest line (which moves the knots after it) must fail the check
 //   --self-test=splice (asia): a line worked out again sweeps only its entries that changed, not those beside them its
 //     change reaches, and the same station must fail the check
+//   --self-test=stations: a station's numbers are kept unless its own node's row changed, and a copy of the line sharing
+//     the most track (its stops then served by one more line) must fail the check
 import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
@@ -21,10 +23,10 @@ import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 globalThis.postMessage = (m, o) => { for (const b of o?.transfer ?? []) if (b instanceof ArrayBuffer && !b.detached && b.byteLength) b.transfer(); };
 globalThis.self ??= globalThis;
 globalThis.location ??= { search: '', hash: '', href: 'http://localhost/' };
-const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, spliceSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest } from '@app/src/map/network.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
+const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, spliceSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest, stationSelfTest } from '@app/src/map/network.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
 await app.initSim({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 
-const SELF = process.argv.includes('--self-test') ? 'orders' : process.argv.includes('--self-test=strokes') ? 'strokes' : process.argv.includes('--self-test=splice') ? 'splice' : '';
+const SELF = process.argv.includes('--self-test') ? 'orders' : process.argv.includes('--self-test=strokes') ? 'strokes' : process.argv.includes('--self-test=splice') ? 'splice' : process.argv.includes('--self-test=stations') ? 'stations' : '';
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const SEEDS = Number(args[0] ?? 2), STEPS = Number(args[1] ?? 12), SAVE = args[2] ?? 'asia';
 const raw = gunzipSync(readFileSync(SAVE === 'asia' ? ARTIFACTS + 't3600-asianita-1852.save' : REAL_SAVE));
@@ -36,6 +38,7 @@ app.setBandCheck(true);
 if (SELF === 'orders') app.bandSelfTest(true);
 if (SELF === 'strokes') app.netSelfTest(true);
 if (SELF === 'splice') app.spliceSelfTest(true);
+if (SELF === 'stations') app.stationSelfTest(true);
 
 function rng(seed) {
   let s = seed >>> 0;
@@ -189,7 +192,7 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
     state();
     if (errors.length) { console.log(`detected  seed ${seed}, a station on edge ${e.id} of line ${best.id}: ${errors[0].slice(0, 300)}`); failures++; break; }
   }
-  if (SELF === 'orders') {
+  if (SELF === 'orders' || SELF === 'stations') {
     // (a copy of the line sharing the most track with others: every edge it shares gains a line its kept order lacks)
     const m = o.model(), count = new Map();
     for (const l of m.rail) for (const p of new Set(Array.from(api.line_path(l.id), (q) => q >> 1))) count.set(p, (count.get(p) ?? 0) + 1);
@@ -219,7 +222,7 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
 }
 console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}; line entries' strokes copied: ${app.netWork.entriesAll}, line samples copied: ${app.netWork.keptAll}; band builds that followed the network's changed edges: ${app.bandWork.followed}; lines worked out again in part: ${app.bandWork.splicedAll} (their entries worked out ${app.bandWork.sweptAll}, copied ${app.bandWork.copiedAll})`);
 if (SELF) {
-  const what = SELF === 'strokes' ? "lines' entries are copied whatever their knots" : SELF === 'splice' ? 'only the entries that changed are worked out again' : 'the kept orders are trusted';
+  const what = SELF === 'strokes' ? "lines' entries are copied whatever their knots" : SELF === 'splice' ? 'only the entries that changed are worked out again' : SELF === 'stations' ? "stations' numbers are kept unless their own node changed" : 'the kept orders are trusted';
   console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test (${SELF}): ${failures ? `the check fails when ${what}` : `the check did not notice when ${what}`}`);
   process.exit(failures ? 0 : 1);
 }

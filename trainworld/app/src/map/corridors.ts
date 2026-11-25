@@ -100,24 +100,80 @@ let lastOut: Beside | null = null;
 let made = new Map<number, { samples: EdgeSamples; sums: Map<number, [number, number, number]> }>();
 /** per edge, the edges whose own records see it */
 let seenBy = new Map<number, Set<number>>();
+/** T-4153: `cache`'s edges' boxes in square cells of `size` local units (ids in no set order; one over more than IX_WIDE
+ * cells in `wide`), and the most local units a metre of any of them (`kTop`, NaN when to be found again) and how many
+ * have it, so an edit's call looks only near what changed */
+interface BoxIx { size: number; cells: Map<number, number[]>; wide: Set<number>; kTop: number; kTopN: number }
+let boxIx: BoxIx | null = null;
+const IX_M = 2000, IX_WIDE = 64;
+function ixCells(ix: BoxIx, b: Prep["box"], pad: number, f: (k: number) => void) {
+  const s = ix.size;
+  for (let cx = Math.floor((b[0] - pad) / s); cx <= Math.floor((b[2] + pad) / s); cx++)
+    for (let cy = Math.floor((b[1] - pad) / s); cy <= Math.floor((b[3] + pad) / s); cy++) f(cx * 1_000_003 + cy);
+}
+const ixWide = (ix: BoxIx, b: Prep["box"]) => !((Math.floor(b[2] / ix.size) - Math.floor(b[0] / ix.size) + 1) * (Math.floor(b[3] / ix.size) - Math.floor(b[1] / ix.size) + 1) <= IX_WIDE);
+function ixAdd(ix: BoxIx, e: Prep) {
+  if (e.k > ix.kTop) (ix.kTop = e.k), (ix.kTopN = 1);
+  else if (e.k === ix.kTop) ix.kTopN++;
+  if (ixWide(ix, e.box)) { ix.wide.add(e.id); return; }
+  ixCells(ix, e.box, 0, (k) => { const v = ix.cells.get(k); if (v) v.push(e.id); else ix.cells.set(k, [e.id]); });
+}
+function ixDrop(ix: BoxIx, e: Prep) {
+  if (e.k === ix.kTop && --ix.kTopN === 0) ix.kTop = NaN;
+  if (ix.wide.delete(e.id)) return;
+  ixCells(ix, e.box, 0, (k) => {
+    const v = ix.cells.get(k), at = v ? v.indexOf(e.id) : -1;
+    if (at < 0) return;
+    v![at] = v![v!.length - 1];
+    v!.pop();
+    if (!v!.length) ix.cells.delete(k);
+  });
+}
+/** the index of `cache`, made once after a whole call */
+function ixOf(): BoxIx {
+  if (boxIx) return boxIx;
+  let k = 1;
+  for (const r of cache.values()) if (r.prep.k > k) k = r.prep.k;
+  const ix: BoxIx = { size: IX_M * k, cells: new Map(), wide: new Set(), kTop: -Infinity, kTopN: 0 };
+  for (const r of cache.values()) ixAdd(ix, r.prep);
+  return (boxIx = ix);
+}
+/** the most local units a metre of `cache`'s edges */
+function ixTop(ix: BoxIx): number {
+  if (Number.isNaN(ix.kTop)) {
+    ix.kTop = -Infinity;
+    ix.kTopN = 0;
+    for (const r of cache.values()) {
+      if (r.prep.k > ix.kTop) (ix.kTop = r.prep.k), (ix.kTopN = 1);
+      else if (r.prep.k === ix.kTop) ix.kTopN++;
+    }
+  }
+  return ix.kTop;
+}
+/** the ids of `cache`'s edges whose boxes may come within `pad` of box `b` (each once) */
+function ixNear(ix: BoxIx, b: Prep["box"], pad: number, out: Set<number>) {
+  for (const id of ix.wide) out.add(id);
+  ixCells(ix, b, pad, (k) => { for (const id of ix.cells.get(k) ?? []) out.add(id); });
+}
 
 /** T-4103: the view's anchor moved (`shiftNetCache`): each edge in `moved` is the same track in the moved frame, so its
  * records (metres along and across edges) carry over to its new points, and a next call that finds them unchanged
  * gives what it gave before. Without this a far jump of the view worked every edge out again. */
 /** T-4153: what `besideSamples` keeps between calls, one per network cache (map/network.ts), so a build from scratch
  * beside the kept one (`?patch=check`) neither reads nor moves it; the module's variables hold the one in use */
-export interface BesideState { cache: Map<number, Raw>; within: number; lastOut: Beside | null; made: typeof made; seenBy: Map<number, Set<number>> }
-export const newBesideState = (): BesideState => ({ cache: new Map(), within: 0, lastOut: null, made: new Map(), seenBy: new Map() });
-const sharedBeside: BesideState = { cache, within: cacheWithin, lastOut, made, seenBy };
+export interface BesideState { cache: Map<number, Raw>; within: number; lastOut: Beside | null; made: typeof made; seenBy: Map<number, Set<number>>; boxIx: BoxIx | null }
+export const newBesideState = (): BesideState => ({ cache: new Map(), within: 0, lastOut: null, made: new Map(), seenBy: new Map(), boxIx: null });
+const sharedBeside: BesideState = { cache, within: cacheWithin, lastOut, made, seenBy, boxIx };
 let inUse = sharedBeside;
 function useBeside(st: BesideState) {
   if (st === inUse) return;
-  Object.assign(inUse, { cache, within: cacheWithin, lastOut, made, seenBy });
-  ({ cache, within: cacheWithin, lastOut, made, seenBy } = st);
+  Object.assign(inUse, { cache, within: cacheWithin, lastOut, made, seenBy, boxIx });
+  ({ cache, within: cacheWithin, lastOut, made, seenBy, boxIx } = st);
   inUse = st;
 }
 export function shiftBeside(moved: ReadonlyMap<Float32Array, Float32Array>, st: BesideState = sharedBeside) {
   useBeside(st);
+  boxIx = null;
   for (const [id, r] of cache) {
     const p = moved.get(r.prep.p);
     if (!p || p.length !== r.prep.p.length) continue;
@@ -188,7 +244,7 @@ const overlaps = (a: Prep["box"], b: Prep["box"], pad: number) => !(a[2] + pad <
  */
 export function besideSamples(ids: readonly number[] | ReadonlyMap<number, unknown>, pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, { a: number; b: number }>, within = CORRIDOR_M, st: BesideState = sharedBeside, changes?: { edges: Iterable<number>[]; has: (id: number) => boolean }): Beside {
   useBeside(st);
-  if (within !== cacheWithin) (cache = new Map()), (lastOut = null);
+  if (within !== cacheWithin) (cache = new Map()), (lastOut = null), (boxIx = null);
   cacheWithin = within;
   if (changes && lastOut) {
     const out = besideChanged(changes, pts, ends, within);
@@ -257,6 +313,9 @@ export function besideSamples(ids: readonly number[] | ReadonlyMap<number, unkno
   if (whole) seenBy = new Map();
   const remake = seersMoved(redone, (g) => (whole ? undefined : cache.get(g)), (g) => raw.get(g));
   cache = raw;
+  // (T-4153: the index an edit's call looks near what changed by, made now so the first edit does not wait for it)
+  boxIx = null;
+  ixOf();
   for (const id of [...made.keys()]) if (!raw.has(id)) (made.delete(id), seenBy.delete(id));
   remakeSamples(remake);
   const out: Beside = { edges: new Map(), pair: new Map(), remade: null };
@@ -310,23 +369,35 @@ function besideChanged(changes: { edges: Iterable<number>[]; has: (id: number) =
     out.remade = [];
     return out;
   }
-  // (the most local units a metre of any edge, as a whole call takes it)
-  let kMax = 1, n = fresh.size;
-  for (const [id, r] of cache) if (!fresh.has(id)) { n++; if (r.prep.k > kMax) kMax = r.prep.k; }
+  // (the most local units a metre of any edge, as a whole call takes it: T-4153, the index's most, unless every edge with
+  // it is made again here)
+  const ix = ixOf();
+  let kMax = 1, n = fresh.size, topFresh = 0;
+  const top = ixTop(ix);
+  for (const id of fresh.keys()) {
+    const r = cache.get(id);
+    if (r) { if (r.prep.k === top) topFresh++; } else n++;
+  }
+  n += cache.size - fresh.size;
+  if (topFresh < ix.kTopN) kMax = Math.max(kMax, top);
+  else for (const [id, r] of cache) if (!fresh.has(id) && r.prep.k > kMax) kMax = r.prep.k;
   for (const e of fresh.values()) if (e.k > kMax) kMax = e.k;
   if (changed.length * n > MANY_TESTS) return null;
   const reach = HOLD * within * kMax, all = boxOfAll(changed);
   const goneSet = new Set(gone);
-  const now = (fn: (e: Prep) => void) => {
-    for (const [id, r] of cache) if (!fresh.has(id) && !goneSet.has(id)) fn(r.prep);
+  /** (T-4153: the kept edges the index finds near a box, and every edge made again) */
+  const nearBy = (boxes: readonly Prep["box"][], fn: (e: Prep) => void) => {
+    const ids = new Set<number>();
+    for (const b of boxes) ixNear(ix, b, reach, ids);
+    for (const id of ids) if (!fresh.has(id) && !goneSet.has(id)) { const r = cache.get(id); if (r) fn(r.prep); }
     for (const e of fresh.values()) fn(e);
   };
   const redo: Prep[] = [];
-  now((e) => { if (fresh.has(e.id) || (overlaps(all, e.box, reach) && changed.some((b) => overlaps(b, e.box, reach)))) redo.push(e); });
+  nearBy(changed, (e) => { if (fresh.has(e.id) || (overlaps(all, e.box, reach) && changed.some((b) => overlaps(b, e.box, reach)))) redo.push(e); });
   // (in id order, as a whole call works them out)
   redo.sort((a, b) => a.id - b.id);
   const area = boxOfAll(redo.map((e) => e.box)), near: Prep[] = [];
-  now((e) => { if (overlaps(e.box, area, reach)) near.push(e); });
+  nearBy([area], (e) => { if (overlaps(e.box, area, reach)) near.push(e); });
   near.sort((a, b) => a.id - b.id);
   const got = recordsOf(redo, near, reach, within);
   const redone = [...got.keys(), ...gone];
@@ -334,6 +405,12 @@ function besideChanged(changes: { edges: Iterable<number>[]; has: (id: number) =
   for (const g of redone) was.set(g, cache.get(g));
   for (const [id, r] of got) cache.set(id, r);
   for (const id of gone) cache.delete(id);
+  for (const g of redone) {
+    const o = was.get(g)?.prep, p = cache.get(g)?.prep;
+    if (o === p) continue;
+    if (o) ixDrop(ix, o);
+    if (p) ixAdd(ix, p);
+  }
   const remake = seersMoved(redone, (g) => was.get(g), (g) => cache.get(g));
   const oldSums = new Map<number, Map<number, [number, number, number]> | undefined>();
   for (const id of gone) {

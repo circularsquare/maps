@@ -40,10 +40,117 @@ export const SHOP_STRIDE = 6, CELL_STRIDE = 4;
  * layouts; `ids` the station id of each index its draw holds) */
 interface Kept { key: string; draw: BuildingDraw; ids: Map<number, number> }
 const kept = new Map<number, Kept>();
-/** each edge's id, points and box (x0, y0, x1, y1), by the network's points map */
-const boxesOf = new WeakMap<Map<number, Float32Array>, { ids: number[]; pts: Float32Array[]; box: Float64Array }>();
+/** T-4153: each edge's box (x0, y0, x1, y1) by id, in square cells of `size` local units (ids in no set order; one over
+ * more than WIDE cells in `wide`), for the points map `map`; kept with the network's cache (map/network.ts) and patched
+ * from the edges it says changed */
+export interface EdgeBoxes { map: ReadonlyMap<number, Float32Array> | null; size: number; boxes: Map<number, Float64Array>; cells: Map<number, number[]>; wide: Set<number> }
+export const newEdgeBoxes = (): EdgeBoxes => ({ map: null, size: 0, boxes: new Map(), cells: new Map(), wide: new Set() });
+function boxOf(p: Float32Array): Float64Array {
+  let e = boxOfPts.get(p);
+  if (!e) {
+    let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+    for (let j = 0; j + 2 < p.length; j += 3) {
+      a = Math.min(a, p[j]); c = Math.max(c, p[j]);
+      b = Math.min(b, p[j + 1]); d = Math.max(d, p[j + 1]);
+    }
+    boxOfPts.set(p, (e = Float64Array.of(a, b, c, d)));
+  }
+  return e;
+}
+/** `ix` made for `edgePts`: patched from the edges `changed` names when it was made for the map those are relative to */
+function edgeBoxesFor(ix: EdgeBoxes, edgePts: ReadonlyMap<number, Float32Array>, size: number, changed?: { pts: ReadonlyMap<number, Float32Array>; edges: ReadonlySet<number> }) {
+  if (ix.map === edgePts) return;
+  const cellsOf = (b: Float64Array, f: (k: number) => void) => {
+    const s = ix.size;
+    for (let cx = Math.floor(b[0] / s); cx <= Math.floor(b[2] / s); cx++) for (let cy = Math.floor(b[1] / s); cy <= Math.floor(b[3] / s); cy++) f(cx * 1_000_003 + cy);
+  };
+  const wide = (b: Float64Array) => (Math.floor(b[2] / ix.size) - Math.floor(b[0] / ix.size) + 1) * (Math.floor(b[3] / ix.size) - Math.floor(b[1] / ix.size) + 1) > WIDE;
+  const add = (id: number, p: Float32Array) => {
+    const b = boxOf(p);
+    ix.boxes.set(id, b);
+    if (!(b[0] <= b[2])) return;
+    if (wide(b)) { ix.wide.add(id); return; }
+    cellsOf(b, (k) => { const v = ix.cells.get(k); if (v) v.push(id); else ix.cells.set(k, [id]); });
+  };
+  const drop = (id: number) => {
+    const b = ix.boxes.get(id);
+    if (!b) return;
+    ix.boxes.delete(id);
+    if (ix.wide.delete(id) || !(b[0] <= b[2])) return;
+    cellsOf(b, (k) => {
+      const v = ix.cells.get(k);
+      if (!v) return;
+      const at = v.indexOf(id);
+      if (at < 0) return;
+      v[at] = v[v.length - 1];
+      v.pop();
+      if (!v.length) ix.cells.delete(k);
+    });
+  };
+  if (changed && ix.map && ix.map === changed.pts) {
+    for (const id of changed.edges) {
+      const p = edgePts.get(id);
+      if (p && ix.boxes.get(id) === boxOfPts.get(p)) continue;
+      drop(id);
+      if (p) add(id, p);
+    }
+  } else {
+    ix.size = size;
+    ix.boxes.clear();
+    ix.cells.clear();
+    ix.wide.clear();
+    for (const [id, p] of edgePts) add(id, p);
+  }
+  ix.map = edgePts;
+}
+/** the edges whose cells meet a box, by id */
+function edgesNear(ix: EdgeBoxes, x0: number, y0: number, x1: number, y1: number): number[] {
+  const s = ix.size, out = new Set<number>(ix.wide);
+  for (let cx = Math.floor(x0 / s); cx <= Math.floor(x1 / s); cx++)
+    for (let cy = Math.floor(y0 / s); cy <= Math.floor(y1 / s); cy++) {
+      const v = ix.cells.get(cx * 1_000_003 + cy);
+      if (v) for (const id of v) out.add(id);
+    }
+  return [...out].sort((a, b) => a - b);
+}
 /** T-4153: each edge's box by its points (an edge whose points are as before keeps its box when the map is new) */
 const boxOfPts = new WeakMap<Float32Array, Float64Array>();
+
+/** T-4153: things by their boxes in square cells, so a building looks only at the stations and track near it, in the
+ * order a scan of every one would meet them (each cell's list ascending, a query's union sorted) */
+class BoxGrid {
+  private cells = new Map<number, number[]>();
+  /** things over more cells than WIDE: in every query */
+  private wide: number[] = [];
+  private stamp = new Int32Array(0);
+  private serial = 0;
+  constructor(private readonly size: number) {}
+  add(i: number, x0: number, y0: number, x1: number, y1: number) {
+    const s = this.size;
+    if ((Math.floor(x1 / s) - Math.floor(x0 / s) + 1) * (Math.floor(y1 / s) - Math.floor(y0 / s) + 1) > WIDE) { this.wide.push(i); return; }
+    for (let cx = Math.floor(x0 / s); cx <= Math.floor(x1 / s); cx++)
+      for (let cy = Math.floor(y0 / s); cy <= Math.floor(y1 / s); cy++) {
+        const k = cx * 1_000_003 + cy, v = this.cells.get(k);
+        if (v) v.push(i);
+        else this.cells.set(k, [i]);
+      }
+  }
+  /** the things whose cells meet the box, ascending (`n`: how many things there are) */
+  near(x0: number, y0: number, x1: number, y1: number, n: number): number[] {
+    if (this.stamp.length < n) this.stamp = new Int32Array(n);
+    const s = this.size, mark = ++this.serial, out: number[] = [];
+    for (const i of this.wide) { this.stamp[i] = mark; out.push(i); }
+    for (let cx = Math.floor(x0 / s); cx <= Math.floor(x1 / s); cx++)
+      for (let cy = Math.floor(y0 / s); cy <= Math.floor(y1 / s); cy++) {
+        const v = this.cells.get(cx * 1_000_003 + cy);
+        if (v) for (const i of v) if (this.stamp[i] !== mark) { this.stamp[i] = mark; out.push(i); }
+      }
+    return out.sort((a, b) => a - b);
+  }
+}
+/** the grids' cell, m (a station building and what is near it fit in one or a few); past WIDE cells a thing is in every
+ * query (a track hundreds of km long) */
+const GRID_M = 4000, WIDE = 64;
 
 /** The buildings as drawn, and per station the building it is in (an index into them, -1 none). `ll`:
  * each building's corners as lng, lat pairs (the worker's frame). */
@@ -55,6 +162,8 @@ export function buildingsDrawn(
   stationLine: Float32Array,
   edgePts: Map<number, Float32Array>,
   inside = true,
+  boxes: EdgeBoxes = newEdgeBoxes(),
+  changed?: { pts: ReadonlyMap<number, Float32Array>; edges: ReadonlySet<number> },
 ): { draw: BuildingDraw[]; memberOf: Int32Array } {
   const memberOf = new Int32Array(st.length).fill(-1);
   const draw: BuildingDraw[] = [];
@@ -64,26 +173,16 @@ export function buildingsDrawn(
   }
   const line = (i: number) => stationLine.subarray(i * 2 * PLATFORM_POINTS, (i + 1) * 2 * PLATFORM_POINTS);
   const seen = new Set<number>();
-  // each edge's box, once (T-4153: kept while the network's points are the same map)
-  let boxes = inside ? boxesOf.get(edgePts) : undefined;
-  if (inside && !boxes) {
-    const ids: number[] = [], pts: Float32Array[] = [], box = new Float64Array(edgePts.size * 4);
-    for (const [id, p] of edgePts) {
-      let e = boxOfPts.get(p);
-      if (!e) {
-        let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
-        for (let j = 0; j + 2 < p.length; j += 3) {
-          a = Math.min(a, p[j]); c = Math.max(c, p[j]);
-          b = Math.min(b, p[j + 1]); d = Math.max(d, p[j + 1]);
-        }
-        boxOfPts.set(p, (e = Float64Array.of(a, b, c, d)));
-      }
-      box.set(e, ids.length * 4);
-      ids.push(id);
-      pts.push(p);
-    }
-    boxesOf.set(edgePts, (boxes = { ids, pts, box }));
+  // (T-4153: the stations by their places, each reaching as far as the longest platform)
+  const perM0 = 1 / Math.cos(((st[0]?.lat ?? 0) * Math.PI) / 180), cellOf = GRID_M * perM0;
+  const stGrid = new BoxGrid(cellOf);
+  let longest = 0;
+  for (let i = 0; i < st.length; i++) {
+    longest = Math.max(longest, st[i].platform);
+    stGrid.add(i, stations[i * 3], stations[i * 3 + 1], stations[i * 3], stations[i * 3 + 1]);
   }
+  // each edge's box (T-4153: kept with the network's cache, patched where its edges changed)
+  if (inside) edgeBoxesFor(boxes, edgePts, cellOf, changed);
   buildings.forEach((b, k) => {
     const g = ll[k], n = g.length / 2;
     if (n < 3) return;
@@ -102,7 +201,8 @@ export function buildingsDrawn(
     // the platforms and track in and round it
     const pad = 60 * perM;
     const near: number[] = [], members: number[] = [];
-    for (let i = 0; i < st.length; i++) {
+    const reach = longest * perM + pad;
+    for (const i of stGrid.near(x0 - reach, y0 - reach, x1 + reach, y1 + reach, st.length)) {
       const x = stations[i * 3], y = stations[i * 3 + 1], r = st[i].platform * perM + pad;
       if (x < x0 - r || x > x1 + r || y < y0 - r || y > y1 + r) continue;
       near.push(i);
@@ -118,9 +218,10 @@ export function buildingsDrawn(
     const tracks: { id: number; pts: number[] }[] = [];
     // (no `...rest` here: it made a copy of every edge's box for every building, most of a build's time with hundreds
     // of buildings, T-3659)
-    for (let q = 0; boxes && q < boxes.ids.length; q++) {
-      const id = boxes.ids[q], p = boxes.pts[q], e = boxes.box;
-      if (e[q * 4 + 2] < x0 - pad || e[q * 4] > x1 + pad || e[q * 4 + 3] < y0 - pad || e[q * 4 + 1] > y1 + pad) continue;
+    // (by edge id: the layout reads the tracks as a set)
+    for (const id of edgesNear(boxes, x0 - pad, y0 - pad, x1 + pad, y1 + pad)) {
+      const p = edgePts.get(id)!, e = boxes.boxes.get(id)!;
+      if (e[2] < x0 - pad || e[0] > x1 + pad || e[3] < y0 - pad || e[1] > y1 + pad) continue;
       // the pieces of it near the floor, each segment on its own
       for (let j = 0; j + 5 < p.length; j += 3) {
         const ax = p[j], ay = p[j + 1], bx = p[j + 3], by = p[j + 4];

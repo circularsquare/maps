@@ -49,8 +49,64 @@ export function splitValue(ends: readonly SplitEnd[], m: number, len: number): n
  * eases over what room there is.
  */
 /** `endsAt`: each node's edges in `edges` order, when the caller has them */
-export function singleSplitEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[], endsAt?: { get(node: number): readonly ClockEdge[] | undefined }): { ends: Map<number, SplitEnd[]>; stations: Set<number>; full: Set<number> } {
-  const ends = new Map<number, SplitEnd[]>(), stations = new Set<number>(), full = new Set<number>();
+export function singleSplitEnds(edges: readonly ClockEdge[], nodes: readonly ClockNode[], endsAt?: { get(node: number): readonly ClockEdge[] | undefined }): SplitEnds {
+  return splitsWhole(edges, nodes, endsAt).res;
+}
+
+/** `singleSplitEnds`' answer */
+export interface SplitEnds { ends: Map<number, SplitEnd[]>; stations: Set<number>; full: Set<number> }
+/** T-4153: one station's part of `singleSplitEnds`: its split edges' ends (edge id and end, in walk order), whether it
+ * splits, the nodes double track carries on past (`full`), and the nodes and edges its walks read */
+interface StationSplit { items: [number, SplitEnd][]; split: boolean; full: number[]; nodes: number[]; edges: number[] }
+/** T-4153: `singleSplitEnds`' answer with each station's part (by node id), the stations naming each edge and how many
+ * name each node in `full`, so an edit works out again only the stations whose walks read what it changed */
+export interface SplitState { res: SplitEnds; by: Map<number, StationSplit>; edgeSt: Map<number, Set<number>>; fullN: Map<number, number> }
+
+function stationSplit(s: ClockNode, at: (node: number) => readonly ClockEdge[], stationOf: (id: number) => ClockNode | undefined): StationSplit {
+  const out: StationSplit = { items: [], split: false, full: [], nodes: [s.id], edges: [] };
+  const plainSingle = (e: ClockEdge) => e.tracks === 1 && !e.oneWay && !e.crossover;
+  const joinedAt = (e: ClockEdge, node: number) => ((e.a === node ? e.join : e.join >> 2) & 3) !== 0;
+  const here = at(s.id);
+  for (const e of here) out.edges.push(e.id);
+  const P = here.length === 1 ? s.platform : s.platform / 2, want = P + SINGLE_SPLIT_LEAD_M;
+  for (const e0 of here) {
+    if (!splitsAt(e0, e0.a === s.id ? 0 : 1, s)) continue;
+    out.split = true;
+    const chain: { id: number; a: boolean; x0: number }[] = [];
+    const seen = new Set<number>();
+    let cur = e0, from = s.id, x0 = 0, lead = SINGLE_SPLIT_LEAD_M, all = false;
+    for (;;) {
+      seen.add(cur.id);
+      chain.push({ id: cur.id, a: cur.a === from, x0 });
+      const far = cur.a === from ? cur.b : cur.a, len = cur.lengthM, farNode = stationOf(far);
+      out.nodes.push(far);
+      if (x0 + len >= want) break;
+      // (a station there that splits too is two tracks at its node already)
+      if (farNode && farNode.platform > 0 && splitsAt(cur, cur.a === far ? 0 : 1, farNode)) break;
+      const there = at(far);
+      for (const o of there) out.edges.push(o.id);
+      const next = there.filter((o) => o.id !== cur.id), ne = next.length === 1 && !(farNode && farNode.platform > 0) ? next[0] : null;
+      if (ne && !seen.has(ne.id) && plainSingle(ne) && !joinedAt(cur, far) && !joinedAt(ne, far)) {
+        x0 += len;
+        from = far;
+        cur = ne;
+        continue;
+      }
+      if (ne && ne.tracks === 2 && !joinedAt(cur, far)) {
+        all = true;
+        out.full.push(far);
+        break;
+      }
+      lead = Math.max(0, Math.min(lead, x0 + len - P));
+      break;
+    }
+    for (const c of chain) out.items.push([c.id, { a: c.a, p: all ? Infinity : P - c.x0, lead }]);
+  }
+  return out;
+}
+
+/** `singleSplitEnds` whole, with each station's part */
+export function splitsWhole(edges: readonly ClockEdge[], nodes: readonly ClockNode[], endsAt?: { get(node: number): readonly ClockEdge[] | undefined }): SplitState {
   let at: { get(node: number): readonly ClockEdge[] | undefined } | undefined = endsAt;
   if (!at) {
     const m = new Map<number, ClockEdge[]>();
@@ -64,49 +120,78 @@ export function singleSplitEnds(edges: readonly ClockEdge[], nodes: readonly Clo
   // (only stations are looked up)
   const nodeOf = new Map<number, ClockNode>();
   for (const n of nodes) if (n.platform > 0) nodeOf.set(n.id, n);
-  const plainSingle = (e: ClockEdge) => e.tracks === 1 && !e.oneWay && !e.crossover;
-  const joinedAt = (e: ClockEdge, node: number) => ((e.a === node ? e.join : e.join >> 2) & 3) !== 0;
+  const st: SplitState = { res: { ends: new Map(), stations: new Set(), full: new Set() }, by: new Map(), edgeSt: new Map(), fullN: new Map() };
+  const endsOf = (n: number) => at!.get(n) ?? [];
   for (const s of nodes) {
     if (!(s.platform > 0) || s.one) continue;
-    const here = at.get(s.id) ?? [];
-    const P = here.length === 1 ? s.platform : s.platform / 2, want = P + SINGLE_SPLIT_LEAD_M;
-    for (const e0 of here) {
-      if (!splitsAt(e0, e0.a === s.id ? 0 : 1, s)) continue;
-      stations.add(s.id);
-      const chain: { id: number; a: boolean; x0: number }[] = [];
-      const seen = new Set<number>();
-      let cur = e0, from = s.id, x0 = 0, lead = SINGLE_SPLIT_LEAD_M, all = false;
-      for (;;) {
-        seen.add(cur.id);
-        chain.push({ id: cur.id, a: cur.a === from, x0 });
-        const far = cur.a === from ? cur.b : cur.a, len = cur.lengthM, farNode = nodeOf.get(far);
-        if (x0 + len >= want) break;
-        // (a station there that splits too is two tracks at its node already)
-        if (farNode && farNode.platform > 0 && splitsAt(cur, cur.a === far ? 0 : 1, farNode)) break;
-        const next = (at.get(far) ?? []).filter((o) => o.id !== cur.id), ne = next.length === 1 && !(farNode && farNode.platform > 0) ? next[0] : null;
-        if (ne && !seen.has(ne.id) && plainSingle(ne) && !joinedAt(cur, far) && !joinedAt(ne, far)) {
-          x0 += len;
-          from = far;
-          cur = ne;
-          continue;
-        }
-        if (ne && ne.tracks === 2 && !joinedAt(cur, far)) {
-          all = true;
-          full.add(far);
-          break;
-        }
-        lead = Math.max(0, Math.min(lead, x0 + len - P));
-        break;
-      }
-      for (const c of chain) {
-        const v = ends.get(c.id);
-        const end: SplitEnd = { a: c.a, p: all ? Infinity : P - c.x0, lead };
-        if (v) v.push(end);
-        else ends.set(c.id, [end]);
-      }
+    const sp = stationSplit(s, endsOf, (id) => nodeOf.get(id));
+    st.by.set(s.id, sp);
+    putSplit(st, s.id, sp, null);
+    for (const [e, end] of sp.items) {
+      const v = st.res.ends.get(e);
+      if (v) v.push(end);
+      else st.res.ends.set(e, [end]);
     }
   }
-  return { ends, stations, full };
+  for (const [n, c] of st.fullN) if (c > 0) st.res.full.add(n);
+  return st;
+}
+/** a station's part counted in (`changed`: the edges whose ends to lay out again, null when they are laid out as it goes) */
+function putSplit(st: SplitState, id: number, sp: StationSplit, changed: Set<number> | null) {
+  if (sp.split) st.res.stations.add(id);
+  for (const n of sp.full) st.fullN.set(n, (st.fullN.get(n) ?? 0) + 1);
+  for (const [e] of sp.items) {
+    changed?.add(e);
+    let v = st.edgeSt.get(e);
+    if (!v) st.edgeSt.set(e, (v = new Set()));
+    else if (changed && !v.has(id)) st.edgeSt.set(e, (v = new Set(v)));
+    v.add(id);
+  }
+}
+/**
+ * T-4153: `prev` with the stations `redo` (node ids; those no longer stations taken out) worked out again, and the ends of
+ * every edge they name laid out again from the stations naming it, in node order (`orderOf`), as a whole pass lays them
+ * out. `prev` is left as it is.
+ */
+export function patchSplits(prev: SplitState, redo: Iterable<number>, rowOf: (id: number) => ClockNode | undefined, at: (node: number) => readonly ClockEdge[], orderOf: (id: number) => number): SplitState {
+  const st: SplitState = { res: { ends: new Map(prev.res.ends), stations: new Set(prev.res.stations), full: prev.res.full }, by: new Map(prev.by), edgeSt: new Map(prev.edgeSt), fullN: new Map(prev.fullN) };
+  const changed = new Set<number>();
+  let fullMoved = false;
+  const stationOf = (id: number) => { const n = rowOf(id); return n && n.platform > 0 ? n : undefined; };
+  for (const id of redo) {
+    const old = st.by.get(id);
+    if (old) {
+      st.by.delete(id);
+      if (old.split) st.res.stations.delete(id);
+      for (const n of old.full) { st.fullN.set(n, st.fullN.get(n)! - 1); fullMoved = true; }
+      for (const [e] of old.items) {
+        changed.add(e);
+        const v = st.edgeSt.get(e);
+        if (!v?.has(id)) continue;
+        const w = new Set(v);
+        w.delete(id);
+        if (w.size) st.edgeSt.set(e, w);
+        else st.edgeSt.delete(e);
+      }
+    }
+    const s = rowOf(id);
+    if (!s || !(s.platform > 0) || s.one) continue;
+    const sp = stationSplit(s, at, stationOf);
+    st.by.set(id, sp);
+    if (sp.full.length) fullMoved = true;
+    putSplit(st, id, sp, changed);
+  }
+  for (const e of changed) {
+    const ids = [...(st.edgeSt.get(e) ?? [])].sort((a, b) => orderOf(a) - orderOf(b)), list: SplitEnd[] = [];
+    for (const sid of ids) for (const [x, end] of st.by.get(sid)!.items) if (x === e) list.push(end);
+    if (list.length) st.res.ends.set(e, list);
+    else st.res.ends.delete(e);
+  }
+  if (fullMoved) {
+    st.res.full = new Set();
+    for (const [n, c] of st.fullN) if (c > 0) st.res.full.add(n);
+  }
+  return st;
 }
 /** Places at a line's end: the arriving train's own track, or the other track (it crosses the
  * scissors on the way in). */

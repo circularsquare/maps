@@ -131,11 +131,13 @@ class CellLists {
     this.head.set(key, e);
   }
   remove(key: number, k: number) {
-    let e = this.head.get(key)!, before = -1;
-    while (this.seg[e] !== k) {
+    let e = this.head.get(key) ?? -1, before = -1;
+    while (e >= 0 && this.seg[e] !== k) {
       before = e;
       e = this.next[e];
     }
+    // (a segment taken from a cell it is not in: a broken invariant, which reaches the worker's error path)
+    if (e < 0) throw new Error(`facility grid: segment ${k} is not in cell ${key}`);
     const after = this.next[e];
     if (before >= 0) this.next[before] = after;
     else if (after >= 0) this.head.set(key, after);
@@ -152,8 +154,9 @@ const cellKey = (cx: number, cy: number) => cx * 1_000_003 + cy;
  * at each station on entry; on return ST_ROOM is left only on the one station per complex whose box
  * draws the room, with ST_FLIP for its side. `complexOf`: each node's complex (0xffffffff none);
  * absent, each station is its own. `outlines`: the station buildings, which lots go outside of
- * (T-2219). `cache`: the last build's (T-3803); a new one places every complex. Returns the lots, LOT_STRIDE numbers
- * each. */
+ * (T-2219). `cache`: the last build's (T-3803); a new one places every complex. `edgesChanged` (T-4153): the edges whose
+ * points may differ from those of the map given (the network's last finished build's), so a cache made from that map
+ * looks at those alone. Returns the lots, LOT_STRIDE numbers each. */
 export function placeFacilities(
   st: { id: number; lat: number; stationBuilt?: boolean; stationOff?: boolean; platform: number }[],
   stations: Float32Array,
@@ -164,6 +167,7 @@ export function placeFacilities(
   complexOf?: ArrayLike<number>,
   outlines: readonly LotOutline[] = [],
   cache: FacilityCache = newFacilityCache(),
+  edgesChanged?: { pts: ReadonlyMap<number, Float32Array>; edges: ReadonlySet<number> },
 ): Float32Array {
   const flag = (i: number) => Math.round(stations[i * 3 + 2]);
   const want: number[] = [];
@@ -239,7 +243,19 @@ export function placeFacilities(
   };
   // the edges: an unchanged one keeps its segments
   // (T-4153: none looked at while the network's points are the same map, the edges' own then)
-  if (cache.edgePts !== edgePts) {
+  if (cache.edgePts !== edgePts && edgesChanged && cache.edgePts === edgesChanged.pts) {
+    // (T-4153: the edges the network says may have changed, the rest as they were)
+    for (const id of edgesChanged.edges) {
+      const p = edgePts.get(id), e = cache.edges.get(id);
+      if (e?.pts === p) continue;
+      if (e) drop(e.segs);
+      if (!p) { cache.edges.delete(id); continue; }
+      const segs: number[] = [];
+      for (let k = 0; k + 5 < p.length; k += 3) if (passesNear(p[k], p[k + 1], p[k + 3], p[k + 4])) add(p[k], p[k + 1], p[k + 3], p[k + 4], id, segs);
+      cache.edges.set(id, { pts: p, segs });
+    }
+    cache.edgePts = edgePts;
+  } else if (cache.edgePts !== edgePts) {
     const edgesNow = new Map<number, { pts: Float32Array; segs: number[] }>();
     for (const [id, p] of edgePts) {
       let e = cache.edges.get(id);
