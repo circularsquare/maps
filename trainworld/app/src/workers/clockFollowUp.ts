@@ -2,11 +2,12 @@
 
 import { toMerc01 } from "../map/geo";
 import type { ClockState, EditOp, ToClock } from "./protocol";
-import { game, localOf, sendRows, sendState, shiftFrom, stateSteps } from "./clockMain";
+import { forget, game, localOf, sendRows, sendState, shiftFrom, stateSteps } from "./clockMain";
 import { isPanic, MODEL_RESTORED, recover } from "./clockPanic";
 import { diagramOn, postDiagram, posted } from "./clockPost";
 import { api, messages, packLngLat, putMessages, putTiming, send, timing } from "./clockState";
-import { loadsOwed } from "./clockDemand";
+import { loadsOwed, scheduleSnapshot } from "./clockDemand";
+import { gameNow } from "./clockMoney";
 
 // T-1039: previews the main thread no longer wants (`previewStale`, sent outside the queue) are
 // answered `stale` without being worked out, or while they wait for masks
@@ -101,12 +102,36 @@ function* followSteps(f: FollowUp): Generator<void, void, void> {
   putTiming({});
   // (from its first edit's apply to its state begun: the queue and the held wait)
   timing.fromApply = performance.now() - f.ask.at;
+  // T-4272: the services stations and deletes answered from what they touch owe, a piece of their own before the state
+  // reads them (an edit coming after it goes ahead of the rest)
+  if (settleOwed(f)) yield;
   const a = f.ask, light = !a.net && !(a.name && shiftFrom);
   yield* stateSteps(light, a.effectiveAt, a.trips, a.early, true, (s) => { f.rows = s; }, a.service ? a.at : undefined);
   // the schematic reads its names off the world when a graph comes, so the same graph again
   if (light && a.name && diagramOn) postDiagram();
   if (a.service && !loadsOwed()) serviceEditMs = performance.now() - a.at;
   f.after();
+}
+/** T-4272: the services answered edits owe worked out (`settle_owed`), or what a refused edit, an undo with nothing to take
+ * or a trial worked out of them first, taken in as an edit's would be: the drawn lines they moved forgotten (the edit's
+ * own `forget` ran before them), and trips with the state where they moved a line for demand (they moved no running
+ * line's trains, so no rider's trip moves otherwise). Whether there were any. */
+function settleOwed(f?: FollowUp): boolean {
+  const a = api!;
+  if (a.owes()) a.set_now(gameNow());
+  if (!a.settle_owed()) return false;
+  forget();
+  a.take_service_moved();
+  if (a.take_settled_demand().length) {
+    if (f) f.ask.trips = true;
+    scheduleSnapshot();
+  }
+  return true;
+}
+/** T-4272: what answered edits owe worked out now, for a save, which then holds no edit without its services (autosave
+ * waits for them; a game left while an edit waits for its ground does not) */
+export function settleOwedNow() {
+  if (api?.owes()) settleOwed(followUp ?? undefined);
 }
 /** a follow-up's steps a task each, then its state a piece a task (T-3803), outside the message queue: a message
  * that reads the model runs what is left of it first, and an edit may come between the pieces (`standAside`) */
@@ -136,7 +161,8 @@ function pump(f: FollowUp) {
     if (!isPanic(err)) send({ kind: "error", message: String(err) });
     return queueFollowUp();
   }
-  if (done || followUp) return;
+  if (done) return stateWent();
+  if (followUp) return;
   followUp = f;
   followTimer = setTimeout(() => pump(f), 0) as unknown as number;
 }
@@ -163,6 +189,9 @@ export function isServiceOp(op: EditOp): boolean {
 export function standAside(f: FollowUp) {
   clearTimeout(followTimer);
   if (f.waiting.some((w) => w.owes())) {
+    // T-4272: these rows answer an edit, so they hold what answered edits owe (one whose map had no patch waits for its
+    // world); rows already built came after them
+    if (!f.rows) settleOwed(f);
     sendRows(f.rows);
     for (const w of f.waiting) w.worldSent();
   }
@@ -185,6 +214,28 @@ export function holdOn() {
   clearTimeout(followTimer);
   const rest = f.held.stops ? STOP_REST_MS : REST_MS;
   followTimer = setTimeout(() => stepThenRun(f), Math.max(1, Math.min(rest, f.held.until - performance.now()))) as unknown as number;
+}
+/** T-4272: messages that go at once, a follow-up waiting or not: the page's money figures from the world it holds, a paid
+ * edit's split it read off it, and the clock. None reads what a follow-up changes or sends (T-2766's stop clicks and
+ * T-2404's holds passed them already), and each ran a waiting follow-up whole in one block, which the next click waited
+ * behind (0.4-2.5 s on her Asia save, notes/T-4267-measure.md) */
+export const passesFollowUp = (m: ToClock) => STOP_KINDS.has(m.kind);
+/** T-4272: demand's results, which may not reach the model ahead of its state (T-1407) and which nothing waits on: kept,
+ * in order, until no follow-up waits (`keepUntilState`), instead of running it whole */
+export const waitsFollowUp = (m: ToClock) => m.kind === "riders" || m.kind === "transfers";
+/** each with the game it came in, as a game opened or rebuilt since (queued ahead of them) clears what they set */
+type Kept = { m: ToClock; game: number };
+let keptMsgs: Kept[] = [];
+let onStateWent: ((msgs: Kept[]) => void) | null = null;
+export function keepUntilState(m: ToClock) { keptMsgs.push({ m, game }); }
+/** `cb` takes the kept messages once no follow-up waits (into the message queue, in order, each dropped there if its
+ * game is gone) */
+export function whenStateWent(cb: (msgs: Kept[]) => void) { onStateWent = cb; }
+function stateWent() {
+  if (followUp || !keptMsgs.length) return;
+  const msgs = keptMsgs;
+  keptMsgs = [];
+  onStateWent?.(msgs);
 }
 /** T-2404: messages a held follow-up stays held for: they read nothing it would change (blueprint
  * track changes no line's run), and a later early edit joins it. T-2766: a stop click's, the next stop click and the
@@ -227,7 +278,7 @@ export function runFollowUp() {
   try {
     const g = (f.job ??= followSteps(f));
     while (!g.next().done);
-  } catch (err) { f.fail(); throw err; }
+  } catch (err) { f.fail(); throw err; } finally { stateWent(); }
 }
 /** the follow-up into the message queue; a failure there never leaves the queue rejected, which
  * would skip the next message (and an edit's answer with it) */
@@ -262,6 +313,7 @@ export function dropFollowUp() {
   const f = followUp;
   followUp = null;
   f?.fail();
+  stateWent();
 }
 
 /** Wall ms the last train count or headway edit took here, from applying it to its trips sent with their loads. */

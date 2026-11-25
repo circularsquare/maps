@@ -1013,13 +1013,14 @@ impl TrackApi {
     /// placeable, and its click is refused for the money.
     pub(super) fn attempt(&mut self, op: Op, dry: bool) -> u32 {
         if !dry {
-            return self.run(op);
+            return self.run_answered(op);
         }
         let fleet = self.fleet;
         match self.w.trial_light(op, |w| trains_to_buy(w, fleet)) {
             Ok((r, trains)) => {
                 self.station_cost = r.cost_after - r.cost_before;
-                let need = r.charge + trains;
+                // T-4272: as the click, which constructs nothing (`run_answered`): only trains
+                let need = trains;
                 self.issues.clear();
                 self.money_short = None;
                 if need > 1e-9 && need > self.spendable() + 1e-6 {

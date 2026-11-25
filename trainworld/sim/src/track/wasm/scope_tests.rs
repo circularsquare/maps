@@ -50,6 +50,8 @@ fn new_station(a: &mut TrackApi, x0: f64, y0: f64, x1: f64, y1: f64) -> u32 {
     let n = a.route_end();
     a.take_service_moved();
     assert_eq!(a.add_station(1, n, 0.0, 0.0, 120, "New".into()), 0, "{}", a.issues());
+    // T-4272: answered from what it touches; its services after (the clock worker's next step)
+    a.settle_owed();
     n
 }
 
@@ -217,6 +219,7 @@ fn a_way_back_is_rebuilt_where_the_edit_reaches_it() {
         let n = &a.w.net;
         let (px, py, _) = crate::track::geom::pos_at(n.edge_pieces(legs[1]), n.project(legs[1], 2500.0, -75.0).0);
         assert_eq!(a.add_station(2, legs[1], px, py, 120, "W".into()), 0, "{}", a.issues());
+        a.settle_owed(); // T-4272: its services after its answer (no line runs: nothing is built)
         steps.push(step(&mut a));
         // the service left behind the track by hand (no edit does this): the next edit anywhere finds the way back moved
         let back: Vec<u32> = {

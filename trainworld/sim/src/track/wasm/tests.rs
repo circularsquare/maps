@@ -84,6 +84,7 @@ mod route_tests;
 mod stroke_tests;
 mod platform_tests;
 mod station_tests;
+mod answer_tests;
 mod quad_tests;
 mod group_tests;
 mod reach_tests;

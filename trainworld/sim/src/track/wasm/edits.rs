@@ -55,7 +55,82 @@ impl TrackApi {
         } else {
             self.w.apply_paid(op, cash, false, &|w| trains_to_buy(w, fleet))
         };
-        self.settle(r, &before)
+        self.settle(r, Some(&before))
+    }
+
+    /// T-4272: a station placed or track deleted on the map, answered from what it touches (`commit_local`): where it
+    /// can move no running line's trains its services are owed (`settle_owed`, after its answer); any other goes the
+    /// whole way, as does one sent among several edits of one player action (`join`). It constructs nothing, so it
+    /// charges no construction either way, only trains: a station on constructed track was charged the re-pricing of
+    /// the pieces its split left ($0.001 to $220 on her Asia save), which made it a paid edit, answered only with its
+    /// rows.
+    pub(super) fn run_answered(&mut self, op: Op) -> u32 {
+        if self.join {
+            return self.run(op);
+        }
+        if !self.answer_first {
+            return self.run_free(op, false);
+        }
+        let fleet = self.fleet;
+        self.edit_start();
+        let cash = self.spendable();
+        match self.w.commit_local(op.clone(), cash, &|w| trains_to_buy(w, fleet)) {
+            Ok(None) => self.run_free(op, false),
+            r => self.settle(r.map(|r| r.expect("an answered edit")), None),
+        }
+    }
+
+    /// T-4272: the services that edits answered from what they touch owe, worked out (`TrackWorld::settle_owed`): the
+    /// clock worker's first step after their answers. None of them moved a running line's trains, so no train runs
+    /// otherwise (`note_changes`). Whether any were worked out since the last call, here or by whatever ran them first
+    /// and left what they touched (an edit refused for its problems or its money, an undo with nothing to take, a trial
+    /// with services): noted here as an edit's are, so the rows, the drawn lines and the trips follow them all the same.
+    pub fn settle_owed(&mut self) -> bool {
+        let fleet = self.fleet;
+        self.w.settle_owed();
+        let Some(d) = self.w.take_owed_done() else { return false };
+        // (the answered edits moved no running line's trains, so this buys none; kept so a wrong gate never gives
+        // trains away)
+        let trains = trains_to_buy(&self.w, fleet);
+        debug_assert!(trains <= 1e-9, "owed services needed {trains} US$M of trains");
+        self.cash -= trains;
+        let need = cars_needed(&self.w);
+        self.fleet = std::array::from_fn(|k| fleet[k].max(need[k]));
+        self.note_dirty(&d);
+        self.settled_demand.extend_from_slice(&d.service.demand);
+        // (the answered edit's result, read as `dirty_lines` and the like, is then the whole edit's; after a preview,
+        // which leaves none, it is what the services touched)
+        match &mut self.last {
+            Some(last) => crate::track::world::merge_dirty(&mut last.dirty, d),
+            None => self.last = Some(EditResult { dirty: d, cost_before: 0.0, cost_after: 0.0, built_before: 0.0, built_after: 0.0, charge: 0.0 }),
+        }
+        true
+    }
+
+    /// T-4272: whether answered edits still owe their services.
+    pub fn owes(&self) -> bool {
+        self.w.owes()
+    }
+
+    /// T-4272: the lines owed services moved for demand since the last call (`dirty_demand_lines` for an answered
+    /// edit, whose own result has none).
+    pub fn take_settled_demand(&mut self) -> Vec<u32> {
+        let mut v = std::mem::take(&mut self.settled_demand);
+        v.sort_unstable();
+        v.dedup();
+        v
+    }
+
+    /// T-4272: off, stations and deletes go the whole way before their answer, as before (tests compare the two).
+    pub fn set_answer_first(&mut self, on: bool) {
+        self.answer_first = on;
+    }
+
+    /// What owed services worked out touched, noted as an edit's is (`done`): for the rows and patch to come, the trips.
+    fn note_dirty(&mut self, d: &crate::track::world::Dirty) {
+        self.touched.note(d);
+        let s = &d.service;
+        self.service_moved |= !(d.lines.is_empty() && s.rebuilt.is_empty() && s.recomputed.is_empty() && s.shared.is_empty() && s.demand.is_empty());
     }
 
     /// T-3528: an edit on neither undo nor redo (`apply_unrecorded`).
@@ -74,7 +149,7 @@ impl TrackApi {
         // would be given the shortfall's cars by the first cap lowering on load, before the rest bring
         // what runs under the fleet
         let free = matches!(r, Ok((_, t)) if t <= 0.0);
-        let out = self.settle(r, &before);
+        let out = self.settle(r, Some(&before));
         if free { self.fleet = fleet; }
         out
     }
@@ -88,7 +163,7 @@ impl TrackApi {
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
         let r = self.w.apply_priced(op, cash, final_, &|w| trains_to_buy(w, fleet), Some(&|_: &TrackWorld| 0.0));
-        self.settle(r, &before)
+        self.settle(r, Some(&before))
     }
 
     /// A final, charged edit (see the module comment), trains included.
@@ -98,7 +173,7 @@ impl TrackApi {
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
         let r = self.w.apply_paid(op, cash, true, &|w| trains_to_buy(w, fleet));
-        self.settle(r, &before)
+        self.settle(r, Some(&before))
     }
 
     /// The game time now, from the clock worker (T-206): an edit that changes a line's departures
@@ -129,13 +204,18 @@ impl TrackApi {
         at
     }
 
-    pub(super) fn settle(&mut self, r: Result<(EditResult, f64), ChargeError>, before: &crate::track::service::Before) -> u32 {
+    /// `before`: the services before the edit, for the trains running on (`note_changes`); None for an answered edit,
+    /// which moved no running line (`run_answered`).
+    pub(super) fn settle(&mut self, r: Result<(EditResult, f64), ChargeError>, before: Option<&crate::track::service::Before>) -> u32 {
         self.last_trains = 0.0;
-        if r.is_ok() {
+        if let (Ok(_), Some(before)) = (&r, before) {
             self.w.svc.note_changes(&self.w.net, before, self.edit_at);
         }
         match r {
-            Ok((r, trains)) => {
+            Ok((mut r, trains)) => {
+                // T-4272: owed services the edit worked out first count as its own (a refused edit, an undo with nothing
+                // to take or a trial leaves them to `settle_owed`)
+                if let Some(d) = self.w.take_owed_done() { crate::track::world::merge_dirty(&mut r.dirty, d); }
                 self.cash -= r.charge + trains;
                 let need = cars_needed(&self.w);
                 self.fleet = std::array::from_fn(|k| self.fleet[k].max(need[k]));

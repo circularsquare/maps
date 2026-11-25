@@ -34,7 +34,7 @@ import { rowsFirst } from "./clockWordLines";
 import { bookCharge, buildSnapshot, busQuoteLL, complexOfNodes, editSteps, nameOnly, putPreviewAt, putXferSet, sameFloats, scheduleSnapshot, sendTrips, snapStations, stationsKey, stepBoarding, turnHour, xferSet } from "./clockDemand";
 import { apply, buildingQuoteAnswer, designOf, doubleUpAnswer, DROP_REFUSED, freeEnds, INSERT_REFUSED, issues, newLineShape, ORDER_REFUSED, paidFor, pisArr, rebuildQuoteAnswer, routeArgs, savedHidden, savedShapes } from "./clockEdits";
 import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLineFares, tidyStationFares } from "./clockFares";
-import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, later, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, stale, standAside, startNow, stepThenRun, Waiting } from "./clockFollowUp";
+import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, keepUntilState, later, passesFollowUp, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, settleOwedNow, stale, standAside, startNow, stepThenRun, waitsFollowUp, Waiting, whenStateWent } from "./clockFollowUp";
 import { putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
 import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, forgetDrawn, game, hex, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
@@ -71,6 +71,7 @@ function header(m: typeof kept = null): SaveHeader {
 /** The game as file bytes. The network and header are taken at once, before anything awaits. */
 function saveBytes(): Promise<Uint8Array> {
   settle();
+  settleOwedNow();
   return encodeSave(header(), api!.save());
 }
 /** T-3869: the same in parts of at most 64 KB, never joined (a download) */
@@ -80,6 +81,7 @@ function saveParts(): Uint8Array[] {
     return encodeSaveParts(header(kept), kept.net);
   }
   settle();
+  settleOwedNow();
   return encodeSaveParts(header(), api!.save());
 }
 
@@ -490,6 +492,9 @@ function rowsOwed() {
   if (!api || modelDown || !f?.waiting.some((w) => w.owes()) || !sendRows()) return;
   for (const w of f.waiting) w.worldSent();
 }
+// T-4272: demand's results kept while a follow-up waited go into the queue, in order, once none waits; one from a game no
+// longer in hand is dropped (the message that ran the follow-up may open another, whose restart clears riders)
+whenStateWent((msgs) => { for (const k of msgs) putMessages(messages.then(() => k.game === game ? processMessage(k.m) : undefined).then(pumpBlocks).catch((err) => send({ kind: "error", message: String(err) }))); });
 onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
   if (msg.kind === "freezeTrace") {
@@ -728,7 +733,9 @@ async function processMessage(msg: ToClock) {
   // T-3803: a follow-up's first edit HOLD_MS ago: an edit neither joins it nor goes ahead of it any more, so its state
   // still comes at most then (T-2404, T-2766) however quickly edits keep coming
   const due = !!followUp && msg.kind === "edit" && performance.now() - followUp.ask.at >= HOLD_MS;
-  if (followUp && !jumpsAhead(msg) && !(followUp.held && passesHeld(msg, followUp.held) && !due)) {
+  // T-4272: demand's results wait for the state; the page's money figures and the clock pass
+  if (followUp && waitsFollowUp(msg) && !(followUp.held && passesHeld(msg, followUp.held))) return keepUntilState(msg);
+  if (followUp && !jumpsAhead(msg) && !passesFollowUp(msg) && !(followUp.held && passesHeld(msg, followUp.held) && !due)) {
     // T-3803: an edit goes ahead of a follow-up's state still to come or between its pieces
     if (!due && api && !modelDown && goesAhead(msg, followUp)) standAside(followUp);
     else await guardedFollowUp();
@@ -792,7 +799,8 @@ function failAnswer(msg: ToClock, issues: string[] = ["Internal"]) { // i18n-ign
 
 /** Once a wall second: autosave when due. */
 function tick() {
-  if (!api || modelDown) return;
+  // T-4272: nor while answered edits owe their services (an edit's follow-up works them out within a few tasks)
+  if (!api || modelDown || api.owes()) return;
   if (saves.dirty && Date.now() - saves.savedAt >= AUTOSAVE_MS) void autosave();
   else if (saves.cloudRetryAt && Date.now() >= saves.cloudRetryAt) { saves.cloudRetryAt = Date.now() + CLOUD_RETRY_MS; void cloudUp(saves.activeSlot); }
   noteUnsaved();

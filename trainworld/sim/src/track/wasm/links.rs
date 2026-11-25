@@ -84,7 +84,7 @@ impl TrackApi {
         // a station the removal would leave at a bare end keeps its place (T-1161); where the
         // trimmed removal is refused, the whole edge goes as before
         if let Some((ops, nodes, edges)) = self.station_trim_ops(id) {
-            let r = self.run(Op::Batch(ops));
+            let r = self.run_answered(Op::Batch(ops));
             if r == 0 {
                 return 0;
             }
@@ -109,12 +109,12 @@ impl TrackApi {
         let kept = !keep.is_empty();
         let plain = ops.clone();
         ops.extend(keep);
-        let r = self.run(Op::Batch(ops));
+        let r = self.run_answered(Op::Batch(ops));
         if r != 0 {
             self.release(&nn, &ne);
             // T-1895: never refused for the track kept under a station; it goes without
             if kept {
-                return self.run(Op::Batch(plain));
+                return self.run_answered(Op::Batch(plain));
             }
         }
         r

@@ -105,6 +105,11 @@ pub struct TrackApi {
     bare_slide: bool,
     /// T-4185: while on, `run` makes each edit part of the player's edit before it (`join_edit`).
     join: bool,
+    /// T-4272: stations placed and track deleted on the map are answered from what they touch (`run_answered`); off,
+    /// every edit goes the whole way, as before (tests compare the two)
+    answer_first: bool,
+    /// T-4272: the lines that owed services, once worked out, moved for demand, since `take_settled_demand`
+    settled_demand: Vec<u32>,
     /// T-3137: the points the next route's ends join double track nearest (`set_route_join`), and
     /// while one is laid out (`route_op`) the ones it uses; NaN for the nearer track.
     route_join: Option<[f64; 4]>,
@@ -475,6 +480,8 @@ impl TrackApi {
             load_level: save::LEVEL,
             bind_new: true,
             old_names: false,
+            answer_first: true,
+            settled_demand: vec![],
         }
     }
 

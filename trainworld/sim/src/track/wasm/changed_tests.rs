@@ -160,6 +160,7 @@ fn lines_left_off_the_moved_list_run_where_they_ran() {
     let mut was = drawn(&a);
     let mut step = |a: &mut TrackApi, what: &str, r: u32| -> Vec<u32> {
         assert_eq!(r, 0, "{what}: {}", a.issues());
+        a.settle_owed(); // T-4272: a station or delete answered first has its services after
         let moved = a.take_moved_lines();
         let now = drawn(a);
         for (k, l) in [l0, l1].into_iter().enumerate() {

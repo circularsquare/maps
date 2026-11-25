@@ -11,6 +11,7 @@ fn track_at(a: &TrackApi, x: f64, y: f64) -> u32 {
 }
 fn station(a: &mut TrackApi, x: f64, y: f64, name: &str) -> u32 {
     assert_eq!(a.add_station(2, track_at(a, x, y), x, y, 200, name.into()), 0, "{}", a.issues());
+    a.settle_owed(); // T-4272: its services after its answer
     (0..a.w.net.node_count() as u32)
         .filter(|&k| a.w.net.node_ok(k) && a.w.net.node_platform[k as usize] > 0)
         .min_by(|&p, &q| {

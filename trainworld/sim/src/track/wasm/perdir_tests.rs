@@ -27,11 +27,13 @@ fn station_near(a: &mut TrackApi, x: f64, y: f64) -> u32 {
     let e = (0..n.edge_count() as u32).filter(|&e| n.edge_ok(e)).min_by(|&p, &q| n.project(p, x, y).1.total_cmp(&n.project(q, x, y).1)).unwrap();
     let (px, py, _) = crate::track::geom::pos_at(n.edge_pieces(e), n.project(e, x, y).0);
     assert_eq!(a.add_station(2, e, px, py, 120, "S".into()), 0, "{}", a.issues());
+    a.settle_owed(); // T-4272: its services after its answer
     node_near(a, px, py)
 }
 fn end_station(a: &mut TrackApi, x: f64, y: f64) -> u32 {
     let n = node_near(a, x, y);
     assert_eq!(a.add_station(1, n, x, y, 200, "T".into()), 0, "{}", a.issues());
+    a.settle_owed();
     n
 }
 fn svc_stop(a: &TrackApi, l: u32, run: usize, k: usize) -> u32 {

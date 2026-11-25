@@ -162,6 +162,7 @@ fn stops_follow_stations_built_near_the_route_and_crossings() {
     assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
     let n0 = a.nodes_info().chunks_exact(10).find(|c| c[1] == 0.0 && c[2] == 600.0).unwrap()[0] as u32;
     assert_eq!(a.add_station(1, n0, 0.0, 0.0, 120, "North".into()), 0, "{}", a.issues());
+    a.settle_owed(); // T-4272: its services after its answer
     assert!(!stops(&a, b).iter().any(|c| c[5] == n0 as f64), "600 m away is out of reach");
     let nodes_before = a.nodes_info().len();
     let ends: Vec<f64> = [0.0, 0.0, 500.0, 300.0, -1.0, 0.0, 0.0, 1500.0, 300.0, -1.0].to_vec();
@@ -169,6 +170,7 @@ fn stops_follow_stations_built_near_the_route_and_crossings() {
     assert!(a.nodes_info().len() > nodes_before);
     let n1 = a.route_end();
     assert_eq!(a.add_station(1, n1, 0.0, 0.0, 120, "Near".into()), 0, "{}", a.issues());
+    a.settle_owed();
     assert!(stops(&a, b).iter().any(|c| c[5] == n1 as f64), "a planned bus previews planned stations");
 }
 

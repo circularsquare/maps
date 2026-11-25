@@ -148,6 +148,7 @@ fn a_named_stop_stays_put_when_its_line_is_extended_a_station_is_built_or_a_line
         assert_eq!(t.add_route(&ends, &[], 2, false), 0, "{}", t.issues());
         let n = t.route_end();
         assert_eq!(t.add_station(1, n, 0.0, 0.0, 120, "East".into()), 0, "{}", t.issues());
+        t.settle_owed(); // T-4272: its services after its answer
         assert!(stops(t, b).iter().any(|c| c[5] == n as f64), "the new station is a stop");
     }
     assert!(moved(&fresh), "{:?}", stops(&fresh, b));

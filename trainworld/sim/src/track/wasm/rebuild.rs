@@ -1217,6 +1217,6 @@ impl TrackApi {
         let beyond = plan.beyond;
         let r = self.w.apply_priced(Op::Batch(plan.take), cash, true, &|w| trains_to_buy(w, fleet), Some(&|w: &TrackWorld| full_price(w, &priced, &charged, &beyond)));
         self.release(&fresh.0, &fresh.1);
-        self.settle(r, &before)
+        self.settle(r, Some(&before))
     }
 }

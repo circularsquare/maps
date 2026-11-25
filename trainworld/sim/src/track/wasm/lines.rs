@@ -1172,7 +1172,7 @@ impl TrackApi {
         let before = self.w.svc.before_edit(&self.w.net, at);
         let cash = self.spendable();
         match self.w.step_paid(redo, cash, &|w| trains_to_buy(w, fleet)) {
-            Some(r) => self.settle(r, &before),
+            Some(r) => self.settle(r, Some(&before)),
             None => {
                 self.money_short = None;
                 self.issues.clear();

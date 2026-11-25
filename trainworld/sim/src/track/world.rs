@@ -258,6 +258,56 @@ struct LineRates {
 struct Rates {
     lines: Vec<(u32, Option<LineRates>, Option<LineRates>)>,
     rest_solved: (bool, bool),
+    /// T-4272: what the edit moved is not known: its services were worked out with edits after it (`settle_owed`),
+    /// so its undo settles as an edit does.
+    unknown: bool,
+}
+
+/// T-4272: what the edits answered from what they touch (`commit_local`) left for their services: what they touched and
+/// derived, put together, and the undo entry of the first of them, which takes what the services moved.
+struct Owed {
+    t: super::net::Touch,
+    der: super::net::Derived,
+    first: usize,
+}
+
+/// What an edit reads of the services before it applies (`commit_with`), or before owed services are worked out
+/// (`settle_owed`): no track or station edit moves any of it.
+struct Ahead {
+    /// T-3482: each line's rates, weekdays' and weekends', None for a line not there
+    had: Vec<Option<[[f32; SLOTS]; 2]>>,
+    worked: [bool; SLOTS],
+    /// T-3655: each line's fleet per level: its headway, or a count line's trains
+    keys: Vec<Option<[(u32, Option<u32>); SLOTS]>>,
+    /// T-752: a line switching between counts and headways, and the levels it had no trains at
+    switch: Option<(u32, [bool; SLOTS])>,
+    /// T-3542: the game's hours, which move every line (`reslot`)
+    hours_game: bool,
+}
+
+/// T-3655: a line's fleet at a level: its headway, or a count line's trains (a headway line's trains follow from its
+/// headway, and an edit setting it sends them anew).
+fn fleet_key(net: &Network, l: usize, s: usize) -> (u32, Option<u32>) {
+    match net.auto_at(l, s) { Some(a) => (u32::MAX, Some(a)), None => (net.trains_key(l, s), None) }
+}
+
+impl Ahead {
+    /// The levels each of `lines` ran no trains at (every worked level of a line not there before).
+    fn none_at(&self, lines: &[u32], row: usize) -> Vec<(u32, [bool; SLOTS])> {
+        let worked = self.worked;
+        lines.iter().map(|&l| (l, self.had.get(l as usize).copied().flatten().map_or(worked, |r| std::array::from_fn(|s| worked[s] && r[row][s] == 0.0)))).filter(|e| e.1.contains(&true)).collect()
+    }
+    /// The levels each of `lines` the edit gave other trains or another headway at, where it ran trains before (the
+    /// others are `none_at`'s).
+    fn reshare_at(&self, net: &Network, lines: &[u32]) -> Vec<(u32, [bool; SLOTS])> {
+        let zero = self.none_at(lines, 0);
+        lines.iter().filter(|&&l| net.line_ok(l)).filter_map(|&l| {
+            let k = self.keys.get(l as usize).copied().flatten()?;
+            let z = zero.iter().find(|e| e.0 == l).map_or([false; SLOTS], |e| e.1);
+            let at: [bool; SLOTS] = std::array::from_fn(|s| self.worked[s] && !z[s] && k[s] != fleet_key(net, l as usize, s));
+            at.contains(&true).then_some((l, at))
+        }).collect()
+    }
 }
 
 /// One entry of the undo history: the step back (the inverse and what it puts back) and, for an edit
@@ -295,12 +345,19 @@ fn merge_results(all: &mut Option<EditResult>, next: EditResult) {
         *all = Some(next);
         return;
     };
+    merge_dirty(&mut a.dirty, next.dirty);
+    a.cost_after = next.cost_after;
+    a.built_after = next.built_after;
+    a.charge += next.charge;
+}
+
+/// What `n` touched put with `d`.
+pub(crate) fn merge_dirty(d: &mut Dirty, n: Dirty) {
     fn join(a: &mut Vec<u32>, b: Vec<u32>) {
         a.extend(b);
         a.sort_unstable();
         a.dedup();
     }
-    let (d, n) = (&mut a.dirty, next.dirty);
     join(&mut d.edges, n.edges);
     join(&mut d.nodes, n.nodes);
     d.crossings.extend(n.crossings);
@@ -310,9 +367,34 @@ fn merge_results(all: &mut Option<EditResult>, next: EditResult) {
     join(&mut d.service.recomputed, n.service.recomputed);
     join(&mut d.service.shared, n.service.shared);
     join(&mut d.service.demand, n.service.demand);
-    a.cost_after = next.cost_after;
-    a.built_after = next.built_after;
-    a.charge += next.charge;
+}
+
+/// T-4272: whether an applied edit, by `inv` its inverse (which holds each line it set as it was), made or removed a line
+/// or set one's trains, headways, rates, rows or twin: a twin made or let go with its parent's trains halved or doubled
+/// (T-3333, `apply_rerouted`). What the services and the undo read ahead of an edit (`Ahead`, `line_rates_all`) is
+/// read only after an answered edit applied (`settle_owed`), which is the same only where it set none of that: a line
+/// moved through a new station or around a split keeps it all.
+fn sets_rates(net: &Network, inv: &Op) -> bool {
+    match inv {
+        Op::Batch(v) => v.iter().any(|o| sets_rates(net, o)),
+        Op::Line { id, data } => {
+            let bare = |d: &LineData| LineData { stops: vec![], path: vec![], ones: vec![], only: vec![], day: 0, ..d.clone() };
+            match (data, net.line_data(*id)) {
+                (Some(was), Some(now)) => bare(was) != bare(&now),
+                (None, None) => false,
+                _ => true,
+            }
+        }
+        _ => false,
+    }
+}
+
+/// T-3646: per line whose `LineRates` moved from `before` to `after`: the line, its rates after and before.
+fn rates_moved(before: &[Option<LineRates>], after: &[Option<LineRates>]) -> Vec<(u32, Option<LineRates>, Option<LineRates>)> {
+    (0..before.len().max(after.len())).filter_map(|l| {
+        let (b, a) = (before.get(l).cloned().flatten(), after.get(l).cloned().flatten());
+        (b != a).then_some((l as u32, a, b))
+    }).collect()
 }
 
 /// A line's departure split where the table does not reach it (as a load grows it).
@@ -431,6 +513,10 @@ pub struct TrackWorld {
     /// T-3584: what the weekends' pacing (`Network::line_pace_rest`) was paced from, kept with
     /// `svc_rest` (the weekdays' start them at the first weekend settle). Not saved.
     pace_in_rest: Vec<[PaceIn; SLOTS]>,
+    /// T-4272: the services edits answered from what they touch left owed (`commit_local`, `settle_owed`)
+    owed: Option<Owed>,
+    /// T-4272: what owed services, once worked out, touched (`take_owed_done`)
+    owed_done: Option<Dirty>,
 }
 
 /// Why an edit that changes what is constructed was refused.
@@ -443,13 +529,16 @@ pub enum ChargeError {
 
 impl TrackWorld {
     pub fn new(net: Network) -> TrackWorld {
-        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], restore_to: None, switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], settle_reshare: vec![], settle_reshare_rest: vec![], off_history: false, svc_rest: None, weekend_as_saved: false, rebuild_all: false, pace_in: vec![], pace_in_rest: vec![] };
+        let mut w = TrackWorld { net, svc: Service::default(), undo: vec![], redo: vec![], restore_to: None, switching: None, settle_scope: None, settle_edited: vec![], settle_edited_rest: vec![], settle_reshare: vec![], settle_reshare_rest: vec![], off_history: false, svc_rest: None, weekend_as_saved: false, rebuild_all: false, pace_in: vec![], pace_in_rest: vec![], owed: None, owed_done: None };
         w.reload();
         w
     }
 
     /// Derive everything from the inputs (after a load or a bulk build).
     pub fn reload(&mut self) {
+        // (everything is worked out below)
+        self.owed = None;
+        self.owed_done = None;
         self.svc.changed_all = true;
         self.svc_rest = None;
         self.net.touch_all();
@@ -1732,6 +1821,7 @@ impl TrackWorld {
     /// `apply_paid` with the track's charge set by `price` on the edited network, not the rise in
     /// built value (T-3059: a rebuild pays the full new price).
     pub fn apply_priced(&mut self, op: Op, cash: f64, final_: bool, extra: &dyn Fn(&TrackWorld) -> f64, price: Option<&dyn Fn(&TrackWorld) -> f64>) -> Result<(EditResult, f64), ChargeError> {
+        self.settle_owed();
         let phases = self.phases();
         let (mut r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
         if let Some(price) = price {
@@ -1764,6 +1854,7 @@ impl TrackWorld {
     /// that edit's undo takes it back and its redo makes it again (the load's cap lowering, which can
     /// come after the first edits). Without, it stays whatever the history does (a removed fare area).
     pub fn apply_off_history(&mut self, op: Op, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64, with_edit: bool) -> Result<(EditResult, f64), ChargeError> {
+        self.settle_owed();
         let phases = self.phases();
         let again = op.clone();
         // T-3655: the game's own edit pays only for the trains it adds: a save running more than its
@@ -1787,6 +1878,7 @@ impl TrackWorld {
     /// Undo (or redo) and pay `extra` as `apply_paid` does: undoing a line's removal can need
     /// trains again. Nothing changes if it is refused.
     pub fn step_paid(&mut self, redo: bool, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Option<Result<(EditResult, f64), ChargeError>> {
+        self.settle_owed();
         let phases = self.phases();
         Some(match self.step(redo)? {
             Ok(mut r) => {
@@ -1815,6 +1907,7 @@ impl TrackWorld {
     /// ones made since and makes them all again after the edit, on the state they were made on.
     /// The result covers all of it. On problems nothing changes.
     fn step(&mut self, redo: bool) -> Option<Result<EditResult, Vec<Issue>>> {
+        self.settle_owed();
         if !redo {
             self.drop_done_steps();
         }
@@ -1919,6 +2012,7 @@ impl TrackWorld {
     /// the variants are put back after, and worked out again only where the rollback left what
     /// they read otherwise.
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
+        self.settle_owed();
         let phases = self.phases();
         // T-4149: the rollback leaves every line where it ran, so the lines the trial moved are not the next edit's
         let moved = self.svc.moved.clone();
@@ -1986,25 +2080,105 @@ impl TrackWorld {
     /// `commit_with` with services, and what it moved (`Rates`) for its inverse to put back;
     /// `back`: what this commit itself puts back (an undo, redo or rollback).
     fn commit_recorded(&mut self, op: Op, checked: bool, back: Option<&Rates>) -> Result<(EditResult, (Op, Rates)), Vec<Issue>> {
+        self.settle_owed();
         let before = self.line_rates_all();
         let solved = self.net.rest_solved;
         self.restore_to = back.and_then(|b| self.found(b, &before));
         let r = self.commit_with(op, checked, true);
         self.restore_to = None;
         let (r, inv) = r?;
-        let after = self.line_rates_all();
-        let n = before.len().max(after.len());
-        let lines = (0..n).filter_map(|l| {
-            let (b, a) = (before.get(l).cloned().flatten(), after.get(l).cloned().flatten());
-            (b != a).then_some((l as u32, a, b))
-        }).collect();
-        Ok((r, (inv, Rates { lines, rest_solved: (self.net.rest_solved, solved) })))
+        let lines = rates_moved(&before, &self.line_rates_all());
+        Ok((r, (inv, Rates { lines, rest_solved: (self.net.rest_solved, solved), unknown: false })))
+    }
+
+    /// T-4272: an edit answered from what it touches (a station placed or track deleted on the map). Applied and checked
+    /// where it lands; it constructs nothing, so it charges for no construction (`run_free`'s price: the pieces a split
+    /// or a join re-prices are no purchase). Where it can move no running line's trains (`moves_no_train`), the trains
+    /// the running lines need are those they need now (`extra`), so it is answered here, on the undo history, and its
+    /// services are owed (`settle_owed`). Ok(None): it could move trains, so it goes the whole way; nothing changed here.
+    pub fn commit_local(&mut self, op: Op, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Result<Option<(EditResult, f64)>, ChargeError> {
+        let (cost_before, built_before) = self.net.total_and_built_cost();
+        let (inv, t, der) = self.apply_checked(op, true).map_err(ChargeError::Issues)?;
+        // (one that set a line's trains or rates goes the whole way too, `sets_rates`)
+        if !t.schedules.is_empty() || !t.weekend.is_empty() || sets_rates(&self.net, &inv) || !self.moves_no_train(&t, &der) {
+            let _ = self.apply_and_derive(inv);
+            return Ok(None);
+        }
+        let (cost_after, built_after) = self.net.total_and_built_cost();
+        let charge = 0.0;
+        let x = extra(self);
+        if x > 1e-9 && x > cash + 1e-6 {
+            let _ = self.apply_and_derive(inv);
+            return Err(ChargeError::Money { need: x, have: cash });
+        }
+        self.undo.push(Back { step: (inv, Rates { unknown: true, ..Default::default() }), again: None });
+        self.redo.clear();
+        let dirty = Dirty { edges: der.edges.clone(), nodes: der.nodes.clone(), crossings: der.crossings.clone(), ..Default::default() };
+        match &mut self.owed {
+            Some(o) => merge_derived(&mut o.t, &mut o.der, t, der),
+            None => self.owed = Some(Owed { t, der, first: self.undo.len() - 1 }),
+        }
+        Ok(Some((EditResult { dirty, cost_before, cost_after, built_before, built_after, charge }, x)))
+    }
+
+    /// T-4272: whether edits answered from what they touch still owe their services.
+    pub fn owes(&self) -> bool {
+        self.owed.is_some()
+    }
+
+    /// T-4272: the services edits answered from what they touch left owed (`commit_local`), worked out as for one edit
+    /// making all their changes; what they touched waits in `take_owed_done`. The first of them on the undo history
+    /// takes back what the services moved; an undo of a later one settles as an edit does. Run before anything that
+    /// reads or changes the services (another commit, an undo or redo, a trial with services). Whether any were owed.
+    pub fn settle_owed(&mut self) -> bool {
+        let Some(o) = self.owed.take() else { return false };
+        let before = self.line_rates_all();
+        let solved = self.net.rest_solved;
+        let ahead = self.ahead(None);
+        let dirty = self.services_after(&o.t, o.der, &ahead);
+        let lines = rates_moved(&before, &self.line_rates_all());
+        if let Some(b) = self.undo.get_mut(o.first) {
+            b.step.1 = Rates { lines, rest_solved: (self.net.rest_solved, solved), unknown: false };
+        }
+        match &mut self.owed_done {
+            Some(d) => merge_dirty(d, dirty),
+            None => self.owed_done = Some(dirty),
+        }
+        true
+    }
+
+    /// T-4272: what owed services touched once worked out (`settle_owed`), since the last call.
+    pub fn take_owed_done(&mut self) -> Option<Dirty> {
+        self.owed_done.take()
+    }
+
+    /// T-4272: whether an applied edit (`t`, `der`) can have moved no running line's trains: no line running now
+    /// uses the track, nodes or stations it touched, nor is among the bus lines and ways back it reached
+    /// (`lines_touched`), and it made or removed no crossing. Capacity is shared only along track, so then no running
+    /// line's capacity moved either.
+    fn moves_no_train(&self, t: &super::net::Touch, der: &super::net::Derived) -> bool {
+        if !der.crossings.is_empty() {
+            return false;
+        }
+        let running = |l: u32| self.svc.lines.get(l as usize).is_some_and(|s| s.running);
+        if self.lines_touched(t, der, true).into_iter().any(running) {
+            return false;
+        }
+        let mut edges: Vec<u32> = t.edges.iter().chain(&der.edges).copied().collect();
+        edges.sort_unstable();
+        edges.dedup();
+        let mut nodes: Vec<u32> = t.nodes.iter().chain(&t.stations).chain(&der.nodes).copied().collect();
+        nodes.sort_unstable();
+        nodes.dedup();
+        let net = &self.net;
+        let clear = |e: u32| edges.binary_search(&e).is_err() && (!net.edge_ok(e) || [net.edge_a[e as usize], net.edge_b[e as usize]].iter().all(|n| nodes.binary_search(n).is_err()));
+        (0..net.line_count() as u32).filter(|&l| running(l)).all(|l| net.line_path(l).iter().all(|&p| clear(path_edge(p))))
     }
 
     /// T-3646: what `back` puts back, if the lines it names are as it expects (`now`, from
     /// `line_rates_all`); None otherwise, and the commit settles as an edit does.
     fn found(&self, back: &Rates, now: &[Option<LineRates>]) -> Option<(Vec<(u32, LineRates)>, bool)> {
-        if back.rest_solved.0 != self.net.rest_solved || !back.lines.iter().all(|(l, want, _)| now.get(*l as usize).cloned().flatten() == *want) {
+        if back.unknown || back.rest_solved.0 != self.net.rest_solved || !back.lines.iter().all(|(l, want, _)| now.get(*l as usize).cloned().flatten() == *want) {
             return None;
         }
         Some((back.lines.iter().filter_map(|(l, _, set)| set.clone().map(|s| (*l, s))).collect(), back.rest_solved.1))
@@ -2080,64 +2254,69 @@ impl TrackWorld {
     /// `service`: rebuild the services the edit touches (every real edit; a `trial` skips it).
     fn commit_with(&mut self, op: Op, checked: bool, service: bool) -> Result<(EditResult, Op), Vec<Issue>> {
         let (cost_before, built_before) = self.net.total_and_built_cost();
-        let again = op.clone();
+        let ahead = service.then(|| self.ahead(Some(&op)));
+        let (inv, t, der) = self.apply_checked(op, checked)?;
+        let dirty = match ahead {
+            Some(a) => self.services_after(&t, der, &a),
+            None => Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, ..Default::default() },
+        };
+        let (cost_after, built_after) = self.net.total_and_built_cost();
+        // below a millionth of a dollar is rounding from re-summing the same shapes (T-624)
+        let charge = if built_after - built_before > 1e-9 { built_after - built_before } else { 0.0 };
+        Ok((EditResult { dirty, cost_before, cost_after, built_before, built_after, charge }, inv))
+    }
+
+    /// What the services read before an edit (`Ahead`); `op` the edit, None for owed services (`settle_owed`).
+    fn ahead(&self, op: Option<&Op>) -> Ahead {
         // T-3542: the game's hours move every line (see `reslot` below)
         let game_hours = |o: &Op| matches!(o, Op::Hours { line: None, .. });
-        let hours_game = match &op { Op::Batch(v) => v.iter().any(game_hours), o => game_hours(o) };
-        // T-3482: each line's rates before the edit, weekdays' and weekends', None for a line not there
-        let had: Vec<Option<[[f32; SLOTS]; 2]>> = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| [WEEKDAYS, WEEKEND].map(|row| std::array::from_fn(|lev| self.net.line_tph_on(l, row, lev))))).collect();
-        let worked: [bool; SLOTS] = std::array::from_fn(|s| self.net.slot_worked(s));
-        let none_at = |lines: &[u32], row: usize| -> Vec<(u32, [bool; SLOTS])> {
-            lines.iter().map(|&l| (l, had.get(l as usize).copied().flatten().map_or(worked, |r| std::array::from_fn(|s| worked[s] && r[row][s] == 0.0)))).filter(|e| e.1.contains(&true)).collect()
-        };
-        // T-3655: each line's fleet per level before the edit: its headway, or a count line's trains
-        // (a headway line's trains follow from its headway, and an edit setting it sends them anew)
-        let fleet_key = |net: &Network, l: usize, s: usize| match net.auto_at(l, s) { Some(a) => (u32::MAX, Some(a)), None => (net.trains_key(l, s), None) };
-        let keys: Vec<Option<[(u32, Option<u32>); SLOTS]>> = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| std::array::from_fn(|s| fleet_key(&self.net, l, s)))).collect();
-        // the levels each of `lines` the edit gave other trains or another headway at, where it ran
-        // trains before (the others are `none_at`'s)
-        let reshare_at = |net: &Network, lines: &[u32]| -> Vec<(u32, [bool; SLOTS])> {
-            let zero = none_at(lines, 0);
-            lines.iter().filter(|&&l| net.line_ok(l)).filter_map(|&l| {
-                let k = keys.get(l as usize).copied().flatten()?;
-                let z = zero.iter().find(|e| e.0 == l).map_or([false; SLOTS], |e| e.1);
-                let at: [bool; SLOTS] = std::array::from_fn(|s| worked[s] && !z[s] && k[s] != fleet_key(net, l as usize, s));
-                at.contains(&true).then_some((l, at))
-            }).collect()
-        };
+        let hours_game = op.is_some_and(|op| match op { Op::Batch(v) => v.iter().any(game_hours), o => game_hours(o) });
+        let had = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| [WEEKDAYS, WEEKEND].map(|row| std::array::from_fn(|lev| self.net.line_tph_on(l, row, lev))))).collect();
+        let worked = std::array::from_fn(|s| self.net.slot_worked(s));
+        let keys = (0..self.net.line_count()).map(|l| self.net.line_ok(l as u32).then(|| std::array::from_fn(|s| fleet_key(&self.net, l, s)))).collect();
         // (T-3542: also inside a batch, as a line of four or five rows sets its midday and afternoon with it)
-        let auto_op = match &op {
+        let auto_op = op.and_then(|op| match op {
             Op::Batch(ops) => ops.iter().find(|o| matches!(o, Op::AutoTrains { .. })),
             o => Some(o),
-        };
+        });
         let switch = match auto_op {
             Some(Op::AutoTrains { id, auto, .. }) if self.net.line_auto.get(*id as usize).is_some_and(|a| a.is_some() != auto.is_some()) => {
                 Some((*id, self.net.trains_of(*id as usize).unwrap_or_default().map(|n| n == 0)))
             }
             _ => None,
         };
-        let (mut inv, mut t, mut der) = self.apply_rerouted(op, checked)?;
+        Ahead { had, worked, keys, switch, hours_game }
+    }
+
+    /// The edit applied and derived; `checked`: refused for the problems it adds, nothing changed then. Problems
+    /// already there (an old save under a newer water mask, say) must not block fixing things nearby.
+    fn apply_checked(&mut self, op: Op, checked: bool) -> Result<(Op, super::net::Touch, super::net::Derived), Vec<Issue>> {
+        let again = op.clone();
+        let (inv, t, der) = self.apply_rerouted(op, checked)?;
         let issues = if checked { self.check(&t, &der) } else { vec![] };
-        if !issues.is_empty() {
-            // Refuse only what the edit adds: problems already there (an old save under a newer
-            // water mask, say) must not block fixing things nearby.
-            let _ = self.apply_raw(inv);
-            let t2 = self.net.take_touch();
-            let der2 = self.net.derive(&t2);
-            self.note_lines(&t2, &der2);
-            let before = self.check(&t, &der);
-            let added: Vec<Issue> = issues.into_iter().filter(|i| !before.iter().any(|b| same_issue(i, b))).collect();
-            if !added.is_empty() {
-                return Err(added);
-            }
-            (inv, t, der) = self.apply_rerouted(again, checked)?;
+        if issues.is_empty() {
+            return Ok((inv, t, der));
         }
+        let _ = self.apply_raw(inv);
+        let t2 = self.net.take_touch();
+        let der2 = self.net.derive(&t2);
+        self.note_lines(&t2, &der2);
+        let before = self.check(&t, &der);
+        let added: Vec<Issue> = issues.into_iter().filter(|i| !before.iter().any(|b| same_issue(i, b))).collect();
+        if !added.is_empty() {
+            return Err(added);
+        }
+        self.apply_rerouted(again, checked)
+    }
+
+    /// The services an applied edit touched (`t`, `der`) worked out again: rebuilt, settled, placed and timed.
+    fn services_after(&mut self, t: &super::net::Touch, der: super::net::Derived, a: &Ahead) -> Dirty {
         // T-3542: rows that split or join the slots work every line out again, as a load does
         let old_slots = self.net.period_slot();
-        let reslotted = service && self.net.refresh_slots();
+        let reslotted = self.net.refresh_slots();
         // T-3542: a line whose hours fall into the slots otherwise (its hours, its rows) settles
         // afresh: what kept it no longer says where its rates go
-        let moved = if service { std::mem::take(&mut self.net.mix_moved) } else { vec![] };
+        let moved = std::mem::take(&mut self.net.mix_moved);
         if !moved.is_empty() {
             self.net.settle_kept.retain(|k| !moved.contains(&k.0));
             self.net.settle_kept_rest.retain(|k| !moved.contains(&k.0));
@@ -2145,10 +2324,10 @@ impl TrackWorld {
         // T-4239: a line given another headway, or switched between counts and headways, runs other
         // trains over the same round trip (`running_trains`): what a settle kept it by there no
         // longer holds
-        if service {
+        {
             let net = &self.net;
             let gone: Vec<(u32, usize)> = net.settle_kept.iter().chain(&net.settle_kept_rest)
-                .filter(|e| net.line_ok(e.0) && keys.get(e.0 as usize).copied().flatten().is_some_and(|k| k[e.1].1 != net.auto_at(e.0 as usize, e.1)))
+                .filter(|e| net.line_ok(e.0) && a.keys.get(e.0 as usize).copied().flatten().is_some_and(|k| k[e.1].1 != net.auto_at(e.0 as usize, e.1)))
                 .map(|e| (e.0, e.1))
                 .collect();
             if !gone.is_empty() {
@@ -2159,23 +2338,14 @@ impl TrackWorld {
         }
         // the game's hours move every line: worked out again as a periods switch is (London 0.9 s
         // natively against 1.8-6.8 s as an edit of every line's schedule)
-        let hours_all = hours_game && !moved.is_empty();
+        let hours_all = a.hours_game && !moved.is_empty();
         if reslotted || hours_all {
             self.reslot(old_slots);
-            let (cost_after, built_after) = self.net.total_and_built_cost();
             let all: Vec<u32> = (0..self.net.line_count() as u32).filter(|&l| self.net.line_ok(l)).collect();
             let service = super::service::ServiceDirty { rebuilt: all.clone(), recomputed: all.clone(), shared: vec![], demand: all.clone() };
-            let dirty = Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources: (0..self.svc.cap.res.len() as u32).collect(), lines: all, service };
-            let charge = if built_after - built_before > 1e-9 { built_after - built_before } else { 0.0 };
-            return Ok((EditResult { dirty, cost_before, cost_after, built_before, built_after, charge }, inv));
+            return Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources: (0..self.svc.cap.res.len() as u32).collect(), lines: all, service };
         }
-        if !service {
-            let (cost_after, built_after) = self.net.total_and_built_cost();
-            let dirty = Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, ..Default::default() };
-            let charge = if built_after - built_before > 1e-9 { built_after - built_before } else { 0.0 };
-            return Ok((EditResult { dirty, cost_before, cost_after, built_before, built_after, charge }, inv));
-        }
-        let lines = self.lines_touched(&t, &der, true);
+        let lines = self.lines_touched(t, &der, true);
         let junction_touched = der.nodes.iter().any(|&n| self.net.node_ok(n) && self.net.node_ports[n as usize].n >= 3);
         // A station touched with no line stopping there still changes passing lines' platforms.
         let cap_dirty = !der.crossings.is_empty() || junction_touched || !t.stations.is_empty();
@@ -2220,16 +2390,16 @@ impl TrackWorld {
         if settles { self.mirror_weekend(&lines, &schedules, cap_dirty, &der.edges, &cap_nodes); }
         if let Some(before) = before {
             // T-752: a switch between counts and headways never buys or sells a train
-            self.switching = switch;
+            self.switching = a.switch;
             // the rescheduled lines themselves too: a bus or ferry line uses no capacity resource, so
             // `svc.shared` never names it, and its new count would never be settled into a rate (T-3704)
             let mut seeds = lines.clone();
             seeds.extend(svc.rebuilt.iter().chain(&svc.recomputed).chain(&svc.shared).chain(&t.weekend).chain(&schedules).chain(&was_sharing).copied());
             self.settle_scope = Some(self.sharing_closure(&seeds));
             // the levels a line ran no trains at, or every level of a line the edit made (or brought back)
-            self.settle_edited = none_at(&changed, 0);
-            self.settle_edited_rest = none_at(&changed, 1);
-            self.settle_reshare = reshare_at(&self.net, &changed);
+            self.settle_edited = a.none_at(&changed, 0);
+            self.settle_edited_rest = a.none_at(&changed, 1);
+            self.settle_reshare = a.reshare_at(&self.net, &changed);
             if self.off_history {
                 // only where the line now has fewer trains than its rate runs: one still over it (the
                 // load's caps) keeps the rate it was saved with; one under it must come down anyway, and
@@ -2281,7 +2451,7 @@ impl TrackWorld {
         } else if !t.weekend.is_empty() {
             // T-3521: an edit of weekends alone settles only them, the weekdays left to the bit
             self.settle_scope = Some(self.sharing_closure(&t.weekend));
-            self.settle_edited_rest = none_at(&t.weekend, 1);
+            self.settle_edited_rest = a.none_at(&t.weekend, 1);
             svc.recomputed.extend(self.settle_weekend(false));
             self.settle_edited_rest.clear();
             self.settle_scope = None;
@@ -2312,17 +2482,7 @@ impl TrackWorld {
                 resources.push(r as u32);
             }
         }
-        let (cost_after, built_after) = self.net.total_and_built_cost();
-        let r = EditResult {
-            dirty: Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc },
-            cost_before,
-            cost_after,
-            built_before,
-            built_after,
-            // below a millionth of a dollar is rounding from re-summing the same shapes (T-624)
-            charge: if built_after - built_before > 1e-9 { built_after - built_before } else { 0.0 },
-        };
-        Ok((r, inv))
+        Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc }
     }
 
     /// Lines to rebuild after an edit: set directly, on touched track, stopping at a touched station, and the bus lines and
