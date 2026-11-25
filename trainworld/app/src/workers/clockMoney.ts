@@ -11,10 +11,10 @@ import { newDay, newHour, addEntry, type DayLedger, type HourLedger, type SaveHe
 import type { MoneyState, RegionNow } from "./protocol";
 import { saves } from "./slots";
 import { serviceEditMs } from "./clockFollowUp";
-import { game } from "./clockMain";
+import { game, moneyLag } from "./clockMain";
 import { kept } from "./clockPanic";
 import { moneyPost, patchMode } from "./clockPost";
-import { achievements, api, clk, copyOf, costHour, dayShift, fareHour, fares, goals, guide, heldCharges, holidayData, hourLedger, hourShape, incomePerHour, kindOfLine, ledger, LEDGER_DAYS, LEDGER_HOURS, ledgerDay, lineCountries, lineIncome, lineNotes, linePoints, lineRides, lineShares, loan, modded, mode, moneyFrozen, NP, partCost, partFare, partHour, prices, putHourLedger, putLedger, putLoan, putPartCost, putPartFare, putPartHour, putSettledT, rideHour, ridesPerHour, rowOfLine, runTail, send, settledT, stars, syncHolidays, TEN, upkeepRegions, wallNow } from "./clockState";
+import { achievements, api, clk, copyOf, costHour, dayShift, fareHour, fares, goals, guide, heldCharges, holidayData, hourLedger, hourShape, incomePerHour, kindOfLine, ledger, LEDGER_DAYS, LEDGER_HOURS, ledgerDay, lineCountries, lineIncome, lineNotes, linePoints, lineRides, lineShares, loan, modded, mode, moneyFrozen, NP, partCost, partFare, partHour, peakC, prices, putHourLedger, putLedger, putLoan, putPartCost, putPartFare, putPartHour, putSettledT, rideHour, ridesPerHour, rowOfLine, runTail, send, settledT, stars, syncHolidays, TEN, upkeepRegions, wallNow } from "./clockState";
 
 /** T-531: each region's ledgers, kept as the network's (a zone id; "" outside every zone or not yet
  * placed, so the regions add up to the network) */
@@ -577,13 +577,45 @@ function pastDays(now: number): LineDay[] {
     const sh = a.line_shift(id), per = lineIncome.get(id);
     let f = 0, day = 0;
     if (per) {
-      for (let h = h0; h <= hNow; h++) f += fareHour(per, h * 3600 + sh, kindOfLine(id)) * (h === hNow ? wNow : h === h0 ? 1 - wNow : 1);
-      for (let h = Math.floor((now + sh) / 86400) * 24 - sh / 3600, e = h + 24; h < e; h++) day += fareHour(per, h * 3600 + sh, kindOfLine(id));
+      const kf = lineFares(id, per, sh, hNow, Math.floor((now + sh) / 86400));
+      for (let h = h0; h <= hNow; h++) f += kf.hours[h - h0] * (h === hNow ? wNow : h === h0 ? 1 - wNow : 1);
+      day = kf.day;
     }
     out.push({ id, block: v.subarray(i, i + len), fare: f, day });
     i += len;
   }
+  if (faresKept.size > count) {
+    const ids = new Set(out.map((d) => d.id));
+    for (const id of faresKept.keys()) if (!ids.has(id)) faresKept.delete(id);
+  }
   return out;
+}
+
+/** T-4281: per line, its fares in each hour of the past 24 (`fareHour`) and over its local day, kept while the hour,
+ * the local day and all `fareHour` reads for the line stand (its income, its kind of each day, the shapes, the lag): a
+ * `today` question while the clock runs otherwise works out every line's 49 hours again, about as long as the track
+ * model's part once that was kept. */
+const faresKept = new Map<number, { h: number; d: number; sh: number; per: number[][]; kindOf: KindOf; peak: number[][]; lag: number; hours: number[]; day: number }>();
+function lineFares(id: number, per: number[][], sh: number, hNow: number, dNow: number) {
+  const kindOf = kindOfLine(id);
+  const k = faresKept.get(id);
+  if (k && k.h === hNow && k.d === dNow && k.sh === sh && k.per === per && k.kindOf === kindOf && k.lag === moneyLag && k.peak.every((row, i) => row === peakC[i])) {
+    if (patchMode === "check") {
+      const w = faresOf(per, sh, hNow, dNow, kindOf);
+      if (!sameFloats64(Float64Array.from(w.hours), Float64Array.from(k.hours)) || !Object.is(w.day, k.day)) console.error(`T-4281 check: line ${id}'s kept fares differ from a whole read`);
+    }
+    return k;
+  }
+  const kept = { h: hNow, d: dNow, sh, per, kindOf, peak: [...peakC], lag: moneyLag, ...faresOf(per, sh, hNow, dNow, kindOf) };
+  faresKept.set(id, kept);
+  return kept;
+}
+function faresOf(per: number[][], sh: number, hNow: number, dNow: number, kindOf: KindOf) {
+  const hours: number[] = [];
+  for (let h = hNow - 24; h <= hNow; h++) hours.push(fareHour(per, h * 3600 + sh, kindOf));
+  let day = 0;
+  for (let h = dNow * 24 - sh / 3600, e = h + 24; h < e; h++) day += fareHour(per, h * 3600 + sh, kindOf);
+  return { hours, day };
 }
 
 /** The flat array the panels read (game/today.ts `readToday`): the line count, each line's block,

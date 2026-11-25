@@ -472,19 +472,6 @@ impl StopTimes<'_> {
     }
 }
 
-/// One line's counts over a window of the day (`Boarding::window`).
-#[derive(Default)]
-struct Tally {
-    stops: Vec<f64>,
-    boarded: f64,
-    /// riders full trains left behind, each once (T-4052: `Queues::left`)
-    left: f64,
-    fullest: f64,
-    full: Vec<f64>,
-    /// trips that reach a stop in the window, the count `full` is out of (T-481)
-    trains: f64,
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct LineAccount {
     key: u64,
@@ -520,10 +507,11 @@ pub struct Boarding {
     redone: usize,
     /// T-4149: accounts made so far (`LineAccount::id`)
     made: u64,
-    /// T-4149: per line, its last block of `window` (past day, then today so far) and what it was read from, given again
-    /// while all of that stands: after an edit only the lines it touched are read again (`past_day` over every line was
-    /// 125-445 ms on a 2,647-station game, asked twice an edit)
-    day_memo: RefCell<[Vec<Option<(Vec<u64>, Vec<f64>)>>; 2]>,
+    /// T-4149, T-4281: per line, its last block of `window` (past day, then today so far) and what it was read from,
+    /// moved along as the clock runs while its accounts, service and local day stand: after an edit only the lines it
+    /// touched are read again, and while the clock runs a read costs the departures it passed (`past_day` over every
+    /// line was 125-445 ms on a 2,647-station game, asked twice an edit and every second or so while the clock runs)
+    day_memo: RefCell<[Vec<Option<day::DayKept>>; 2]>,
     /// T-4149: per line and kind of day, its last `line_periods` and what it was read from (the panels ask every line's
     /// after each edit, `linesPeriods`)
     periods_memo: RefCell<HashMap<(usize, usize), ([u64; 3], Vec<f64>)>>,
@@ -1253,7 +1241,7 @@ impl Boarding {
     /// train, the fullest train's riders as a share of crush, the number of spans of full trains,
     /// per span its first and last time (s into the day), then boardings at each stop in the
     /// line's own stop order (both directions), then its trains in service at `t` and how many
-    /// of them are packed full on their trip (`under_way`, T-472), then the trips counted, the
+    /// of them are packed full on their trip (`DayKept::under_way`, T-472), then the trips counted, the
     /// number the full ones are out of (T-481), then for the period now on `t`'s kind of day the
     /// rider-seconds waited after full trains, riders arriving and rider-seconds aboard
     /// (`crowding`, T-491), 0, and the busiest hour's load in the period on the fullest stretch as
@@ -1261,38 +1249,10 @@ impl Boarding {
     ///
     /// A stop's boardings since midnight telescope: the riders who have arrived by its last
     /// departure, less those still waiting after it, less the same at its last departure before
-    /// midnight, less those who went another way (`tally`). Riders left behind are counted per departure as in `simulate` (who arrived since
-    /// the train before and is still waiting).
+    /// midnight, less those who went another way (`day::Stop`). Riders left behind are counted per departure as in
+    /// `simulate` (who arrived since the train before and is still waiting).
     pub fn today(&self, svc: &Service, t: f64) -> Vec<f64> {
         self.window(svc, t, false, true)
-    }
-
-    /// Trains of a line on the move or turning at local time of day `tod`, and how many of them
-    /// are packed full somewhere on their trip (T-472). A trip counts from its departure until the
-    /// next one could leave the far end, so the count is about the line's trains in service.
-    fn under_way(acc: &LineAccount, ls: &LineSvc, tod: f64) -> (f64, f64) {
-        let cap = ls.crush();
-        let (mut on, mut packed) = (0.0, 0.0);
-        for (r, ra) in acc.runs.iter().enumerate() {
-            let n = ra.n;
-            for j in 0..ra.deps.len() {
-                let lv = ra.levels[j] as usize;
-                // a loop's train is out until the next one of its run could leave (T-798)
-                let span = if ls.is_loop() {
-                    ls.round_trip[lv] / ls.live_runs() as f64
-                } else {
-                    ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0)
-                };
-                if (tod - ra.deps[j]).rem_euclid(DAY) >= span {
-                    continue;
-                }
-                on += 1.0;
-                if ra.load[j * n..(j + 1) * n].iter().any(|&v| v as f64 >= cap - 0.5) {
-                    packed += 1.0;
-                }
-            }
-        }
-        (on, packed)
     }
 
     /// A line's day by period (T-477, T-491), on a kind of day: per period `PERIOD_STRIDE`
@@ -1469,167 +1429,6 @@ impl Boarding {
         self.window(svc, t, true, false)
     }
 
-    fn window(&self, svc: &Service, t: f64, past: bool, keep: bool) -> Vec<f64> {
-        let mut out = vec![0.0];
-        let mut count = 0;
-        let nl = self.accounts.iter().map(|a| a.len()).max().unwrap_or(0);
-        let mut memo = self.day_memo.borrow_mut();
-        let memo = &mut memo[past as usize];
-        memo.resize(nl, None);
-        for l in 0..nl {
-            let Some(ls) = svc.lines.get(l) else { continue };
-            // the line's own day and time of day (T-309: its local time)
-            let t = t + ls.shift;
-            let tod = t.rem_euclid(DAY);
-            let Some(Some(acc)) = self.accounts[self.kind_at(t, l)].get(l) else { continue };
-            // T-4149: what the block reads: the time, the accounts (each made once, never changed), and the service's
-            // parts read below
-            let ya_id = if past { self.accounts[self.kind_at(t - DAY, l)].get(l).and_then(|a| a.as_ref()).map_or(0, |a| a.id) } else { 0 };
-            let key = Self::day_key(ls, t, acc.id, ya_id);
-            if let Some((k, block)) = memo[l].as_ref().filter(|_| keep) {
-                if *k == key {
-                    out.extend_from_slice(block);
-                    count += 1;
-                    continue;
-                }
-            }
-            let start = out.len();
-            let n = acc.runs[0].n;
-            let mut w = Tally { stops: vec![0.0f64; n], ..Default::default() };
-            if past {
-                if let Some(Some(ya)) = self.accounts[self.kind_at(t - DAY, l)].get(l) {
-                    if ya.runs[0].n == n {
-                        self.tally(ya, ls, tod, DAY, -DAY, t - tod - DAY, &mut w);
-                    }
-                }
-            }
-            self.tally(acc, ls, f64::NEG_INFINITY, tod, 0.0, t - tod, &mut w);
-            let Tally { stops, boarded, left, fullest, mut full, trains } = w;
-            full.sort_by(f64::total_cmp);
-            let mut spans: Vec<(f64, f64)> = vec![];
-            for &s in &full {
-                match spans.last_mut() {
-                    Some(p) if s - p.1 <= 1800.0 => p.1 = s,
-                    _ => spans.push((s, s)),
-                }
-            }
-            out.extend([l as f64, n as f64, boarded, full.len() as f64, left, fullest, spans.len() as f64]);
-            for (a, b) in spans {
-                out.extend([a, b]);
-            }
-            out.extend(stops);
-            let (on, packed) = Self::under_way(acc, ls, tod);
-            out.extend([on, packed, trains]);
-            let p = period_at(tod);
-            let c = Self::crowding(acc, ls)[p];
-            let pk = Self::period_peaks(acc, ls);
-            let s = pk.len() / PERIODS;
-            let peak = pk[p * s..(p + 1) * s].iter().fold(0.0f64, |a, &b| a.max(b));
-            // T-1255: the crowding at the platforms where trains come full, every rider alike; T-2236:
-            // the load past rated in the slot the km-weighted wait had
-            out.extend([c[9], c[10], c[5], 0.0, peak]);
-            if keep {
-                memo[l] = Some((key, out[start..].to_vec()));
-            }
-            count += 1;
-        }
-        out[0] = count as f64;
-        out
-    }
-
-    /// T-4149: what line `ls`'s block of `window` at its local time `t` is read from besides its accounts: the service's
-    /// parts `tally`, `under_way`, `crowding` and `period_peaks` read, as their bits.
-    fn day_key(ls: &LineSvc, t: f64, acc: u64, ya: u64) -> Vec<u64> {
-        let mut k = vec![t.to_bits(), acc, ya, ls.shift.to_bits(), ls.crush().to_bits(), ls.rated().to_bits(), ls.is_loop() as u64, ls.live_runs() as u64];
-        k.extend(ls.round_trip.iter().map(|v| v.to_bits()));
-        for r in &ls.runs {
-            k.extend(r.prof.iter().map(|p| p.duration.to_bits()));
-        }
-        k
-    }
-
-    /// Add one account's departures with time of day in (`from`, `to`] to `w`; full trains' times
-    /// are shifted by `off`. A stop's boardings telescope: the riders who have arrived by its last
-    /// departure in the window, less those still waiting after it, less the same at the departure
-    /// before the window (the day's last, a day earlier, when `from` is before the first), less
-    /// those who went another way in the window.
-    /// `day0` is the local time of the window's midnight.
-    fn tally(&self, acc: &LineAccount, ls: &LineSvc, from: f64, to: f64, off: f64, day0: f64, w: &mut Tally) {
-        let cap = ls.crush();
-        let n = w.stops.len();
-        for (r, ra) in acc.runs.iter().enumerate() {
-            let m = ra.deps.len();
-            if m == 0 || ra.n != n {
-                continue;
-            }
-            // T-680: nothing ran before the line's trains started
-            let open = ra.open - day0;
-            let line_from = if open > from { open - 1e-6 } else { from };
-            for k in 0..n {
-                // T-848: a stop along the line opens with its first train
-                let open = ra.stop_open.get(k).map_or(open, |o| o - day0);
-                let from = if open > from { open - 1e-6 } else { from };
-                let arr = &ra.arrivals[k];
-                let ts = ra.stop_times(k);
-                let ord = ts.ord;
-                let q = |j: usize| ra.queues.q_after(ord.get(j) * n + k) as f64;
-                let lo = ts.partition_point(|s| s <= from);
-                let done = ts.partition_point(|s| s <= to);
-                if done <= lo {
-                    continue;
-                }
-                let (t_before, q_before) = if lo > 0 { (ts.at(lo - 1), q(lo - 1)) } else { (ts.at(m - 1) - DAY, q(m - 1)) };
-                let last = done - 1;
-                // T-1815: each departure's `cum` is the next one's `cum(prev)`, worked out once
-                let c_before = arr.cum(t_before);
-                let mut b = (arr.cum(ts.at(last)) - q(last)) - (c_before - q_before);
-                let (mut prev, mut q_prev, mut c_prev) = (t_before, q_before, c_before);
-                for j in lo..done {
-                    let tj = ts.at(j);
-                    let c_j = arr.cum(tj);
-                    if prev < open && open <= tj {
-                        // whoever was waiting then never was: the platform starts empty
-                        b -= q_prev + arr.cum(open) - c_prev;
-                    }
-                    let i = ord.get(j) * n + k;
-                    w.left += ra.queues.left(i) as f64;
-                    // T-1067: those who went another way never boarded
-                    b -= ra.queues.gone(i) as f64;
-                    (prev, q_prev, c_prev) = (tj, q(j), c_j);
-                }
-                let b = b.max(0.0);
-                w.stops[if r == 0 { k } else { n - 1 - k }] += b;
-                w.boarded += b;
-            }
-            // trains: the fullest stretch each has reached in the window (a trip from before
-            // midnight counts at the stops it reaches after it)
-            for j in 0..m {
-                let (mut best, mut at_t, mut seen) = (0.0f64, f64::NAN, false);
-                for k in 0..n {
-                    let o = ra.stop_dep_of(j).get(k).copied().unwrap_or(0.0);
-                    let s = (ra.deps[j] + o).rem_euclid(DAY);
-                    let from = ra.stop_open.get(k).map_or(line_from, |o| if o - day0 > line_from { o - day0 - 1e-6 } else { line_from });
-                    if s > to || s <= from {
-                        continue;
-                    }
-                    seen = true;
-                    let v = ra.load[j * n + k] as f64;
-                    if v > best {
-                        best = v;
-                        at_t = s;
-                    }
-                }
-                w.fullest = w.fullest.max(best / cap);
-                if seen {
-                    w.trains += 1.0;
-                }
-                if best >= cap - 0.5 && !at_t.is_nan() {
-                    w.full.push(at_t + off);
-                }
-            }
-        }
-    }
-
     /// T-2707: heap bytes held, by structure (benches).
     pub fn mem_bytes(&self) -> Vec<(&'static str, usize)> {
         use std::mem::size_of;
@@ -1674,6 +1473,9 @@ impl Boarding {
                     add("mask segments", size_of::<Mask>() + m.heap_bytes());
                 }
             }
+        }
+        for (memo, what) in self.day_memo.borrow().iter().zip(["today so far kept", "past day kept"]) {
+            add(what, v(memo.capacity(), size_of::<Option<day::DayKept>>()) + memo.iter().flatten().map(|k| k.heap_bytes()).sum::<usize>());
         }
         out
     }
@@ -2057,5 +1859,6 @@ fn simulate_carry(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRid
     acc
 }
 
+mod day;
 #[cfg(test)]
 mod tests;

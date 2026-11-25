@@ -1125,3 +1125,312 @@ fn trip_order_reads_back_in_both_widths() {
     assert_eq!(short.try_get(stops * 1000), None);
     assert_eq!((short.heap_bytes(), wide.heap_bytes()), (stops * 1000 * 2, stops * trips * 4));
 }
+
+/// The past day as read before T-4281 (every departure at every stop, nothing kept), the oracle for `window`: its
+/// counts and times must match `window`'s, its sums to rounding (`window` sums riders gone and left per stop).
+fn old_window(b: &Boarding, svc: &Service, t: f64, past: bool) -> Vec<f64> {
+    #[derive(Default)]
+    struct Tally {
+        stops: Vec<f64>,
+        boarded: f64,
+        left: f64,
+        fullest: f64,
+        full: Vec<f64>,
+        trains: f64,
+    }
+    fn tally(acc: &LineAccount, ls: &LineSvc, from: f64, to: f64, off: f64, day0: f64, w: &mut Tally) {
+        let cap = ls.crush();
+        let n = w.stops.len();
+        for (r, ra) in acc.runs.iter().enumerate() {
+            let m = ra.deps.len();
+            if m == 0 || ra.n != n {
+                continue;
+            }
+            let open = ra.open - day0;
+            let line_from = if open > from { open - 1e-6 } else { from };
+            for k in 0..n {
+                let open = ra.stop_open.get(k).map_or(open, |o| o - day0);
+                let from = if open > from { open - 1e-6 } else { from };
+                let arr = &ra.arrivals[k];
+                let ts = ra.stop_times(k);
+                let ord = ts.ord;
+                let q = |j: usize| ra.queues.q_after(ord.get(j) * n + k) as f64;
+                let lo = ts.partition_point(|s| s <= from);
+                let done = ts.partition_point(|s| s <= to);
+                if done <= lo {
+                    continue;
+                }
+                let (t_before, q_before) = if lo > 0 { (ts.at(lo - 1), q(lo - 1)) } else { (ts.at(m - 1) - DAY, q(m - 1)) };
+                let last = done - 1;
+                let c_before = arr.cum(t_before);
+                let mut b = (arr.cum(ts.at(last)) - q(last)) - (c_before - q_before);
+                let (mut prev, mut q_prev, mut c_prev) = (t_before, q_before, c_before);
+                for j in lo..done {
+                    let tj = ts.at(j);
+                    let c_j = arr.cum(tj);
+                    if prev < open && open <= tj {
+                        b -= q_prev + arr.cum(open) - c_prev;
+                    }
+                    let i = ord.get(j) * n + k;
+                    w.left += ra.queues.left(i) as f64;
+                    b -= ra.queues.gone(i) as f64;
+                    (prev, q_prev, c_prev) = (tj, q(j), c_j);
+                }
+                let b = b.max(0.0);
+                w.stops[if r == 0 { k } else { n - 1 - k }] += b;
+                w.boarded += b;
+            }
+            for j in 0..m {
+                let (mut best, mut at_t, mut seen) = (0.0f64, f64::NAN, false);
+                for k in 0..n {
+                    let o = ra.stop_dep_of(j).get(k).copied().unwrap_or(0.0);
+                    let s = (ra.deps[j] + o).rem_euclid(DAY);
+                    let from = ra.stop_open.get(k).map_or(line_from, |o| if o - day0 > line_from { o - day0 - 1e-6 } else { line_from });
+                    if s > to || s <= from {
+                        continue;
+                    }
+                    seen = true;
+                    let v = ra.load[j * n + k] as f64;
+                    if v > best {
+                        best = v;
+                        at_t = s;
+                    }
+                }
+                w.fullest = w.fullest.max(best / cap);
+                if seen {
+                    w.trains += 1.0;
+                }
+                if best >= cap - 0.5 && !at_t.is_nan() {
+                    w.full.push(at_t + off);
+                }
+            }
+        }
+    }
+    fn under_way(acc: &LineAccount, ls: &LineSvc, tod: f64) -> (f64, f64) {
+        let cap = ls.crush();
+        let (mut on, mut packed) = (0.0, 0.0);
+        for (r, ra) in acc.runs.iter().enumerate() {
+            let n = ra.n;
+            for j in 0..ra.deps.len() {
+                let lv = ra.levels[j] as usize;
+                let span = if ls.is_loop() {
+                    ls.round_trip[lv] / ls.live_runs() as f64
+                } else {
+                    ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0)
+                };
+                if (tod - ra.deps[j]).rem_euclid(DAY) >= span {
+                    continue;
+                }
+                on += 1.0;
+                if ra.load[j * n..(j + 1) * n].iter().any(|&v| v as f64 >= cap - 0.5) {
+                    packed += 1.0;
+                }
+            }
+        }
+        (on, packed)
+    }
+    let mut out = vec![0.0];
+    let mut count = 0;
+    let nl = b.accounts.iter().map(|a| a.len()).max().unwrap_or(0);
+    for l in 0..nl {
+        let Some(ls) = svc.lines.get(l) else { continue };
+        let t = t + ls.shift;
+        let tod = t.rem_euclid(DAY);
+        let Some(Some(acc)) = b.accounts[b.kind_at(t, l)].get(l) else { continue };
+        let n = acc.runs[0].n;
+        let mut w = Tally { stops: vec![0.0f64; n], ..Default::default() };
+        if past {
+            if let Some(Some(ya)) = b.accounts[b.kind_at(t - DAY, l)].get(l) {
+                if ya.runs[0].n == n {
+                    tally(ya, ls, tod, DAY, -DAY, t - tod - DAY, &mut w);
+                }
+            }
+        }
+        tally(acc, ls, f64::NEG_INFINITY, tod, 0.0, t - tod, &mut w);
+        let Tally { stops, boarded, left, fullest, mut full, trains } = w;
+        full.sort_by(f64::total_cmp);
+        let mut spans: Vec<(f64, f64)> = vec![];
+        for &s in &full {
+            match spans.last_mut() {
+                Some(p) if s - p.1 <= 1800.0 => p.1 = s,
+                _ => spans.push((s, s)),
+            }
+        }
+        out.extend([l as f64, n as f64, boarded, full.len() as f64, left, fullest, spans.len() as f64]);
+        for (a, b) in spans {
+            out.extend([a, b]);
+        }
+        out.extend(stops);
+        let (on, packed) = under_way(acc, ls, tod);
+        out.extend([on, packed, trains]);
+        let p = period_at(tod);
+        let c = Boarding::crowding(acc, ls)[p];
+        let pk = Boarding::period_peaks(acc, ls);
+        let s = pk.len() / PERIODS;
+        let peak = pk[p * s..(p + 1) * s].iter().fold(0.0f64, |a, &b| a.max(b));
+        out.extend([c[9], c[10], c[5], 0.0, peak]);
+        count += 1;
+    }
+    out[0] = count as f64;
+    out
+}
+
+/// T-4281: the past day and today so far moved along as the clock runs equal a whole read to the bit at time `t` (an
+/// ask moves each line's kept block on from the last ask), and with `old`, the reads before T-4281 to rounding. Those
+/// placed a train's stop by `(deps + o).rem_euclid(DAY)` where the stops' own order (and now the trains too) has
+/// `RunAccount::leaves`, which can differ in the last bit: at a departure's exact time the two can count it apart.
+fn moved_along_equals_whole(b: &Boarding, svc: &Service, t: f64, what: &str, old: bool) {
+    let bits = |v: &[f64]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
+    for past in [true, false] {
+        let (got, whole) = (b.window(svc, t, past, true), b.window(svc, t, past, false));
+        assert_eq!(bits(&got), bits(&whole), "{what}, t {t:?}, past {past}: kept against whole");
+        if !old {
+            continue;
+        }
+        let old = old_window(b, svc, t, past);
+        assert_eq!(whole.len(), old.len(), "{what}, t {t:?}, past {past}: {whole:?} against {old:?}");
+        for (i, (a, o)) in whole.iter().zip(&old).enumerate() {
+            assert!((a - o).abs() <= 1e-9 * o.abs().max(1.0), "{what}, t {t:?}, past {past}: [{i}] {a} against {o} before");
+        }
+    }
+}
+
+/// `moved_along_equals_whole` at each of `tods` on the day starting at game time `day` (in order, as the clock runs),
+/// and midway to the next one a millisecond or more on, with the reads before T-4281 too.
+fn sweep(b: &Boarding, svc: &Service, day: f64, tods: &[f64], what: &str) {
+    for (i, &s) in tods.iter().enumerate() {
+        moved_along_equals_whole(b, svc, day + s, what, false);
+        let next = tods.get(i + 1).copied().unwrap_or(DAY);
+        if next - s > 1e-3 {
+            moved_along_equals_whole(b, svc, day + (s + next) / 2.0, what, true);
+        }
+    }
+}
+
+/// Every time of day a line's figures can change at, and a bit either side: each departure at each stop in any of its
+/// accounts, each train going out of service, the periods' starts, midnight.
+fn every_change(b: &Boarding, svc: &Service, l: u32) -> Vec<f64> {
+    let mut out = vec![0.0, f64::next_up(0.0), f64::next_down(DAY)];
+    for (a, _) in PERIOD_HOURS {
+        let s = a * 3600.0;
+        out.extend([s.next_down(), s, s.next_up()]);
+    }
+    let ls = &svc.lines[l as usize];
+    for acc in b.accounts.iter().filter_map(|d| d.get(l as usize).and_then(|a| a.as_ref())) {
+        for (r, ra) in acc.runs.iter().enumerate() {
+            for k in 0..ra.n {
+                let ts = ra.stop_times(k);
+                for i in 0..ts.ord.len() {
+                    let s = ts.at(i);
+                    out.extend([s.next_down(), s, s.next_up()]);
+                }
+            }
+            for (j, &d) in ra.deps.iter().enumerate() {
+                let lv = ra.levels[j] as usize;
+                let span = ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0);
+                let s = (d + span).rem_euclid(DAY);
+                out.extend([s.next_down(), s, s.next_up()]);
+            }
+        }
+    }
+    out.retain(|&s| (0.0..DAY).contains(&s));
+    out.sort_by(f64::total_cmp);
+    out.dedup();
+    out
+}
+
+/// T-4281: while the clock runs, each ask moves the kept blocks on by the departures passed since the last ask: equal to
+/// a whole read at every departure and a bit either side, over a Friday into a Saturday (the weekend's account), on a
+/// line whose peak trains leave riders behind and turn riders away, and after the clock goes back, the service changes
+/// ahead of its account and the account is worked out again.
+#[test]
+fn past_day_moved_along_equals_a_whole_read() {
+    let (mut w, l) = setup(10.0);
+    let mut b = Boarding::default();
+    b.set_riders_day(&riders(l, [20000.0 * X, 2000.0 * X, 2000.0 * X, 2000.0 * X, 100.0 * X]), 0);
+    b.set_riders_day(&riders(l, [3000.0 * X, 9000.0 * X, 2000.0 * X, 2000.0 * X, 100.0 * X]), 1);
+    b.ensure(&w.net, &w.svc);
+    let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
+    assert!(ra.queues.kept() > 0 && ra.load.iter().any(|&v| v as f64 >= w.svc.lines[l as usize].crush() - 0.5), "the line leaves riders behind");
+    let tods = every_change(&b, &w.svc, l);
+    let fri = 5.0 * DAY;
+    assert_eq!((day_kind_at(fri + 3600.0), day_kind_at(fri + DAY + 3600.0)), (0, 1));
+    for d in [fri, fri + DAY] {
+        sweep(&b, &w.svc, d, &tods, "Friday into Saturday");
+    }
+    let t = fri + 9.0 * 3600.0;
+    moved_along_equals_whole(&b, &w.svc, t, "the clock back a day", true);
+    moved_along_equals_whole(&b, &w.svc, t - 60.0, "the clock back a minute", true);
+    set_headway(&mut w, l, [20.0, 10.0, 5.0]);
+    moved_along_equals_whole(&b, &w.svc, t + 60.0, "the service changed, its account not yet", true);
+    b.ensure(&w.net, &w.svc);
+    moved_along_equals_whole(&b, &w.svc, t + 120.0, "the account worked out again", true);
+    let after: Vec<f64> = every_change(&b, &w.svc, l).into_iter().filter(|&s| s > 9.0 * 3600.0 + 120.0).collect();
+    sweep(&b, &w.svc, fri, &after, "after the account was worked out again");
+}
+
+/// T-4281: a line on London's time (five hours ahead of the game clock) moved along through its own midnight, and a
+/// line's opening day (its platforms empty before its first trains, T-680 and T-848) and the two days after it, while
+/// the opening is within a day of the window, equal a whole read.
+#[test]
+fn past_day_moved_along_through_local_midnight_and_an_opening() {
+    use crate::track::frame::FrameKind;
+    use crate::track::localtime::TimeZones;
+    use crate::track::net::Network;
+    use crate::track::world::TrackWorld;
+    let mut net = Network::new_in(FrameKind::Merc, -73.985, 40.758, true);
+    net.time_zones = TimeZones::from_table(&[-5.0, 120_000.0, -73.985, 40.758, -5.0, -79.3832, 43.6534, -5.0]);
+    let mut w = TrackWorld::new(net);
+    let k = 1.0 / (51.51f64 * std::f64::consts::PI / 180.0).cos();
+    let (x, y) = w.net.frame().from_lonlat(-0.12, 51.51);
+    let (x, y) = (quant(x), quant(y));
+    let s: Vec<u32> = (0..3).map(|i| node(&mut w, x + i as f64 * 3000.0 * k, y, 0)).collect();
+    edge(&mut w, s[0], s[1], &[], 0).unwrap();
+    edge(&mut w, s[1], s[2], &[], 0).unwrap();
+    for &n in &s {
+        station(&mut w, n, 200);
+    }
+    let lon = line(&mut w, &s, [10.0, 5.0, 2.5]);
+    assert_eq!(w.svc.lines[lon as usize].shift, 5.0 * 3600.0);
+    let mut b = Boarding::default();
+    b.set_riders_day(&riders(lon, [20000.0 * X, 2000.0 * X, 2000.0 * X, 2000.0 * X, 100.0 * X]), 0);
+    b.ensure(&w.net, &w.svc);
+    // London's midnight is 19:00 on the game clock: every change from 15:00 to 23:00 game time
+    let mut game: Vec<f64> = every_change(&b, &w.svc, lon).iter().map(|&s| s - 5.0 * 3600.0).map(|g| if g < 0.0 { g + DAY } else { g }).filter(|g| (15.0 * 3600.0..23.0 * 3600.0).contains(g)).collect();
+    game.sort_by(f64::total_cmp);
+    sweep(&b, &w.svc, 3.0 * DAY, &game, "London's midnight");
+
+    // T-848's line: 11 stops 10 km apart, its trains set at 07:20 on day 2
+    let mut w = world();
+    let n = 11;
+    let s: Vec<u32> = (0..n).map(|i| node(&mut w, i as f64 * 10_000.0, 0.0, 0)).collect();
+    for i in 1..n {
+        edge(&mut w, s[i - 1], s[i], &[], 0).unwrap();
+    }
+    for &x in &s {
+        station(&mut w, x, 200);
+    }
+    let l = line(&mut w, &s, [0.0, 0.0, 0.0]);
+    let mut v = vec![1.0; PERIODS];
+    v.extend([l as f32, n as f32]);
+    // full trains at every stop all day: a trip over midnight takes in its stops after midnight first, and its fullest
+    // is the first of the full ones by stop (the tie rule in `Run::advance`)
+    for p in 0..PERIODS {
+        let x = 20000.0 * X * (PERIOD_HOURS[p].1 - PERIOD_HOURS[p].0) as f32;
+        v.extend((0..2 * n).map(|k| if k % n + 1 < n { x } else { 0.0 }));
+        v.extend((0..2 * n).map(|k| if k % n > 0 { x } else { 0.0 }));
+    }
+    let mut b = Boarding::default();
+    b.set_riders(&v);
+    let now = 2.0 * DAY + 7.0 * 3600.0 + 1200.0;
+    let before = w.svc.before_edit(&w.net, now);
+    set_headway(&mut w, l, [4.0, 4.0, 4.0]);
+    w.svc.note_changes(&w.net, &before, now);
+    b.ensure(&w.net, &w.svc);
+    assert!(b.accounts[0][l as usize].as_ref().unwrap().runs[0].open.is_finite());
+    let tods = every_change(&b, &w.svc, l);
+    // the opening is within a day of the window until day 5
+    for d in [2.0, 3.0, 4.0, 5.0] {
+        sweep(&b, &w.svc, d * DAY, &tods, "an opening");
+    }
+}

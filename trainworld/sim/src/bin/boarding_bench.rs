@@ -138,6 +138,10 @@ fn main() {
         std::hint::black_box(a.boarding_hour((clock / 3600.0).floor() * 3600.0));
     }
     eprintln!("  today {today_ms:.1} ms a call, the hour's platforms {:.1} ms a call", t.elapsed().as_secs_f64() * 1e2);
+    // T-4281: each line's past day and today so far, kept once read
+    for (k, b) in a.boarding_mem().into_iter().filter(|x| x.0.ends_with(" kept")) {
+        eprintln!("  {k} after the readouts: {:.2} MB", b as f64 / 1e6);
+    }
     if let Ok(path) = std::env::var("TW_DUMP") {
         let mut s = String::new();
         for &(id, _) in &lines {
