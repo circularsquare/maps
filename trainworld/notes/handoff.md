@@ -1,28 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 13:03 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 13:20 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 0. Usage: Gemini's weekly quota ran out 10:24 UTC 11-25, back about 12-01 03:30 UTC (ask a-2026-11-25-6: upgrade?);
-   meanwhile reviews and small code go to Sonnet. Stay light; review findings go to fix agents unread. Overnight: 2-4 agents.
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Asia: later clicks 144-360 ms
-   (T-4281 s2), network build 190 ms (T-4153 s7), page 27 ms placed / 45 removed (T-4150 s2, T-4284 s3, all landed).
-   NYC "slower" was noise (T-4293: trees' lone samples are cold first edits; edit_bench now compares first with first).
-   Owed on a quiet machine: `node trainworld/tools/edit_bench.mjs --save asia,nyc --baseline` on master (11-24's has no stop rows). Next: T-4291 (rows and
-   post: landed 755b1278f, Asia 144 to 59 ms; review21: 3 lows; modelpass (Opus,
-   T-4299 + those lows) running; T-4300 next); T-4214 done (D-E landed 4a2ab2d37, review22 fixed in T-4311); T-4294 done (a bench
-   fault). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
-   Not edit speed: T-4080 bus stop names done and archived (081dcb203); connections are T-4083.
-2. T-4220 stages 6-7 landed together 4ffd70e86 (NYC edited line's figures 17 s instead of 53); review20 fixed (T-4307,
-   landed); review22 fixed (T-4311, landed). aside8 (Opus) on stage 8 (Use more
-   cores on); 9 after.
-   rowsdelta (Opus, T-4291). Briefs: my scratch <agent>/brief.md.
-3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1-2, T-4283, T-4220 s4-5, T-4285,
-   T-4153 s7, T-4080 s3 + review fixes, T-4293, T-4284 s3, T-4297. 8800 = d56bb9594, smoke passed 13:1x.
-4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
-5. Not edit speed: drawmem (Opus, T-4187: draw caches on phones, exact). Next: T-4199 s2, T-3160, T-4306 (P3).
+   meanwhile reviews (a fresh Sonnet reviewer per risky landing, read-only) and small code go to Sonnet. Review
+   findings go to a fix agent unread. Briefs: maps-13's scratch <agent>/brief.md (copy a recent one as a template).
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097, notes/repeats.md). Asia now: later clicks 144-360 ms
+   (T-4281), network build 190 ms (T-4153 s7), page 27 ms placed / 45 removed, worker rows 59 ms (T-4291). Running:
+   modelpass (Opus, T-4299: the track model's whole passes per state, about 15 ms, plus review21's three lows on
+   T-4291). Then T-4300 (complex numbering, about 7 ms; shares clockDemand.ts with modelpass, so after it). On her yes
+   to a-2026-11-25-4: T-4272 rest (train work before each answer). Don't ask her to test edit speed yet (her 11-24).
+2. Owed on a quiet machine: `node trainworld/tools/edit_bench.mjs --save asia,nyc --baseline` on master (11-24's
+   baseline has no stop rows; trees' lone samples are cold first edits, T-4293).
+3. Running, not edit speed: aside8 (Opus, T-4220 stage 8: quick figures with Use more cores on; stage 9, measuring on
+   her Asia save, after); drawmem (Opus, T-4187: draw caches on phones, exact). Each landing gets a Sonnet review.
+4. 8800 = d56bb9594 = master, smoke passed 13:1x; every review finding from tonight is fixed on master. T-4275 roads
+   hotfix ready when she says publish (never ask). Waiting on her: asks.py list.
+5. Next starts: T-4199 s2 (corridors tree, stage 1 unlanded), T-3160 (phone memory), T-4306 (P3), T-3742 after she asks.
 6. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
@@ -56,4 +53,5 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   settlestop (settlefix working in it).
 - reserve_cores: maps-3e's retry loop (task b19u3mylb; powershell PID 29592) follows the ledger's cap and pins Gemini
   runners; it dies with maps-3e's tab: the successor starts its own (a second copy waits on the mutex).
+- notes/T-4214.md: stage A's section (stationclick, 11-25) sits uncommitted, not ours; keep it.
 - `land` (not `finish`) conflicts on changelog/next.json when the tree has items: use `finish` (it moves them).
