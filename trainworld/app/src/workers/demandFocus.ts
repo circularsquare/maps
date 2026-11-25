@@ -83,6 +83,18 @@ export class FocusPool {
     this.workers.forEach((w, i) => w.postMessage(this.n > 1 && i < this.n ? { ...msg, part: [i, this.n] } : msg));
   }
 
+  /** T-4220: the snapshot generation its first solving worker holds (`aside`'s `gen`) */
+  private asideGen = -1;
+
+  /** T-4220 stage 3: a side job's plan to the first solving worker, the snapshot with it unless that worker holds its
+   * generation already */
+  aside(msg: Extract<ToDemand, { kind: "aside" }>) {
+    if (this.ended) return;
+    const { shown: _, ...bare } = msg;
+    this.workers[0].postMessage(this.asideGen === msg.gen ? bare : msg);
+    this.asideGen = msg.gen;
+  }
+
   /** the next round may start (the solve is sent with the barrier) */
   go(version: number, round: number) {
     for (const w of this.workers.slice(0, this.n)) w.postMessage({ kind: "go", version, round, group: 0 } satisfies ToDemand);

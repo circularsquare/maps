@@ -38,7 +38,7 @@ import { addIntercity } from "./demandSums";
 import { CRUSH_SCALE, FARE_SCALE, LOAD_SCALE, addInto, stepOf, toF32 } from "./exactSum";
 import { VIEW_TOLERANCE, sameView } from "./demandView";
 import { cellBox, cityReach, clusterView, reachView, splitClusters, type Box, type Cluster, type PopView } from "./demandClusters";
-import { SNAP_MAX_BYTES, ShownPop, type SnapIds, type SnapOn, type SnapPeriod, type SnapPop, type Snapshot } from "./demandShown";
+import { ASIDE_MAX_ZONES, SNAP_MAX_BYTES, ShownPop, type AsideAnswer, type AsideRefusal, type AsideShown, type SnapFares, type SnapIds, type SnapOn, type SnapPeriod, type SnapPop, type Snapshot } from "./demandShown";
 
 /** WASM started (and the market opened if `init` carried it): `open` and solves wait for this. */
 let started = false;
@@ -140,7 +140,7 @@ let stageRound = -1;
 /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
  * answered the moment it has, before it starts the next round */
 let waiting: Query[] = [];
-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "endLocal" | "close" | "corridorsAgain" | "rows" | "debugPanic" | "periods" | "first" | "view" | "loads" | "zones" }>;
+type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "endLocal" | "close" | "corridorsAgain" | "rows" | "debugPanic" | "periods" | "first" | "view" | "loads" | "zones" | "aside" }>;
 /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
  * for it) */
 let go = { version: -1, group: 0, round: 0 };
@@ -276,6 +276,11 @@ const heldQ = new Map<Population, string[]>();
 /** T-1609: a period solved alone against its cluster's frozen loads (`heldQ` psig plus this), which
  * a later solve may refine against again but never keeps as a whole solve's */
 const LOCAL = "~local"; // i18n-ignore
+/** T-3512: the periods of `periods` (bits) every population of c holds solved for c's `psig`, in a whole solve or a
+ * local one (`LOCAL`); a stand-in from the snapshot (`ShownPop.psig`) */
+function keptIn(c: JobCluster<Reader>, periods: readonly number[]): number {
+  return periods.reduce((m, q) => (c.pops.every((p) => { const h = p instanceof ShownPop ? p.psig(q) : heldQ.get(p)?.[q]; return p.solved_mask() & (1 << q) && (h === c.psig[q] || h === c.psig[q] + LOCAL); }) ? m | (1 << q) : m), 0);
+}
 /** T-1609: per cluster `sig` and period, the last whole solve's loads before the capacity fit over
  * those after it, where they differ (route nodes of the whole network, the three blocks as `step`'s
  * totals): the frozen loads a local refine crowds on are the populations' capped loads times this */
@@ -349,7 +354,7 @@ function localOrder(lines: ArrayLike<number>, a: NetIds | null, b: NetIds | null
 const marketNet = new Map<Population, NetIds>();
 /** T-2188: a network's fare settings the market prices by: the fares, and each line's own multiples and distance fare
  * and each station's fare zone, by id */
-type FareOf = { fare: string; lines: Map<string, string>; stations: Map<string, number> };
+type FareOf = SnapFares;
 function fareOf(n: DemandNetwork, ids: NetIds): FareOf {
   const lines = new Map<string, string>(), stations = new Map<string, number>();
   let o = 0;
@@ -571,7 +576,7 @@ function snapPops(cs: JobCluster[]): { pops: SnapPop[]; transfer: ArrayBuffer[];
   for (const c of cs) for (const p of c.pops) {
     const shown = shownIntact.get(p), m = p.solved_mask();
     if (!shown || !m) continue;
-    const market = p instanceof IntercityApi, on: SnapOn = { zones: shown.zones, marketKey: shown.marketKey };
+    const market = p instanceof IntercityApi, fares = marketFare.get(p), on: SnapOn = { zones: shown.zones, marketKey: shown.marketKey, ...(fares ? { fares } : {}) };
     if (market) {
       const g = marketOn.get(p);
       if (!g || !lastNet) continue;
@@ -608,9 +613,9 @@ function snapPops(cs: JobCluster[]): { pops: SnapPop[]; transfer: ArrayBuffer[];
  * T-4220 stage 2: a stand-in for a population snapshot `p` holds, for a cluster's readers. Its trail, boardings, fare
  * multiples and passes go where those look for a population's (`trail`, `boards`, `popScales`, `passByRound`, all weak);
  * `keptOf` reads its period signatures from it (`psig`). Never put in a strong map of the worker's (`held`, `heldQ`,
- * `cityOn`, `marketOn`), which outlive a job. (Exported only until the side job calls it: notes/T-4220.md, stage 3.)
+ * `cityOn`, `marketOn`), which outlive a job.
  */
-export function standIn(p: SnapPop): ShownPop {
+function standIn(p: SnapPop): ShownPop {
   const s = new ShownPop(p), t: (Float32Array | undefined)[][] = [], b = boardsOf(s), pass: number[][] = [];
   p.periods.forEach((at, q) => {
     if (!at) return;
@@ -623,6 +628,105 @@ export function standIn(p: SnapPop): ShownPop {
   passByRound.set(s, pass);
   if (p.scales) popScales.set(s, p.scales);
   return s;
+}
+/** T-4220 stage 3: the snapshot of the figures on screen the last side job was planned against, each population's
+ * stand-in by `kind:key`, made once per generation the page sends */
+let asideSnap: { gen: number; shown: AsideShown; stand: Map<string, ShownPop> } | null = null;
+/** T-4220 stage 3: a cluster of the side job's network, every population its stand-in on its view of that network, and
+ * `fresh` those whose view is not their shown one's (in `zones`): stage 4 solves the real ones of those in the periods
+ * `solve`, crowded on the others' trails, and reads every stand-in in the periods `keep` (bits) */
+type AsideCluster = { c: JobCluster<ShownPop>; fresh: ShownPop[]; zones: CityId[]; keep: number; solve: number[]; ms: number | null };
+const EVERY_PERIOD = PERIODS.map((_, q) => q);
+
+/**
+ * T-4220 stage 3: the side job's plan for network `msg.net` against the figures on screen (notes/T-4220.md, "The pick"
+ * 4 and 7). The network's clusters are made as the main pool makes them, from the snapshot's zones in its order, its
+ * market zones and flags, and the page's `rounds` (all in `psig`); each population is its stand-in, a city's on its view
+ * of the network, the market's on its route nodes carried there (`nodeMap`, as `remapKept`). Fresh: a city population
+ * whose view is not `sameView` its shown one. Kept: a period every population holds for the cluster's `psig`, over every
+ * period (one focus worker solves them all). Reads none of this worker's solve state; sets the frame, as `run` does.
+ */
+function planAside(msg: Extract<ToDemand, { kind: "aside" }>): { answer: AsideAnswer; clusters: AsideCluster[] } {
+  const t0 = performance.now();
+  const no = (refused: AsideRefusal, why: string) => ({ answer: { refused, why, fresh: [], clusters: [], periods: [], ms: null, planMs: performance.now() - t0 }, clusters: [] });
+  if (msg.shown) asideSnap = { gen: msg.gen, shown: msg.shown, stand: new Map(msg.shown.pops.map((p) => [`${p.kind}:${p.key}`, standIn(p)])) };
+  const snap = asideSnap;
+  if (!snap || snap.gen !== msg.gen) return no("snapshot", `generation ${msg.gen} not held`); // i18n-ignore
+  const { shown, stand } = snap;
+  // (the main pool's solve of this network covers other zones: a line into a new zone, which it solves with the barrier)
+  const was = new Set(shown.zones.map((z) => z.id)), now = new Set(msg.cities);
+  const opened = msg.cities.filter((id) => !was.has(id)), closed = [...was].filter((id) => !now.has(id));
+  if (opened.length || closed.length) return no("zones", [opened.length ? `opened ${opened.join(",")}` : "", closed.length ? `closed ${closed.join(",")}` : ""].filter(Boolean).join("; "));
+  const n = msg.net;
+  setWorldFrame(n.frame);
+  const ids: NetIds = { lines: msg.ids.lines, stations: msg.ids.stations, lineN: n.lineN, stops: n.stops, tph: n.tph, times: n.times };
+  const { flags } = shown, zoneOf = new Map(shown.zones.map((z) => [z.id, z]));
+  const split = splitClusters(n, shown.zones.map(({ id, box }) => ({ id, box })), shown.marketZones, msg.rounds, flags.whole, flags.oneMarket);
+  const maps = new Map<SnapIds, Int32Array>();
+  const out: (AsideCluster & { missing: string[] })[] = [];
+  for (const c of split) {
+    const whole = clusterView(c), pops: ShownPop[] = [], views = new Map<ShownPop, PopView>(), missing: string[] = [];
+    // (every population the main pool's cluster has, in its `pops` order: the figures add up in it)
+    const take = (key: string) => { const s = stand.get(key); if (s) pops.push(s); else missing.push(key); return s; };
+    for (const id of c.cities) {
+      const s = take(`commute:${id}`);
+      if (s) views.set(s, flags.wide || flags.whole ? whole : reachView(n, c, cityReach(n, id, zoneOf.get(id)!.box)));
+    }
+    for (const z of shown.zones) {
+      if (!z.day || !c.cities.includes(z.id)) continue;
+      const s = take(`everyday:${z.id}`), a = stand.get(`commute:${z.id}`);
+      if (s && a) views.set(s, views.get(a)!);
+    }
+    const part = c.market ? take(`market:${c.marketKey}`) ?? null : null;
+    if (part?.on?.nodes && part.on.ids) {
+      let m = maps.get(part.on.ids);
+      if (!m) maps.set(part.on.ids, (m = nodeMap(part.on.ids, ids)));
+      const map = m;
+      views.set(part, { ...whole, nodeGlobal: part.on.nodes.map((v) => (v === NONE || map[v] < 0 ? NONE : map[v])), pads: new Uint32Array(0) });
+    } else if (part) missing.push("the market's periods solved on different networks"); // i18n-ignore
+    // (a city whose periods were solved on views that differ, `on` null, is fresh: in a period kept, `psig` says its
+    // inputs there are as they were, so its figures there still stand)
+    const fresh = pops.filter((p) => p !== part && (!p.on?.view || !views.has(p) || !sameView(p.on.view, views.get(p)!)));
+    if (!fresh.length && !missing.length) continue;
+    out.push({ c: { ...c, pops, solveOrder: pops.slice(), reuse: 0, part, views }, fresh, zones: c.cities.filter((id) => fresh.some((p) => p.key === id)), keep: 0, solve: [], ms: null, missing });
+  }
+  const who = (p: ShownPop) => (p.kind === "market" ? "the market" : `${p.kind} ${p.key}`); // i18n-ignore
+  // fares first: an edit of them touches every population, so it reads as that rather than as what follows from it.
+  // Against what stays frozen, as the main pool's local stage tests: the market part, else a city not touched
+  let fareNow: FareOf | undefined;
+  for (const { c, fresh } of out) {
+    const kept = (c.part instanceof ShownPop ? c.part : null) ?? c.pops.find((p) => !fresh.includes(p));
+    if (!kept) continue; // (nothing frozen: the cluster is solved whole)
+    const f = kept.on?.fares;
+    if (!f || faresMoved(f, (fareNow ??= fareOf(n, ids)))) return no("fares", f ? `moved since ${who(kept)} was solved` : `none held for ${who(kept)}`); // i18n-ignore
+  }
+  const freshZones = [...new Set(out.flatMap((a) => a.zones))].sort((x, y) => CITY_ORDER.get(x)! - CITY_ORDER.get(y)!);
+  if (freshZones.length > ASIDE_MAX_ZONES) return no("many", `${freshZones.length} zones fresh: ${freshZones.slice(0, 8).join(",")}`); // i18n-ignore
+  for (const a of out) {
+    const { c } = a;
+    if (a.missing.length) return no("partial", `${a.missing.slice(0, 3).join(", ")} not held`); // i18n-ignore
+    const frozen = c.pops.filter((p) => !a.fresh.includes(p));
+    for (const p of frozen) {
+      if (!p.on) return no("partial", `${who(p)}: its periods solved on different networks`); // i18n-ignore
+      if (p.on.zones.join() !== c.cities.join() || p.on.marketKey !== c.marketKey) return no("clusters", `${who(p)} solved with ${p.on.zones.join(",")}${p.on.marketKey !== c.marketKey ? " and another market key" : ""}, now with ${c.cities.join(",")}`); // i18n-ignore
+    }
+    a.keep = msg.fresh ? 0 : keptIn(c, EVERY_PERIOD);
+    a.solve = EVERY_PERIOD.filter((q) => !(a.keep & (1 << q)));
+    // (a frozen population's loads as each round was priced on, never the ended loads: T-1733's 6-16%)
+    for (const q of a.solve) for (const p of frozen) {
+      const t = trail.get(p)?.[q], nr = viewOf(c, p).nodeGlobal.length;
+      for (let r = 0; r <= msg.rounds; r++) if (t?.[r]?.length !== 3 * nr) return no("trail", `${who(p)} has no full trail of period ${q}`); // i18n-ignore
+    }
+    a.ms = a.solve.reduce<number | null>((sum, q) => { const m = passPrior(a.fresh, q, "all", msg.rounds); return sum === null || m === null ? null : sum + m; }, 0);
+  }
+  const answer: AsideAnswer = {
+    fresh: freshZones.map((id) => ({ id, level: zoneOf.get(id)!.level })),
+    clusters: out.map((a) => ({ zones: a.c.cities, fresh: a.zones, keep: a.keep, solve: a.solve, ms: a.ms })),
+    periods: EVERY_PERIOD.filter((q) => out.some((a) => a.solve.includes(q))),
+    ms: out.reduce<number | null>((sum, a) => (sum === null || a.ms === null ? null : sum + a.ms), 0),
+    planMs: performance.now() - t0,
+  };
+  return { answer, clusters: out.map(({ missing: _, ...a }) => a) };
 }
 const boxes = new Map<CityId, Box>();
 /** T-3373 B: the boxes of the city packs in `cityInfo`, for the page to send to workers not holding them */
@@ -1261,6 +1365,11 @@ onmessage = (e: MessageEvent<ToDemand>) => {
   } else if (msg.kind === "loads") {
     inbox.set(`${msg.version}:${msg.cluster}:${msg.period}:${msg.round}${msg.from === undefined ? "" : `:${msg.from}`}`, msg.loads);
     wake?.();
+  } else if (msg.kind === "aside") {
+    // T-4220 stage 3: planned at once, between a solve's populations if one runs here (it reads none of its state)
+    let plan: AsideAnswer;
+    try { plan = planAside(msg).answer; } catch (err) { failed(err); return; }
+    sendMessage({ kind: "asidePlan", version: msg.version, gen: msg.gen, plan });
   } else if (msg.kind === "zones") {
     zonesIn.set(msg.version, msg.zones);
     for (const v of zonesIn.keys()) if (v < msg.version) zonesIn.delete(v);
@@ -2243,7 +2352,7 @@ async function run() {
       // T-3512: this worker's periods every population of c holds from c's last solve on these inputs: a local solve
       // keeps them as they are, and the whole solve after it keeps those held from a whole solve (setUp's test; T-2188:
       // one held from a local solve, `LOCAL`, it solves)
-      const keptOf = (c: JobCluster<Reader>) => (job.fresh ? 0 : mine.reduce((m, q) => (c.pops.every((p) => { const h = p instanceof ShownPop ? p.psig(q) : heldQ.get(p)?.[q]; return p.solved_mask() & (1 << q) && (h === c.psig[q] || h === c.psig[q] + LOCAL); }) ? m | (1 << q) : m), 0));
+      const keptOf = (c: JobCluster<Reader>) => (job.fresh ? 0 : keptIn(c, mine));
       // T-3512: the share of c's changed periods' passes that `fresh` took in c's last whole solve here (-1: not known)
       const freshShare = (c: JobCluster, fresh: Population[]) => {
         const kept = keptOf(c);
@@ -3120,7 +3229,7 @@ async function run() {
       const sendShown = (cs: JobCluster[], again: boolean): boolean => {
         const t0 = performance.now(), s = snapPops(cs), mz = !again && !s.over && zones ? zones.slice() : null;
         const snap: Snapshot = { pops: s.pops, periods: mine.slice(), bytes: s.bytes, ms: 0, ...(s.over ? { over: true } : {}), ...(again ? { again } : {
-          zones: jobLocal.map(([id, a]) => ({ id, box: boxes.get(id) ?? null, level: a.level() })), marketZones: mz, flags: { whole: !!job.whole, oneMarket: !!job.oneMarket, wide: !!job.wide },
+          zones: jobLocal.map(([id, a]) => ({ id, box: boxes.get(id) ?? null, level: a.level(), day: everyday.has(id) })), marketZones: mz, flags: { whole: !!job.whole, oneMarket: !!job.oneMarket, wide: !!job.wide },
         }) };
         snap.ms = performance.now() - t0;
         sendMessage({ kind: "shown", version: job.version, snap }, mz ? [...s.transfer, mz.buffer as ArrayBuffer] : s.transfer);

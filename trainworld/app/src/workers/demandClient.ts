@@ -80,7 +80,7 @@ import {
   demandHeld,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
-import { SNAP_MAX_BYTES, ShownStore, type Snapshot } from "./demandShown";
+import { SNAP_MAX_BYTES, ShownStore, type AsideAnswer, type Snapshot } from "./demandShown";
 import { tracing } from "../game/freezeTrace";
 import { demandNote, startDemandTrace } from "./demandTrace";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad, smallDevice } from "./deviceMemory";
@@ -3337,6 +3337,36 @@ class DemandClient {
     if (demandView.peek()?.final) memoryResolve.value = true;
   }
 
+  /**
+   * T-4220 stage 3, dev server only (`?debug=1`, `twDemand.client.asidePlan()`): the side job's plan for the newest
+   * network against the snapshot held, logged and returned. Asked of a focus pool of its own, ended after: `fpool` is
+   * T-2605's, and no side job is started yet (stage 6).
+   */
+  async asidePlan(): Promise<AsideAnswer | null> {
+    if (!import.meta.env.DEV) return null;
+    const svc = this.latest(), shown = this.shownSnap.forAside();
+    // i18n-ignore
+    if (!svc || !shown) { console.info("T4220 aside plan: no snapshot held"); return null; }
+    const { net, ids } = packService(svc), cities = CITIES.map((c) => c.id).filter((id) => this.opened.has(id)), version = this.version;
+    let pool: FocusPool | null = null;
+    const t0 = performance.now();
+    const plan = await new Promise<AsideAnswer | null>((done) => {
+      pool = new FocusPool(1, [periodsOfWorker(0, 1)], {
+        message: (_, msg) => { if (msg.kind === "asidePlan") done(msg.plan); },
+        opened: () => {},
+        failed: (why) => { console.warn(`T4220 aside plan: ${why}`); done(null); }, // i18n-ignore
+      }, this.viewMsg(), false);
+      pool.aside({ kind: "aside", version, net, ids, rounds: ROUNDS, cities, gen: shown.gen, shown, ...(perfOff("periods") ? { fresh: true } : {}) });
+    });
+    (pool as FocusPool | null)?.end();
+    if (!plan) return null;
+    const qs = (m: number) => PERIODS.map((_, q) => q).filter((q) => m & (1 << q)).join(",") || "none";
+    const s = (ms: number | null) => (ms === null ? "not known" : `${(ms / 1000).toFixed(1)} s`); // i18n-ignore
+    // i18n-ignore
+    console.info(plan.refused ? `T4220 aside plan v${version} (snapshot ${shown.pops.length} populations): refused, ${plan.refused}: ${plan.why}` : `T4220 aside plan v${version} (snapshot ${shown.pops.length} populations): ${plan.fresh.length ? plan.fresh.map((z) => `${z.id}${z.level === LOD_COARSE ? " coarse" : ""}`).join(",") : "no zone"} fresh of ${shown.zones.length}; ${plan.clusters.map((c) => `cluster ${c.zones.slice(0, 6).join(",")}${c.zones.length > 6 ? ",..." : ""}: periods ${c.solve.join(",") || "none"} solved, ${qs(c.keep)} kept, ${s(c.ms)}`).join("; ") || "nothing to solve"}; expected ${s(plan.ms)}; planned in ${Math.round(plan.planMs)} ms, answered in ${Math.round(performance.now() - t0)} ms`);
+    return plan;
+  }
+
   /** T-1174, dev server only (`?debug=1`, `twDemand.client.debugPanic`): make worker `i` panic. */
   debugPanic(i = 0, when: "now" | "solve" = "now", oom = false) {
     if (import.meta.env.DEV) this.workers[i]?.postMessage({ kind: "debugPanic", when, oom } satisfies ToDemand);
@@ -4057,6 +4087,7 @@ class DemandClient {
     markStep();
     if (msg.kind === "unit") { this.inUnit[i] = { round: msg.round, period: msg.period, at: performance.now() }; return; }
     if (msg.kind === "shown") return this.shownIn(i, msg.version, msg.snap);
+    if (msg.kind === "asidePlan") return; // (a focus pool's alone)
     if (msg.kind === "result") this.inUnit[i] = null;
     if (msg.kind === "loads" && msg.to) {
       // T-3373 B: on to the cluster's other holders

@@ -3,7 +3,7 @@ import type { CorridorBook, CorridorRows } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
 import type { FareArea } from "../game/fareCurve";
 import { PERIODS } from "../game/periods";
-import type { Snapshot } from "./demandShown";
+import type { AsideAnswer, AsideShown, Snapshot } from "./demandShown";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
 export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 16 } as const;
@@ -289,6 +289,10 @@ export type ToDemand =
   | { kind: "periods"; periods: number[]; groups?: number[][]; markets?: number[]; share?: boolean }
   /** T-1607: a period's loads from the worker solving the other side of it (`FromDemand` "loads") */
   | Loads
+  /** T-4220 stage 3, a focus worker: plan a side job for `net` (the newest network) against the figures on screen,
+   * answered by `asidePlan`. `cities`: the zones the main pool's solve of `net` covers, in the registry's order; `gen`:
+   * the snapshot's (`shown`, sent when the worker does not hold that generation); `fresh` as `solve.fresh` */
+  | { kind: "aside"; version: number; net: DemandNetwork; ids: { lines: string[]; stations: string[] }; rounds: number; cities: CityId[]; gen: number; shown?: AsideShown; fresh?: boolean }
   | Zones
   // Queries for the demand views (T-078, notes/T-078.md, `QUERY_KINDS`), answered between periods.
   // `id` matches the reply; `version` is the solve they ask about: a worker that has moved on to a
@@ -528,6 +532,8 @@ export type FromDemand =
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[]; localHeld?: boolean }
   /** T-4220 (`solve.snap`): what this worker holds of the figures on screen, before the whole solve sets any of it up */
   | { kind: "shown"; version: number; snap: Snapshot }
+  /** T-4220 stage 3: a side job's plan (`aside`) */
+  | { kind: "asidePlan"; version: number; gen: number; plan: AsideAnswer }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119);
    * `local` (T-2532): an edit's local result's, which its whole solve's of the same round replace */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null; day?: number; local?: true }
