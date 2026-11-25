@@ -87,3 +87,45 @@ fn changes_are_listed_once_and_only_what_an_edit_touched() {
     assert_eq!(a.take_name_changes(), vec![ALL]);
     assert_eq!(a.take_changed_lines(), vec![ALL]);
 }
+
+/// T-4231: a weekend edit lists every line whose weekend setting changed, even where its weekend
+/// counts round up to the same numbers as weekdays (so its weekend rates and phases do not move).
+#[test]
+fn weekend_edits_list_lines_whose_rates_do_not_move() {
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.take_changed_lines();
+    a.set_route_tangent(true);
+    for (k, y) in [0.0, 5000.0].into_iter().enumerate() {
+        route(&mut a, 0.0, y, 6000.0, y);
+        for (j, x) in [500.0, 3000.0, 5500.0].into_iter().enumerate() {
+            let e = (0..a.w.net.edge_count() as u32)
+                .filter(|&e| a.w.net.edge_ok(e) && !a.w.net.edge_crossover[e as usize])
+                .min_by(|&p, &q| a.w.net.project(p, x, y).1.total_cmp(&a.w.net.project(q, x, y).1))
+                .unwrap();
+            assert_eq!(a.add_station(2, e, x, y, 120, format!("S{k}{j}")), 0, "{}", a.issues());
+        }
+    }
+    let st = station_nodes(&a);
+    let by_name = |a: &TrackApi, n: &str| *st.iter().find(|&&k| a.w.net.node_name[k as usize] == n).unwrap();
+    let first: Vec<u32> = (0..3).map(|j| by_name(&a, &format!("S0{j}"))).collect();
+    let second: Vec<u32> = (0..3).map(|j| by_name(&a, &format!("S1{j}"))).collect();
+    let (big, small) = (a.new_line_id(), a.new_line_id());
+    assert_eq!(a.set_line_with_trains(big, &first, 6, 4, 2, 30.0, 180.0, 0, 0, "Big".into()), 0, "{}", a.issues());
+    // 70% of 3/2/1 rounds up to 3/2/1: weekend rates and phases stay as on weekdays
+    assert_eq!(a.set_line_with_trains(small, &second, 3, 2, 1, 30.0, 180.0, 0, 0, "Small".into()), 0, "{}", a.issues());
+    a.take_changed_lines();
+
+    // Apply to all lines at 70%: both lines must be listed, and again on undo
+    assert_eq!(a.set_weekend_share_all(70), 0, "{}", a.issues());
+    let lines = a.take_changed_lines();
+    assert!(lines.contains(&big) && lines.contains(&small), "apply all missed a line: {lines:?}");
+    assert_eq!(a.undo(), 0);
+    let lines = a.take_changed_lines();
+    assert!(lines.contains(&big) && lines.contains(&small), "undo missed a line: {lines:?}");
+
+    // Single-line share and manual counts matching weekdays still list the line
+    assert_eq!(a.set_line_weekend_share(small, 70), 0, "{}", a.issues());
+    assert_eq!(a.take_changed_lines(), vec![small]);
+    assert_eq!(a.set_line_weekend_counts(small, 3, 2, 1), 0, "{}", a.issues());
+    assert_eq!(a.take_changed_lines(), vec![small]);
+}

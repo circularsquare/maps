@@ -2221,6 +2221,9 @@ impl TrackWorld {
     fn note_lines(&mut self, t: &super::net::Touch, der: &super::net::Derived) {
         let lines = self.lines_touched(t, der);
         self.svc.note_changed(&lines);
+        // T-4231: a line whose weekend setting changed (percent or manual flag) must be re-read even
+        // when its weekend rates and phases stay the same (e.g. small fleets whose rounded-up counts match).
+        self.svc.note_changed(&t.weekend);
     }
 
     fn apply_and_derive(&mut self, op: Op) -> Result<(Op, super::net::Touch, super::net::Derived), Vec<Issue>> {
