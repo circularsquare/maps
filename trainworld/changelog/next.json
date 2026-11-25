@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c035",
+      "text": "named bus stops: rename one in its panel, and the name shows in the stop's hover and its line's stop list",
+      "edited": "added names for bus stops, set in the stop's panel like a station's",
+      "hidden": false,
+      "task": "T-4080",
+      "by": "busnames3",
+      "at": "2026-11-25T10:13:50Z",
+      "rev": 2,
+      "area": "track",
+      "fix": false,
+      "changed": "2026-11-25T10:14:48Z"
+    },
+    {
       "id": "c034",
       "text": "placing several stations in a row responds faster on big networks",
       "edited": "stations placed one after another on big networks show up about 5x faster",
