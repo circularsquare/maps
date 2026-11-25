@@ -1125,6 +1125,9 @@ export type FromClock =
   /** T-284: the cash and today's ledger as fares land and running costs drain, several times a wall
    * second while the clock runs; the rest of MoneyState comes with "money" when an hour turns */
   | { kind: "cash"; cash: number; today: MoneyState["ledger"][number]; hour: HourLedger; regions: RegionNow }
+  /** T-4272: trains bought for a click's services once they were worked out, after its answer: what they cost, US$M, and
+   * what they were ("train" when of several kinds), for the page's notice */
+  | { kind: "trainsBought"; cost: number; vehicle: import("../game/vehicle").Vehicle }
   /** a game was loaded or started (`from`), at game time `clock`; a failed import says why in
    * `error` and changes nothing;
    * `frame`: the game now in the worker; `converted`: its save was in an older frame and was

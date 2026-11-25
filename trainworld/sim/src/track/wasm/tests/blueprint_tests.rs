@@ -116,6 +116,8 @@ fn blueprint_construct_run() {
     let cash = a.cash();
     let e0 = a.edges_info()[0] as u32;
     assert_eq!(a.delete_edge(e0), 0, "{}", a.issues());
+    // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+    a.settle_owed();
     assert_eq!(a.cash(), cash);
     assert!(a.trips(8.0 * 3600.0).is_empty());
 }

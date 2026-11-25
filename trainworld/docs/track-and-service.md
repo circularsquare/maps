@@ -1864,7 +1864,11 @@ money: it pays, and the cash may go below zero (the cash is not shown; docs/ui-p
   their busiest schedule's trains times their cars. Any edit that makes them need more than are
   owned (a construct that starts a line, a larger allocation, a headway that needs more trains,
   longer trains, or an undo) buys the difference with it, and is refused with nothing changed if
-  construction plus trains is more than the cash. Cars are never sold or refunded: those a line no
+  construction plus trains is more than the cash. Placing a station, removing one and deleting track are never
+  refused for money (Anita 11-25, T-4272): they build nothing, and the cars they make the running lines need are
+  bought right after their answer, once their services are worked out, with any the running lines lacked before it,
+  the cash going below zero if short as a loan payment can, and a notice says what they cost (an undo of one buys only
+  what it needs then, as any undo). Cars are never sold or refunded: those a line no
   longer needs stay in the depot as spares and serve the next line that grows, any line's (T-631).
   Loaded fleets count as already paid. The Money tab lists cars owned, needed and spare (and the
   high-speed cars owned and spare, once there are any); the line

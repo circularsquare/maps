@@ -429,7 +429,9 @@ impl TrackApi {
             let Some((ops, (nn, ne), st)) = self.pieces_ops(edges, stations, plain) else {
                 return self.refuse(Issue::NoSuchEdge { edge: edges.first().copied().unwrap_or(u32::MAX) });
             };
-            let r = self.run(Op::Batch(ops));
+            // T-4272: as a delete clicked on the map, answered from what it touches; a removal builds nothing, so the
+            // re-pricing of the track a removed station joins back into one piece is no purchase
+            let r = self.run_answered(Op::Batch(ops));
             if r == 0 {
                 self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
                 self.kept.note_extras();

@@ -512,6 +512,8 @@ impl TrackApi {
     /// Cost rows for Construct all, including new cars after using the spare fleet.
     /// Infrastructure rows come from the same pricing intervals as track_cost.
     pub fn blueprint_cost_items(&mut self) -> Vec<f64> {
+        // (T-4272: the trains owed services need are bought first, as on the whole path, so the quote prices only its own)
+        self.pay_owed();
         let mut rows = self.w.net.blueprint_cost_items();
         if !rows.is_empty() && self.w.svc.lines.iter().any(|s| s.ok && !s.running) {
             let net = &self.w.net;

@@ -314,6 +314,8 @@ fn a_connection_to_a_removed_station_ends_and_its_unnamed_stop_goes_with_it() {
     assert_eq!(a.connect_keep(u32::MAX, m[1], m[2], 0, n, 0.0, 0.0), 0, "{}", a.issues());
     let k = a.last_keep();
     assert_eq!(a.remove_station(n), 0, "{}", a.issues());
+    // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+    a.settle_owed();
     assert!(a.keep_links(k).is_empty() && a.station_keeps(n).is_empty());
     // the bare stop goes in the same edit; an undo brings it and the connection back
     assert_eq!(keep_of(&a, b, m[1], m[2]), u32::MAX);

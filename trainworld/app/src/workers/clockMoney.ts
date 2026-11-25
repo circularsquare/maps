@@ -6,6 +6,7 @@ import { loanDrain } from "../game/loan";
 import { foldLedger } from "./ledgerFold";
 import { kindOfIn, rowOfDay, rowOfIn, type DayRow } from "../game/holidayCalendar";
 import { type KindOf } from "../game/moneyTiming";
+import type { Vehicle } from "../game/vehicle";
 import { newDay, newHour, addEntry, type DayLedger, type HourLedger, type SaveHeader } from "./saveFile";
 import type { MoneyState, RegionNow } from "./protocol";
 import { saves } from "./slots";
@@ -70,6 +71,27 @@ export function hourEntry(hour: number): HourLedger {
   return entryIn(hourLedger, (d) => d.hour, hour, () => newHour(hour), LEDGER_HOURS);
 }
 
+/** T-4272: the trains bought once what answered edits owed was worked out (`TrackApi::take_trains_bought`: line and US$M
+ * each, line -1 for none), on the ledger now: each line's in the regions its trains run in (`lineShares`), the rest in "";
+ * and told to the page, which says what they cost (no answer carries it: the click was answered before) and names the
+ * vehicle bought */
+export function bookTrains(bought: ArrayLike<number>) {
+  const vehicle = BOUGHT_VEHICLE[api!.take_bought_vehicle()] ?? "train";
+  if (!bought.length) return;
+  const d = dayEntry(ledgerDay(moneyNow())), e = hourEntry(Math.floor(moneyNow() / 3600));
+  let cost = 0;
+  for (let i = 0; i + 1 < bought.length; i += 2) {
+    const v = bought[i + 1], shares = bought[i] >= 0 ? lineShares.get(bought[i])?.run : undefined;
+    cost += v;
+    d.trains += v;
+    e.trains += v;
+    if (shares?.length) for (const [z, s] of shares) for (const x of regionEntries(z, d.day, e.hour)) x.trains += v * s;
+    else for (const x of regionEntries("", d.day, e.hour)) x.trains += v;
+  }
+  if (cost > 0) send({ kind: "trainsBought", cost, vehicle });
+}
+/** `TrackApi::take_bought_vehicle`'s codes */
+const BOUGHT_VEHICLE: readonly (Vehicle | undefined)[] = [undefined, "train", "tram", "bus", "boat"];
 /** T-531: a region's entries for game day `day` and hour `hour`, made if missing. */
 export function regionEntries(zone: string, day: number, hour: number): [DayLedger, HourLedger] {
   let r = regions.get(zone);

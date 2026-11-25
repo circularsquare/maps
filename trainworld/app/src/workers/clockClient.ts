@@ -31,6 +31,7 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { modelStopped } from "../game/modelStopped";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
+import { money } from "../game/format";
 import { ascendingBy, checkPatches, freshNow, noteSide, noteStep, sameBuilt } from "../game/worldDiff";
 import { timed } from "../game/stepTimes";
 import type { LineInput, LineStats, RowFigs, StationInput, StopOnly, TrackEdge, TrackNode, WorldView } from "../game/types";
@@ -1868,6 +1869,9 @@ export class ClockClient {
       case "cash": // T-284: fares landing, running costs draining
         liveMoney.value = { cash: msg.cash, today: msg.today, hour: msg.hour, regions: msg.regions };
         pendingTaken(this.orderOf(msg), { money: true });
+        break;
+      case "trainsBought":
+        say(t("clockClient.trainsBought", { vehicle: msg.vehicle, price: money(msg.cost * 1e6) }));
         break;
       case "opened":
         // T-975: a save older than its start zone shows the realm it opens in

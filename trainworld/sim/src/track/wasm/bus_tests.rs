@@ -466,6 +466,25 @@ fn a_built_bus() -> (TrackApi, u32) {
     (a, b)
 }
 
+/// T-4272: the cars a station click's services buy are named by what they are: a bus line already short of buses
+/// buys buses once the click's services are worked out, and the notice's noun says buses, though no line's own buses rose.
+#[test]
+fn buses_bought_after_a_click_are_named_as_buses() {
+    let (mut a, _) = a_built_bus();
+    let ends = [0.0, 0.0, 0.0, 3000.0, -1.0, 0.0, 0.0, 6000.0, 3000.0, -1.0];
+    assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+    let e = a.route_pieces[0];
+    // (short only now: the route, a whole edit, would buy what the lines lack)
+    let need = cars_needed(&a.w);
+    assert!(need[2] > 0, "the bus line runs buses");
+    a.fleet[2] = need[2] - 1;
+    assert_eq!(a.add_station(2, e, 3000.0, 3000.0, 200, String::new()), 0, "{}", a.issues());
+    assert!(a.owes(), "answered before its services");
+    assert!(a.settle_owed());
+    assert_eq!(a.fleet[2], need[2], "the bus bought");
+    assert_eq!(a.take_bought_vehicle(), 3, "buses");
+}
+
 #[test]
 fn a_bus_lines_rate_follows_its_buses() {
     let (mut a, b) = a_built_bus();
@@ -914,6 +933,8 @@ fn a_brt_station_serves_brt_lines_only() {
     assert!(a.w.net.node_road[s as usize] == Some(0.0) && at(&a, b).is_some() && at(&a, p).is_none());
     // removed as any station a bus passes is (its node with it): the line stops there no more
     assert_eq!(a.remove_station(s), 0, "{}", a.issues());
+    // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+    a.settle_owed();
     assert!(a.brt_stations().is_empty() && !a.w.net.node_ok(s) && at(&a, b).is_none());
 }
 
@@ -1072,6 +1093,8 @@ fn a_busway_costs_runs_buses_at_its_speed_and_saves() {
     assert!(a.w.net.edge_kind[ways[0] as usize] == TrackKind::Busway && (time(&a, plain) - want).abs() < 1e-6);
     // deleting it takes the speed away
     assert_eq!(a.delete_pieces(&ways, &[]), 0, "{}", a.issues());
+    // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+    a.settle_owed();
     assert!((time(&a, plain) - before).abs() < 1e-6, "{}", time(&a, plain));
 }
 

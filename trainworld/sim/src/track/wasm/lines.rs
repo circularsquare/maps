@@ -1170,6 +1170,7 @@ impl TrackApi {
         self.step(true)
     }
     pub(super) fn step(&mut self, redo: bool) -> u32 {
+        self.pay_owed();
         let fleet = self.fleet;
         let at = self.edit_start();
         let before = self.w.svc.before_edit(&self.w.net, at);

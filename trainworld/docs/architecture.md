@@ -137,12 +137,13 @@ Web first, so it can be shared as a link.
   else sees the model ahead of its state and an edit's answer comes with the first world holding it (the page splits a
   paid edit's charge by it). **Every message kind has its answer to a waiting follow-up** [T-4272, T-4281]: the page's
   money figures (income, points, region shares, a charge's split) and the clock pass it; demand's riders and transfers,
-  and every question but the previews' and the delete question's (a panel's figures, a quote: the page reads them
-  against the world it holds), wait, in order, until no follow-up waits (`keepUntilState`; a question from a game no
+  the page's new hour (`epoch`, whose trips follow that state), and every question but the previews' and the delete
+  question's (a panel's figures, a quote: the page reads them against the world it holds), wait, in order, until no
+  follow-up waits (`keepUntilState`; a question from a game no
   longer in hand is answered empty, riders are dropped); trips from a timer (the boarding account's last step, the
   next hour) go after its state (`whenNoneWaits`); a held follow-up keeps its own passes and the rest end it; anything
-  else runs it first, as above (the page's `epoch` each game hour while the clock runs, a state sent from outside, an edit
-  5 s after the follow-up's first, a question that is no pass under a hold). Each edit's answer names the blocks run
+  else runs it first, as above (a state sent from outside, an edit 5 s after the follow-up's first, a question that is
+  no pass under a hold). Each edit's answer names the blocks run
   whole since the edit before it and what ran each (`ms["forced:…"]`). **An edit goes ahead** [T-3803]: one of
   the main path that changes no service, coming before or between the pieces of a follow-up that
   builds the network (`goesAhead`, `standAside`). An edit in that follow-up still waiting for a world
@@ -204,22 +205,26 @@ Web first, so it can be shared as a link.
   everything was touched (a load), past the cap, or with the draw anchor moving.
   A station or delete clicked on the map (`edit`'s "click") whose edit was patched and cost nothing is answered right
   after its word; any other edit once `world` holds it, as before; a paid one after its state, whose world its money's
-  split is read off. **A station or a track delete is applied from what it touches** [T-4272]: the track model applies
-  and checks it where it lands (the edit, its geometry, crossings and platforms) and charges it no construction (it
-  builds nothing: a split's re-pricing is no purchase); where it can move no running line's trains (no running line
-  uses the track, nodes or stations it touched, nor a bus line or way back it reached, and it made no crossing:
-  `TrackWorld::moves_no_train`), and that set no line's trains, rates, rows or twin (a twin made or let go goes the
-  whole way: `sets_rates`), the trains needed are those needed already, so it goes on the undo history and is
-  answered at once, its services owed (`commit_local`). The follow-up's first piece works them out for every such
-  edit since (`settle_owed`), as one edit making all their changes, before the state reads them (`?patch=check` names a
-  state built while any are owed), and drops the drawn
-  lines they moved; any other commit, an undo or redo and a trial with services work them out first (a refused one
-  leaves what they touched for that piece), a save does, and autosave waits for them. Rows sent to answer an edit
-  before its state hold them. An undo puts back exactly
-  what the services moved for the first edit of such a run; a later one's undo settles as an edit does. A station on
-  a running line's track, or a delete of track a running line uses, goes the whole way before its answer: the trains
-  it makes headway lines need are paid at the click, and only the settle over every line sharing that track says how
-  many. The client's rows the worker's changes are posted against are never patched. **Clicks wait for the
+  split is read off. **A station or a track delete is applied from what it touches** [T-4272]: a station placed or removed,
+  or track deleted, is applied and checked where it lands (the edit, its geometry, crossings and platforms), charged no
+  construction (it builds nothing: a split's or a join's re-pricing is no purchase) and never refused for money; it goes
+  on the undo history and is answered at once, its services owed (`commit_local`). The follow-up's first piece works
+  them out before the state reads them as the whole path would have (`settle_owed`; `?patch=check` names a state built
+  while any are owed): the trains running then noted
+  where they are, the trains the services need bought whatever the cash, which may go below zero as a loan payment
+  can (Anita 11-25), with any the running lines lacked before the click (the click raises no fleet), booked by the
+  lines whose trains rose and told to the page for its notice (`trainsBought`); then the drawn lines they moved are
+  dropped and the boarding account's lines they moved stepped, whichever path worked them out (`StateAsk.board`). Any
+  other edit, an undo or redo, a trial with services and a reload for the water work them out first in the track model
+  (`TrackApi::pay_owed`), a save does, and autosave waits for them and for the cars so bought to be booked
+  (`owed_left`). One that can move a running line's trains (a running line uses the track, nodes or stations it touched, or a
+  bus line or way back it reached, or it made or removed a crossing: `moves_no_train`) is owed alone, what was owed
+  before it worked out first, so its services, trains and undo are the whole path's edit for edit; those that move
+  none are owed together, the first one's undo putting back exactly what their services moved and a later one's
+  settling as an edit does. One that sets a line's trains, rates, rows or twin goes the whole way at the click
+  (`sets_rates`), unrefused too. Rows sent to answer an edit before its state hold them, and the patch leaves out a
+  line whose owed services could say otherwise of it (broken or mended, a partly built line's run, its return run's
+  stops). The client's rows the worker's changes are posted against are never patched. **Clicks wait for the
   map** [T-4214]: a click on the map with a tool (a tap, the touch bar's confirm) made while an edit sent before it is not
   yet in the map the tools pick on waits, the tool's tag showing the spinner after 0.3 s, and is carried out at the same
   map spot once every such edit's patch is laid on or its network set (the same message order; game/pending.ts

@@ -264,11 +264,25 @@ struct Rates {
 }
 
 /// T-4272: what the edits answered from what they touch (`commit_local`) left for their services: what they touched and
-/// derived, put together, and the undo entry of the first of them, which takes what the services moved.
+/// derived, put together, and the undo entry of the first of them, which takes what the services moved. `trains`: the edit
+/// can move a running line's trains; such an edit is owed alone, so its services, the trains bought for them and its undo
+/// are the whole path's, edit for edit.
 struct Owed {
     t: super::net::Touch,
     der: super::net::Derived,
     first: usize,
+    trains: bool,
+}
+
+/// T-4272: how an edit answered from what it touches went (`commit_local`).
+pub enum Local {
+    /// applied and checked, its services owed
+    Answered(EditResult),
+    /// it sets a line's trains, rates, rows or twin: it goes the whole way (nothing changed here)
+    Whole,
+    /// what is owed can move running trains, or this edit can while others are owed: they are worked out first (nothing
+    /// changed here)
+    SettleFirst,
 }
 
 /// What an edit reads of the services before it applies (`commit_with`), or before owed services are worked out
@@ -1834,7 +1848,7 @@ impl TrackWorld {
     /// `apply_paid` with the track's charge set by `price` on the edited network, not the rise in
     /// built value (T-3059: a rebuild pays the full new price).
     pub fn apply_priced(&mut self, op: Op, cash: f64, final_: bool, extra: &dyn Fn(&TrackWorld) -> f64, price: Option<&dyn Fn(&TrackWorld) -> f64>) -> Result<(EditResult, f64), ChargeError> {
-        self.settle_owed();
+        self.settle_owed_here();
         let phases = self.phases();
         let (mut r, inv) = self.commit(op).map_err(ChargeError::Issues)?;
         if let Some(price) = price {
@@ -1867,7 +1881,7 @@ impl TrackWorld {
     /// that edit's undo takes it back and its redo makes it again (the load's cap lowering, which can
     /// come after the first edits). Without, it stays whatever the history does (a removed fare area).
     pub fn apply_off_history(&mut self, op: Op, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64, with_edit: bool) -> Result<(EditResult, f64), ChargeError> {
-        self.settle_owed();
+        self.settle_owed_here();
         let phases = self.phases();
         let again = op.clone();
         // T-3655: the game's own edit pays only for the trains it adds: a save running more than its
@@ -1891,7 +1905,7 @@ impl TrackWorld {
     /// Undo (or redo) and pay `extra` as `apply_paid` does: undoing a line's removal can need
     /// trains again. Nothing changes if it is refused.
     pub fn step_paid(&mut self, redo: bool, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Option<Result<(EditResult, f64), ChargeError>> {
-        self.settle_owed();
+        self.settle_owed_here();
         let phases = self.phases();
         Some(match self.step(redo)? {
             Ok(mut r) => {
@@ -1920,7 +1934,7 @@ impl TrackWorld {
     /// ones made since and makes them all again after the edit, on the state they were made on.
     /// The result covers all of it. On problems nothing changes.
     fn step(&mut self, redo: bool) -> Option<Result<EditResult, Vec<Issue>>> {
-        self.settle_owed();
+        self.settle_owed_here();
         if !redo {
             self.drop_done_steps();
         }
@@ -2025,7 +2039,7 @@ impl TrackWorld {
     /// the variants are put back after, and worked out again only where the rollback left what
     /// they read otherwise.
     pub fn trial_with<T>(&mut self, op: Op, inspect: impl FnOnce(&TrackWorld) -> T) -> Result<(EditResult, T), Vec<Issue>> {
-        self.settle_owed();
+        self.settle_owed_here();
         let phases = self.phases();
         // T-4149: the rollback leaves every line where it ran, so the lines the trial moved are not the next edit's
         let (moved, spans) = (self.svc.moved.clone(), self.svc.spans.clone());
@@ -2094,7 +2108,7 @@ impl TrackWorld {
     /// `commit_with` with services, and what it moved (`Rates`) for its inverse to put back;
     /// `back`: what this commit itself puts back (an undo, redo or rollback).
     fn commit_recorded(&mut self, op: Op, checked: bool, back: Option<&Rates>) -> Result<(EditResult, (Op, Rates)), Vec<Issue>> {
-        self.settle_owed();
+        self.settle_owed_here();
         let before = self.line_rates_all();
         let solved = self.net.rest_solved;
         self.restore_to = back.and_then(|b| self.found(b, &before));
@@ -2107,32 +2121,35 @@ impl TrackWorld {
 
     /// T-4272: an edit answered from what it touches (a station placed or track deleted on the map). Applied and checked
     /// where it lands; it constructs nothing, so it charges for no construction (`run_free`'s price: the pieces a split
-    /// or a join re-prices are no purchase). Where it can move no running line's trains (`moves_no_train`), the trains
-    /// the running lines need are those they need now (`extra`), so it is answered here, on the undo history, and its
-    /// services are owed (`settle_owed`). Ok(None): it could move trains, so it goes the whole way; nothing changed here.
-    pub fn commit_local(&mut self, op: Op, cash: f64, extra: &dyn Fn(&TrackWorld) -> f64) -> Result<Option<(EditResult, f64)>, ChargeError> {
+    /// or a join re-prices are no purchase), and the trains its services need are bought once they are worked out
+    /// (`settle_owed`), whatever the cash, so it is never refused for money. It goes on the undo history at once. One
+    /// that sets a line's trains, rates, rows or twin goes the whole way (`Local::Whole`), since what its services and
+    /// its undo read must be read before it applies. One that can move a running line's trains is owed alone: what is
+    /// owed is worked out before it, or before the next edit (`Local::SettleFirst`).
+    pub fn commit_local(&mut self, op: Op) -> Result<Local, Vec<Issue>> {
+        if self.owed.as_ref().is_some_and(|o| o.trains) {
+            return Ok(Local::SettleFirst);
+        }
         let (cost_before, built_before) = self.net.total_and_built_cost();
-        let (inv, t, der) = self.apply_checked(op, true).map_err(ChargeError::Issues)?;
-        // (one that set a line's trains or rates goes the whole way too, `sets_rates`)
-        if !t.schedules.is_empty() || !t.weekend.is_empty() || sets_rates(&self.net, &inv) || !self.moves_no_train(&t, &der) {
+        let (inv, t, der) = self.apply_checked(op, true)?;
+        if !t.schedules.is_empty() || !t.weekend.is_empty() || sets_rates(&self.net, &inv) {
             let _ = self.apply_and_derive(inv);
-            return Ok(None);
+            return Ok(Local::Whole);
+        }
+        let trains = !self.moves_no_train(&t, &der);
+        if trains && self.owed.is_some() {
+            let _ = self.apply_and_derive(inv);
+            return Ok(Local::SettleFirst);
         }
         let (cost_after, built_after) = self.net.total_and_built_cost();
-        let charge = 0.0;
-        let x = extra(self);
-        if x > 1e-9 && x > cash + 1e-6 {
-            let _ = self.apply_and_derive(inv);
-            return Err(ChargeError::Money { need: x, have: cash });
-        }
         self.undo.push(Back { step: (inv, Rates { unknown: true, ..Default::default() }), again: None });
         self.redo.clear();
         let dirty = Dirty { edges: der.edges.clone(), nodes: der.nodes.clone(), crossings: der.crossings.clone(), ..Default::default() };
         match &mut self.owed {
             Some(o) => merge_derived(&mut o.t, &mut o.der, t, der),
-            None => self.owed = Some(Owed { t, der, first: self.undo.len() - 1 }),
+            None => self.owed = Some(Owed { t, der, first: self.undo.len() - 1, trains }),
         }
-        Ok(Some((EditResult { dirty, cost_before, cost_after, built_before, built_after, charge }, x)))
+        Ok(Local::Answered(EditResult { dirty, cost_before, cost_after, built_before, built_after, charge: 0.0 }))
     }
 
     /// T-4272: whether edits answered from what they touch still owe their services.
@@ -2140,10 +2157,25 @@ impl TrackWorld {
         self.owed.is_some()
     }
 
+    /// T-4272: whether what is owed can move a running line's trains.
+    pub fn owes_trains(&self) -> bool {
+        self.owed.as_ref().is_some_and(|o| o.trains)
+    }
+
+    /// T-4272: `settle_owed` where a commit, an undo or redo or a trial reaches owed services its caller did not work out
+    /// first (`TrackApi::pay_owed`): what they touched still reaches the caller (`take_owed_done`), but no train running
+    /// now is noted, so only services that move none may be left to this.
+    fn settle_owed_here(&mut self) {
+        debug_assert!(!self.owed.as_ref().is_some_and(|o| o.trains), "owed services that move running trains reached a commit");
+        self.settle_owed();
+    }
+
     /// T-4272: the services edits answered from what they touch left owed (`commit_local`), worked out as for one edit
     /// making all their changes; what they touched waits in `take_owed_done`. The first of them on the undo history
-    /// takes back what the services moved; an undo of a later one settles as an edit does. Run before anything that
-    /// reads or changes the services (another commit, an undo or redo, a trial with services). Whether any were owed.
+    /// takes back what the services moved; an undo of a later one settles as an edit does (only edits that move no
+    /// running line's trains are owed together). The track model's caller runs it before anything that reads or changes
+    /// the services, with the trains running now noted and the trains the services need bought
+    /// (`TrackApi::pay_owed`). Whether any were owed.
     pub fn settle_owed(&mut self) -> bool {
         let Some(o) = self.owed.take() else { return false };
         let before = self.line_rates_all();

@@ -236,6 +236,10 @@ impl TrackApi {
         }
     }
     /// The line's path, `edge << 1 | direction`, first stop to last.
+    /// T-4272: whether line `id` is broken on the track as it is now (`lines_info`'s flag, read alone).
+    pub fn line_broken(&self, id: u32) -> bool {
+        self.w.net.line_ok(id) && self.w.net.line_broken[id as usize]
+    }
     pub fn line_path(&self, id: u32) -> Vec<u32> {
         if self.w.net.line_ok(id) {
             self.w.net.line_path(id).to_vec()

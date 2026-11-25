@@ -38,7 +38,7 @@ import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldE
 import { putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
 import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, forgetDrawn, game, hex, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
-import { gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
+import { bookTrains, gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
 import { afterLoadPanic, downTold, EDIT_UNDONE, kept, putDownTold, isPanic, keep, MODEL_DOWN, MODEL_RESTORED, modelDown, newModel, openFailReason, panicAfterEdit, panicLater, panicNow, panicOnLoad, panicWhy, putModelDown, putPanicAfterEdit, putPanicOnLoad, recover, SAVE_PANIC } from "./clockPanic";
 import { wordAfter, wordBefore } from "./clockWord";
 import { mapPatch, patchMiss } from "./clockPatch";
@@ -490,7 +490,10 @@ function rowsSoon() {
  * the drawn pieces are to move: the full state answers them) */
 function rowsOwed() {
   const f = followUp;
-  if (!api || modelDown || !f?.waiting.some((w) => w.owes()) || !sendRows()) return;
+  if (!api || modelDown || !f?.waiting.some((w) => w.owes())) return;
+  // T-4339: these rows answer edits, so they hold what answered edits owe (as `standAside`'s do)
+  settleOwedNow();
+  if (!sendRows()) return;
   for (const w of f.waiting) w.worldSent();
 }
 // T-4272: demand's results kept while a follow-up waited go into the queue, in order, once none waits; one from a game no
@@ -801,8 +804,9 @@ function failAnswer(msg: ToClock, issues: string[] = ["Internal"]) { // i18n-ign
 
 /** Once a wall second: autosave when due. */
 function tick() {
-  // T-4272: nor while answered edits owe their services (an edit's follow-up works them out within a few tasks)
-  if (!api || modelDown || api.owes()) return;
+  // T-4272: nor while answered edits owe their services, or the cars bought for them are off the ledger (an edit's
+  // follow-up works them out and books them within a few tasks)
+  if (!api || modelDown || api.owed_left()) return;
   if (saves.dirty && Date.now() - saves.savedAt >= AUTOSAVE_MS) void autosave();
   else if (saves.cloudRetryAt && Date.now() >= saves.cloudRetryAt) { saves.cloudRetryAt = Date.now() + CLOUD_RETRY_MS; void cloudUp(saves.activeSlot); }
   noteUnsaved();
@@ -1026,6 +1030,8 @@ async function handleMessage(msg: ToClock) {
     const before = wordBefore(api, msg.op, posted);
     api.take_service_moved(); // T-4249: what the previews asked meanwhile moved and put back does not count
     const applied = apply(msg.op);
+    // T-4272: trains owed services needed, bought as the edit began (their services worked out first)
+    bookTrains(api.take_trains_bought());
     const moved = api.take_service_moved();
     const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = applied;
     refusedLast = r === 0 ? -1 : msg.seq;

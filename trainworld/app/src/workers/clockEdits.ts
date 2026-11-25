@@ -14,6 +14,7 @@ import { saves } from "./slots";
 import { addPorts, newLineRows, newLineWeekends, nextBusName, renameBusStop, renameComplex, renameStation, renameStations } from "./clockDemand";
 import { cityFares, setLineFare } from "./clockFares";
 import { stateRows } from "./clockMain";
+import { settleOwedNow } from "./clockFollowUp";
 import { gameNow } from "./clockMoney";
 import { api, fares, freezeCheckpoint, hiddenLines, lineShapes, loanOp, newLineCars, newLineHeadway, newLineWeekendShare, putFares, putNewLineCars, putNewLineWeekendShare, send, TRAM_MAX_CARS, TRAM_NEW_CARS } from "./clockState";
 
@@ -55,8 +56,11 @@ export type Applied = { r: number; fault?: number[]; line?: number; node?: numbe
 
 /** T-1899: a new line's stop edit (`edit`), its trains then high-speed when more than half its
  * route's km is high-speed track and ordinary otherwise. The type is set before the stops in the undo
- * history (an undo takes the stop back first), and nothing the first try bought is kept. */
+ * history (an undo takes the stop back first), and nothing the first try bought is kept. T-4272: what answered edits
+ * owe is worked out and paid before the cash and fleets are read, as the follow-up would, so putting them back keeps the
+ * trains those services bought. */
 function withAutoFast(a: TrackApi, line: number, edit: () => number): Applied {
+  settleOwedNow();
   const was = [a.cash(), a.fleet(), a.fleet_fast()] as const;
   const back = () => (a.undo(), a.set_cash(was[0]), a.set_fleet(was[1]), a.set_fleet_fast(was[2]));
   const r = edit();

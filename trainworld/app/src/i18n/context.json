@@ -540,6 +540,7 @@
   "clockClient.updating": "Status tag while the network is updated after an edit that takes long.",
   "clockClient.loaded": "Notice after a game file is opened. day: the game day, 406.",
   "clockClient.newGame": "Notice after a new game starts.",
+  "clockClient.trainsBought": "Notice a moment after placing a station or deleting track that makes running lines need more vehicles, which are bought then (the cash may go below zero). vehicle: train, tram, bus or boat (what was bought; train when of several kinds). price: \"$12.4M\".",
   "clockClient.saved": "Notice after saving by hand. time: the clock time in the browser's style, \"3:45 PM\".",
   "clockClient.leaveView": "Question before a network the player is viewing from Community (never saved) gives way to another game or the main menu. name: the network's name, \"Guangzhou - kanocifer\".",
   "clockClient.leaveViewYes": "Button on that question: goes on to the other game, losing the viewed network.",

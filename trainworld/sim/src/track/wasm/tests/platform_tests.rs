@@ -284,6 +284,8 @@ fn a_station_across_a_built_joint_keeps_the_line_its_trains_and_the_money() {
         let e = edge_under(&a, 960.0, 0.0);
         assert_eq!(a.preview_station(2, e, 960.0, 0.0, 200), 0, "{levels:?}: {}", a.issues());
         assert_eq!(a.add_station(2, e, 960.0, 0.0, 200, "Middle".into()), 0, "{levels:?}: {}", a.issues());
+        // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+        a.settle_owed();
         assert!(!a.w.net.node_ok(joint), "{levels:?}: the joint went");
         let now = live_edges(&a);
         assert_eq!(now.len(), 2, "joined, then split at the station");

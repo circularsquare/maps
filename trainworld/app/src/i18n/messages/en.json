@@ -533,6 +533,7 @@
   "clockClient.updating": "Updating the network",
   "clockClient.loaded": "Game loaded, day {day}.",
   "clockClient.newGame": "New game started.",
+  "clockClient.trainsBought": "{vehicle, select, tram {More trams bought for {price}.} bus {More buses bought for {price}.} boat {More boats bought for {price}.} other {More trains bought for {price}.}}",
   "clockClient.saved": "Saved {time}",
   "clockClient.leaveView": "{name} won't be saved.",
   "clockClient.leaveViewYes": "Leave without saving",

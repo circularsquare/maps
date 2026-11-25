@@ -1008,25 +1008,17 @@ impl TrackApi {
     /// An edit, or with `dry` a trial of it: checked as a real edit is, then rolled back. T-4249: the
     /// trial leaves the services as they are (`trial_light`): rebuilding them (every bus line and way
     /// back on a station, the settle, the retiming) made a station's ghost check cost more than the
-    /// edit itself (25-80 ms on her Asia save), and a click arriving meanwhile waited behind it. The
-    /// lie: a station that makes running lines need more trains than the cash can buy shows as
-    /// placeable, and its click is refused for the money.
+    /// edit itself (25-80 ms on her Asia save), and a click arriving meanwhile waited behind it.
+    /// T-4272: no money check, as the click is never refused for money (`run_answered`).
     pub(super) fn attempt(&mut self, op: Op, dry: bool) -> u32 {
         if !dry {
             return self.run_answered(op);
         }
-        let fleet = self.fleet;
-        match self.w.trial_light(op, |w| trains_to_buy(w, fleet)) {
-            Ok((r, trains)) => {
+        match self.w.trial_light(op, |_| ()) {
+            Ok((r, ())) => {
                 self.station_cost = r.cost_after - r.cost_before;
-                // T-4272: as the click, which constructs nothing (`run_answered`): only trains
-                let need = trains;
                 self.issues.clear();
                 self.money_short = None;
-                if need > 1e-9 && need > self.spendable() + 1e-6 {
-                    self.money_short = Some((need, self.cash));
-                    return 1;
-                }
                 0
             }
             Err(e) => self.done(Err(e)),

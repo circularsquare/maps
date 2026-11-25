@@ -264,6 +264,8 @@ fn a_one_way_pair_starts_no_queue_of_its_own() {
         for stage in ["built", "a station on the north leg"] {
             if stage != "built" {
                 station_near(&mut a, 3000.0, 250.0);
+                // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+                a.settle_owed();
                 cap_matches_global(&a, &format!("{what}, {stage}"));
             }
             for &l in &lines {

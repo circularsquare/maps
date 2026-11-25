@@ -6,8 +6,8 @@ import { forget, game, localOf, sendRows, sendState, shiftFrom, stateSteps } fro
 import { isPanic, MODEL_RESTORED, modelDown, recover } from "./clockPanic";
 import { diagramOn, postDiagram, posted } from "./clockPost";
 import { api, messages, packLngLat, putMessages, putTiming, send, timing } from "./clockState";
-import { loadsOwed, scheduleSnapshot } from "./clockDemand";
-import { gameNow } from "./clockMoney";
+import { editSteps, loadsOwed, scheduleSnapshot } from "./clockDemand";
+import { bookTrains, gameNow } from "./clockMoney";
 
 // T-1039: previews the main thread no longer wants (`previewStale`, sent outside the queue) are
 // answered `stale` without being worked out, or while they wait for masks
@@ -49,8 +49,9 @@ interface Held { until: number; stops: boolean }
  * count or a name, T-229, T-3803); `name`, a name edit's (the schematic's graph sent again; a full state after all if
  * the drawn pieces are to move to a new anchor); `service`, a train count's (its lead is timed from `at`, when the edit
  * began); `effectiveAt`, the moment it takes effect (T-1071); `trips` sent with it; `early`, taken after the next
- * paint (`ghostFirst`, T-1407) */
-interface StateAsk { net: boolean; name: boolean; service: boolean; effectiveAt?: number; trips: boolean; early: boolean; at: number }
+ * paint (`ghostFirst`, T-1407); `board`, owed services that moved lines were worked out (T-4272: here, by `standAside`,
+ * by the stop clicks' rows or by a save), so the boarding account's lines they moved are stepped before the state */
+interface StateAsk { net: boolean; name: boolean; service: boolean; effectiveAt?: number; trips: boolean; early: boolean; at: number; board?: boolean }
 /** T-3803: an edit in a follow-up that still waits for a world holding it (its answer, or the page's split of an early
  * answer's money, which it reads off the next state it takes), and what to do once one went */
 export interface Waiting { owes: () => boolean; worldSent: () => void }
@@ -91,7 +92,7 @@ export function later(ask: StateAsk, after: () => void, fail: () => void, waitin
 function joined(a: FollowUp, b: FollowUp): FollowUp {
   const x = a.ask, y = b.ask;
   return {
-    ask: { net: x.net || y.net, name: x.name || y.name, service: x.service || y.service, effectiveAt: y.effectiveAt ?? x.effectiveAt, trips: x.trips || y.trips, early: y.early, at: Math.min(x.at, y.at) },
+    ask: { net: x.net || y.net, name: x.name || y.name, service: x.service || y.service, effectiveAt: y.effectiveAt ?? x.effectiveAt, trips: x.trips || y.trips, early: y.early, at: Math.min(x.at, y.at), board: x.board || y.board },
     after: () => { a.after(); b.after(); },
     fail: () => { a.fail(); b.fail(); },
     waiting: [...a.waiting, ...b.waiting],
@@ -104,8 +105,14 @@ function* followSteps(f: FollowUp): Generator<void, void, void> {
   // (from its first edit's apply to its state begun: the queue and the held wait)
   timing.fromApply = performance.now() - f.ask.at;
   // T-4272: the services stations and deletes answered from what they touch owe, a piece of their own before the state
-  // reads them (an edit coming after it goes ahead of the rest)
+  // reads them (an edit coming after it goes ahead of the rest), then the boarding account's lines they moved, a few a
+  // piece, as an edit's are before its state (`editSteps`), whichever path worked them out (`board`; kept until the
+  // steps end, as an edit between them begins this again)
   if (settleOwed(f)) yield;
+  if (f.ask.board) {
+    if (api!.has_riders()) for (const step = editSteps(false); step();) yield;
+    f.ask.board = false;
+  }
   const a = f.ask, light = !a.net && !(a.name && shiftFrom);
   yield* stateSteps(light, a.effectiveAt, a.trips, a.early, true, (s) => { f.rows = s; }, a.service ? a.at : undefined);
   // the schematic reads its names off the world when a graph comes, so the same graph again
@@ -114,25 +121,28 @@ function* followSteps(f: FollowUp): Generator<void, void, void> {
   f.after();
 }
 /** T-4272: the services answered edits owe worked out (`settle_owed`), or what a refused edit, an undo with nothing to take
- * or a trial worked out of them first, taken in as an edit's would be: the drawn lines they moved forgotten (the edit's
- * own `forget` ran before them), and trips with the state where they moved a line for demand (they moved no running
- * line's trains, so no rider's trip moves otherwise). Whether there were any. */
+ * or a trial worked out of them first, taken in as an edit's would be: the trains they bought on the ledger, the drawn
+ * lines they moved forgotten (the edit's own `forget` ran before them), and trips with the state, and the boarding
+ * account's steps before it, where they could move a running line's trains or moved a line for demand. Whether there
+ * were any. */
 function settleOwed(f?: FollowUp): boolean {
   const a = api!;
   if (a.owes()) a.set_now(gameNow());
-  if (!a.settle_owed()) return false;
+  const any = a.settle_owed();
+  bookTrains(a.take_trains_bought());
+  if (!any) return false;
   forget();
   a.take_service_moved();
-  if (a.take_settled_demand().length) {
-    if (f) f.ask.trips = true;
-    scheduleSnapshot();
-  }
+  const running = a.take_settled_running(), demand = a.take_settled_demand().length > 0;
+  if (demand) scheduleSnapshot();
+  if (f && (running || demand)) f.ask.trips = f.ask.board = true;
   return true;
 }
-/** T-4272: what answered edits owe worked out now, for a save, which then holds no edit without its services (autosave
- * waits for them; a game left while an edit waits for its ground does not) */
+/** T-4272: what answered edits owe worked out now, and what was worked out of it between edits (a reload, the Build tab's
+ * quote) taken in, for a save, which then holds no edit without its services and no car off the ledger (autosave waits
+ * for them; a game left while an edit waits for its ground does not) */
 export function settleOwedNow() {
-  if (api?.owes()) settleOwed(followUp ?? undefined);
+  if (api?.owed_left()) settleOwed(followUp ?? undefined);
 }
 /** a follow-up's steps a task each, then its state a piece a task (T-3803), outside the message queue: a message
  * that reads the model runs what is left of it first, and an edit may come between the pieces (`standAside`) */
@@ -226,8 +236,9 @@ export const passesFollowUp = (m: ToClock) => STOP_KINDS.has(m.kind);
  * answered ahead (`jumpsAhead`): the page reads a panel's figures or a quote against the world it holds (a line's counts
  * by its stops, a quote by the world's version), so each is answered after the state holding the model it reads, and
  * none runs that state in one block, which a click sent after it waited behind (`today`, the Build tab's quote: a whole
- * follow-up, 0.4-1 s on her Asia save). A held follow-up keeps its own passes (`passesHeld`); anything else still ends it. */
-export const waitsFollowUp = (m: ToClock, f: FollowUp) => m.kind === "riders" || m.kind === "transfers" || (m.kind === "query" && !f.held && !jumpsAhead(m));
+ * follow-up, 0.4-1 s on her Asia save). T-4272: and the page's new hour (`epoch`), whose trips follow that state. A held
+ * follow-up keeps its own passes (`passesHeld`); anything else still ends it. */
+export const waitsFollowUp = (m: ToClock, f: FollowUp) => m.kind === "riders" || m.kind === "transfers" || (m.kind === "epoch" && !f.held) || (m.kind === "query" && !f.held && !jumpsAhead(m));
 /** each with the game it came in, as a game opened or rebuilt since (queued ahead of them) clears what they set */
 type Kept = { m: ToClock; game: number };
 let keptMsgs: Kept[] = [];

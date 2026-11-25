@@ -86,6 +86,8 @@ fn a_station_rebuilds_the_bus_lines_near_it_and_no_others() {
         new_station(&mut a, 500.0, 4500.0, 1500.0, 4500.0);
         steps.push(step(&mut a));
         assert_eq!(a.remove_station(n1), 0, "{}", a.issues());
+        // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+        a.settle_owed();
         assert!(!stops(&a, near).iter().any(|c| c[5] == n1 as f64));
         steps.push(step(&mut a));
         // a rail line's own edit: no bus line reads it

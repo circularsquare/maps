@@ -1210,6 +1210,7 @@ impl TrackApi {
             self.issues = plan.issues;
             return 1;
         }
+        self.pay_owed();
         let fleet = self.fleet;
         let at = self.edit_start();
         let before = self.w.svc.before_edit(&self.w.net, at);

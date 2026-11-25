@@ -306,6 +306,8 @@ fn deleting_termini_past_one_way_stations_keeps_capacity_whole() {
     };
     for s in [x2, x1] {
         assert_eq!(a.remove_station(s), 0, "{}", a.issue_kinds());
+        // (its services worked out after its answer, as the clock worker does before its state: T-4272)
+        a.settle_owed();
         assert!(fresh(&a), "after removing {s}");
         let d = a.w.net.line_data(l).unwrap();
         assert_eq!(a.set_line_with_trains(l, &d.stops, 3, 2, 1, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issue_kinds());

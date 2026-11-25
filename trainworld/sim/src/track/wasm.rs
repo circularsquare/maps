@@ -21,7 +21,7 @@ use super::profile;
 use super::roads::{self, RoadTile, Roads};
 use super::save;
 use super::streets::StreetGrid;
-use super::world::{auto_trains, ChargeError, EditResult, Op, TrackWorld};
+use super::world::{auto_trains, ChargeError, EditResult, Local, Op, TrackWorld};
 use std::collections::{HashMap, HashSet};
 use std::f64::consts::PI;
 use std::sync::Arc;
@@ -115,6 +115,15 @@ pub struct TrackApi {
     answer_first: bool,
     /// T-4272: the lines that owed services, once worked out, moved for demand, since `take_settled_demand`
     settled_demand: Vec<u32>,
+    /// T-4272: what owed services worked out touched (`pay_owed`), until an edit's result or `settle_owed` takes it
+    owed_pending: Option<super::world::Dirty>,
+    /// T-4272: the trains bought for owed services since `take_trains_bought`: line and US$M each (`u32::MAX`: no line's
+    /// own trains rose, a weekend's need)
+    trains_bought: Vec<(u32, f64)>,
+    /// T-4272: the fleets `trains_bought` bought cars of, bit k for fleet k, since `take_bought_vehicle`
+    bought_fleets: u8,
+    /// T-4272: owed services that could move running lines' trains were worked out since `take_settled_running`
+    settled_running: bool,
     /// T-3137: the points the next route's ends join double track nearest (`set_route_join`), and
     /// while one is laid out (`route_op`) the ones it uses; NaN for the nearer track.
     route_join: Option<[f64; 4]>,
@@ -498,6 +507,10 @@ impl TrackApi {
             old_names: false,
             answer_first: true,
             settled_demand: vec![],
+            owed_pending: None,
+            trains_bought: vec![],
+            bought_fleets: 0,
+            settled_running: false,
         }
     }
 
@@ -680,7 +693,7 @@ impl TrackApi {
         self.rasters.clear();
         let set = self.mask_set();
         self.w.net.set_water_mask(Box::new(set));
-        self.w.reload();
+        self.reload_paid();
     }
 
     /// Append a pack raster transformed into the fixed network frame by an offset and scale
@@ -693,7 +706,7 @@ impl TrackApi {
         };
         let previous = std::mem::replace(&mut self.w.net.water_mask, Box::new(NoWater));
         self.w.net.set_water_mask(Box::new(UnionMask(previous, Box::new(m))));
-        self.w.reload();
+        self.reload_paid();
     }
 
     /// Add a pack's water raster (T-125). `pack_lon`, `pack_lat` are the origin of the pack's own
@@ -779,6 +792,8 @@ impl TrackApi {
     pub fn add_pack_streets(&mut self, zone_m: f64, x0: f64, y0: f64, w: u32, h: u32, pop: &[f32], jobs: &[f32], zone: &[u32], gx: &[u16], gy: &[u16], size: &[u8], cells9: &[u32], pack_lon: f64, pack_lat: f64) -> i32 {
         let Some(g) = StreetGrid::from_zones(zone_m, x0, y0, w, h, pop, jobs, zone, gx, gy, size, cells9, pack_lon, pack_lat) else { return -1 };
         let area = (!self.w.net.streets.is_empty()).then(|| g.lonlat_box());
+        // T-4272: the bus lines are settled again, so what answered edits owe is worked out and paid first, as for a reload
+        self.pay_owed();
         self.w.net.streets.grids.push(Arc::new(g));
         self.w.rework_buses(area) as i32
     }
@@ -2443,6 +2458,12 @@ impl TrackApi {
         }
         let set = self.mask_set();
         self.w.net.set_water_mask(Box::new(set));
+        self.reload_paid();
+    }
+
+    /// T-4272: `TrackWorld::reload` mid-game (the water arriving), which drops what is owed: worked out and paid first.
+    fn reload_paid(&mut self) {
+        self.pay_owed();
         self.w.reload();
     }
 
@@ -2467,7 +2488,7 @@ impl TrackApi {
         let m = RunMask::pack(cell, x0, y0, w, h, row.to_vec(), xs.to_vec());
         self.rasters.clear();
         self.w.net.set_water_mask(Box::new(m));
-        self.w.reload();
+        self.reload_paid();
     }
     pub fn new_node_id(&mut self) -> u32 {
         self.w.net.alloc_node()
