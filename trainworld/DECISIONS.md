@@ -54,7 +54,7 @@ artifacts/trainworld/T-4120/.
 
 ## Lines and scheduling
 - 2026-11-24 (Anita, T-4220): Edits made during a whole re-solve get quick figures from a second worker that re-solves only the touched cities against the figures on screen (lie: up to about 4.5 min on Asia); off on phones and short memory. notes/T-4220.md
-- 2026-11-24 (Anita, T-4239): The train-count settle may stop once lines hold nearly still instead of running all 80 rounds on shared track; "we definitely dont need to do to bit exact". notes/T-4188.md
+- 2026-11-24 (Anita, T-4239): The train-count settle need not be exact (her call). A line circling across a jump in its round trip (passing-track waits, following loss) is settled once it circles, on the side its fleet falls short: the lie, up to 3% more trains an hour than its fleet runs. notes/T-4239.md
 - 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
 - 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md
 - 2026-11-24 (Anita, T-4178): A reversal mid-line limits capacity no more than a line's end: each way counts half a turn (the lie: trains turn there twice a round trip). The reversal icon shows only where the turn limits the line. notes/T-4178.md
@@ -163,6 +163,7 @@ artifacts/trainworld/T-4120/.
 
 ## Buses
 
+- 2026-11-25 (Anita, T-4257): Bus routes take the quickest road by the sim's own bus speeds, not the shortest ("shouldnt we still make it take the fastest route rather than the shortest?"), replacing length plus turns.
 - 2026-11-25 (Anita, T-4251): Bus stops and BRT stations can be built on busways ("that should definitely be allowed").
 - 2026-11-24 (T-4080): A kept bus stop no stop takes, or one left with no name and no connection that holds (its station removed), lasts the session, so an undo finds it again, and is forgotten at the next save and load. notes/T-4080.md
 - 2026-11-24 (Anita, T-4052): Riders left behind count once each, at the first train or bus to leave them; riders turned away from a full stop don't (they went another way). Rail counts drop too (NYC save 11%). Kept per departure with a queue, 4 bytes each. notes/T-4052.md
@@ -181,7 +182,7 @@ artifacts/trainworld/T-4120/.
 
 ## Map and UI
 
-- 2026-11-24 (Anita, T-4097): After 0.4.6, edit speed works at the root cause: an edit costs what it touched (drawn network, clickable map, trips), not the whole world; drawing results at the click is deprioritized once that starts. notes/T-4153.md
+- 2026-11-25 (Anita, T-4097): Edit speed works at the root cause, the game reworking the whole network after each edit ("everything else is kinda just flavor"): every step of an edit costs what it touched, not the whole map. Drawing results at the click is deprioritized. notes/T-4153.md
 - 2026-11-24 (T-4214): An edit's patch goes only to the map the tools pick on (`clickWorld`, `clickNet`); `world`, which panels, layers and money follow, waits for the state. Setting `world` per patch ran them all twice per edit (79 ms for a station on New York). notes/T-4214.md
 - 2026-11-24 (T-4214): A map click made before an earlier edit reaches the clickable map waits (spinner, at most 5 s), then acts at its spot; the map takes the edit's patch with its word, or its network when none is sent. Track run segments and stop clicks never wait. notes/T-4214.md
 - 2026-11-24 (T-4075): Trains, trams and buses are placed along 50 m samples plus points where the track bends between them (within 0.25 m, about 0.6 m at a right-angle corner); a finer step everywhere was ruled out (5x the samples on NYC). notes/T-4075.md
@@ -305,6 +306,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
+- 2026-11-25 (Anita, T-4252): Gemini code agents run commands unattended inside their own worktree (tools/gemini_agent.py), limited by agy's allow and deny rules; with no OS sandbox here, an allowed check runs whatever the tree holds. Their first three runs are asked about permissions.
 - 2026-11-25 (Anita): Claude usage runs out before Gemini's, so Gemini takes most reading and review (docs/orchestrator.md "Tools"), and Gemini Neon agents are to make code changes like Claude subagents (T-4252). Replaces 11-24's "Gemini sparingly".
 - 2026-11-24 (T-4166): The AWS bench installs Node, Chrome and Rust on each machine instead of keeping an image (6-8 minutes, under a cent, against a snapshot billing every month) and ships only the files the save reads. Its numbers never go in the home ledgers (Linux, SwiftShader).
 - 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it (profile removed, guard.py and awslib refuse it; its scripts kept as a record). AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).

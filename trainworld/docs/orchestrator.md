@@ -20,7 +20,9 @@ These come before everything below; the first two are her two top priorities (11
   (11-24). The core cap changes only on her explicit word (11-24): never raise it on your own, not back to a daytime
   number and not to the machine's max overnight. Agents stay within it; queue instead.
 - **When a call is hers, ask and wait**: trainworld/CLAUDE.md "What waits for her word", publishing, server deploys and
-  the website push (never overnight), a restore's `--yes`, any reply to a player.
+  the website push (never overnight), a restore's `--yes`, any reply to a player. A pull request is never closed
+  without a comment (her 11-25): the reason, thankful rather than apologetic, normal capitalization (it's ours, not her
+  voice); closing waits for her OK on it.
 - **When she makes a direction call**, write it in DECISIONS.md then (trainworld/CLAUDE.md "Doc rules"), not only in
   the handoff.
 - **When choosing what to fix, take the biggest cost first** and fix it now, not left to later work (11-23: the drawn
@@ -188,14 +190,24 @@ she thinks it's ready; then run the skill. Keep the checks it needs (smoke, perf
 
 - **Gemini first for reading and review** (her 11-25: Claude usage runs out before Gemini's). Gemini: batch and
   design reviews, PR surveys, sorting player requests, task sweeps, scoping a task from the code ("the code says
-  why", what a change would touch), research reading. Claude: orchestration and bookkeeping, code that lands, anything
-  that runs the game, checks or benchmarks, player text. Gemini code agents: T-4252.
+  why", what a change would touch), research reading. Claude: orchestration and bookkeeping, anything that runs the
+  game or benchmarks, player text. Code that needs only a typecheck, Rust tests or a node check can go to a Gemini code
+  agent (below).
 - **Gemini as adversarial reviewer** on every risky batch and every big design before it's built (her 11-24: "if we run
   out i'll likely upgrade the sub"):
-  `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (read-only, sandboxed, Gemini 4 Neon
-  medium by default, her pick; its top comment). It can't run commands: write the diff to a file under artifacts/trainworld/gemini/ and name it in the
-  brief (diff plus the task's Goal, "try to break it"). A finding is checked against the code by the agent that acts on it. It doesn't run the game
-  or write code here; Gemini's own code tasks run in Antigravity and she passes them on to land.
+  `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (read-only: it reads files and runs
+  only git's read commands and Get-ChildItem; Gemini 4 Neon medium by default, her pick; its top comment). Write the diff to a
+  file under artifacts/trainworld/gemini/ and name it in the brief (diff plus the task's Goal, "try to break it"). A finding
+  is checked against the code by the agent that acts on it. It doesn't run the game or write code.
+- **Gemini code agents** (her 11-25): `venv\Scripts\python.exe trainworld/tools/gemini_agent.py start <name> --brief <file>
+  [--task T-x] [--new-tree]` runs Gemini 4 Neon medium unattended in `.tw-trees/<name>`, detached, at most 90 minutes on 2
+  claimed cores. Brief it as a Claude agent. Its report, a failure or timeout too, comes in as a watch line `agent report
+  ... (gemini, ...)` (`reports.py show`); land with `agent-tree.mjs finish` as usual. agy refuses every command but
+  git's read commands, Get-ChildItem, the typecheck, agent_cargo.py, changelog.py and node checks, and refuses commits,
+  stashes, resets, pushes, tools/ops, tools/aws, 8800, and file writes outside its tree or to TASKS, DECISIONS, ARCHIVE,
+  LINES, TODO and the handoff. Not enforced: there is no OS sandbox here, so an allowed command runs whatever the tree
+  holds (an edited check or package.json). Its first three runs end with a "Permissions" answer for her. `list`, `stop`:
+  its top comment.
 
 ## Traps
 

@@ -7,6 +7,8 @@ orchestrator is current reads it, not only the session that started the agent. R
                                                         mark read once acted on (tasks.py done/close does it for its T-id)
   venv\Scripts\python.exe trainworld/tools/reports.py sweep [--session <id>] [--since <ISO time>]
   venv\Scripts\python.exe trainworld/tools/reports.py hook                  the SubagentStop hook (stdin JSON)
+  venv\Scripts\python.exe trainworld/tools/reports.py add --name <agent> --text-file <f> [--task T-1] [--kind gemini]
+                                                        keep a report that no hook sees (gemini_agent.py calls Box.add)
 
 The hook (registered in .claude/settings.json) fires when any subagent of any maps session stops. It keeps only
 top-level agents of a session that orchestrates trainworld: one registered by `watch.py --session`, or named on
@@ -113,6 +115,16 @@ class Box:
             json.dump(rec, f, ensure_ascii=False, indent=1)
         os.replace(tmp, os.path.join(self.dir, rec["id"] + ".json"))
         return True
+
+    def add(self, name, text, task=None, kind="gemini", session="gemini", agent_id=None, model=None, description=""):
+        """Keep a report from an agent outside Claude's hooks. The watch prints it as long as session is not the
+        watching orchestrator's id, so "gemini" rather than a session id."""
+        agent_id = agent_id or f"{kind}-{name}"
+        rid = "r-" + hashlib.sha1(f"{agent_id}\0{kind}\0{text}".encode("utf-8")).hexdigest()[:8]
+        rec = {"id": rid, "at": now_iso(), "session": session, "agent_id": agent_id, "name": name, "task": task,
+               "description": description, "model": model, "kind": kind, "text": text}
+        self.write(rec)
+        return rec
 
     def load(self, d):
         out = []
@@ -381,6 +393,12 @@ def main():
     w.add_argument("--since", help="ISO time; default each session's registration, else 12 hours ago")
     g = sub.add_parser("register")
     g.add_argument("session")
+    d = sub.add_parser("add")
+    d.add_argument("--name", required=True)
+    d.add_argument("--text-file", required=True)
+    d.add_argument("--task")
+    d.add_argument("--kind", default="gemini")
+    d.add_argument("--model")
     a = ap.parse_args()
     box = Box(a.root)
 
@@ -403,6 +421,11 @@ def main():
         return 0
     if a.cmd == "register":
         print("registered" if box.register(a.session) else "already registered")
+        return 0
+    if a.cmd == "add":
+        with open(a.text_file, encoding="utf-8") as f:
+            rec = box.add(a.name, f.read().strip(), task=a.task, kind=a.kind, model=a.model)
+        print("  " + line(rec))
         return 0
     if a.cmd == "list":
         rs = box.all() if a.all else box.unread()

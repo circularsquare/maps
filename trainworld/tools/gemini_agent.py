@@ -1,0 +1,367 @@
+"""Run a Gemini code agent (Antigravity CLI, agy) on a brief in its own worktree, the way a Claude subagent works (T-4252).
+
+    venv\Scripts\python.exe trainworld/tools/gemini_agent.py start <name> --brief <file> [--task T-1234] [--tree <tree>]
+        [--new-tree] [--cores 2] [--timeout 90] [--model gemini-4-neon-medium] [--trial]
+    venv\Scripts\python.exe trainworld/tools/gemini_agent.py list
+    venv\Scripts\python.exe trainworld/tools/gemini_agent.py stop <name>
+
+start returns at once and the run goes on detached (one agy process, up to --timeout minutes). Its tree is
+maps/.tw-trees/<tree> (default: the name), made with agent-tree.mjs when --new-tree is given. With --task it marks
+the task on the board (tasks.py start). It claims --cores through cores.py for the run (TW_CORES and CARGO_BUILD_JOBS
+tell checks and cargo inside), released at the end, failure included. The report, the agent's own plus one footer line
+(files changed, refused calls, log), lands in the agent report inbox (reports.py, kind "gemini"), so the board watch
+prints "agent report ... (gemini, ...)"; a run that fails or times out reports that too. Everything agy printed is in
+artifacts/trainworld/gemini/agents/<name>-<time>/agy.log (agy's own log beside it; steps.txt lists each tool call).
+For the first runs (notes/gemini-agent-rounds.json, her 11-25) the same conversation is then asked which permissions
+it lacked or didn't need, and the answer goes in the report under "Permissions"; --trial runs ask but don't count.
+
+What the agent can do (agy 1.5 on Windows 10, which has no terminal sandbox):
+- Its tools are only those of the custom agent trainworld-coder (written to ~/.gemini/config/agents/ each run): read,
+  write and edit files, run a command. No subagents, browser, web search, MCP or scheduling.
+- Commands: only those matching an allow rule in settings.json of its run (git status/diff/log/show/blame/ls-files/
+  grep, Get-ChildItem, the typecheck, agent_cargo.py test|wasm, changelog.py add|list|reword, node
+  trainworld/checks/<x>.mjs), one per call, no chaining or redirection. Anything else is refused by agy, and deny
+  rules (agy_session.backstop_rules: git commit, push, stash, reset, checkout and the like, aws, taskkill, tools/ops,
+  tools/aws, agent-tree, smoke, 8800) also beat the global grants in ~/.gemini/config/config.json.
+- File writes: inside its tree only (outside, including through the tree's links to the main tree's data, node_modules,
+  venv and artifacts, agy asks and print mode refuses), and not to TASKS, DECISIONS, ARCHIVE, LINES, TODO, the
+  handoff, asks.json, the CLAUDE.md and GEMINI.md files, .git, .agents or .claude, nor the temp folder.
+Not enforced: an allowed command runs whatever the tree holds, so an agent that edits a check, package.json or build.rs
+can run anything as Anita's user. The rules in GEMINI.md and trainworld/CLAUDE.md are asked, not enforced.
+"""
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import time
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import agy_session  # noqa: E402
+import reports  # noqa: E402
+
+TW = HERE.parent
+MAPS = TW.parent
+TREES = MAPS / ".tw-trees"
+RUNS = MAPS / "artifacts" / "trainworld" / "gemini" / "agents"
+ROUNDS = TW / "notes" / "gemini-agent-rounds.json"
+PY = MAPS / "venv" / "Scripts" / "python.exe"
+ASK_ROUNDS = 3                     # her 11-25: ask the first three runs about their permissions
+MARK = "END OF REPORT"
+ANS_MARK = "END OF ANSWER"
+AGENT = "trainworld-coder"
+TOOLS = ["view_file", "write_to_file", "replace_file_content", "run_command", "command_status"]
+AGENT_BODY = """You are a code agent working unattended in a git worktree of Anita's maps repository, for the trainworld
+orchestrator. Your rules are GEMINI.md and trainworld/CLAUDE.md in your working directory; the user message gives the
+task and what this run allows. Work carefully, change only what the task needs, and finish with the report asked for."""
+PROTECTED = ["trainworld/TASKS.md", "trainworld/DECISIONS.md", "trainworld/ARCHIVE.md",
+             "trainworld/ARCHIVE-to-2026-10-19.md", "trainworld/LINES.md", "trainworld/TODO.md",
+             "trainworld/notes/handoff.md", "trainworld/notes/asks.json", "trainworld/CLAUDE.md", "CLAUDE.md",
+             "GEMINI.md", ".git", ".agents", ".claude"]
+
+
+def temp_dirs():
+    """Every Claude scratchpad sits in the temp folder, which agy lets any agent write to unless denied."""
+    dirs = {Path(tempfile.gettempdir()).resolve().as_posix()}
+    if os.environ.get("LOCALAPPDATA"):
+        dirs.add((Path(os.environ["LOCALAPPDATA"]) / "Temp").as_posix())
+    return dirs
+
+
+def settings():
+    SAFE, SEP = agy_session.SAFE, agy_session.SEP
+    py = r"(python|py|venv%sScripts%spython(\.exe)?)" % (SEP, SEP)
+    return {
+        "agentMode": "accept-edits",
+        "toolPermission": "request-review",
+        "permissions": {
+            "allow": agy_session.read_rules() + [
+                r"command(regex:npm run check --prefix trainworld%sapp)" % SEP,
+                r"command(regex:%s trainworld%stools%s(agent_cargo\.py (test|wasm)|changelog\.py (add|list|reword))( %s*)?)"
+                % (py, SEP, SEP, SAFE),
+                r"command(regex:node trainworld%schecks%s[\w.-]+\.mjs( %s*)?)" % (SEP, SEP, SAFE),
+                "read_file(%s)" % MAPS.as_posix(),
+            ],
+            "deny": agy_session.backstop_rules() + ["write_file(%s)" % p for p in sorted(temp_dirs()) + PROTECTED],
+        },
+    }
+
+
+PROMPT = """You are Gemini agent "{name}", one of the trainworld orchestrator's code agents, running unattended.
+Read GEMINI.md and then trainworld/CLAUDE.md in full first: they are your rules (where they say "agent", that is you).
+
+This run:
+- Your working directory is your own git worktree, {tree} (branch tw/{tree_name}). Edit files only inside it and
+  leave your changes uncommitted: the orchestrator lands them.
+- These commands run, one per call (no chaining with ; && |, no redirection), from the working directory:
+    git status | diff | log | show | blame | ls-files | grep, with arguments (git grep is your search)
+    Get-ChildItem (or ls, dir) to list folders; read files with your file tool
+    npm run check --prefix trainworld/app        (the typecheck)
+    python trainworld/tools/agent_cargo.py test | wasm
+    python trainworld/tools/changelog.py add | list | reword ...
+    node trainworld/checks/<check>.mjs ...       (a Vite of your own on a port in 6100-6199, never 8800)
+  Anything else is refused, and a refused command ends your turn; you will be told to carry on. Never commit, push,
+  stash, reset or check out anything.
+- {cores} cores are claimed for you (TW_CORES is set). Don't run cores.py, tasks.py or handoff.py.
+- The file tools can't write to TASKS.md, DECISIONS.md, ARCHIVE.md, LINES.md, TODO.md, notes/handoff.md,
+  notes/asks.json or the CLAUDE.md and GEMINI.md files: say in your report what should change there. Detail goes
+  in trainworld/notes/{note} in your tree.
+- When you're done, reply with your report: at most 15 lines (trainworld/CLAUDE.md "Talking to Anita"): what you
+  changed and where, check results, every in-game string you added or changed (old -> new), anything for Anita.
+  End the reply with the line {mark}.
+
+The brief:
+
+{brief}
+"""
+
+QUESTION = """One more question before you finish, from Anita, for the first few Gemini agent runs: are there permissions
+you should have had that you didn't, or permissions you had that you shouldn't? Answer from what happened in this run,
+in a few lines, without running anything. End the reply with the line {mark}."""
+
+
+def now():
+    return time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def hidden():
+    return {"creationflags": subprocess.CREATE_NO_WINDOW} if sys.platform == "win32" else {}
+
+
+def sh(cmd, cwd=MAPS, timeout=600):
+    r = subprocess.run(cmd, cwd=str(cwd), capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       timeout=timeout, **hidden())
+    return r.returncode, (r.stdout or "") + (r.stderr or "")
+
+
+def load_json(path, default):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return default
+
+
+def save_json(path, obj):
+    path = Path(path)
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+        json.dump(obj, f, indent=1, ensure_ascii=False)
+    os.replace(tmp, path)
+
+
+def claim(name, n, say):
+    code, out = sh([str(PY), str(MAPS / "cores.py"), "claim", str(n), "gemini-" + name, "--pid", str(os.getpid()),
+                    "--timeout", "1800", "Gemini agent " + name], timeout=1900)
+    lines = [l for l in out.splitlines() if l.strip()]
+    say("cores.py claim: exit %d, %s" % (code, lines[-1] if lines else ""))
+    if code != 0 or not lines or not lines[-1].strip().isdigit():
+        return 0
+    return int(lines[-1].strip())
+
+
+def release(name):
+    sh([str(PY), str(MAPS / "cores.py"), "release", "gemini-" + name])
+
+
+def summary(sess, tree, minutes):
+    refused = sess.refused() if sess else []
+    code, out = sh(["git", "-C", str(tree), "status", "--short"])
+    changed = len([l for l in out.splitlines() if l.strip()]) if code == 0 else "?"
+    parts = ["%s files changed in its tree" % changed, "%d min" % minutes, "%d turns" % (sess.turns if sess else 0)]
+    if refused:
+        parts.append("%d refused (%s)" % (len(refused), "; ".join(s["args"][:60] for s in refused[:4])))
+    return ", ".join(parts)
+
+
+def run(a):
+    run_dir = Path(a.run_dir) if a.run_dir else RUNS / ("%s-%s" % (a.name, time.strftime("%Y%m%d-%H%M")))
+    run_dir.mkdir(parents=True, exist_ok=True)
+    state_path = run_dir / "state.json"
+    state = {"name": a.name, "pid": os.getpid(), "status": "running", "started": now(), "tree": a.tree,
+             "task": a.task, "model": a.model, "trial": a.trial}
+    save_json(state_path, state)
+    runner_log = open(run_dir / "runner.txt", "a", encoding="utf-8")
+
+    def say(msg):
+        runner_log.write("%s %s\n" % (now(), msg))
+        runner_log.flush()
+
+    tree = TREES / a.tree
+    t0 = time.time()
+    sess, granted, text, status = None, 0, "", "failed"
+    try:
+        if a.new_tree:
+            code, out = sh(["node", str(TW / "checks" / "agent-tree.mjs"), "new", a.tree])
+            say("agent-tree new: exit %d\n%s" % (code, out))
+            if code != 0:
+                raise RuntimeError("agent-tree.mjs new %s failed: %s" % (a.tree, out.strip()[-300:]))
+        if not (tree / ".git").exists():
+            raise RuntimeError("no tree at %s (make it with agent-tree.mjs new, or pass --new-tree)" % tree)
+        if a.task:
+            code, out = sh([str(PY), str(TW / "tools" / "tasks.py"), "start", a.task, "--agent", a.name,
+                            "--model", a.model, "--tree", a.tree])
+            say("tasks.py start: exit %d %s" % (code, out.strip()))
+        granted = claim(a.name, a.cores, say)
+        if not granted:
+            raise RuntimeError("cores.py claim for %d cores failed or timed out" % a.cores)
+        brief = Path(a.brief).read_text(encoding="utf-8")
+        (run_dir / "brief.md").write_text(brief, encoding="utf-8")
+        settings_path = run_dir / "settings.json"
+        save_json(settings_path, settings())
+        agy_session.ensure_agent(AGENT, "Code agent for trainworld/tools/gemini_agent.py (files, search, commands)",
+                                 TOOLS, AGENT_BODY)
+        prompt = PROMPT.format(name=a.name, tree=tree, tree_name=a.tree, cores=granted, mark=MARK, brief=brief,
+                               note=(a.task + ".md") if a.task else "T-xxxx.md")
+        env = dict(os.environ, TW_CORES=str(granted), CARGO_BUILD_JOBS=str(granted))
+        sess = agy_session.Session(tree, run_dir / "agy.log", model=a.model, agent=AGENT, settings=settings_path,
+                                   cli_log=run_dir / "agy-cli.log", env=env)
+        state["agy_pid"] = sess.start()
+        save_json(state_path, state)
+        say("agy started, pid %s" % state["agy_pid"])
+        deadline = t0 + a.timeout * 60
+        res, nudges = agy_session.work(sess, prompt, MARK, deadline)
+        say("work done: nudges %d, ended %s, conversation %s" % (nudges, sess.ended, sess.conversation))
+        if res is not None and MARK in (res.get("response") or ""):
+            text, status = agy_session.reply_text(res, MARK), "done"
+        elif sess.ended == "timeout":
+            text, status = "Timed out after %d min. Its last words: %s" % (a.timeout, sess.partial.strip()[-1500:]), "timeout"
+        else:
+            last = agy_session.reply_text(res, MARK) if res else sess.partial.strip()
+            text = "Stopped without a report (%s, %d nudges). Its last words: %s" % (sess.ended or "no closing line",
+                                                                                     nudges, last[-1500:])
+        rounds = load_json(ROUNDS, {"asked": 0, "runs": []})
+        if status == "done" and rounds.get("asked", 0) < ASK_ROUNDS:
+            ans, _ = agy_session.work(sess, QUESTION.format(mark=ANS_MARK), ANS_MARK,
+                                      min(deadline + 600, time.time() + 600), max_nudges=2)
+            answer = agy_session.reply_text(ans, ANS_MARK) if ans else ""
+            text += "\n\nPermissions\n" + (answer or "(no answer)")
+            if not a.trial:
+                rounds["asked"] = rounds.get("asked", 0) + 1
+                rounds.setdefault("runs", []).append({"name": a.name, "task": a.task, "at": now()})
+                save_json(ROUNDS, rounds)
+    except Exception as ex:      # the orchestrator hears about every failure through the inbox
+        say("error: %s: %s" % (type(ex).__name__, ex))
+        text = text or "Failed before finishing: %s" % ex
+    finally:
+        if sess:
+            sess.close()
+        if granted:
+            release(a.name)
+        minutes = round((time.time() - t0) / 60)
+        foot = "(Gemini agent %s, %s, tree %s: %s. Log: %s)" % (a.name, a.model, a.tree,
+                                                                 summary(sess, tree, minutes), run_dir / "agy.log")
+        report = text.strip() + "\n\n" + foot
+        (run_dir / "report.md").write_text(report + "\n", encoding="utf-8")
+        if sess:
+            with open(run_dir / "steps.txt", "w", encoding="utf-8") as f:
+                for s in sess.steps:
+                    f.write("%s %s %s %s\n" % (s["state"], s["name"], s["args"], s["error"]))
+        rec = reports.Box(str(TW)).add(a.name, report, task=a.task, kind="gemini", model=a.model,
+                                       agent_id="gemini-%s-%s" % (a.name, (sess.conversation if sess else None) or
+                                                                  run_dir.name),
+                                       description="Gemini agent %s in tree %s%s" % (a.name, a.tree,
+                                                                                     " (trial)" if a.trial else ""))
+        state.update(status=status, ended=now(), report=rec["id"], conversation=sess.conversation if sess else None)
+        save_json(state_path, state)
+        say("report %s, status %s" % (rec["id"], status))
+        runner_log.close()
+
+
+def runs():
+    out = []
+    for p in sorted(RUNS.glob("*/state.json")):
+        st = load_json(p, {})
+        st["dir"] = str(p.parent)
+        out.append(st)
+    return out
+
+
+def alive(pid):
+    code, out = sh(["tasklist", "/FI", "PID eq %d" % int(pid), "/NH"], timeout=30)
+    return str(pid) in out
+
+
+def start(a):
+    run_dir = RUNS / ("%s-%s" % (a.name, time.strftime("%Y%m%d-%H%M%S")))
+    run_dir.mkdir(parents=True, exist_ok=True)
+    args = [sys.executable, str(Path(__file__).resolve()), "run", a.name, "--brief", str(Path(a.brief).resolve()),
+            "--tree", a.tree, "--cores", str(a.cores), "--timeout", str(a.timeout), "--model", a.model,
+            "--run-dir", str(run_dir)]
+    if a.task:
+        args += ["--task", a.task]
+    if a.new_tree:
+        args.append("--new-tree")
+    if a.trial:
+        args.append("--trial")
+    out = open(run_dir / "runner-console.txt", "w", encoding="utf-8")
+    flags = 0x8 | 0x200 | 0x01000000      # DETACHED_PROCESS, CREATE_NEW_PROCESS_GROUP, CREATE_BREAKAWAY_FROM_JOB
+    kw = dict(cwd=str(MAPS), stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT, close_fds=True)
+    try:
+        p = subprocess.Popen(args, creationflags=flags, **kw)
+    except OSError:                       # a job that forbids breakaway: still detached from this console
+        p = subprocess.Popen(args, creationflags=flags & ~0x01000000, **kw)
+    print("started Gemini agent %s in tree %s, up to %d min; its report arrives in the inbox (reports.py list). "
+          "Run folder: %s" % (a.name, a.tree, a.timeout, run_dir))
+
+
+def stop(a):
+    live = [r for r in runs() if r.get("name") == a.name and r.get("status") == "running"]
+    if not live:
+        print("no running Gemini agent named %s" % a.name)
+        return 1
+    for r in live:
+        if alive(r["pid"]):
+            sh(["taskkill", "/F", "/PID", str(r["pid"])], timeout=60)   # its job object takes agy and its children
+        release(a.name)
+        text = "Stopped by the orchestrator before it reported. Log: %s" % (Path(r["dir"]) / "agy.log")
+        rec = reports.Box(str(TW)).add(a.name, text, task=r.get("task"), kind="gemini", model=r.get("model"),
+                                       agent_id="gemini-%s-%s" % (a.name, Path(r["dir"]).name))
+        r.update(status="stopped", ended=now(), report=rec["id"])
+        d = r.pop("dir")
+        save_json(Path(d) / "state.json", r)
+        print("stopped %s (pid %s), report %s" % (a.name, r["pid"], rec["id"]))
+    return 0
+
+
+def main():
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    for cmd in ("start", "run"):
+        s = sub.add_parser(cmd)
+        s.add_argument("name")
+        s.add_argument("--brief", required=True)
+        s.add_argument("--task")
+        s.add_argument("--tree")
+        s.add_argument("--new-tree", action="store_true")
+        s.add_argument("--cores", type=int, default=2)
+        s.add_argument("--timeout", type=int, default=90, help="minutes")
+        s.add_argument("--model", default="gemini-4-neon-medium")
+        s.add_argument("--trial", action="store_true", help="a test run: not counted as a round")
+        s.add_argument("--run-dir", help=argparse.SUPPRESS)
+    sub.add_parser("list")
+    t = sub.add_parser("stop")
+    t.add_argument("name")
+    a = ap.parse_args()
+    if a.cmd in ("start", "run"):
+        a.tree = a.tree or a.name
+        if not re.fullmatch(r"[\w.-]+", a.name) or not re.fullmatch(r"[\w.-]+", a.tree):
+            ap.error("name and tree: letters, digits, . _ - only")
+        if not Path(a.brief).is_file():
+            ap.error("no brief file at %s" % a.brief)
+        return start(a) if a.cmd == "start" else run(a)
+    if a.cmd == "stop":
+        return stop(a)
+    for r in runs():
+        print("%-14s %-8s %s  tree %s  %s  %s" % (r.get("name"), r.get("status"), r.get("started", ""),
+                                                  r.get("tree"), r.get("task") or "", r.get("report") or ""))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

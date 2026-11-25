@@ -159,9 +159,21 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-3659.md
 
 ## Demand
+- T-4259 [P2] {L:small-fixes} Port PR 35, rename a line's stations together
+  - Context: omi-key's PR 35 (11-24): rename every station of a rail line from its panel, pasting a list. You, 11-25: "lets port it but should keep the ui impact minimal". Gemini: Escape doesn't stop at the panel; a vanished station drops the edits; the header may crowd.
+  - Goal: Ported with credit and those fixed, one small control in the line panel; its strings to you.
+  - Other: notes/pr-survey-2026-11-25.md
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: A player, 11-22: a line with 21 one-way platforms is "extremely laggy", once 40 minutes for the stops to register. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Tree onewaylag has a memo making stop_tiers 2.3x faster (uncommitted). Notes/T-4045.md.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
+- T-4256 [P2] {L:buses} Port PR 30, Auto bus catchments stop at rail-linked stops
+  - Context: Leni-Vienne's PR 30 (11-22): an Auto bus stop's catchment no longer runs past stops linked to rail (one counted a 9.6 km road past 9 rail stations as a short walk). You, 11-25: "yes can port". Gemini: easy; its doc says 100 m where ours is now 500 m.
+  - Goal: Ported with credit; a bus save's riders before and after, and the lines that move most.
+  - Other: notes/pr-survey-2026-11-25.md
+- T-4257 [P2] {L:buses} Bus routes take the fastest road, not the shortest
+  - Context: xoaninc's PR 32 weights trunk roads and motorways at a flat 1.4x. You, 11-25: "it shouldnt be 1.4x cuz we changed the ratio, but shouldnt we still make it take the fastest route rather than the shortest?" Today a route follows streets by length plus a turn penalty; busways (60 km/h) count as plain streets.
+  - Goal: The route tool picks the quickest path by the sim's own bus speeds on each road, busways included; credit to xoaninc.
+  - Other: notes/pr-survey-2026-11-25.md
 - T-4251 [P2] {L:buses} Bus and BRT stations on busways
   - Context: A player (via your scratch pad, 11-25): "bus stations cannot be built on busways"; you: "that should definitely be allowed". The same player: "when creating a BRT line, cant connect BRT stations" (unclear; read their report in tw-feedback).
   - Goal: Bus stops and BRT stations can be placed on busways, and the second complaint named and fixed if it's a bug.
@@ -183,17 +195,17 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
   - Other: notes/T-4131.md
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
-  - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
+  - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor"; on your Asia save a station shows up in 1-3 s, a removal in about 4 s. Parts: T-4153 (drawn network), T-4214 (clickable map), T-4149 (worker rows), T-4150 (page).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
 - T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-24, agent cutstretch2)
   - Context: You, 11-23: "this is the entire issue". Stage 3 (tree bandorders): band orders kept through a cut path, and a removed line no longer redoes every corridor. Asia network build in Node: a station on its longest trunk 0.62-0.69 to 0.31-0.49 s, a line removed 0.82-0.85 to 0.28-0.36 s. Left: each line whose path is cut is redone whole.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 3 "What is left"
-- T-4149 [P2] {L:edit-speed} The checked version sooner, worker side, stage 2
+- T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2 (taking, 2026-11-24, agent rowsedit)
   - Context: Stage 1 landed 11-24 (6d7c50c5): the day's figures -77% and line periods -58% on Asia, money posted in 1-2 ms. Left: rows first for every full-path edit, trips and boarding per touched line, demand snapshot per cluster.
   - Goal: Those redone for what an edit touched. Tree editworker kept.
   - Other: notes/T-4144.md
-- T-4150 [P2] {L:edit-speed} The checked version sooner, page side
+- T-4150 [P1] {L:edit-speed} The checked version sooner, page side (taking, 2026-11-24, agent pageedit)
   - Context: From T-4144 stream D: every panel redraws on each state (T-4097 part C); T-3804 today answers 125-445 ms.
   - Goal: Panels redraw only their own records, issues list and totals patched; 6-10 h.
   - Other: notes/T-4144.md
@@ -357,12 +369,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4242 [P2] {L:timetables} Weekend riders follow weekend trains
   - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
-- T-4252 [P2] {L:checks} Gemini agents that make code changes (taking, 2026-11-24, agent geminirun)
-  - Context: You, 11-25: Claude usage will run out before Gemini's; "i'd also like to set it up so that we can use gemini neons to make code changes / handle tasks, like claude subagents." Today gemini_audit.py runs agy read-only; Gemini's code tasks run in Antigravity and you pass them on.
-  - Goal: A Gemini Neon agent works a brief in its own worktree (edits, typecheck, tests), reports to the inbox like a Claude agent, and can't commit, push, deploy or touch 8800.
-- T-4250 [P2] {L:route-choice} A short line beside a crowded long one stays empty
-  - Context: A player report (via your scratch pad, 11-25): line B runs a short part of long line A to relieve it, but A stays over 130% there while B sits near 60%. Maybe real (riders going past B's end), maybe riders not weighing A's crowding when picking a train. Reach: some, anyone adding a relief line.
-  - Goal: The code says why; fixed if riders whose trip fits B ignore A's crowding.
+- T-4250 [P2] {L:route-choice} {waits:Anita} A short line beside a crowded long one stays empty
+  - Need from Anita: Try a smooth fade of the dearer line's share in place of today's cliff, judged on an NYC figure diff? I'd say yes.
+  - Context: A player (11-25): relief line B near 60% while long line A stays over 130%. Gemini read the code: riders inside B split by frequency and keep A's full share until A is dearer by half B's headway, then drop to none; round 0's uncrowded split also keeps a quarter.
+  - Goal: Riders whose trip fits B move to it as A fills; NYC lines within 1% or the shift to you.
+  - Other: notes/T-4250.md (Gemini, not yet checked by a Claude agent)
 - T-4245 [P3] {L:timetables} Timetables for bus and ferry lines
   - Context: A player request (tw-feedback, 11-24). You, 11-24: "should be easy i think". The schedule panel's timetable is rail only: the sim keeps no trip timetable for bus and ferry lines, so the sim has to work one out first.
   - Goal: A bus or ferry line's schedule panel shows its timetable like a rail line's.
@@ -657,6 +668,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3654 [P3] {L:map-look} Draw on the map for planning
   - Context: Your pad, 2026-11-18, from Discord, "not high prio": "some people want draw on map tool for planning stuff. could add it in a discreet way, hideable".
   - Goal: A design to you first (what can be drawn, whether it saves and shares, where the hide control sits), then a first version.
+- T-4258 [P2] {L:line-rates} Port PR 34, capacity sections through one-way pairs
+  - Context: xoaninc's PR 34 (11-24): a capacity section runs on through a one-way pair (and flat crossings with the same lines) instead of queueing again at each end. You, 11-25: "yes can look into it". Gemini: applies cleanly.
+  - Goal: Ported with credit after an NYC figure diff (total, lines that move most); a big shift goes to you first.
+  - Other: notes/pr-survey-2026-11-25.md
 - T-4021 [P3] {L:line-rates} Load's cap lowering can miss a line after an early edit
   - Context: Seen by fullspeed (T-3655), 11-21, on London's save: with a count edit about 2 s after the load's final, the load's cap lowering never reached Victoria for the whole session (368/136/7); an edit 10 s after, or a single edit right after, let it finish (37 lines lowered). Cause unknown; not from T-3655. Not started while usage is high.
   - Goal: The cause named, and the lowering always finishes whatever the edit timing.
@@ -1032,7 +1047,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A tram stop lists parking with its improvements, added and removed like a station's.
 - T-4248 [P3] {L:track-drawing} Track across the 180th meridian
   - Context: A player building a Bering Strait line (your scratch pad, 11-24) gets "Too far for one piece of track" for any piece crossing 180°: the flat map measures it the long way around. Today crossing is refused (docs/world.md "The plane's edges"). You, 11-25: "if people want to build it, they should ideally be able to."
-  - Goal: First a scope from the code (geometry, drawing, tiles and zones, trips across the line), then track that crosses 180° and works like any other.
+  - Goal: Track that crosses 180° and works like any other. Gemini's scope: 5 stages, the map's drawing across world copies the hardest (13-20 h of about 30-45).
+  - Other: notes/T-4248.md
 - T-3692 [P3] {L:track-drawing} Bezier track as a setting
   - Context: Your old TODO: "bezier track placement, toggleable". You, 2026-11-18: "bezier track should be toggleable in settings yes".
   - Goal: A design to you first (how a curve is drawn and edited, what speed rules apply), then a settings toggle for bezier placement.

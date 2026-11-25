@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c013",
+      "text": "added remove buttons on passages and station connections while placing a passage",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4048",
+      "by": "passx",
+      "at": "2026-11-25T00:43:57Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
       "id": "c012",
       "text": "saves with many bus lines load much faster",
       "edited": null,
