@@ -325,6 +325,15 @@ function EDGE_AT([id, f]) {
   const rect = window.tw.map.getCanvas().getBoundingClientRect();
   return { x: rect.left + sx, y: rect.top + sy, ll: window.tw.map.unproject([sx, sy]).toArray() };
 }
+/** T-4294: what Edit stops holds at page px (x, y): the line its markers are for, the station a press there picks and its
+ * tier, and station `mid`'s tier and marker (its distance from the point, CSS px) */
+function STOP_WHY([x, y, mid]) {
+  const k = window.tw.tools.stops, r = window.tw.map.getContainer().getBoundingClientRect();
+  if (!k) return null;
+  const px = x - r.left, py = y - r.top, at = k.pick(px, py), m = k.marks.get(String(mid));
+  const st = (id) => id === null ? null : { id, name: k.names.get(id) ?? null, tier: k.tiers.get(id) ?? 'none' };
+  return { line: k.line ? { num: k.line.num, name: k.line.name } : null, picked: st(at), mid: { ...st(String(mid)), shown: !!m?.shown, px: m?.shown ? Math.round(Math.hypot(m.x - px, m.y - py)) : null } };
+}
 /** T-4267: each pressed station's times from its press (the presses in order, as the station tool keeps them): its
  * edit posted, the worker's word or refusal in (confirm), and its answer */
 function clickRunOf(ev, presses) {
@@ -372,7 +381,7 @@ async function play(g, runs, only, acc, note) {
     let err = null;
     try { await fn(); } catch (e) { err = e.message.split('\n')[0]; }
     await quiet(40000, 1500);
-    const seen = await page.evaluate((m) => window.__eb.ev.slice(m).filter((x) => x.k === 'post' || x.k === 'input').map((x) => x.k === 'post' ? x.kind + ':' + (x.op ?? '') : 'input:' + x.typ), m);
+    const seen = await page.evaluate((m) => window.__eb.ev.slice(m).filter((x) => x.k === 'post' || x.k === 'input').map((x) => x.k === 'post' ? x.kind + ':' + (x.op ?? x.q ?? '') : 'input:' + x.typ), m);
     const edits = (await since(m)).filter((e) => !ops || ops.includes(e.op));
     const e = edits[0];
     if (!e || err) {
@@ -510,18 +519,31 @@ async function play(g, runs, only, acc, note) {
   // stops, reorder, undo on the save's biggest line
   if (want('stop') || want('reorder') || want('undo')) {
     await g.act.key('Escape');
-    await g.act.openLine(C.line.name);
+    const opened = await g.act.openLine(C.line.name);
+    if (opened.again) note('  stop: the Lines tab opened another line ' + opened.again + 'x before ' + C.line.name + ' (the list sorted again under the press)');
     await g.act.click('Edit stops', { exact: false });
+    // T-4294: the stops edited are the line's (openLine checks its panel; Edit stops goes in its turn after clicks waiting)
+    const editing = await page.waitForFunction((num) => window.tw.tools.stops?.line?.num === num, C.line.num, { timeout: 10000 }).then(() => true, () => false);
+    if (!editing && want('stop')) note('  stop: Edit stops is not on line ' + C.line.name + ' (' + JSON.stringify(await page.evaluate(STOP_WHY, [0, 0, C.mid.id])) + '): its stop clicks are not sampled');
     await g.act.camera([C.mid.lng, C.mid.lat], 15);
     await sleep(1500);
     const stopOps = ['toggleStop', 'insertStop', 'dropStop', 'setStops', 'stopPassed'];
     // T-4234: every click brings its station to the middle of the map first, as a player pans to a stop before clicking
     // it. The camera was left where the line's stops had put it (Edit stops, the earlier lines' panels, a click's own
     // selection) and the station sat outside the view for the second press.
-    const pressStop = async () => { await g.act.camera([C.mid.lng, C.mid.lat], 15); await sleep(300); return g.act.press([C.mid.lng, C.mid.lat]); };
-    for (let k = 0; k < runs && want('stop'); k++) {
-      await sample(() => pressStop(), stopOps, { shows: 'stop click, removed: shows', rows: 'stop click, removed: panel rows', built: 'stop click, removed: line path' }, 'stop remove ' + (k + 1));
-      await sample(() => pressStop(), stopOps, { shows: 'stop click, added: shows', rows: 'stop click, added: panel rows', built: 'stop click, added: line path' }, 'stop add ' + (k + 1));
+    // T-4294: what the markers held at the press, said when a press sends no edit
+    let why = null;
+    const pressStop = async () => {
+      await g.act.camera([C.mid.lng, C.mid.lat], 15);
+      await sleep(300);
+      const [s] = await g.toScreen([[C.mid.lng, C.mid.lat]]);
+      why = await page.evaluate(STOP_WHY, [s.x, s.y, C.mid.id]);
+      return g.act.press([C.mid.lng, C.mid.lat]);
+    };
+    const stopSample = async (keys, label) => { if (!(await sample(() => pressStop(), stopOps, keys, label))) note('    the press, as the markers stood: ' + JSON.stringify(why)); };
+    for (let k = 0; k < runs && want('stop') && editing; k++) {
+      await stopSample({ shows: 'stop click, removed: shows', rows: 'stop click, removed: panel rows', built: 'stop click, removed: line path' }, 'stop remove ' + (k + 1));
+      await stopSample({ shows: 'stop click, added: shows', rows: 'stop click, added: panel rows', built: 'stop click, added: line path' }, 'stop add ' + (k + 1));
     }
     await g.act.click('Stop editing', { exact: false }).catch(() => {});
     await g.act.key('Escape');

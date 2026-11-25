@@ -214,12 +214,19 @@ export function actions(d) {
       return see('panel');
     },
 
-    /** open a line's panel from the Lines tab by its name */
+    /** open a line's panel from the Lines tab by its name. T-4294: the list sorts by riders and keeps its row elements
+     * in place when it sorts again, so while trips are calculated the row found by the name can hold another line by
+     * the press: pressed again until the panel open is that line's (`again` on the panel read: the presses that opened
+     * another) */
     async openLine(name) {
       await act.tab('lines');
-      await d.control({ css: `#dock .pane li:has(.line-name:text-is("${name}"))` });
-      await until(d, () => see('panel'), (p) => !!p?.text, { what: `the panel of ${name}` });
-      return see('panel');
+      let p = null;
+      for (let k = 0; k < 3; k++) {
+        await d.control({ css: `#dock .pane li:has(.line-name:text-is("${name}"))` });
+        p = await until(d, () => see('panel'), (x) => x?.title === name, { timeout: 3000, what: `the panel of ${name}` }).catch(() => null);
+        if (p) return k ? { ...p, again: k } : p;
+      }
+      throw new Error(`pressed the row of ${name} three times; the panel open is ${JSON.stringify((await see('panel'))?.title ?? null)}`);
     },
 
     /** the open line panel's trains by demand level, typed into each row's value: [high, medium, low] (null leaves one) */
