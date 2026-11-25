@@ -96,7 +96,7 @@ Web first, so it can be shared as a link.
   worker answers the track previews and station checks asked meanwhile, then builds and posts its
   state, trips and boarding hour and answers it (`later` in the clock worker). **A service edit's loads
   can follow** [T-3655]: a count or headway edit takes one step of the boarding account (3 lines)
-  first; with lines still to redo, its state, its trips without loads and its answer go, the steps go
+  first; with lines it changed still to redo (T-4240: lines out of date for new riders alone never hold an edit), its state, its trips without loads and its answer go, the steps go
   on (8 ms of them a task), and the last sends the hour's trips with loads, which the page waits for
   before drawing the staged state (`loadsFollow`; a state a newer one replaced goes in with that one;
   past 2 s it is drawn without loads until they come). A full state is built

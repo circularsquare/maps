@@ -383,6 +383,34 @@ fn line_periods_kept_equal_a_whole_read() {
     same(&b, &w.svc, l, "new riders");
 }
 
+/// T-4240: new riders leave every account out of date, but an edit's steps (`ensure_service_some`) work out only the
+/// lines whose service changed; the others keep their accounts until `ensure_some` reaches them, and `hour_kept` reads
+/// them as they are.
+#[test]
+fn an_edits_steps_leave_new_riders_to_the_steps_after_them() {
+    let bits = |v: &[f32]| v.iter().map(|x| x.to_bits()).collect::<Vec<_>>();
+    let (mut w, l) = setup(10.0);
+    let mut b = Boarding::default();
+    b.set_riders(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]));
+    b.ensure(&w.net, &w.svc);
+    let t = 2.0 * DAY + 8.0 * 3600.0;
+    let before = b.hour(&w.net, &w.svc, t);
+    let id = b.accounts[0][l as usize].as_ref().unwrap().id;
+    b.set_riders(&riders(l, [900.0, 300.0, 700.0, 300.0, 80.0]));
+    let fresh = b.clone().hour(&w.net, &w.svc, t);
+    assert_ne!(bits(&fresh), bits(&before), "the new riders load the trains otherwise");
+    assert!(b.ensure_some(&w.net, &w.svc, 0), "out of date for the new riders");
+    assert!(!b.ensure_service_some(&w.net, &w.svc, 0), "but not for an edit");
+    assert_eq!(bits(&b.hour_kept(&w.net, &w.svc, t)), bits(&before), "the last riders' loads");
+    assert_eq!(b.accounts[0][l as usize].as_ref().unwrap().id, id);
+    set_headway(&mut w, l, [20.0, 10.0, 5.0]);
+    assert!(b.ensure_service_some(&w.net, &w.svc, 0), "the service changed");
+    assert!(!b.ensure_service_some(&w.net, &w.svc, usize::MAX));
+    assert!(!b.ensure_some(&w.net, &w.svc, 0), "worked out with the new riders");
+    let kept = b.hour_kept(&w.net, &w.svc, t);
+    assert_eq!(bits(&kept), bits(&b.hour(&w.net, &w.svc, t)));
+}
+
 #[test]
 fn period_totals_match_demand_with_the_busiest_hour_shapes() {
     let (w, l) = setup(12.0);

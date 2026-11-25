@@ -5,7 +5,7 @@ import type { ClockState, EditOp, ToClock } from "./protocol";
 import { game, localOf, sendRows, sendState, shiftFrom, stateSteps } from "./clockMain";
 import { isPanic, MODEL_RESTORED, recover } from "./clockPanic";
 import { diagramOn, postDiagram, posted } from "./clockPost";
-import { api, messages, packLngLat, putMessages, putTiming, send } from "./clockState";
+import { api, messages, packLngLat, putMessages, putTiming, send, timing } from "./clockState";
 import { loadsOwed } from "./clockDemand";
 
 // T-1039: previews the main thread no longer wants (`previewStale`, sent outside the queue) are
@@ -98,6 +98,8 @@ function joined(a: FollowUp, b: FollowUp): FollowUp {
 /** the follow-up's state, its trips, and its edits' work after it, a piece per `next` */
 function* followSteps(f: FollowUp): Generator<void, void, void> {
   putTiming({});
+  // (from its first edit's apply to its state begun: the queue and the held wait)
+  timing.fromApply = performance.now() - f.ask.at;
   const a = f.ask, light = !a.net && !(a.name && shiftFrom);
   yield* stateSteps(light, a.effectiveAt, a.trips, a.early, true, (s) => { f.rows = s; }, a.service ? a.at : undefined);
   // the schematic reads its names off the world when a graph comes, so the same graph again

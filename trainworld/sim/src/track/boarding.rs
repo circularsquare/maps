@@ -488,6 +488,9 @@ struct Tally {
 #[derive(Clone, Debug, Default)]
 pub struct LineAccount {
     key: u64,
+    /// T-4240: the line's service key alone (`Boarding::key`): the account is out of date for new riders only while it
+    /// matches
+    base: u64,
     /// T-4149: this account among every one this `Boarding` made (from 1), so a line's day read from it can be kept
     /// while it stands (`Boarding::window`)
     id: u64,
@@ -522,6 +525,8 @@ pub struct Boarding {
     periods_memo: RefCell<HashMap<(usize, usize), ([u64; 3], Vec<f64>)>>,
     /// where `ensure_some` goes on from: day kind times lines plus line
     cursor: usize,
+    /// T-4240: where `ensure_service_some` goes on from, likewise
+    svc_cursor: usize,
     /// T-2707: per line id, the service key (`key`) its arrival masks were made for, and per run
     /// the masks (`line_masks`), which every kind of day's account shares
     masks: Vec<Option<(u64, [RunMasks; 2])>>,
@@ -789,6 +794,18 @@ impl Boarding {
     /// `ensure`, working out at most `max_lines` lines again; true if more are out of date. The
     /// clock worker calls it a few lines at a time after new riders, so it never blocks long.
     pub fn ensure_some(&mut self, net: &Network, svc: &Service, max_lines: usize) -> bool {
+        self.ensure_where(net, svc, max_lines, false)
+    }
+
+    /// T-4240: `ensure_some` for the accounts whose line's service changed since they were made (an edit's), none out of
+    /// date for new riders alone: those stand, read with the riders they were made from, until `ensure_some` reaches
+    /// them. A line with riders and no account yet is left to `ensure_some` too (new riders for a kind of day give
+    /// every line none). True if more are left.
+    pub fn ensure_service_some(&mut self, net: &Network, svc: &Service, max_lines: usize) -> bool {
+        self.ensure_where(net, svc, max_lines, true)
+    }
+
+    fn ensure_where(&mut self, net: &Network, svc: &Service, max_lines: usize, service_only: bool) -> bool {
         let nl = svc.lines.len();
         for day in 0..DAY_KINDS {
             self.accounts[day].resize(nl, None);
@@ -801,8 +818,9 @@ impl Boarding {
         let total = DAY_KINDS * nl;
         let mut svc_key: Vec<Option<u64>> = vec![None; nl];
         let mut done = 0;
+        let from = if service_only { self.svc_cursor } else { self.cursor };
         for i in 0..total {
-            let at = (self.cursor + i) % total;
+            let at = (from + i) % total;
             let (day, l) = (at / nl, at % nl);
             let ls = &svc.lines[l];
             let lr = self.riders[day].get(l).and_then(|r| r.as_ref());
@@ -817,11 +835,17 @@ impl Boarding {
                 h.add(self.generation[day]);
                 h.0
             };
-            if self.accounts[day][l].as_ref().map_or(false, |a| a.key == key) {
-                continue;
+            match &self.accounts[day][l] {
+                Some(a) if a.key == key || (service_only && a.base == base) => continue,
+                None if service_only => continue,
+                _ => {}
             }
             if done == max_lines {
-                self.cursor = at;
+                if service_only {
+                    self.svc_cursor = at;
+                } else {
+                    self.cursor = at;
+                }
                 return true;
             }
             done += 1;
@@ -842,8 +866,11 @@ impl Boarding {
                 if a.leftover > 0.5 { simulate_with(net, svc, l, r, lr, &self.peak, true, m, row) } else { a }
             });
             self.made += 1;
-            self.accounts[day][l] = Some(LineAccount { key, id: self.made, shift: ls.shift, runs });
+            self.accounts[day][l] = Some(LineAccount { key, base, id: self.made, shift: ls.shift, runs });
             self.redone += 1;
+        }
+        if service_only {
+            return false;
         }
         // every line seen: no masks kept for a line without an account
         self.masks.truncate(nl);
@@ -883,6 +910,19 @@ impl Boarding {
     /// Between two events, the crowd grows at the steady rate plus the pulses.
     pub fn hour(&mut self, net: &Network, svc: &Service, epoch: f64) -> Vec<f32> {
         self.ensure(net, svc);
+        self.hour_as_is(net, svc, epoch)
+    }
+
+    /// T-4240: `hour`, bringing up to date only the accounts whose line's service changed (`ensure_service_some`): a
+    /// line out of date for new riders alone gives the loads of the riders its account was made from, lined up with
+    /// its trips all the same (its service is the one they were worked out on).
+    pub fn hour_kept(&mut self, net: &Network, svc: &Service, epoch: f64) -> Vec<f32> {
+        self.ensure_service_some(net, svc, usize::MAX);
+        self.hour_as_is(net, svc, epoch)
+    }
+
+    /// `hour` from the accounts as they are.
+    fn hour_as_is(&mut self, net: &Network, svc: &Service, epoch: f64) -> Vec<f32> {
         let game = epoch;
         let mut pulses: Vec<(f32, f32, f32, f32)> = vec![];
         // the hour's kind of day (T-260) in each line's local time (T-309): every trip and

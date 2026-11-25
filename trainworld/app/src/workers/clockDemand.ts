@@ -86,17 +86,21 @@ let boardSince: number | null = null;
 /** a service edit's loads are still being worked out (its lead is timed when they go) */
 export const loadsOwed = () => boardSince !== null;
 export function loadsLater(boardAt: number | undefined): boolean {
-  if (boardAt === undefined || !accountStale()) return false;
+  if (boardAt === undefined || !api?.has_riders() || !api.boarding_step_service(0)) return false;
+  accountStale();
   boardSince = boardAt;
   return true;
 }
-/** an edit's boarding steps before its state (`later`'s `step`); `budget`: at most BOARD_STEPS_BEFORE_STATE */
+/** an edit's boarding steps before its state (`later`'s `step`); `budget`: at most BOARD_STEPS_BEFORE_STATE. T-4240: only
+ * the lines whose service changed (the edit's): lines out of date for new riders alone keep their last loads in its
+ * trips (`sendSlice`) until `stepBoarding` reaches them, so an edit made while trips are calculated no longer waits for
+ * every line's account (4.8 s of a station's 6.1 s on the Asia save) */
 export function editSteps(budget: boolean): () => boolean {
   let n = 0;
   return () => {
     if (budget && n++ >= BOARD_STEPS_BEFORE_STATE) return false;
     putTodayGen(todayGen + 1);
-    return api!.boarding_step(BOARDING_STEP_LINES);
+    return api!.boarding_step_service(BOARDING_STEP_LINES);
   };
 }
 
@@ -220,10 +224,12 @@ function sendSlice(s: TripSlice, withBoard = true) {
   const a = api!, { e, trips, ends, nexts, bays } = s, riders = a.has_riders();
   if (withBoard && riders) {
     const t0 = performance.now();
-    const board = a.boarding_hour(e);
+    // (T-4240: a line out of date for new riders alone with its last loads, so an edit's trips never wait for every
+    // line's account; the last of `stepBoarding`'s steps sends the hours again with theirs)
+    const board = a.boarding_hour_kept(e);
     shapeHour(e, board); // T-284: when this hour's fares land, read before the slice is sent
     timing.board += performance.now() - t0;
-    send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays, board, boardMs: performance.now() - t0, redone: a.boarding_redone(), prepMs: prep.ms, prepMax: prep.max }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer, board.buffer]);
+    send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays, board, boardMs: performance.now() - t0, redone: a.boarding_redone(), prepMs: prep.ms, prepMax: prep.max, ...(import.meta.env.DEV ? { timing: { trips: timing.trips, bays: timing.bays, board: timing.board } } : {}) }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer, board.buffer]);
     prep = { ms: 0, max: 0 };
   } else send({ kind: "trips", version, epoch: e, trips, ends, nexts, bays }, [trips.buffer, ends.buffer, nexts.buffer, bays.buffer]);
   if (withBoard || !riders) sentHours.add(e);

@@ -407,9 +407,10 @@ export function postState(s: ClockState, transfer: Transferable[]) {
   if (dl.ids) posted.lineIds = dl.ids;
   const full = patchMode === "check" ? { edges: s.edges, nodes: s.nodes, lines: s.lines } : undefined;
   const t1 = performance.now(), money = moneyPost(s.money!), t2 = performance.now();
-  send({ kind: "state", state: { ...s, ...money, edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) } }, transfer);
   // T-4149: the post's parts, for the edit's answer
-  timing.pRows = t1 - t0; timing.pMoney = t2 - t1; timing.pSend = performance.now() - t2;
+  timing.pRows = t1 - t0; timing.pMoney = t2 - t1;
+  send({ kind: "state", state: { ...s, ...money, edges: [], nodes: [], lines: [], delta: { edges: de, nodes: dn, lines: dl }, ...(full ? { checkRows: full } : {}) }, ...(import.meta.env.DEV ? { timing: { ...timing } } : {}) }, transfer);
+  timing.pSend = performance.now() - t2;
 }
 export function putDiagramOn(v: typeof diagramOn) { diagramOn = v; }
 export function putDiagramWhole(v: typeof diagramWhole) { diagramWhole = v; }

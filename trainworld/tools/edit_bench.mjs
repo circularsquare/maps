@@ -18,7 +18,10 @@
 //   --calculating    also a second pass in a fresh game with the edits made while trips are calculating
 //   --compare <hash or run id> the change per action against one run: the run id (printed at the end of a run, in the ledger's `run`) or the newest run of that build hash; only that run's lines are read
 //   --show [hash or run id]    print one run's table from the ledger, no run (the newest run without an argument)
-//   --steps          each edit's steps, ms from the input: posted, word, drawn ahead, rows, network in, taken, drawn (T-4097)
+//   --steps          each edit's steps, ms from the input: posted, word, drawn ahead, rows, network in, taken, drawn (T-4097);
+//                    T-4240: also the worker's laps for the state and its trips (a DEV build's `timing`; `fromApply` counts from
+//                    the follow-up's first edit), trips in, the page's take and setNetwork, its long tasks, and a second
+//                    station's steps (logged, not counted)
 //
 // Actions (times in ms, median of --runs repeats; shows = the first frame that changes, built = the frame that
 // draws the edit as built): ghost trail (px the drawn ghost trails the pointer at a steady speed, and the answer
@@ -112,7 +115,9 @@ function boost(profile) {
  * renamed one loses that mark and no more. */
 function INSTALL() {
   if (window.__eb) return;
-  const eb = window.__eb = { ev: [], ptr: null, ghost: null, ghostDrawn: null, answers: [], trail: [], trailOn: false, dirty: false };
+  const eb = window.__eb = { ev: [], long: [], ptr: null, ghost: null, ghostDrawn: null, answers: [], trail: [], trailOn: false, dirty: false };
+  // the page's long tasks (--steps), kept apart: they arrive after the fact
+  try { new PerformanceObserver((l) => { for (const e of l.getEntries()) eb.long.push({ t: e.startTime, ms: e.duration }); }).observe({ type: 'longtask' }); } catch { /* none */ }
   const now = () => performance.now();
   const push = (k, o = {}) => { eb.ev.push({ t: now(), k, ...o }); eb.dirty = true; };
   const tw = window.tw, c = tw.client, r = tw.renderer;
@@ -125,7 +130,10 @@ function INSTALL() {
     c.arrive = (msg) => {
       if (msg.kind === 'edited') push('arrive', { kind: 'edited', seq: msg.seq, ok: msg.ok, ms: msg.ms });
       else if (msg.kind === 'applied') push('arrive', { kind: 'applied', seq: msg.seq });
-      else if (msg.kind === 'state') { const s = msg.state; push('arrive', { kind: 'state', rows: !!s.rows, net: !!s.net, service: !!s.service }); }
+      else if (msg.kind === 'state') { const s = msg.state; push('arrive', { kind: 'state', rows: !!s.rows, net: !!s.net, service: !!s.service, ms: s.ms, timing: msg.timing }); }
+      // (--steps: no frame is owed for these)
+      else if (msg.kind === 'trips') eb.ev.push({ t: now(), k: 'trips', boardMs: msg.boardMs, timing: msg.timing });
+      else if (msg.kind === 'snapshot') eb.ev.push({ t: now(), k: 'snapshot' });
       return arrive(msg);
     };
   }
@@ -201,8 +209,8 @@ function INSTALL() {
 
 // ------------------------------------------------------------------------------------------ reading the events
 
-/** one record per edit message: input to the frames that show it */
-function editsOf(ev) {
+/** one record per edit message: input to the frames that show it; `long`: the page's long tasks, for --steps */
+function editsOf(ev, long = []) {
   const out = [];
   const r0 = (x) => (x == null ? null : Math.round(x));
   for (const [i, p] of ev.entries()) {
@@ -227,9 +235,30 @@ function editsOf(ev) {
     out.push({ op: p.op, seq: p.seq, post: r0(p.t - t0), answer: ans >= 0 ? r0(ev[ans].t - t0) : null, ok: ans >= 0 ? ev[ans].ok : null,
       standIn: Number.isFinite(standIn) ? r0(standIn) : null, rows: r0(rows), built: r0(built), shows: shows.length ? r0(Math.min(...shows)) : null, work: ans >= 0 ? ev[ans].ms ?? null : null,
       // the steps between (T-4097): the edit's word in, the drawn-ahead frame, the network's state in and taken
-      word: word >= 0 ? r0(ev[word].t - t0) : null, ahead: r0(drawnAhead), netIn: netIn >= 0 ? r0(ev[netIn].t - t0) : null, netTake: netTake >= 0 ? r0(ev[netTake].t + (ev[netTake].ms ?? 0) - t0) : null });
+      word: word >= 0 ? r0(ev[word].t - t0) : null, ahead: r0(drawnAhead), netIn: netIn >= 0 ? r0(ev[netIn].t - t0) : null, netTake: netTake >= 0 ? r0(ev[netTake].t + (ev[netTake].ms ?? 0) - t0) : null,
+      ...(STEPS ? stepDetail(ev, long, i, t0, netIn, netTake, built) : {}) });
   }
   return out;
+}
+
+const STEPS = !!opt('steps', false);
+/** --steps: what the worker's state and trips say of their own time (DEV builds), the page's take and network, and the
+ * page's long tasks between the input and the built frame */
+function stepDetail(ev, long, i, t0, netIn, netTake, built) {
+  const r0 = (x) => (x == null ? null : Math.round(x));
+  const after = (j, pred) => { for (let k = Math.max(0, j); k < ev.length; k++) if (pred(ev[k])) return k; return -1; };
+  const trips = after(netIn, (e) => e.k === 'trips');
+  const setNet = after(netTake >= 0 ? netTake - 3 : -1, (e) => e.k === 'r.setNetwork');
+  const snap = after(i, (e) => e.k === 'snapshot');
+  const end = t0 + (built ?? 0);
+  const round = (o) => o && Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === 'number' ? Math.round(v * 10) / 10 : v]));
+  return {
+    stateMs: netIn >= 0 ? ev[netIn].ms ?? null : null, stateTiming: netIn >= 0 ? round(ev[netIn].timing) : null,
+    tripsIn: trips >= 0 ? r0(ev[trips].t - t0) : null, tripsTiming: trips >= 0 ? round({ ...(ev[trips].timing ?? {}), boardMs: ev[trips].boardMs }) : null,
+    takeMs: netTake >= 0 ? r0(ev[netTake].ms) : null, setNetMs: setNet >= 0 ? r0(ev[setNet].ms) : null,
+    snapIn: snap >= 0 ? r0(ev[snap].t - t0) : null,
+    long: long.filter((x) => x.t + x.ms >= t0 && x.t <= end).map((x) => [r0(x.t - t0), r0(x.ms)]),
+  };
 }
 
 // ------------------------------------------------------------------------------------------ the game and its places
@@ -284,7 +313,7 @@ async function play(g, runs, only, acc, note) {
   note('places: line ' + C.line.name + ' (' + C.line.n + ' stops), ' + Math.min(runs, C.sites.length) + ' sites');
   const quiet = (ms = 25000, q = 1500) => page.evaluate(([a, b]) => window.__eb.quiet(a, b), [ms, q]);
   const mark = () => page.evaluate(() => window.__eb.ev.length);
-  const since = async (m) => editsOf(await page.evaluate((m) => window.__eb.ev.slice(m), m));
+  const since = async (m) => { const x = await page.evaluate((m) => ({ ev: window.__eb.ev.slice(m), long: window.__eb.long ?? [] }), m); return editsOf(x.ev, x.long); };
   const sample = async (fn, ops, keys, label) => {
     await quiet(20000, 1000);
     const m = await mark();
@@ -356,7 +385,9 @@ async function play(g, runs, only, acc, note) {
       await g.act.tool('station');
       await sample(() => g.act.placeStation(site.st[0]), ['addStation', 'addBrtStation'], { shows: 'station: shows', built: 'station: built' }, 'station ' + (k + 1));
       await quiet(20000, 1000);
-      await g.act.placeStation(site.st[1]);
+      // (--steps: the second station's steps are logged too, not counted)
+      if (STEPS) await sample(() => g.act.placeStation(site.st[1]), ['addStation', 'addBrtStation'], {}, 'station ' + (k + 1) + 'b');
+      else await g.act.placeStation(site.st[1]);
       await quiet(20000, 1000);
       await g.act.key('Escape');
       const name = 'EB' + (k + 1);

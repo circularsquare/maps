@@ -1062,14 +1062,15 @@ export type FromClock =
        * junction, or for a crossing its tram tracks as `packCross(0, trams)` (0, 0.1 or 0.2; T-3535), per mark */
       marks?: Float32Array;
     }
-  | { kind: "state"; state: ClockState }
+  /** `timing`: DEV builds, the worker's laps for this state since its edit (workers/clockState.ts `timing`; edit_bench --steps) */
+  | { kind: "state"; state: ClockState; timing?: Record<string, number> }
   /** trips drawn in [epoch, epoch + 3600): profile index, departure - epoch (notes/T-040.md);
    * `ends`, per trip, when it stops being drawn - epoch (its train takes its next departure from
    * the terminal or leaves service, T-206); `nexts`, per trip, the departure - epoch its train
    * takes next (the other run's trip drawn from then), NaN when it leaves service (T-245); `board`, once demand's riders are known: that hour of the boarding account, lined up with
-   * `trips` (`TrackApi.boarding_hour`, game/boarding.ts reads it; T-164), the ms it took, the
+   * `trips` (`TrackApi.boarding_hour_kept`, game/boarding.ts reads it; T-164), the ms it took, the
    * lines worked out again since the last, and the ms spent stepping through them (all, longest) */
-  | { kind: "trips"; version: number; epoch: number; trips: Float32Array; ends?: Float32Array; nexts?: Float32Array; bays?: Float32Array; board?: Float32Array; boardMs?: number; redone?: number; prepMs?: number; prepMax?: number }
+  | { kind: "trips"; version: number; epoch: number; trips: Float32Array; ends?: Float32Array; nexts?: Float32Array; bays?: Float32Array; board?: Float32Array; boardMs?: number; redone?: number; prepMs?: number; prepMax?: number; timing?: Record<string, number> }
   | { kind: "snapshot"; snapshot: NetworkSnapshot }
   /** T-2159: the network diagram's graph, after a network state while the diagram is shown */
   /** one graph per region of the network (T-3448), each in a frame of its own */

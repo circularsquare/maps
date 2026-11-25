@@ -2269,7 +2269,9 @@ per person and does not change who travels: demand still decides that (SPEC 4).
   fewer trains (none in the hours before the opening) but no rider waits for a train that could
   not yet be there. Nothing is saved: it follows from the service and the riders. Each line's inputs are hashed, so an edit
   works out again only the lines it changed; new riders redo every line, a few lines at a time
-  between the clock worker's other messages (3 a step); while the track tool is asking ghosts (one
+  between the clock worker's other messages (3 a step). An edit's state and trips wait only for the lines whose
+  service it changed: a line out of date for new riders alone gives the loads of its last riders until the steps
+  reach it, and their last step sends the hour again (T-4240); while the track tool is asking ghosts (one
   in the last 220 ms) the steps wait, at most 3 s a round of them, then run to the end (T-2404). New transfers (T-554) while that runs wait
   for its last step to send the hour, and the same transfers again send nothing; after the riders
   or transfers, the next hour's slice goes a task after this hour's (T-1810).

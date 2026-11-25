@@ -558,6 +558,17 @@ impl TrackApi {
     pub fn boarding_step(&mut self, max_lines: u32) -> bool {
         self.boarding.ensure_some(&self.w.net, &self.w.svc, max_lines as usize)
     }
+    /// T-4240: `boarding_hour`, bringing up to date only the accounts of lines whose service changed (an edit's,
+    /// `Boarding::hour_kept`): a line out of date for new riders alone gives its last loads until `boarding_step`
+    /// reaches it, so an edit's trips never wait for every line's account after new riders.
+    pub fn boarding_hour_kept(&mut self, epoch: f64) -> Vec<f32> {
+        self.boarding.hour_kept(&self.w.net, &self.w.svc, epoch)
+    }
+    /// T-4240: `boarding_step` for the lines whose service changed since their account (an edit's), leaving those
+    /// out of date for new riders alone; true if more such lines are left.
+    pub fn boarding_step_service(&mut self, max_lines: u32) -> bool {
+        self.boarding.ensure_service_some(&self.w.net, &self.w.svc, max_lines as usize)
+    }
     /// Lines whose account was worked out again since the last call.
     pub fn boarding_redone(&mut self) -> u32 {
         self.boarding.take_redone() as u32
