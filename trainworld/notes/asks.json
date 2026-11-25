@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-25-12",
+    "title": "Rural park and ride",
+    "text": "Upkeep check (T-4342, C:\\Users\\anita\\projects\\maps\\trainworld\\notes\\T-4342.md): only the waiting room was too high (lowering it to $5k/day now, as you said). Rural lines mostly lose money before any upgrade; the park and ride is the big upgrade cost there ($40k/day, priced for about 1,300 spaces). A smaller, cheaper park and ride (say $5M, $10k/day) would match a real rural lot, but it changes what players can build. Add it? Buildings and passages come out low against real costs; I'd leave them.",
+    "since": "2026-11-25",
+    "by": "maps-76"
+  }
+]

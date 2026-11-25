@@ -1,29 +1,29 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 5930d0ed-8c43-4146-931e-316bd8ffe75e, name maps-76 [78c9fa], since 2026-11-25 13:21 UTC
-Updated: 2026-11-25 15:27 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 16:42 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-0. Usage: Gemini out until about 12-01 03:30 UTC (she: "gemini will wait"); reviews go to a fresh Sonnet reviewer per
-   risky landing, findings to a fix agent unread. Briefs: maps-76's scratch <agent>/brief.md.
-1. Edit speed, her main focus, T-4267's plan (her 11-25 10:0x: "a big improvement... keep going and finish the plan").
-   Running: buytrains (Opus, T-4272 rest, her yes to buying trains after the confirm), complexnum (Opus, T-4300),
-   netfix8 (Sonnet, review27's fixes on T-4153 s8: buildings ignore new track). Left after: T-4309 (track limits),
-   T-4314/T-4315 (page), T-4153 rest (~50 ms), T-4149 s3, T-4281 rest; review28's lows go with T-4284's next stage.
-2. Owed: edit_bench NYC on master (batch: modelpass's lone samples read slower) once corrfix lands; Asia baseline on a
-   quiet machine (`edit_bench.mjs --save asia,nyc --baseline`, T-4293).
-3. 0.4.6.1 published 15:26 UTC (build mww9c849, data 2026-11-24, verified; website a4a8b5d; open source 7d1c0f7;
-   branch tw/hotfix461 a5f84494f, its tree kept; master has the notice, 2038c80ae). Watch for blocked-map reports.
-4. Also running: renameui (Opus: (R) on the rename tooltip, bulk-rename hover text, next stop name below with the speed
-   dial right of Next stop; screenshots to her), ofmproxy (Sonnet, research only: OpenFreeMap terms, a Worker draft;
-   her "only in cases we actually need to"), caprise (Sonnet: shonei-server MaxTwAccountBytes 64 to 128 MiB,
-   committed 493e582, deploy waits for her word; shonei-server's save check is level 39 = live 0.4.6, master is 41
-   (LBK1, LAP1): bump it before the next full release). T-4328 proxy waits for reports of players still blocked after 0.4.6.1 (her call). corrfix landing.
-5. Then: T-4220 s9 (Asia measuring + review24's findings, demand worker now free), T-3160 phone memory, T-4230.
-6. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
+1. Edit speed, her main focus, T-4267's plan ("a big improvement... keep going and finish the plan"). Running: buytrains
+   (Opus, T-4272 rest: trains bought after the confirm, cash may go negative; money: review before landing). Left:
+   T-4309 (track limits), T-4314/T-4315 (page), T-4153 rest (~50 ms), T-4149 s3, T-4281 rest, T-4339 (rowsOwed, P3).
+2. 0.4.7 release prep from about 18:00 UTC (1pm her time); she leaves about 20:00 UTC for about 2 days: no publish or
+   deploy until she's back; "nothing absolutely needs to be in". Rebuild 8800 at master + smoke first (8800 2398650f9 is
+   behind). Publish skill: changelog review agent, sort, highlights, her board edit, playtest list, smoke8800, perf_bench
+   3 saves. Her OK on new text: selectmodes' 3 labels, linestab's 2 hovers + "Profit % {percent}", helpapp's Q and A,
+   waitroom's Money hover; renameui's she gave. Server deploy on her yes BEFORE the publish: shonei-server ea0720a (save
+   level 41: master writes 41) + 493e582 (128 MB cap). buytrains only if reviewed in time; complexfix (T-4300 load
+   shortcut, review29's lows) and loadeta (T-4343, players' 3-hour loads, "Use more cores" maybe not working) if ready.
+3. Owed on a quiet machine: `edit_bench.mjs --save asia,nyc --baseline` (T-4293).
+4. Then: T-4220 s9 (Asia, review24's findings), T-3160 phone memory, T-4230; P3 pad tasks T-4332-T-4337; T-4328 proxy
+   only if players stay blocked after 0.4.6.1.
+5. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
 
 ## Her words
+- 11-25 10:5x: 0.4.7 release prep at about 1pm her time (18:00 UTC), small features first (linestab T-4329/T-4331,
+  selectmodes T-4330, savecheck41 for the server deploy); she leaves about 3pm (20:00 UTC) for about 2 days: no
+  publish or deploy after that until she's back. "if we dont get it out its also not the end of the world."; 11:3x: "nothing absolutely needs to be in by any point."
 - 11-25 10:0x her time: edit speed "a big improvement... keep going and finish the plan"; buy trains after the confirm,
   cash may go negative; proxy "only in cases we actually need to"; weekend solve after loads are faster; plays with
   Use more cores off; Resend: nothing; account cap 128 MB yes; Gemini waits; PRs 21, 24 closed with comments.
@@ -50,8 +50,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
 - Uncommitted on purpose: TODO.md (hers), notes/asks-log.jsonl, notes/board-live.json, changelog/roadmap.json,
   maps .claude/settings.json, notes/T-3397.md, tools/ops/archive_bad_saves.py.
-- Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), corridors (corridors3),
-  settlestop (settlefix working in it).
+- Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), hotfix461 (0.4.6.1 as shipped,
+  branch pushed; remove with agent-tree.mjs remove --force when done with it).
 - reserve_cores: maps-3e's retry loop (task b19u3mylb; powershell PID 29592) follows the ledger's cap and pins Gemini
   runners; it dies with maps-3e's tab: the successor starts its own (a second copy waits on the mutex).
 - notes/T-4214.md: stage A's section (stationclick, 11-25) sits uncommitted, not ours; keep it.

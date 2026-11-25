@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent netfix8)
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
   - Context: You, 11-23: "this is the entire issue". Stage 8 (tree netcut8): stations, buildings, facilities, splits, band orders and corridors redo only what an edit changed. Your Asia save, Node, a station on a three-line trunk: network build about 190 to 150 ms (first click 260 to 185). Left: cut lines' bands (about 30 ms), train speeds (20), per-line passes (20).
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 7 "What is left"
@@ -218,14 +218,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4299: a state's money and lists are kept per record now, 24 to about 5.5 ms a state on your Asia save. Still whole: the track limits, with the fleet needs, markers and turn limits built on them (about 2 ms), and profile_meta's copy (0.4 ms). The capacity has no index from a line to the track it shares.
   - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
   - Other: notes/T-4299.md
-- T-4300 [P1] {L:edit-speed} Station complexes worked out by what changed (taking, 2026-11-25, agent complexnum)
-  - Context: From T-4291: complexes are numbered by their first station in list order, which the network, line links and the page read, so any station edit renumbers over every station; with the names folded by them about 7 ms in Node on your Asia save.
-  - Goal: A numbering that holds when another complex changes, and names folded again only there; under 1 ms on Asia.
-  - Other: notes/T-4291.md "Left"
 - T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-25, agent buytrains)
   - Context: You, 11-25: yes, buy them after the confirm, cash may go negative. Stations and deletes on track no running line uses skip the train work before their answer (answers 95-207 ms in a run on your Asia save); on a running line's track they still wait 0.15-0.6 s for their trains.
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
+- T-4339 [P3] {L:edit-speed} Stop clicks' rows hold the services a station click owes
+  - Context: From T-4281: the stop clicks' rows (`rowsOwed`) skip working out what a station or delete on unused track owes, unlike other rows answering an edit. Only reachable when such a click gets no map patch between a stop click and its rows; a planned line's figures lag a few tasks.
+  - Goal: Those rows work out owed services first, as `standAside`'s do; for whoever has T-4272's files.
+  - Other: notes/T-4281.md
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
@@ -260,6 +260,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
+- T-4343 [P1] {L:loading} Big loads that show over 50 minutes left (taking, 2026-11-25, agent loadeta)
+  - Context: You, 11-25: "some people are complaining about >60 minute load times. or at least, thats what the estimate says". Two reports: one inbox report (0.4.6, "Same since 3 hours", card at 13% and about 50 min left, one solving worker) and rotas04 on Discord (72 min left with "Use more cores" on).
+  - Goal: Such a load ends instead of being restarted or failed while a worker is still in a period, and the time left stays the workers' own pace.
+  - Other: notes/T-4343.md
 - T-4230 [P2] {L:loading} The clock worker's first state sooner on load
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
@@ -357,6 +361,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
+- T-4337 [P3] {L:small-fixes} A new game can open with old groups closed
+  - Context: From T-4329: closed line groups are kept per save slot by group number, and a new game in the same slot numbers its groups again from the start, so a group can start closed.
+  - Goal: A new game in a slot starts with every group open.
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.
@@ -477,6 +484,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail.
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
   - Other: notes/T-4328.md
+- T-4327 [P3] {L:translations} Key hints in Japanese and Chinese hovers
+  - Context: Found while adding R to the station rename hover (11-25): ja, zh-Hans and zh-TW write a hover's key in full-width brackets ("バス路線を描く（U）"). The hover styles only ASCII brackets, so those keys are not lettered in the accent, and on phones they stay although there is no keyboard.
+  - Goal: Full-width bracketed keys get the same hint styling, and go on phones, as ASCII ones.
+  - Other: notes/renameui.md
 - T-4246 [P3] {L:map-look} Tram wires look rough at corners in thickness mode
   - Context: You, 11-24: "trams and their two white wires look a little ugly in demand thickness mode, when they turn around corners. not sure if we could improve this easily."
   - Goal: Tram wires follow corners cleanly at every width.
@@ -954,6 +965,15 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
   - Other: research/late-game-spending.md C.
+- T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows
+  - Context: Your pad, 11-25: most players won't care about every mode as niche ones come (cable cars, monorail, maglev, maybe planes). Your design: a gear on the construct panel to hide or show modes; by default it shows today's (bus and ferry), with checkboxes for cable cars and monorail.
+  - Goal: That gear and its setting, kept per player; needed before the next mode ships.
+- T-4335 [P3] {L:other-modes} Monorail as a mode
+  - Context: Your pad, 11-25: a train that can't connect to train track, only at or above grade, a bit dearer at grade and a bit cheaper elevated, steeper slopes allowed, top speed about 80-100 km/h, maybe tighter curve limits. Players ask for it. Not to start yet.
+  - Goal: A design to you first (rail facts decided and recorded), then the mode behind T-4334's gear.
+- T-4336 [P3] {L:other-modes} Cable cars
+  - Context: Your pad, 11-25: Mi Teleferico style. Straight spans only (waypoints allowed), very cheap to build, at or above grade, no slope limit, very short headways, small low-capacity cars drawn as little squircles. No terrain yet, so it will look a bit odd. Not to start yet.
+  - Goal: A design to you first, then the mode behind T-4334's gear.
 Anita 2026-11-03 early afternoon (verbatim in notes/todo-2026-11-03g.md):
 Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
 - T-2240 [P3] {L:passing-tracks} Express still queues on an overtake pair
@@ -1022,11 +1042,14 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20: "leaderboard map view". Design for you first.
 - T-3864 [P4] {L:community} Multiplayer hosting and compute
   - Context: Your TODO.md, 11-20: "for multiplayer, fredericrohrer said he'd sponsor compute / someone suggested private server hosted by people / someone suggested web socketsss". Design for you first.
+- T-4332 [P3] {L:community} Leaderboards for continents, regions and every country
+  - Context: Your pad, 11-25: leaderboards for continents, for regions like Benelux, and for the countries added lately (some may be missing). Add the leaderboard step to the add-a-country checklist (docs/adding-a-country.md) so new countries get one.
+  - Goal: Every country, continent and named region with a board; the checklist has the step.
 - T-3417 [P3] {L:map-look} Pixel-art city map style
   - Context: Your TODO 2026-11-15: a pixel-art style like the city maps going around Twitter. An idea.
   - Goal: A mock for you first.
 - T-3418 [P3] {L:map-look} Isochrone map mode
-  - Context: Your TODO 2026-11-15: a map mode showing travel time from a point to everywhere.
+  - Context: Your TODO 2026-11-15: a map mode showing travel time from a point to everywhere. Your pad, 11-25 (a player): also time to reach any stop, in tiers (train; train and tram; train, tram and bus), getting there by any other mode, walking or car.
   - Goal: Design first, then the mode.
 - T-3858 [P4] {L:map-look} Station logo or paint
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
@@ -1132,6 +1155,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You changed your mind again 2026-11-16: exact spacing for people who want full control, with waypoints. Exact edits were hidden behind ?exact, then dropped.
   - Goal: Exact stop ordering is an option beside normal stop editing, styled like your stop-picking notes in T-3444 (numbered circles per track).
   - Other: Folded in T-3384 (Waypoints on lines) and T-3410 (pass through or turn at a one-way station: you 11-16, "better solved with waypoints, so we dont have to add an additional thing to the UI"). Renamed from "spacing" on your board note 11-16. UI notes: notes/T-3444.md
+- T-4333 [P3] {L:stops} Board-only and disembark-only stops by direction, trains and buses
+  - Context: Your pad, 11-25: players want direction on board/disembark stops, buses too. Your design: the circle splits into two half-size semicircles with a gap (use the side padding); a click makes an arrow out (disembark) or in (board), right half one way, left the other, following the driving side. Buses with manual stops list every stop, like trains.
+  - Goal: That control on trains' and buses' stops; manual-stop buses list every stop.
 - T-3002 [P3] {L:trams} Shorter tram ramps
   - Context: You asked 2026-11-10 whether tram ramps could be shorter. Researched, not built.
   - Other: notes/T-2921.md "Round 3".

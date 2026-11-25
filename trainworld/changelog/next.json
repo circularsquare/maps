@@ -3,6 +3,66 @@
   "line": "",
   "items": [
     {
+      "id": "c042",
+      "text": "station waiting rooms cost half as much upkeep",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4342",
+      "by": "waitroom",
+      "at": "2026-11-25T16:35:10Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c041",
+      "text": "fixed dragging station building corners on phones; clicking an empty building opens it to remove",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4341",
+      "by": "bldgmobile",
+      "at": "2026-11-25T16:30:46Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
+      "id": "c040",
+      "text": "added a menu to the select tool for picking built track only or demand bubbles",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4330",
+      "by": "selectmodes",
+      "at": "2026-11-25T16:18:32Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c039",
+      "text": "added a profit percent row to the profit hover in the Lines and Cities views",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4331",
+      "by": "linestab",
+      "at": "2026-11-25T16:04:42Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c038",
+      "text": "line groups remember if they are closed, and double clicking a group's arrow closes or opens all",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4329",
+      "by": "linestab",
+      "at": "2026-11-25T16:04:41Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
       "id": "c037",
       "text": "trips are calculated about 2x faster when a small game loads",
       "edited": null,

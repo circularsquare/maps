@@ -17,6 +17,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 - trams | Trams | Trams after their release: snapping to real light rail, shorter ramps, crossing water on a road bridge.
 - buses | Buses, BRT and ferries | Bus balance against trams and a possible BRT upgrade, long distance buses, and small bus and ferry fixes.
 - track-speed | Track speed, slopes and maglev | Ideas that change how fast trains go on track: slopes slowing trains, a speed cap in mountains, maglev.
+- other-modes | Monorail, cable cars and more modes | New niche modes (monorail, cable cars, later maybe planes) and a setting to hide the modes a player doesn't use.
 - terrain | Terrain | The terrain under track prices: worldwide blocks, hexagon cells, water depth.
 - real-networks | Real networks | The real city networks a game can start with: missing lines, slow loads, and modes built on them. Fixes and additions to these starting networks are P4, Japan's P3, until players ask; the reference map (real world rail and stations drawn under the player's network) is a bit higher, and one-city changes stay low (Anita, 2026-11-19).
 

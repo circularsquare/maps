@@ -141,7 +141,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-25 (Anita, T-4253): A line's fare multiple may go up to 10x, refused when the base fare times it is over US$1,000.
 - 2026-11-23 (Anita): A new game starts with $10B (older entries said $6B; the code's $10B is right).
 
-- 2026-11-21 (Anita, T-3922): Station upgrades, passages and buildings pay 0.1% of their price a game day (Anita's call), replacing no upkeep. On a 2,647-station save that is US$3.6M a day against US$22,000M fares; kept at the game's own ratio rather than raised.
+- 2026-11-25 (Anita, T-3922, T-4342): Station upgrades, passages and buildings pay 0.2% of their price a game day (Anita raised it from 0.1%); waiting rooms pay 0.1%, US$5k, since a real shelter or small hall costs US$1-7k a year against US$10k a game day. Upkeep replaces none of the old.
 - 2026-11-20 (Anita, T-3885): The profit leaderboard ranks forecast weekday fares minus running costs and upkeep, leaving out new trains, construction and the loan. It has cities and countries like the points boards; losses get no row ("yes can not list loss games").
 - 2026-11-19 (, T-3753): Income charges each ride by its stops' country, or city when fares are set by city (an unset city takes its country's default); riders choose by their own, replacing country-only regions (T-1277). Lie: cross-border base extras pay each leaving stop. notes/T-3753.md
 - 2026-11-19 (Anita, T-3784, T-3689): The transfer fare can never exceed the base fare ("cap transfer fare at base fare"), replacing T-3303's cap of 1000. A change between zone rides in one fare zone run pays none (her call).
