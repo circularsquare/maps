@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4347 [P1] {L:loading} A time left from the start of a load (2026-11-25): Belgrade, 2 cores: a time left from 15-19 s (13 min shown, about 20 real), was blank for minutes; it rises once at a later round (13 to 17 min at 500 s). notes/T-4347.md.
+- T-4344 [P1] {L:fares} Waiting room upkeep back to 0.2% and smaller tram stop parking (2026-11-25): Waiting rooms back to 0.2% (05bf5508a reverted); tram stop park and ride US$5M via TRAM_PARK_RIDE_COST; Rust 1045 pass; NYC game: tram lot $5.00M / $10k a day, rail $20.0M / $40k, waiting room $5.00M / $10k. notes/T-4342.md.
+- T-4343 [P2] {L:loading} Load time left runs high early in a big load (2026-11-25): Watchdog waits out a period (8f835656e); time left sized and timed per round: New York on one worker 2 min shown with about 2 min real, was 8 min with 3 min real. notes/T-4343.md.
 - T-4342 [P2] {L:fares} Station improvement upkeep against real costs (2026-11-25): Waiting room upkeep 0.1% a day (WAITING_ROOM_UPKEEP_FACTOR in sim/src/track/upgrades.rs, mirrored in game/upgrades.ts); the rest stays 0.2%; Rust tests pass; hover checked on NYC. notes/T-4342.md.
 - T-4341 [P1] {L:station-placement} Station building tool on phones (2026-11-25): Touch drags for building corners and midpoints, hold-to-delete with the refusal as a notice, touch bar above the outline, an empty building's floor opens its panel (Remove building); checked in an emulated phone. notes/T-4341.md.
 - T-4300 [P1] {L:edit-speed} Station complexes worked out by what changed (2026-11-25): Complex numbers by first station node; ComplexBuilder.patch with a change log; names, node complexes, patch names, building names and the page's complexes by change; Asia worker 27 to 0.6 ms; patch-check comparisons added; t1380 extended. notes/T-4300.md.

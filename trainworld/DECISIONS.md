@@ -141,7 +141,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-25 (Anita, T-4253): A line's fare multiple may go up to 10x, refused when the base fare times it is over US$1,000.
 - 2026-11-23 (Anita): A new game starts with $10B (older entries said $6B; the code's $10B is right).
 
-- 2026-11-25 (Anita, T-3922, T-4342): Station upgrades, passages and buildings pay 0.2% of their price a game day (Anita raised it from 0.1%); waiting rooms pay 0.1%, US$5k, since a real shelter or small hall costs US$1-7k a year against US$10k a game day. Upkeep replaces none of the old.
+- 2026-11-25 (Anita, T-3922, T-4344): Station upgrades, passages, buildings and waiting rooms pay 0.2% of their price a game day, "closer to the same cost" (0.1% for waiting rooms lasted a day). A tram stop's park and ride is a smaller lot, US$5M against a station's US$20M.
 - 2026-11-20 (Anita, T-3885): The profit leaderboard ranks forecast weekday fares minus running costs and upkeep, leaving out new trains, construction and the loan. It has cities and countries like the points boards; losses get no row ("yes can not list loss games").
 - 2026-11-19 (, T-3753): Income charges each ride by its stops' country, or city when fares are set by city (an unset city takes its country's default); riders choose by their own, replacing country-only regions (T-1277). Lie: cross-border base extras pay each leaving stop. notes/T-3753.md
 - 2026-11-19 (Anita, T-3784, T-3689): The transfer fare can never exceed the base fare ("cap transfer fare at base fare"), replacing T-3303's cap of 1000. A change between zone rides in one fare zone run pays none (her call).
@@ -255,6 +255,9 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-25 (Anita, T-4347): The load card shows a time left from its start, on the solve model scaled by this browser's pace, until the workers' units give one; the bar stays under half meanwhile. Replaces T-4209's blank until known; the cost is a figure that can rise once. notes/T-4347.md
+- 2026-11-25 (T-4343): A load's later crowding rounds are sized at this browser's last measured ratio to the first (0.5 until it has one) and timed by their own pace once one of their units has ended; the flat 0.9 a round is gone. notes/T-4343.md
+- 2026-11-25 (T-4343): While a demand worker is inside a period, the loading card's watchdog waits 4 times the longest period timed on the page (30 minutes before this solve's first ends), not 10 minutes. Lie: a worker hung mid-period is caught that much later. notes/T-4343.md
 - 2026-11-25 (T-4284): The page's money and points figures add each line's kept terms in line order; a region's boardings and a line's points are summed per line first, not stop by stop, so an edit redoes only its lines' terms. Figures move in their last digits only. notes/T-4150.md
 - 2026-11-25 (T-4299): A state's money and flag lists are kept per record in the track model, moved only for what an edit, re-pricing, the service, a price factor, a passage or a building names. Lie: a change nothing names keeps its old part until a load; `?patch=check` catches it. notes/T-4299.md
 - 2026-11-25 (T-4299): The kept money adds its parts exactly (fixed point, steps of 2^-64), so it is the same whatever order the edits came in; its totals differ from a float sum over every record by a part in 1e9 at most, never in a shown figure. notes/T-4299.md

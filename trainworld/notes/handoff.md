@@ -1,58 +1,52 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 5930d0ed-8c43-4146-931e-316bd8ffe75e, name maps-76 [78c9fa], since 2026-11-25 13:21 UTC
-Updated: 2026-11-25 16:42 UTC (cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session a79cb0e8-7f65-4078-93d4-689df5d0c8b6, name maps-96 [c6b101], since 2026-11-25 16:42 UTC
+Updated: 2026-11-25 17:43 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. Edit speed, her main focus, T-4267's plan ("a big improvement... keep going and finish the plan"). Running: buytrains
-   (Opus, T-4272 rest: trains bought after the confirm, cash may go negative; money: review before landing). Left:
-   T-4309 (track limits), T-4314/T-4315 (page), T-4153 rest (~50 ms), T-4149 s3, T-4281 rest, T-4339 (rowsOwed, P3).
-2. 0.4.7 release prep from about 18:00 UTC (1pm her time); she leaves about 20:00 UTC for about 2 days: no publish or
-   deploy until she's back; "nothing absolutely needs to be in". Rebuild 8800 at master + smoke first (8800 2398650f9 is
-   behind). Publish skill: changelog review agent, sort, highlights, her board edit, playtest list, smoke8800, perf_bench
-   3 saves. Her OK on new text: selectmodes' 3 labels, linestab's 2 hovers + "Profit % {percent}", helpapp's Q and A,
-   waitroom's Money hover; renameui's she gave. Server deploy on her yes BEFORE the publish: shonei-server ea0720a (save
-   level 41: master writes 41) + 493e582 (128 MB cap). buytrains only if reviewed in time; complexfix (T-4300 load
-   shortcut, review29's lows) and loadeta (T-4343, players' 3-hour loads, "Use more cores" maybe not working) if ready.
-3. Owed on a quiet machine: `edit_bench.mjs --save asia,nyc --baseline` (T-4293).
-4. Then: T-4220 s9 (Asia, review24's findings), T-3160 phone memory, T-4230; P3 pad tasks T-4332-T-4337; T-4328 proxy
-   only if players stay blocked after 0.4.6.1.
-5. reserve_cores: maps-3e's loop holds the mutex; start one (`-All -Loop 30`) if it dies.
+1. 0.4.7: cut master 8d70fe09b, on 8800; her playtest passed ("good to ship from playtest perspective"), changelog
+   edited by her, her own wording for the new strings, server deployed. Running (maps-96's REPL): smoke8800, then
+   perf_bench build + run on 3 saves. Then the publish on her word (publish skill): translate the updates keys and
+   moneyTab.upgradesUpkeep (no language has it since 0.4.6), deploy, website push, open-source sync.
+   buytrains is not in 0.4.7 (my call: big money change while she can't hotfix).
+2. After the publish: hand over to standby 1 (notes/standby.txt; no Code Mode, she turns on remote control) so she can
+   reach the orchestrator from her laptop; standby 2 is the next cycle's. None left: ask her relay session for one.
+3. buyfix: a fresh agent on the buytrains tree: review30's finding 1 (edits.rs:84, a shortfall's cars free), findings
+   2, 4, 7, and a short notice for trains bought after a click, like other money notices (her yes). Then land T-4272
+   (also does T-4339). Review: artifacts/trainworld/reviews/review30-buytrains.md.
+4. Quiet-machine work while she's away: `edit_bench.mjs --save asia,nyc --baseline` (T-4293). Player reports after
+   0.4.7 first; small tasks: T-4337. Edit-speed stages (T-4309, T-4314/T-4315, T-4153, T-4149 s3, T-4281) wait for her
+   return, as do T-4220 s9, T-4230, T-3160. Up next: T-3160, T-3838.
+5. Gemini's quota ran out 11-25 16:47 UTC (resets about 11-30): Claude reviewers meanwhile.
 
 ## Her words
-- 11-25 10:5x: 0.4.7 release prep at about 1pm her time (18:00 UTC), small features first (linestab T-4329/T-4331,
-  selectmodes T-4330, savecheck41 for the server deploy); she leaves about 3pm (20:00 UTC) for about 2 days: no
-  publish or deploy after that until she's back. "if we dont get it out its also not the end of the world."; 11:3x: "nothing absolutely needs to be in by any point."
-- 11-25 10:0x her time: edit speed "a big improvement... keep going and finish the plan"; buy trains after the confirm,
-  cash may go negative; proxy "only in cases we actually need to"; weekend solve after loads are faster; plays with
-  Use more cores off; Resend: nothing; account cap 128 MB yes; Gemini waits; PRs 21, 24 closed with comments.
-- 11-24 evening her time: edit speed's root cause is the main focus ("we should *only be targeting the root cause*",
-  "please dont overindex on what i've said"); away overnight, keep going calmly; usage not high this week. Speed dial
-  smaller (landed). 35 MB GPU copy OK. Use more cores: she plays off; test off, both after big loading changes. Bars:
-  past half only on a bounded time left. Don't ask her to test the bar or edit speed until it feels right on 8800.
-  Repeats tracked in notes/repeats.md. Edit-speed memory budget 30 MB. Game stays at anita.garden.
+- 11-25 ~12:15: rest of the week 1-4 agents (not 2-8); usage at 83%, "dont worry about running out... dont want you
+  to perform worse cuz u feel limited"; after the release, mostly quiet-machine work. T-4346 is P3.
+- 11-25 ~12:10: at her parents' 1.5 days on her laptop, connecting by remote control; mostly urgent bug fixes, other
+  work if there's room; keep the up-next items.
+- 11-25 ~12:00: waiting rooms back to US$10k, tram stop parking smaller (T-4344); parking fee filed (T-4345); time left
+  from a load's start (T-4347): "10 minutes left" then instant is "kinda funny but not a problem".
+- 11-25 10:0x her time: buy trains after the confirm, cash may go negative; proxy "only in cases we actually need to";
+  weekend solve after loads are faster; plays with Use more cores off; account cap 128 MB; PRs 21, 24 closed.
+- 11-24 evening: edit speed's root cause is the main focus ("we should *only be targeting the root cause*"). Use more
+  cores: she plays off; test off, both after big loading changes. Bars: past half only on a bounded time left. Don't
+  ask her to test edit speed until it feels right on 8800. Edit-speed memory budget 30 MB. Game stays at anita.garden.
 - 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
-  kinda just flavor. we should mostly be focusing on isolating the changes and cutting out the impacts on the broader
-  map." (DECISIONS T-4097; T-4149, T-4150, T-4262 at P1.) Asia: station adds 1-3 s, removal about 4 s.
-- 11-25: PR comments: never close without one; the reason, thankful not apologetic, normal capitalization; her OK
-  first. Gemini code agents may run commands unattended in their tree; first 3 rounds asked about permissions (done).
-  No terminal windows from anything we start (CLAUDE.md Shell). Airports later, P3, "dont reinvent the wheel". 180th
-  meridian: "if people want to build it, they should ideally be able to". T-3742 after settlestop (my call).
-- 11-24 18:5x: shipped 0.4.6. She says when to publish (never ask); no "less memory" items when memory is up overall.
-- 11-23: answer her first; agents 2-8 by load; tasks about an hour; you don't investigate, agents do; cycle at 500k;
-  no drafted player replies; times as percent of the wait.
-- 11-19: player complaints before new features; full playtest list before every publish (not the 0.4.6.1 hotfix).
+  kinda just flavor." (DECISIONS T-4097.) Asia: station adds 1-3 s, removal about 4 s.
+- 11-25: Airports later, P3. 180th meridian: "if people want to build it, they should ideally be able to".
+- 11-19: player complaints before new features.
 
 ## Only a person knows
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
   docs/interface.md, checks/old moves, checks/INDEX.md, tools/checks_index.py. Landings touching them: patch dance
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
+- DECISIONS.md holds buytrains' two T-4272 entries uncommitted: commit them with its landing.
 - Uncommitted on purpose: TODO.md (hers), notes/asks-log.jsonl, notes/board-live.json, changelog/roadmap.json,
   maps .claude/settings.json, notes/T-3397.md, tools/ops/archive_bad_saves.py.
 - Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed), hotfix461 (0.4.6.1 as shipped,
-  branch pushed; remove with agent-tree.mjs remove --force when done with it).
-- reserve_cores: maps-3e's retry loop (task b19u3mylb; powershell PID 29592) follows the ledger's cap and pins Gemini
-  runners; it dies with maps-3e's tab: the successor starts its own (a second copy waits on the mutex).
+  branch pushed; remove with agent-tree.mjs remove --force when done with it), buytrains (unlanded).
+- reserve_cores: maps-96's loop (task bqimpnxwn); it dies with this tab: the successor starts its own.
 - notes/T-4214.md: stage A's section (stationclick, 11-25) sits uncommitted, not ours; keep it.
 - `land` (not `finish`) conflicts on changelog/next.json when the tree has items: use `finish` (it moves them).
+  `finish` drops a tree's edits to existing changelog items: redo them in the main tree.

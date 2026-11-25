@@ -219,7 +219,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
   - Other: notes/T-4299.md
 - T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-25, agent buytrains)
-  - Context: You, 11-25: yes, buy them after the confirm, cash may go negative. Stations and deletes on track no running line uses skip the train work before their answer (answers 95-207 ms in a run on your Asia save); on a running line's track they still wait 0.15-0.6 s for their trains.
+  - Context: Your 11-25 yes is built (tree buytrains): stations and deletes on running lines' track are answered too, their trains bought right after. Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest is the worker busy with other pieces.
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
 - T-4339 [P3] {L:edit-speed} Stop clicks' rows hold the services a station click owes
@@ -260,10 +260,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4343 [P1] {L:loading} Big loads that show over 50 minutes left (taking, 2026-11-25, agent loadeta)
-  - Context: You, 11-25: "some people are complaining about >60 minute load times. or at least, thats what the estimate says". Two reports: one inbox report (0.4.6, "Same since 3 hours", card at 13% and about 50 min left, one solving worker) and rotas04 on Discord (72 min left with "Use more cores" on).
-  - Goal: Such a load ends instead of being restarted or failed while a worker is still in a period, and the time left stays the workers' own pace.
-  - Other: notes/T-4343.md
+- T-4346 [P3] {L:loading} Move or close the first load's card
+  - Context: You, 11-25: "having the initial load panel that shows up in the middle of the screen be draggable to the side or dismissable with an x. if we dismiss it it can jus go into the small form at the top of the screen like the normal loads that happen in the middle of playing"
+  - Goal: The first load's card can be dragged aside or closed with an x; closed, it becomes the small loading bar at the top that loads during play use.
 - T-4230 [P2] {L:loading} The clock worker's first state sooner on load
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
@@ -513,6 +512,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3988 [P3] {L:steam} {after:the standalone build} Downloadable build on itch.io, $5 suggested
   - Context: You, 11-21: the standalone downloadable game with "a suggested donation of 5 dollars (but you can set it to 0)"; itch as the store ("$0 or donate", $5 suggested), and the anita.garden page linking to it. Steam stays free; no in-game donation link in the Steam build unless Valve's rules allow it.
   - Goal: An itch.io page with the downloadable build at $0 or donate ($5 suggested), linked from anita.garden.
+  - Other: 11-25: no approval to wait for; her itch account exists (shonei); a first paid page may wait a few days for itch's Search and Browse review.
 - T-3853 [P3] {L:steam} Offline version with chosen cities
   - Context: Your TODO.md, 11-20: "when we build standalone, allow offline version, choose which cities you wanna have downloaded i guess (say how much storage each one will take up)". Also from the suggestions: "make downloadable (doesnt have to be offline, but just not on web, i guess)", which T-3729's standalone build covers. Design for you first.
 - T-3696 [P4] {L:money} Lines' money and ridership changes as a list
@@ -1055,6 +1055,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
+- T-4345 [P3] {L:fares} A fee to use a station's park and ride
+  - Context: You, 11-25: "i think there probably also are some people having issues with parking lots with non tram lines. but yeah we can just do this for now. can maybe file like charging a fee to use parking lot as a task, could be fun". A rail station's lot costs US$40k a day and earns nothing.
+  - Goal: A design for a parking fee that earns money and puts some drivers off, shown to you before it is built.
 - T-4248 [P3] {L:track-drawing} Track across the 180th meridian
   - Context: A player building a Bering Strait line (your scratch pad, 11-24) gets "Too far for one piece of track" for any piece crossing 180°: the flat map measures it the long way around. Today crossing is refused (docs/world.md "The plane's edges"). You, 11-25: "if people want to build it, they should ideally be able to."
   - Goal: Track that crosses 180° and works like any other. Gemini's scope: 5 stages, the map's drawing across world copies the hardest (13-20 h of about 30-45).

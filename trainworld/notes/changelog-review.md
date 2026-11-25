@@ -123,3 +123,22 @@ Reworded (old -> new):
 
 Sorted by area (track, demand, scheduling, fares, schematic, community, performance, other), features before fixes with highlights first, hidden last. 55 shown items.
 Highlights: unchanged (7): c043, c035, c051, c088, c080, c048, c072. (c022 and c064 still carry a highlight flag but are hidden.)
+
+## 2026-11-25, 0.4.7 pass (agent clreview047)
+
+Reviewed: c001-c043 (c004, c007, c015, c025, c030, c032 were already hidden). 37 were shown at the start; 7 hidden, 30 kept.
+
+Hidden:
+- c001: trips 7% faster in big cities, too small to notice
+- c020: adding stops to lines faster, covered by c002 (edits on big networks show up faster)
+- c022: city trips slow after load with use more cores on, niche setting; covered by c009
+- c026: loading bars stuck near 90%, too fiddly
+- c028: a city's bubbles waiting after an edit, duplicate of c009
+- c039: profit percent row in a hover, hover only
+- c008: income jumping briefly after a fare change, too minor
+
+Merged: c020 and c028 into c002 and c009 (hidden, no reword; those lines are Anita's wording). c010, c018, c034, c012 and c037 stay separate: each is a different action a player would notice.
+Reworded: none (edited items keep her wording; c031 shows "added R hotkey to rename station", already edited).
+
+Sorted by area (track, demand, scheduling, fares, performance, other), features before fixes, biggest first, hidden last. 30 shown items.
+Highlights (7): c002, c018, c009, c034 (edit speed on big networks), c035 (bus stop names), c024 (stops on busways), c012 (saves with many bus lines load faster). Stale flags cleared elsewhere.
