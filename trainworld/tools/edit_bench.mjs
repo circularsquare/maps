@@ -10,9 +10,10 @@
 //   The budget (trainworld/CLAUDE.md, T-4213; tools/bench_gate.mjs). Inside .tw-trees/<name>/: 2 invocations in all
 //   (counted in <tree>/.bench-runs.json), --runs 1 (the default there), the default save is nyc, the asia save (and
 //   any tokyo/belgrade file) needs --heavy "<reason>" (still counted), --compare is refused: the run is diffed against
-//   master's stored lines (editbench/baseline.json) by itself. --dry-run checks the gates and exits. On the main
-//   tree nothing is refused; the orchestrator writes the baseline with --baseline (replaces the file with this run's
-//   lines). A run with more than 4 other cores claimed at its start or end is stamped NOISY (n) on its lines.
+//   master's stored lines (editbench/baseline.json) by itself, a lone sample against the baseline's first (T-4293).
+//   --dry-run checks the gates and exits. On the main tree nothing is refused; the orchestrator writes the baseline
+//   with --baseline (replaces the file with this run's lines). A run with more than 4 other cores claimed at its start
+//   or end is stamped NOISY (n) on its lines.
 //
 //   (default)        paused clock, trips final first: the edits' own wait
 //   --calculating    also a second pass in a fresh game with the edits made while trips are calculating
@@ -697,9 +698,14 @@ function compare(rows, cur, base) {
   const out = [];
   for (const r of cur) {
     const o = b.get(r.save + '|' + r.pass + '|' + r.action);
-    if (!o || !o.median || !r.median) { out.push(r.save + ' ' + r.pass + ' ' + r.action + ': no line for ' + base); continue; }
-    const ch = Math.round((100 * (r.median - o.median)) / o.median);
-    out.push(r.save + ' ' + r.pass.padEnd(5) + ' ' + r.action + ': ' + o.median + ' -> ' + r.median + ' (' + (ch > 0 ? '+' : '') + ch + '%)');
+    // T-4293: a lone sample is the action's first in its game (a cold build, often 1.5-3x the later ones), so it is set
+    // against the base's first sample, never its median, and the base's spread is shown beside it
+    const first = r.n === 1 && o?.all?.length > 1;
+    const ref = first ? o.all[0] : o?.median;
+    if (!o || !ref || !r.median) { out.push(r.save + ' ' + r.pass + ' ' + r.action + ': no line for ' + base); continue; }
+    const ch = Math.round((100 * (r.median - ref)) / ref);
+    const spread = o.all?.length > 1 ? ', its ' + o.all.length + ' samples ' + Math.round(Math.min(...o.all)) + '-' + Math.round(Math.max(...o.all)) : '';
+    out.push(r.save + ' ' + r.pass.padEnd(5) + ' ' + r.action + ': ' + (first ? 'first ' : '') + ref + ' -> ' + r.median + ' (' + (ch > 0 ? '+' : '') + ch + '%' + spread + ')');
   }
   return out;
 }
