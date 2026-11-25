@@ -25,7 +25,7 @@ import { chargeShares, lineShares, upkeepShares } from "../game/regionMoney";
 import { linePoints } from "../game/points";
 import { goalsDue } from "../game/goalRules";
 import { AVERAGE_DAY, AWAY_DAY, awaySoon, BACK_DAY, DAY_KINDS, OUT_DAY, rushSoon } from "../game/days";
-import { demandByDay, demandView, marketIn, platformTransfers, zoneViews } from "../game/demand";
+import { mainDemandByDay, demandView, marketIn, platformTransfers, zoneViews } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
@@ -1168,7 +1168,7 @@ export class ClockClient {
     };
     effect(() => {
       // what the two shares read; they are worked out later
-      void moneyWorld.value, moneyTerms.value, zonesLoaded.value, demandByDay.value, world.value;
+      void moneyWorld.value, moneyTerms.value, zonesLoaded.value, mainDemandByDay.value, world.value;
       if (sharesSoon) return;
       sharesSoon = true;
       if (typeof requestIdleCallback === "function") requestIdleCallback(postShares, { timeout: 2000 });
@@ -1197,7 +1197,7 @@ export class ClockClient {
       if (!m) return;
       // (T-3509: the trips within the zone, those between its far-apart parts included, so never
       // from figures before the market's result while the game has one)
-      const d = demandByDay.value[AVERAGE_DAY];
+      const d = mainDemandByDay.value[AVERAGE_DAY];
       if (!marketIn(d) && !marketOff()) return;
       // T-4150: the zones' views once per day's figures, not again with every state's money
       let zv = d ? starViews.get(d.cities) : undefined;
@@ -1211,7 +1211,7 @@ export class ClockClient {
       // so the account reads the ordinary day's (track/boarding.rs `kind`)
       void resend.value;
       const soon = awaySoon.value, rush = rushSoon.value;
-      demandByDay.value.slice(0, DAY_KINDS.length).forEach((d0, day) => {
+      mainDemandByDay.value.slice(0, DAY_KINDS.length).forEach((d0, day) => {
         const own = day === AWAY_DAY ? soon : day === OUT_DAY || day === BACK_DAY ? rush : null;
         const d = own === false ? { view: null } : d0;
         if (own !== null && !d.view) {

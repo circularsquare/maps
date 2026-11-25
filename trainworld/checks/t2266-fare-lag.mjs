@@ -37,7 +37,7 @@ try {
     const { lineFares } = await import('/src/game/fareInEffect.ts');
     // T-2286: each line's stamp of its solve's fares, as the demand client's `daysOf` writes it
     const markSolveFares = (days, fares) => { for (const d of days) if (d.view) for (const l of d.view.lines.values()) l.solvedFares = fares; };
-    const { demandByDay } = await import('/src/game/demand.ts');
+    const { demandByDay, mainDemandByDay } = await import('/src/game/demand.ts');
     const tw = window.tw;
     const orig = tw.moneyState.value.fares.nodes.map((n) => [...n]);
     const k0 = orig.findIndex((n) => n[1] > 0);
@@ -58,7 +58,8 @@ try {
       // (their marks moved to them for an instant, then put back; the views are copies so income is worked out again)
       spike: () => {
         const days = demandByDay.peek(), old = days[0].view.lines.values().next().value.solvedFares;
-        const copy = () => demandByDay.value = demandByDay.peek().map((d) => ({ ...d, view: d.view && { ...d.view } }));
+        // (income reads the main pool's figures, T-4307; with no side job they are the ones shown)
+        const copy = () => { const d = demandByDay.peek().map((x) => ({ ...x, view: x.view && { ...x.view } })); mainDemandByDay.value = d; demandByDay.value = d; };
         markSolveFares(days, tw.moneyState.value.fares);
         copy();
         const v = T.income();

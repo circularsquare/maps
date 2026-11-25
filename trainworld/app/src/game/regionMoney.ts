@@ -10,7 +10,7 @@
 // region (its stations go with it), new trains by the line the edit started.
 
 import { computed } from "@preact/signals";
-import { demandByDay, type DemandView, type LineDemand } from "./demand";
+import { mainDemandByDay, type DemandView, type LineDemand } from "./demand";
 import { stationZone } from "./listScope";
 import { baseTrips, busUpkeepDay, keptFor, lineGeo, liveMoney, moneyState, moneyTerms, moneyWorld, scalesOf, type LineGeo, type MoneyTerms } from "./money";
 import { placeAt, zonesLoaded } from "./zones";
@@ -47,7 +47,7 @@ export const lineShares = computed(() => {
   const out: LineShares = new Map();
   if (!w || !m) return out;
   const zl = zonesLoaded.value; // boundaries arriving re-place the stations
-  const dv = demandByDay.value[0]?.view ?? null;
+  const dv = mainDemandByDay.value[0]?.view ?? null;
   const was = sharesMemo;
   if (was && was.w === w && was.m === m && was.zl === zl && was.dv === dv) return was.out;
   sharesMemo = { w, m, zl, dv, out };

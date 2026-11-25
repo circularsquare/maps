@@ -522,8 +522,10 @@ snapshot and the fresh zones' `zoneGB` past 95% of the budget, as `memShort` cou
 snapshot's pass times of the periods it solves, plus opening its zones) not under 0.7 (`ASIDE_GAIN`) of the main
 pool's to the edit's lines (the solve's time left, and for a held edit its local stage after). The pool stays across
 edits while a whole solve runs and it holds a zone; a final shown, or a side job ending, with no whole solve running
-ends it, as does a game load or the main pool showing a final of the last side job's network or a newer one. It answers
-no question. T-2605's refine waits while it runs.
+ends it, as do a game load, the main pool showing a final of the side job in hand's network or a newer one (with none in
+hand, the last one's: its figures could no longer be shown, so a hung or slow side job ends there too), and T-2605's
+refine wanted while no side job is in hand or about to be decided. It answers no question. After the pool fails, none
+starts until the next whole solve's snapshot; after `ASIDE_FAILS` (2) failures, none until another game.
 **Its figures** go on screen at its end over the main pool's, which the page keeps apart (`mainDays`: every publish
 of the main pool merges there and goes under them): in each of its clusters the lines a fresh zone's population sees
 (its `reachView`) and any the figures on screen have none for on their stops, trains and cars, with their stations
@@ -534,7 +536,12 @@ undo or another edit: the next side job covers it), another game came, or the ma
 its network or a newer one in that cluster. They stay over the main pool's results of older networks (the running
 solve's final included) and go, cluster by cluster, once the main pool shows a final of their network or a newer one
 there; a later side job's replace them whole, and a newer network's plan that finds one of their fresh zones as on
-screen (the edit there undone) takes that cluster's away at once.
+screen (the edit there undone) takes that cluster's away at once. Once a newer network's side job is decided and shows
+nothing (refused, failed, or not shown with that network still the newest), they all go: they may be of an edit since
+undone or changed again, and nothing else would replace them before the main pool's result (T-4307). They go too when
+the kinds of day made change (a superholiday near or gone). What is kept reads the main pool's figures alone
+(`mainDemandByDay`): money, the boarding account's riders, points, achievements and stars. So while a side job's figures
+show, a line's riders are the side job's, and its income and the score the main pool's.
 With the barrier
 (startup, a zone just opened) the clusters to solve go in two groups when there are two or more and
 the first ranked zone's is one of them (T-402; the zone in view's, else the city view's, "The zone
@@ -640,7 +647,8 @@ solve's final moves them a little (notes/T-2045.md); that solve itself is untouc
 are the same to the bit.
 **The zone in view aside** (T-2605, `refineAside`, `?perfOff=refineAside` off). Outside a load, while a whole
 solve without the barrier runs (`firm`), the zone in view gone fine waits for that solve's final, which covers it
-coarse. On a big game that is a minute or more (an edit held meanwhile is solved aside by T-4220, above). So a focus pool of one worker is started for that zone alone, solving it as during a load with
+coarse. On a big game that is a minute or more (an edit held meanwhile is solved aside by T-4220, above; an edit of the
+zone in view whose side job shows nothing is refined here, as before T-4220). So a focus pool of one worker is started for that zone alone, solving it as during a load with
 the newest network (fine), each round shown as the zone's figures and bubbles, and as the figures of lines
 the shown result has none at all for (T-2793: new ones only; a line whose stops changed keeps its shown figures,
 carried onto the new stops). Every other line and station keeps the shown figures (`withZone`, `aside`):
@@ -649,7 +657,8 @@ lines 50,400 a day against 67,800; a 1,068 km Hikari 36,600 a day against 589,00
 whatever an edit held meanwhile did to them.
 Those figures stay over any solve that covers the zone coarse or is of an older network, its final included,
 and the pool ends when a solve of the main pool of that network shows the zone (its local result or final), at a
-newer edit, or as an edit's side pool starts (T-4220); it waits while that pool runs. They carry the same lie as during a load; the main pool's solves are untouched.
+newer edit, or as an edit's side pool starts (T-4220); it waits while a side job is in hand or about to be decided, and
+ends a side pool kept for a later edit. They carry the same lie as during a load; the main pool's solves are untouched.
 **One period first** (T-1538, `?perfOff=estimate` off). A worker holds two or three of the five
 periods (the pool is at most 3), and on a big network each period's free flow takes seconds. So
 in a rough solve, and in that free-flow round after an edit, a worker solves its first period

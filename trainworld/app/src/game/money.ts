@@ -20,7 +20,7 @@
 
 import { computed, signal } from "@preact/signals";
 import { awayNear, DAY_KINDS, kindMade, PLAIN_KIND, rushRun } from "./days";
-import { demandByDay, lineLoadsFor, type DemandView } from "./demand";
+import { mainDemandByDay, lineLoadsFor, type DemandView } from "./demand";
 import { cityById, isCity } from "./cities";
 import { faresFor, faresOf, lineFareMul, ownLineFare, type Fares } from "./fareCurve";
 import { boatFleet, boatOf } from "./boats";
@@ -160,7 +160,7 @@ export const incomeByDay = computed<Income[]>(() => {
   // T-264, T-1373: a superholiday's days have their own figures only while one is near, else the
   // ordinary day's they stand in for
   const near = awayNear.value, rush = rushRun.value;
-  const views = demandByDay.value.slice(0, DAY_KINDS.length).map((d, k) => (kindMade(k, near, rush) ? d.view : null));
+  const views = mainDemandByDay.value.slice(0, DAY_KINDS.length).map((d, k) => (kindMade(k, near, rush) ? d.view : null));
   const was = incomeMemo, same = !!was && was.w === w && was.t === t && was.zl === zl;
   if (same && sameList(views, was.views)) return was.out;
   const own = views.map((v, k) => (!kindMade(k, near, rush) ? null : same && v === was.views[k] ? was.out[k] : incomeFor(w, t, v, was?.out[k])));

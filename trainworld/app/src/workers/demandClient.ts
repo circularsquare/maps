@@ -28,14 +28,14 @@
 
 import { t } from "../i18n";
 import { ownModesFrom } from "../game/corridorFigures";
-import { effect } from "@preact/signals";
+import { batch, effect } from "@preact/signals";
 import { activeCity, CITIES, cityById, getWorldFrame, HOME_CITY, isCity, LEGACY_FRAME, MARKET_FRAME, viewedZone, worldFrameEpoch, worldToCity, cityToMarket, type CityId } from "../game/cities";
 import type { FrameSpec } from "../game/frame";
 import { splitOf } from "../game/types";
 import { BACK_DAY, DEMAND_DAYS, OUT_DAY, PLAIN_KIND, rushRun, type DayKind, type DemandDay } from "../game/days";
 import { display, marketOff, selection, shownDay, tool } from "../game/ui";
 import {
-  cityDemandViews, demandByDay, intercityDemand,
+  cityDemandViews, demandByDay, intercityDemand, mainDemandByDay,
   type DayDemand,
   type DemandView,
   demandStep,
@@ -554,6 +554,8 @@ interface Solve {
   localShownAt?: number;
   /** solved with the round barrier (estimates by round); else after an edit, counted by stage */
   barrier?: boolean;
+  /** T-4220: its solving workers were asked for the figures on screen (`snap`), which a side job is planned against */
+  snap?: boolean;
   /** T-1734: networks held back while it ran, and when the first came */
   heldFrom?: number;
   /** T-3616: when the first of the edits' solves this one follows on from without a whole solve started between
@@ -794,6 +796,8 @@ const ASIDE_QUIET_MS = 1000;
 const ASIDE_GAIN = 0.7;
 /** T-4220: the side pool's start, before its plan can be asked for (0.5 s on New York, stage 3; a guess for slower machines) */
 const ASIDE_START_MS = 1500;
+/** T-4220: the side pool's failures in one game after which no side job starts until another game */
+const ASIDE_FAILS = 2;
 
 /** Pack a service for the workers; lines naming a station that is not in the list are left out. */
 function packService(svc: Service): { net: DemandNetwork; layout: Solve["layout"]; ids: { lines: string[]; stations: string[] } } {
@@ -3419,11 +3423,13 @@ class DemandClient {
 
   /**
    * T-4220 (notes/T-4220.md, "The pick" 5): the side job's pool, one worker holding up to `ASIDE_MAX_ZONES` zones. Never
-   * alive beside `fpool` (T-2045's and T-2605's): it ends a refine aside as it starts, and a refine waits while it lives.
+   * alive beside `fpool` (T-2045's and T-2605's): it ends a refine aside as it starts; a refine wanted while no side job
+   * is in hand or about to be decided ends it in turn (`refineAside`, T-4307).
    * An edit does not end it: its zones and its copy of the snapshot stay for the next edit made during the same whole
    * solve. A side job ending, or a final shown, with no whole solve running or no zone held there ends it (`asideIdle`),
-   * as does the main pool showing the last side job's network or a newer one (`sideCovered`). It answers no question: a
-   * side job leaves its zones' populations there on its own network (T-4297).
+   * as does the main pool showing the last side job's network or a newer one, or that of the side job in hand, whose
+   * figures could then never be shown (`sideCovered`). It answers no question: a side job leaves its zones' populations
+   * there on its own network (T-4297).
    */
   private apool: FocusPool | null = null;
   /** the level each zone was posted to it at, and those opening there */
@@ -3435,8 +3441,12 @@ class DemandClient {
   private asideJob: { svc: Service; gen: number } | null = null;
   /** the snapshot generation each network's side job was decided on (started or refused): once a generation */
   private asideDecided = new WeakMap<Service, number>();
-  /** the pool failed: none starts again until a whole snapshot comes after */
+  /** the pool failed: none starts again until a whole snapshot comes after; `ASIDE_FAILS` failures in a game, none until
+   * another game (a worker that runs out of memory on its zones would otherwise start, and fail, at every whole solve) */
   private asideBroken = false;
+  private asideFails = 0;
+  /** T-4307: networks whose side job was decided and shows nothing (`asideNothing`): T-2605's refine of an edit may run */
+  private asideNone = new WeakSet<Service>();
   /** a side job waits for the running solve's time left (`unitsLeft`), looked at again at its next `work` */
   private asideWaitsLeft = false;
   private asideTimer = 0;
@@ -3462,7 +3472,7 @@ class DemandClient {
     if (smallDevice() || addressLimited()) return "device";
     // (`?split=1`: T-3373 B's solves are all whole, round by round, with no snapshot)
     if (this.holding) return "split";
-    if (this.failed || this.asideBroken) return "pool";
+    if (this.failed || this.asideBroken || this.asideFails >= ASIDE_FAILS) return "pool";
     return null;
   }
 
@@ -3489,13 +3499,21 @@ class DemandClient {
    * on the page (`asideOff`, the fares changed since the figures on screen, the side pool's memory, too little left to
    * gain), else planned in the side pool; solved there if the plan has fresh zones held at the main pool's levels now,
    * they fit in memory too, and the side job's expected time is under `ASIDE_GAIN` of the main pool's (`asideRun`).
+   * With no side job in hand after it, T-2605's refine may run (`refineAside`).
    */
   private asideGo() {
+    try { this.asideDecide(); } finally { if (!this.asideJob) this.refineAside(); }
+  }
+  private asideDecide() {
     const want = this.asideWanted();
     if (!want || this.asideJob) return;
     const { svc, s, held } = want;
-    // (`shownIn` looks again once the running solve's snapshot is in, the next `work` once its time left is known)
-    if (this.shownSnap.sent(s.version).size < this.computeN) return;
+    // (`shownIn` looks again once the running solve's snapshot is in, the next `work` once its time left is known; a
+    // solve whose workers were not asked for it has none coming)
+    if (this.shownSnap.sent(s.version).size < this.computeN) {
+      if (!s.snap) this.asideNothing(svc);
+      return;
+    }
     const shown = this.shownSnap.forAside(), gen = shown?.gen ?? -1;
     if (this.asideDecided.get(svc) === gen) return;
     const left = unitsLeft(s, this.computeN, performance.now());
@@ -3504,10 +3522,10 @@ class DemandClient {
     const ent: AsideLog = { version: ++this.version, on: s.version, gen, held, at: performance.now(), mainMs: left };
     this.asideLog.push(ent);
     if (this.asideLog.length > 50) this.asideLog.shift();
-    const no = (refused: string, why: string) => this.asideEnd(ent, { refused, why });
+    const no = (refused: string, why: string) => { this.asideEnd(ent, { refused, why }); this.asideNothing(svc); };
     const off = this.asideOff(), cities = this.asideCities(svc);
     // i18n-ignore (the dev log's)
-    if (off) return no(off, off === "off" ? "?perfOff=editAside or focus" : off === "device" ? "a small or address-limited device" : off === "split" ? "?split=1" : "the side pool failed; none until the next snapshot");
+    if (off) return no(off, off === "off" ? "?perfOff=editAside or focus" : off === "device" ? "a small or address-limited device" : off === "split" ? "?split=1" : this.asideFails >= ASIDE_FAILS ? `the side pool failed ${this.asideFails} times; none until another game` : "the side pool failed; none until the next snapshot");
     if (!shown) return no("snapshot", "no whole snapshot held"); // i18n-ignore
     if (!cities) return no("zones", "the network's reach is not known yet"); // i18n-ignore
     // (the fare test the plan makes, on the page: a fare edit never starts the pool to be refused there)
@@ -3520,6 +3538,7 @@ class DemandClient {
       this.asideJob = null;
       this.asideIdle();
       this.asideSoon();
+      this.refineAside();
     });
   }
 
@@ -3527,7 +3546,7 @@ class DemandClient {
    * stage 7) */
   private async asideRun(ent: AsideLog, svc: Service, s: Solve, held: boolean, shown: AsideShown, cities: CityId[]) {
     const { version, gen } = ent;
-    const no = (refused: string, why: string) => this.asideEnd(ent, { refused, why });
+    const no = (refused: string, why: string) => { this.asideEnd(ent, { refused, why }); this.asideNothing(svc); };
     const s1 = (ms: number) => `${(ms / 1000).toFixed(1)} s`; // i18n-ignore
     const pool = this.asidePool(), { net, ids } = packService(svc);
     const plan = await this.asideAsk(pool, (p) => p.aside({ kind: "aside", version, net, ids, rounds: ROUNDS, cities, gen, shown, ...(perfOff("periods") ? { fresh: true } : {}) }), (m) => (m.kind === "asidePlan" && m.version === version ? m.plan : undefined));
@@ -3577,6 +3596,21 @@ class DemandClient {
     if (done.stale) return this.asideEnd(ent, { stale: true });
     const not = await this.asideShow(ent, svc, now, done.plan, got);
     this.asideEnd(ent, not ? { done: true, notShown: not } : { done: true });
+    // (not shown with its network still the newest: none comes for it; a newer one's side job is decided next)
+    if (not && this.latest() === svc) this.asideNothing(svc);
+  }
+
+  /**
+   * T-4307: the side job decided for `svc` shows nothing and none comes for it (refused, failed, or not shown with `svc`
+   * still the newest). Figures on screen from an older network's side job go: they may be of an edit the player has
+   * undone or changed again since, and nothing would replace them before the main pool's result of `svc` (on a big
+   * game a whole solve later). The main pool's figures show until then, as with no side job; T-2605's refine of an edit
+   * of the zone in view may run for `svc` instead (`refineAside`). Figures of `svc`'s own network stay.
+   */
+  private asideNothing(svc: Service) {
+    this.asideNone.add(svc);
+    const o = this.side;
+    if (o && (this.netSeq.get(svc) ?? -1) > o.seq) this.dropOverlay();
   }
 
   /** T-4220: a side job decided, its log entry ended (on the dev server, the console's line) */
@@ -3604,7 +3638,11 @@ class DemandClient {
   }
   private set days(days: DayDemand[]) {
     this.mainDays = days;
-    demandByDay.value = this.sideOver(days);
+    // (T-4307: what is kept, money, points, achievements, stars and the boarding account, reads the main pool's alone)
+    batch(() => {
+      mainDemandByDay.value = days;
+      demandByDay.value = this.sideOver(days);
+    });
   }
   /** the side job's figures on screen, by cluster (`game`: the `gameLoadSeq` they are of; `removed`: lines on screen its
    * network no longer has), until the main pool shows its network or a newer one there (`sideCovered`), a later side
@@ -3732,8 +3770,9 @@ class DemandClient {
   }
 
   /** T-4220: the main pool shows a final of `s` for `zones` (null: its whole final). The side job's figures there of
-   * `s`'s network or an older one go; once it is the last side job's network or a newer one, the side pool ends too
-   * (`asideIdle` keeps it through an older final, for an edit made during the next whole solve). */
+   * `s`'s network or an older one go; once it is the network of the side job in hand (with none, of the last one) or a
+   * newer one, the side pool ends too (`asideIdle` keeps it through an older final, for an edit made during the next
+   * whole solve). */
   private sideCovered(s: Solve, zones: readonly CityId[] | null) {
     const seq = this.netSeq.get(s.svc) ?? -1;
     if (!zones) this.coveredAll = Math.max(this.coveredAll, seq);
@@ -3745,7 +3784,9 @@ class DemandClient {
       for (const l of s.layout) o.removed.delete(l.id);
       if (!o.clusters.length) this.side = null;
     }
-    if (seq >= this.asideSeq && !this.asideJob) this.endAside();
+    // (T-4307: the job in hand's figures could then never be shown: a hung or slow one ends here too)
+    const job = this.asideJob;
+    if (seq >= (job ? this.netSeq.get(job.svc) ?? -1 : this.asideSeq)) this.endAside();
   }
   /** the newest network a final of the main pool has been shown for in any of `zones` */
   private coveredFrom(zones: readonly CityId[]): number {
@@ -3770,6 +3811,12 @@ class DemandClient {
     this.coveredAt.clear();
     this.coveredAll = -1;
     this.asideSeq = Infinity;
+    this.asideFails = 0;
+    this.dropOverlay();
+  }
+
+  /** the side job's figures leave the screen (only those: what the main pool has shown stays known, `coveredFrom`) */
+  private dropOverlay() {
     if (!this.side) return;
     this.side = null;
     this.days = this.mainDays;
@@ -3785,7 +3832,7 @@ class DemandClient {
       message: (_, msg) => this.atake?.(msg),
       opened: (id) => { this.aopening.get(id)?.(); this.aopening.delete(id); },
       // i18n-ignore
-      failed: (why) => { console.warn(`demand: the side pool stopped (${why})`); this.lastTrouble = `side pool stopped: ${why}`; this.asideBroken = true; this.endAside(); },
+      failed: (why) => { console.warn(`demand: the side pool stopped (${why})`); this.lastTrouble = `side pool stopped: ${why}`; this.asideBroken = true; this.asideFails++; this.endAside(); },
     }, this.viewMsg(), false, ASIDE_MAX_ZONES));
   }
 
@@ -4297,15 +4344,20 @@ class DemandClient {
    * main pool's refine of it waits for that solve's final (`firm`), a minute or more on a big game. So a focus
    * pool solves the zone alone at fine level meanwhile, and its figures and bubbles stand for the zone (its lines
    * keep the shown ones) until a solve of the main pool covers it fine. `?perfOff=refineAside` off. T-4220: an edit
-   * held behind that solve is the side job's, and this waits while the side pool runs.
+   * held behind that solve is the side job's; this waits while a side job is in hand or about to be decided, and refines
+   * an edit of the zone in view only once its side job shows nothing (T-4307: a refused side job leaves the wait as it
+   * was before T-4220). A side pool kept for a later edit gives way to it.
    */
   private refineAside() {
     const id = activeCity.peek(), s = this.cur, svc = this.latest();
-    if (this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || this.apool || (this.fpool?.alive && !this.frefine)) return;
+    if (this.lod !== "auto" || this.failed || this.hold || gameLoadArmed() || this.asideJob || this.asideTimer || (this.fpool?.alive && !this.frefine)) return;
     if (!s || !svc || !this.firm() || !this.solveNeed(svc)?.has(id)) return;
-    // the zone gone fine, which the solve in hand covers coarse
-    if (!(this.levelPosted.has(id) && this.levelFor(id) === LOD_FINE && s.cities.includes(id) && this.coarseIn(s, id))) return;
+    // the zone gone fine, which the solve in hand covers coarse; or an edit of the zone held behind that solve
+    const relevel = this.levelPosted.has(id) && this.levelFor(id) === LOD_FINE && s.cities.includes(id) && this.coarseIn(s, id);
+    const edit = svc !== s.svc && this.asideNone.has(svc) && this.side?.svc !== svc && (this.edited.get(id) ?? -Infinity) > Date.now() - (performance.now() - s.arrivedAt);
+    if (!relevel && !edit) return;
     if (this.fpool?.alive && this.frefine === id && (this.fsolve?.svc ?? svc) === svc) return;
+    this.endAside();
     this.endFocus();
     this.startFocus();
     if (!this.fpool) return;
@@ -5166,7 +5218,7 @@ class DemandClient {
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
     const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}), ...(refresh ? { refresh } : {}) };
-    if (!barrier && this.snapOn()) msg.snap = true;
+    if (!barrier && this.snapOn()) msg.snap = this.cur.snap = true;
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();
@@ -6296,6 +6348,8 @@ class DemandClient {
   private refreshDays() {
     const key = madeDays().join();
     if (!this.madeKey || key === this.madeKey) return;
+    // (T-4307: a side job's figures were made for the kinds of day before; the main pool's show until its next result)
+    this.dropOverlay();
     const shown = this.days[0].view;
     const s = shown?.final ? this.log.find((x) => x.version === shown.version) : undefined;
     const res = s?.results;

@@ -10,7 +10,7 @@ import { CITIES, cityById, type CityId } from "./cities";
 import { complexes } from "./complexView";
 import { continentLabel, continentOf } from "./continents";
 import { AVERAGE_DAY, WEEKDAY_LONG } from "./days";
-import { demandByDay, demandUpdating, lineFiguresIn, marketIn, zoneViews, type Corridors, type DayDemand, type DemandView } from "./demand";
+import { mainDemandByDay, demandUpdating, lineFiguresIn, marketIn, zoneViews, type Corridors, type DayDemand, type DemandView } from "./demand";
 import { bigDistance, clockTime, dayOf, money, speed } from "./format";
 import { t, tCountry, tList, tNumber } from "../i18n";
 import { tPlace } from "../i18n/places";
@@ -368,11 +368,11 @@ function zoneViewsOf(d: DayDemand): Map<CityId, DemandView> {
 const sleeperParts = new PerLine<number>();
 let sleeperView: DemandView | null = null;
 
-/** The figures from demand: final results only, on the average day, coarse zones' too (T-4117). */
+/** The figures from demand: the main pool's final results only (T-4307), on the average day, coarse zones' too (T-4117). */
 export const demandFigures = computed(() => {
   const w = achWorld.value;
   void zonesLoaded.value;
-  const d = demandByDay.value[AVERAGE_DAY];
+  const d = mainDemandByDay.value[AVERAGE_DAY];
   const v = d?.view;
   // (T-3509: the zones' trips within wait for the market's result while the game has one)
   if (!w || !v?.final || (!marketIn(d) && !marketOff())) return null;
@@ -482,7 +482,7 @@ export const longProfitable = signal<Detail | null>(null);
 let profitView: unknown = null;
 let profitHour = NaN, profitGame = -1, profitAsked: unknown = null;
 effect(() => {
-  const m = moneyState.value, g = gameStamp.value, dv = demandByDay.value[AVERAGE_DAY]?.view ?? null;
+  const m = moneyState.value, g = gameStamp.value, dv = mainDemandByDay.value[AVERAGE_DAY]?.view ?? null;
   if (g !== profitGame) { profitGame = g; profitHour = NaN; profitAsked = profitView = null; bestProfit.value = undefined; longProfitable.value = null; }
   const hour = m?.hours.at(-1)?.hour;
   if (!m || m.mode === "sandbox" || hour === undefined || (hour === profitHour && dv === profitAsked)) return;
@@ -536,7 +536,7 @@ export const metNow = computed(() => {
   if (trainsfanReached.value) out.trainsfan = { v: TRAINSFAN_HOURS };
   // an older save's quiet working-out waits for the loaded game's own world, this network's own final
   // (a cached result shown ahead of it is solved again, `demandUpdating`) and the profit asked after it
-  const settled = !!df?.covered && bp !== undefined && profitView === demandByDay.value[AVERAGE_DAY]?.view;
+  const settled = !!df?.covered && bp !== undefined && profitView === mainDemandByDay.value[AVERAGE_DAY]?.view;
   return { met: out, ready: worldSinceLoad.value && !demandUpdating.value && (nf.running === 0 || settled) };
 });
 

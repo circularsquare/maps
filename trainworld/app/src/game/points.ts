@@ -15,7 +15,7 @@
 import { computed, effect, signal } from "@preact/signals";
 import { CITIES, type CityId } from "./cities";
 import { AVERAGE_DAY, awayNear, DAY_KINDS, DEMAND_DAYS, kindMade, PLAIN_KIND, rushRun } from "./days";
-import { demandByDay, demandHeld, demandUpdating, finalWorld, networkWorld, type DayDemand, type LineDemand } from "./demand";
+import { mainDemandByDay, demandHeld, demandUpdating, finalWorld, networkWorld, type DayDemand, type LineDemand } from "./demand";
 import { checkPatches, freshly, freshNow, PerRecord, sameBuilt } from "./worldDiff";
 import { loadProgress } from "./loading";
 import { t } from "../i18n";
@@ -164,7 +164,7 @@ const runPrices = computed<RunPrices | null>(() => {
  * from the two together. */
 export const lineCover = computed<Map<number, number>>(() => {
   const out = new Map<number, number>();
-  const w = moneyWorld.value, r = runPrices.value, inc = incomeByDay.value[0], dv = demandByDay.value[0]?.view;
+  const w = moneyWorld.value, r = runPrices.value, inc = incomeByDay.value[0], dv = mainDemandByDay.value[0]?.view;
   if (!w || !r || !inc) return out;
   const pair = new Map<string, { fares: number; run: number; nums: number[] }>();
   for (const l of w.save.lines) {
@@ -202,7 +202,7 @@ export const fullPoints = computed<LinePoints>(() => {
   // T-264, T-1373: a superholiday's days have their own points only while one is near, else the
   // ordinary day's they stand in for
   const near = awayNear.value, rush = rushRun.value;
-  const days = DAY_KINDS.map((k) => demandByDay.value[kindMade(k, near, rush) ? k : PLAIN_KIND[k]]);
+  const days = DAY_KINDS.map((k) => mainDemandByDay.value[kindMade(k, near, rush) ? k : PLAIN_KIND[k]]);
   const was = pointsMemo, same = !!was && was.w === w && was.zl === zl;
   if (same && days.every((d, k) => sameDay(d, was.days[k]))) return was.out;
   const own = days.map((d, k) => (!kindMade(k, near, rush) ? null : same && sameDay(d, was.days[k]) ? was.per[k] : dayPoints(w, d)));
@@ -304,7 +304,7 @@ export const scoreSettled = computed<"solved" | "idle" | null>(() => {
   if (!w || demandUpdating.value || demandHeld.value || loadProgress.value || net < 0 || finalWorld.value < net) return null;
   const running = w.save.lines.filter((l) => w.lineStats[l.id]?.status === "running");
   if (!running.length) return "idle";
-  const dv = demandByDay.value[0]?.view;
+  const dv = mainDemandByDay.value[0]?.view;
   if (!dv?.final) return null;
   // every running line solved on its stops as they are (editNote's `solvedForNow`, and none missing)
   for (const l of running) {
