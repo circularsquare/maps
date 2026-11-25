@@ -7,21 +7,20 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 ## Next
 1. 0.4.7 published 18:42 UTC (R2 version 2026-11-25, website 0497af6, export b89a791; bench marked published). Live
    smoke passed. Player reports since: none new on 0.4.7 (checked 19:15 UTC).
-2. Landed 11-25: T-4348, T-4351, T-4337, T-4349 (labels only; T-4356, T-4357 filed), T-4354 stages 1-2 (ja, zh, ko,
-   de, fr, es, pt). 8800 rebuild at 22a3efd23 and smoke on master running (scratchpad snapbuild.log, smoke.log).
-3. Running: tr117c (Sonnet, tree tr117c, 6147, T-4354 stage 3: tr, ru, ca, id, glossary excepts for "boardings");
-   then I edit the publish skill's step 4 to translate missing and stale keys, and close T-4354 (one pass plus own
-   back-translation, my call). review31 (Opus, read-only) on buyfix (tree buytrains, unlanded: review30's 1, 2, 4, 7
-   fixed, notice "More trains bought for {price}.", her "text ack"). review31 says land (artifacts/trainworld/reviews/
-   review31-buyfix.md); buyfix resumed for its findings 1, 2, 4 (3 filed, T-4358); then land T-4272, T-4339, 8800.
-4. Then on the quiet machine `edit_bench.mjs --save asia,nyc --baseline` (T-4293). Edit-speed stages (T-4309, T-4314/T-4315, T-4153, T-4149 s3, T-4281), T-4220 s9, T-4230, T-3160 wait for
-   her return. Up next: T-3160, T-3838.
+2. Landed 11-25: T-4348, T-4351, T-4337, T-4349 (labels only; T-4356 filed), T-4354 (all 12 languages at 3303/3303;
+   one pass plus own back-translation, my call; publish skill step 4 now translates missing and stale keys), T-4357
+   (her "slowest limit"), T-4272 stage 2 and T-4339 (566aa52a5; review31 passed; T-4358 filed; T-4272 stays open
+   for its 100 ms goal). 8800 at 566aa52a; smoke on master running (scratchpad smoke2.log). No agents running.
+3. When she's back from her game (her 11-25 ~15:00): the quiet machine's `edit_bench.mjs --save asia,nyc --baseline`
+   (notes/T-4293.md), nothing else running; then edit-speed stages two at a time, biggest first: T-4149 s3 (Asia rows
+   266 ms a station, goal 100), T-4153 (cut stretch), then T-4281, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 5. Standby: maps-3a is the next cycle's (notes/standby.txt); none left: ask her relay session for one. Gemini's quota
    is out until about 11-30: Claude reviewers meanwhile.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
    projected; Class B, repo size known to her. Cloudflare stats: her Configuration Rule leaves /trainsworld out (checked).
 
 ## Her words
+- 11-25 ~15:00: quiet-machine work (baseline, edit-speed stages) "would make sense to start after" her League game.
 - 11-25 ~12:50: "ok, ship." 0.4.7 (via standby maps-d6, after Belgrade setup +23% over her one-time 20% threshold).
 - 11-25 ~12:15: rest of the week 1-4 agents (not 2-8); usage at 83%, "dont worry about running out... dont want you
   to perform worse cuz u feel limited"; after the release, mostly quiet-machine work. T-4346 is P3.

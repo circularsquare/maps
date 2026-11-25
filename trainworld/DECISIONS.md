@@ -137,7 +137,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-054): Commute demand leaves out people who work at home: the home end is LODES jobs by home block times (1 - tract work-from-home share), the work end each sector's jobs times its industry's share, so Midtown loses more than the Bronx. notes/T-054.md
 
 ## Fares and money
-- 2026-11-25 (T-4272): Placing a station or deleting track charges no construction, only trains: re-pricing the pieces a split or join leaves ($0.001-$220 on her Asia save) is no purchase, and it made the click a paid edit that waited for its rows. notes/T-4272.md
+- 2026-11-25 (Anita, T-4272): Placing a station, removing one or deleting track is never refused for money: it builds nothing (re-pricing the pieces a split or join leaves is no purchase), and the trains its services need are bought right after its confirm, the cash going below zero if short. notes/T-4272.md
 - 2026-11-25 (Anita, T-4253): A line's fare multiple may go up to 10x, refused when the base fare times it is over US$1,000.
 - 2026-11-23 (Anita): A new game starts with $10B (older entries said $6B; the code's $10B is right).
 
@@ -267,7 +267,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-25 (T-4220, T-4307): A side job's figures show over the main pool's (kept apart) until a final of their network or newer, or until a newer network's side job is refused; bubbles, questions, money, points and achievements stay the main pool's. New York lines within 0.1%. notes/T-4307.md
 - 2026-11-25 (T-4220, T-4307): An edit made during a whole solve is solved aside in its own pool, which yields to T-2605's zone refine; that refine also runs when a side job is refused. Cost: a refused plan still starts a worker (0.5 s on New York). notes/T-4220.md
 - 2026-11-25 (T-4281): A question (a panel's figures, a quote) or a timer's trips that come while an edit's follow-up waits go after its state, never ahead of it nor by running it whole: the page reads answers against its world. Panels catch up once the clicks pause. notes/T-4281.md
-- 2026-11-25 (T-4272): A station or track delete that can move no running line's trains is answered from its own checks, its services worked out in the next piece; one on a running line's track still waits for the settle, since the trains it needs are paid at the click. notes/T-4272.md
+- 2026-11-25 (T-4272): A station or track delete is answered from its own checks, its services worked out right after; one that can move a running line's trains is owed alone, so the money, trains and undo equal the whole path's edit for edit. notes/T-4272.md
 - 2026-11-25 (T-4265): During a whole solve a zone's bubbles come from the on-screen final's bubble sums, kept on the page. Lie: figures from before the edit until it ends; a zone not drawn since the load lacks its trips with other places (5.5% of Nanjing's legs). notes/T-4265.md
 - 2026-11-25 (T-4263): A loading save's demand pool is sized by the after-solve memory test on estimates, the aux worker counted (0.03 GB plus 0.15 MB per million trips), so it is not cut and solved again after its first final. Lie: an estimate miss still costs one whole re-solve. notes/T-4263.md
 - 2026-11-25 (Anita, T-4267): Edit speed is built to one design: the track model lists what each edit changed and every later layer redoes only that; answer first, the map in pieces, trips after. Approved pending Gemini's and Fable's adversarial reviews. notes/T-4267.md

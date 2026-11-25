@@ -218,14 +218,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4299: a state's money and lists are kept per record now, 24 to about 5.5 ms a state on your Asia save. Still whole: the track limits, with the fleet needs, markers and turn limits built on them (about 2 ms), and profile_meta's copy (0.4 ms). The capacity has no index from a line to the track it shares.
   - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
   - Other: notes/T-4299.md
-- T-4272 [P1] {L:edit-speed} A click confirmed from what it touches (taking, 2026-11-25, agent buytrains)
-  - Context: Your 11-25 yes is built (tree buytrains): stations and deletes on running lines' track are answered too, their trains bought right after. Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest is the worker busy with other pieces.
+- T-4272 [P1] {L:edit-speed} A click confirmed from what it touches
+  - Context: Stage 2 landed 11-25: stations and deletes on running lines' track are answered at the click, their trains bought right after (your yes). Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest waits on the worker's other pieces (T-4281).
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
-- T-4339 [P3] {L:edit-speed} Stop clicks' rows hold the services a station click owes (taking, 2026-11-25, agent buyfix)
-  - Context: From T-4281: the stop clicks' rows (`rowsOwed`) skip working out what a station or delete on unused track owes, unlike other rows answering an edit. Only reachable when such a click gets no map patch between a stop click and its rows; a planned line's figures lag a few tasks.
-  - Goal: Those rows work out owed services first, as `standAside`'s do; for whoever has T-4272's files.
-  - Other: notes/T-4281.md
 - T-4358 [P3] {L:edit-speed} {after:T-4272} Trips dropped when an edit settles a click's services
   - Context: From review31 of T-4272: a track segment, blueprint delete or rename that comes before a station click's services are worked out settles them, and `settle` clears `settled_running`, so those lines' trips aren't sent. Narrow.
   - Goal: Trips are sent for those lines whichever edit settles them.

@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c005",
+      "text": "placing a station or deleting track on a line with trains running shows up faster",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4272",
+      "by": "maps-d6",
+      "at": "2026-11-25T20:06:07Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c004",
+      "text": "placing a station or deleting track is never refused for money; its trains are bought right after",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4272",
+      "by": "buytrains",
+      "at": "2026-11-25T19:54:30Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
       "id": "c003",
       "text": "fixed speed labels on a curve on a ramp showing the higher of the two limits",
       "edited": null,

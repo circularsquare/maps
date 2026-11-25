@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4339 [P3] {L:edit-speed} Stop clicks' rows hold the services a station click owes (2026-11-25): done by T-4272 stage 2: stop clicks' rows settle what a station click owes first. notes/T-4272.md.
 - T-4357 [P3] {L:track-speed} Track panel's Slowest curve can be a ramp (2026-11-25): all 12 languages at 3303/3303 keys (117 a language were showing English); release step 4 now translates missing and stale keys; Slowest curve renamed Slowest limit. notes/T-4354.md.
 - T-4354 [P2] {L:translations} 117 keys showing English in every language (2026-11-25): all 12 languages at 3303/3303 keys (117 a language were showing English); release step 4 now translates missing and stale keys; Slowest curve renamed Slowest limit. notes/T-4354.md.
 - T-4349 [P2] {L:track-speed} A ramp's speed limit shown over a tighter curve's (2026-11-25): labels only: ramp labels only where the ramp is the lowest limit for 10 m+, curve labels take a slower ramp, slower label wins overlaps; trains unchanged. notes/T-4349.md.
