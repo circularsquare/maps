@@ -27,6 +27,7 @@ gets `frozen.json` naming the freeze and the tree; `tools/deploy.py --dist <out>
 The tree's wasm must be built already (its last `npm run build` made it).
 """
 import datetime
+import hashlib
 import json
 import os
 import shutil
@@ -186,9 +187,17 @@ def build(path, tree, out):
             if (path / "game" / g).exists():
                 shutil.copyfile(path / "game" / g, app / "src/game" / g)
         # T-4199: the market's corridor file for the freeze's rows and drives (the tree's own put back after)
-        subprocess.run(["node", str(tree / "trainworld/tools/corridor_file.mjs")], cwd=str(app),
-                       env=dict(os.environ, TW_MARKET_DRIVES=str(path / "packs/market-drives.bin")),
-                       creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        # (a publish's file that browsers refuse keeps the right figures but loses the speed, with nothing to show it:
+        # a stale fareBits.json, missing drives or a failed script stop the build here)
+        drives = path / "packs/market-drives.bin"
+        if not drives.is_file():
+            sys.exit(f"{drives} is missing: the corridor file needs the freeze's routed drives")
+        made = subprocess.run(["node", str(tree / "trainworld/tools/corridor_file.mjs"), "--strict", "--need-drives"], cwd=str(app),
+                              env=dict(os.environ, TW_MARKET_DRIVES=str(drives)),
+                              creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        if made.returncode or not corridors.is_file() or corridors.stat().st_mtime < t0:
+            sys.exit(f"corridor_file.mjs failed ({made.returncode}); no build on a file browsers would refuse")
+        file_bytes = corridors.read_bytes()
         p = subprocess.run(["node", str(vite), "build", "--outDir", str(out), "--emptyOutDir"], cwd=str(app),
                            env=dict(os.environ, TW_PACKS=str(path / "packs")))
     finally:
@@ -199,12 +208,16 @@ def build(path, tree, out):
             corridors.write_bytes(own)
     if p.returncode:
         sys.exit(f"vite build failed ({p.returncode})")
+    sha = hashlib.sha256(file_bytes).hexdigest()
+    if not any(hashlib.sha256(a.read_bytes()).hexdigest() == sha for a in (out / "assets").glob("market-corridors*.bin")):
+        sys.exit("the build holds no copy of the corridor file made for it (assets/market-corridors*.bin)")
     bad = check(path)
     if bad:
         sys.exit(f"freeze {path.name} changed during the build: {'; '.join(bad[:5])}")
     man = json.loads((path / "manifest.json").read_text(encoding="utf-8"))
     (out / "frozen.json").write_text(json.dumps({"task": "T-928", "freeze": str(path), "stamp": man["stamp"], "label": man["label"],
                                                  "zones": man["zones"], "tree": str(tree), "app": str(app), "commit": commit,
+                                                 "corridors": {"sha256": sha, "world": file_bytes[8:16].hex(), "drives": file_bytes[16:24].hex(), "src": file_bytes[24:32].hex()},
                                                  "built": datetime.datetime.now().isoformat(timespec="seconds")}, indent=1), encoding="utf-8")
     print(f"built {commit} of {tree} on freeze {man['stamp']} ({man['label'] or 'no label'}, {man['zones']} zones) into {out} "
           f"in {time.time() - t0:.0f} s", flush=True)

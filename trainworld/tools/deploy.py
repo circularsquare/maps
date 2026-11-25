@@ -46,7 +46,9 @@ do, and the copy fails with a 403 that looks like a dead token.
 
 import argparse
 import datetime
+import glob
 import gzip
+import hashlib
 import json
 import os
 import re
@@ -159,6 +161,16 @@ def preflight(dist, allow_dirty, app=None, r2_version=None):
         bad = freeze.check(frozen["freeze"]) if os.path.isdir(frozen["freeze"]) else ["the freeze folder is gone"]
         if bad:
             warnings.append(f"freeze {frozen['stamp']} changed since the build ({len(bad)} files: {bad[0]}); the build copied it as it was")
+    # T-4199: the corridor file freeze.py build made (strict: fareBits current, the freeze's drives) is the one in the build;
+    # whether the shipped WASM accepts it is only known by running that WASM (it holds the source key), which the build's
+    # own corridor_file.mjs run did on the tree's WASM
+    if frozen:
+        want = (frozen.get("corridors") or {}).get("sha256")
+        have = {hashlib.sha256(open(p, "rb").read()).hexdigest() for p in glob.glob(os.path.join(dist, "assets", "market-corridors*.bin"))}
+        if not want:
+            problems.append("frozen.json has no corridor file (T-4199): rebuild with freeze.py build, or every load works the corridors out")
+        elif want not in have:
+            problems.append("the build's corridor file is not the one freeze.py build made for it: rebuild")
     app = app or os.path.dirname(dist)
     repo = git("rev-parse", "--show-toplevel", cwd=app)
     head = git("rev-parse", "--short", "HEAD", cwd=app)

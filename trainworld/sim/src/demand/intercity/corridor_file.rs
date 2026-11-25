@@ -48,6 +48,12 @@ pub(super) fn hash64(b: &[u8]) -> u64 {
 pub(super) fn world_key(world: &str) -> u64 {
     hash64(world.rfind(",\"attractions\":").map_or(world, |i| &world[..i]).as_bytes())
 }
+/// The body's checksum, as the header holds it: the header's own bytes (the keys, which the load checks itself) and
+/// the checksum's slot left out.
+pub(super) fn body_sum(b: &[u8]) -> u32 {
+    let h = hash64(b.get(72..).unwrap_or(&[]));
+    (h ^ (h >> 32)) as u32
+}
 pub(super) fn src_key() -> u64 {
     hash64(SRC_HASH.as_bytes())
 }
@@ -178,7 +184,7 @@ impl CorridorFile {
         o.extend_from_slice(&(self.place_pairs as u64).to_le_bytes());
         o.extend_from_slice(&(self.book.n as u64).to_le_bytes());
         o.extend_from_slice(&self.book.key.to_le_bytes());
-        o.extend_from_slice(&0u32.to_le_bytes());
+        o.extend_from_slice(&0u32.to_le_bytes()); // (the body's checksum, set below)
         for v in self.leaving_by.iter().chain(&self.book.sums) {
             o.extend_from_slice(&v.to_le_bytes());
         }
@@ -189,6 +195,8 @@ impl CorridorFile {
             o.extend_from_slice(&s.mode[0].to_le_bytes());
             o.extend_from_slice(&s.mode[1].to_le_bytes());
         }
+        let sum = body_sum(&o);
+        o[68..72].copy_from_slice(&sum.to_le_bytes());
         o
     }
     pub(super) fn parse(b: &[u8]) -> Result<CorridorFile, String> {
@@ -198,8 +206,13 @@ impl CorridorFile {
             return Err("not a corridor file of this version".into());
         }
         let (np, ns) = (u32_at(32).unwrap_or(0) as usize, u32_at(36).unwrap_or(0) as usize);
-        if b.len() != 72 + 48 * np + 24 * ns {
+        // (usize is 32 bits in wasm: a garbled count must not wrap past the length check)
+        let len = np.checked_mul(48).and_then(|a| ns.checked_mul(24).and_then(|c| a.checked_add(c))).and_then(|a| a.checked_add(72));
+        if len != Some(b.len()) {
             return Err("corridor file of the wrong length".into());
+        }
+        if u32_at(68) != Some(body_sum(b)) {
+            return Err("corridor file whose body does not match its checksum".into());
         }
         let f64_at = |k: usize| f64::from_bits(u64_at(k).unwrap());
         let floats = |k: usize, n: usize| (0..n).map(|i| f64_at(k + 8 * i)).collect::<Vec<f64>>();

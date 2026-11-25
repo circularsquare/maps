@@ -695,8 +695,21 @@ const MARKET_ROWS = new URL("../game/market-rows.json", import.meta.url).href;
 /** T-4199: the market's corridors and corridor book, worked out once (tools/corridor_file.mjs); a build without it works them out */
 const MARKET_CORRIDORS = new URL("../game/market-corridors.bin", import.meta.url).href;
 /** the corridor file's bytes, null where there is none (any other answer is the worker's to refuse) */
-const fetchCorridorFile = (): Promise<Uint8Array | null> =>
-  fetch(MARKET_CORRIDORS).then((r) => (r.ok ? r.arrayBuffer() : null), () => null).then((b) => (b ? new Uint8Array(b) : null), () => null);
+const CORRIDOR_RETRY_MS = [500, 1500, 4000];
+const fetchCorridorFile = async (): Promise<Uint8Array | null> => {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const r = await patientFetch(MARKET_CORRIDORS);
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error(`corridor file: ${r.status}`);
+      return new Uint8Array(await r.arrayBuffer());
+    } catch {
+      // (a file that never comes is no failure: the corridors are worked out, as without one)
+      if (attempt >= CORRIDOR_RETRY_MS.length) return null;
+      await new Promise((res) => setTimeout(res, CORRIDOR_RETRY_MS[attempt]));
+    }
+  }
+};
 const isMarket = (item: string) => item.startsWith(MARKET);
 const marketZone = (item: string) => item.slice(MARKET.length) as CityId;
 /**
@@ -3214,7 +3227,9 @@ class DemandClient {
   /** The workers being replaced: `left`, the items a replacement has still to reopen (null before
    * they are sent); `solving`, reopened and sent the solve again; `planned`, restarted to give back
    * memory (T-1205), not after a panic. Each is cleared by its replacement's first `done`. */
-  private respawn = new Map<number, { left: Set<string> | null; solving: boolean; planned: boolean }>();
+  private respawn = new Map<number, { left: Set<string> | null; solving: boolean; planned: boolean; held?: boolean }>();
+  /** a replacement whose solve waits for a game load's network (`held`) is no sign that a fresh worker fails */
+  private respawnTrusted(r: { held?: boolean }) { return !!r.held && gameLoadArmed(); }
   private respawns = 0;
   /** T-3492: questions waiting for the solve that follows a replacement to be sent (`reopening`) */
   private respawnWaits: (() => void)[] = [];
@@ -3239,7 +3254,7 @@ class DemandClient {
     demandNote("worker-restart", { worker: i, planned, download, why }); // T-4206
     if (!planned) this.lastTrouble = `worker ${i}${download ? " download" : ""}: ${why}`; // i18n-ignore
     if (!planned && !download && this.computeN > 1 && isMemoryFailure(why)) return this.memoryShort(i, why);
-    const panicked = [...this.respawn.values()].some((r) => !r.planned);
+    const panicked = [...this.respawn.values()].some((r) => !r.planned && !this.respawnTrusted(r));
     if (!planned && !download && (panicked || this.respawns >= MAX_RESPAWNS)) return this.fail(`worker ${i}: ${why}`); // i18n-ignore
     if (download) console.warn(`demand: worker ${i}'s code did not download; trying again`); // i18n-ignore
     else if (planned) { console.info(`demand: worker ${i} restarted to give back memory: ${why}`); memoryResolve.value = true; }
@@ -3372,7 +3387,7 @@ class DemandClient {
     this.freshParts = true;
     if (this.waiting) this.flush(true);
     // (T-4199: a game load's network on its way is solved when it comes, as `flush` sends nothing until then)
-    else if (gameLoadArmed()) this.releaseRespawnWaits();
+    else if (gameLoadArmed()) { for (const r of this.respawn.values()) r.held = true; this.releaseRespawnWaits(); }
     // (T-3373 B: a shrink moves packs, which open again before the solve can cover them)
     else if (this.cur && this.holding) { this.waiting = { svc: this.cur.svc, arrivedAt: performance.now() }; this.flush(true); }
     else if (this.cur) this.dispatch(this.cur.svc, performance.now());
@@ -3390,7 +3405,7 @@ class DemandClient {
    * focus pool stops (its figures stay shown). False when there is
    * nothing to restart, or it was done already: the failure screen then goes up. */
   restartStuck(): boolean {
-    if (this.stuckRestarted || this.failed || !this.workers.length || this.respawn.size) return false;
+    if (this.stuckRestarted || this.failed || !this.workers.length || [...this.respawn.values()].some((r) => !this.respawnTrusted(r))) return false;
     this.stuckRestarted = performance.now();
     const quiet = this.diagnosis();
     this.lastTrouble = `stuck, workers restarted: ${quiet}`.slice(0, 600); // i18n-ignore

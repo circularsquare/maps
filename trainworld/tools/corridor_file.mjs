@@ -5,15 +5,18 @@
 // after each demand WASM build (app/package.json, tools/snap_wasm.py), for a freeze's data by `freeze.py build`, and
 // by a world run's join (`world_run.py step @corridors`); by hand after the market rows or the drives change.
 // About 10 s on one core.
-//   node trainworld/tools/corridor_file.mjs [--out <file>] [--strict]
+//   node trainworld/tools/corridor_file.mjs [--out <file>] [--strict] [--need-drives]
 // The rows are app/src/game/market-rows.json, the drives data/packs/market-drives.bin (or TW_MARKET_DRIVES). Without
-// --strict a failure is a warning and exit 0, so a build goes on (its loads work the corridors out as before).
+// --strict a failure is a warning and exit 0, so a build goes on (its loads work the corridors out as before). With
+// --strict a stale fareBits.json is a failure too (browsers would refuse the file), and --need-drives fails when
+// there are no drives (a publish's file must carry the drives it ships with).
 import { readFileSync, renameSync, writeFileSync, existsSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
 const args = process.argv.slice(2);
 const strict = args.includes('--strict');
+const needDrives = args.includes('--need-drives');
 const outAt = args.indexOf('--out');
 const OUT = outAt >= 0 ? args[outAt + 1] : fileURLToPath(new URL('../app/src/game/market-corridors.bin', import.meta.url));
 
@@ -30,10 +33,12 @@ try {
   // the fare figures are fareBits.json's, the same in every engine, unless it is stale: then they are Node's, and
   // a browser whose last bits differ refuses the file
   const stale = fareBitsStale(REGISTRY.market.rule.eps);
+  if (stale.length && strict) throw new Error(`fareBits.json is stale for ${stale.length} countries (${stale.slice(0, 8).join(' ')}): node trainworld/tools/fare_bits.mjs makes it again`);
   if (stale.length) console.warn(`corridor file: fareBits.json is stale for ${stale.length} countries (${stale.slice(0, 8).join(' ')}), so the file may be refused by browsers: node trainworld/tools/fare_bits.mjs makes it again`);
   // the world exactly as the demand workers give it (the attractions, which the key leaves out, aside)
   const packs = new MarketPacks(marketWorld(marketRows()));
   let drives = marketDrives();
+  if (needDrives && !drives) throw new Error('no routed drives (data/packs/market-drives.bin or TW_MARKET_DRIVES): a file made without them is refused wherever the drives are served');
   if (drives && drives[0] === 0x1f && drives[1] === 0x8b) drives = new Uint8Array(gunzipSync(drives));
   // as the worker: drives that do not read leave every drive the rule's
   if (drives) try { packs.set_drives(drives); } catch (err) { console.warn('corridor file: the drives would not read, so the rule\'s:', String(err)); }

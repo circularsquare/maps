@@ -271,7 +271,7 @@ def corridors_file(args):
     """T-4199: the market's corridor file (tools/corridor_file.mjs) over the run root's rows, drives and demand WASM."""
     root = Path(os.environ.get("TW_RUN_ROOT") or REAL)
     flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-    r = subprocess.run(["node", str(root / "tools/corridor_file.mjs"), "--strict", *args], cwd=str(root.parent),
+    r = subprocess.run(["node", str(root / "tools/corridor_file.mjs"), "--strict", "--need-drives", *args], cwd=str(root.parent),
                        stdout=sys.stdout, stderr=subprocess.STDOUT, creationflags=flags)
     if r.returncode:
         raise SystemExit(r.returncode)
@@ -1529,7 +1529,9 @@ class Run:
         ok, _, tail = self.step("@corridors", [], f"{L}.corridors.log", threads=1, limit=600)
         if not ok:
             self.report.setdefault("problems", []).append(
-                f"market corridor file not made, so loads work the corridors out (again: world_run.py step @corridors): {str(tail)[-300:]}")
+                f"MARKET CORRIDOR FILE NOT MADE (a stale fareBits.json, no drives or a script failure): browsers would refuse it, so loads work the corridors out at the old speed; "
+                f"fix it before a publish (again: world_run.py step @corridors): {str(tail)[-300:]}")
+            print("PROBLEM: market corridor file not made; see the report's problems", flush=True)
 
     def market_only(self):
         """T-2777: a failed join's market and trips step again, on its own. The ids are the join's own
