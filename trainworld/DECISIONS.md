@@ -255,6 +255,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-25 (T-4281): The panels' past 24 hours keep each line's window, moved along as the clock runs; summing riders per stop and timing trains by their leave time moved figures only by rounding (2e-13 at most on her Asia save). notes/T-4281.md
 - 2026-11-25 (T-4359): A city reached during play stops loading once its packs are open if the map already has figures for it; the calculation after shows as calculating trips. A bar's wait ends at a final covering every edit, and a re-solve after it starts from empty. notes/T-4359.md
 - 2026-11-25 (Anita, T-4347): The load card shows a time left from its start, on the solve model scaled by this browser's pace, until the workers' units give one; the bar stays under half meanwhile. Replaces T-4209's blank until known; the cost is a figure that can rise once. notes/T-4347.md
 - 2026-11-25 (T-4343): A load's later crowding rounds are sized at this browser's last measured ratio to the first (0.5 until it has one) and timed by their own pace once one of their units has ended; the flat 0.9 a round is gone. notes/T-4343.md

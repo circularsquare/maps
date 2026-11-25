@@ -202,8 +202,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-25, agent today3)
-  - Context: Stage 2 (11-25, tree followcut2): questions and timer trips no longer run the previous click's follow-up in one block. Click run on your Asia save: first 212 ms, later 360, 278, 144 (stage 1: 618, 1,538, 2,156). Left: each click's own apply (T-4272's question) and the page holding it until the one before is confirmed.
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
+  - Context: Stage 3 landed 11-25: the panels' `today` with the clock running costs 3-6 ms on your Asia save (was about 107). Click run on Asia: first 46 ms, later 37, 170, 272. Left: which follow-up piece later clicks wait behind (no per-click laps yet); the page's click hold stays (unsafe to drop).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
 - T-4291 [P1] {L:edit-speed} Rows and post sent by what an edit touched

@@ -5,8 +5,7 @@ Updated: 2026-11-25 19:19 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. 0.4.7 published 18:42 UTC (R2 version 2026-11-25, website 0497af6, export b89a791; bench marked published). Live
-   smoke passed. Player reports since: none new on 0.4.7 (checked 19:15 UTC).
+1. 0.4.7 published 11-25 18:42 UTC (R2 2026-11-25, website 0497af6); no new player reports on it (19:15 UTC).
 2. Landed 11-25: T-4348, T-4351, T-4337, T-4349 (labels only; T-4356 filed), T-4354 (all 12 languages at 3303/3303;
    one pass plus own back-translation, my call; publish skill step 4 now translates missing and stale keys), T-4357
    (her "slowest limit"), T-4272 stage 2 and T-4339 (566aa52a5; review31 passed; T-4358 filed; T-4272 stays open
@@ -16,14 +15,16 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    load was a mid-game load of Haeju waiting 4.7 min on an edit's re-solve, bar full; T-4361, T-4362), T-4153 s9
    (b6aa1b90f: bands 27 to 15 ms in Node; T-4153 open for 100 ms; T-4363 filed). netcut9's page bench was worse (NYC
    station built 147 -> 249 not noisy, n 1; Asia noisy): after today3 lands, on master quietly: edit_bench NYC --runs
-   3 --compare 65f0134b@20261125203108-11820, smoke, 8800, then a Claude batch review of the four. Running: today3
-   (Opus, tree today3, 6151, T-4281 s3). Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
-5. Standby: maps-3a is the next cycle's (notes/standby.txt); none left: ask her relay session for one. Gemini's quota
-   is out until about 11-30: Claude reviewers meanwhile.
+   3 --compare 65f0134b@20261125203108-11820 (running, scratchpad batchbench.log), smoke, 8800; then stop. T-4281
+   s3 landed (67426dfa8: `today` ~107 to 3-6 ms on Asia with the clock running; page click hold left as is, see
+   notes). Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8. Then
+   T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
+5. Standby: maps-3a (notes/standby.txt). Gemini's quota is out until about 11-30: Claude reviewers meanwhile.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
    projected; Class B, repo size known to her. Cloudflare stats: her Configuration Rule leaves /trainsworld out (checked).
 
 ## Her words
+- 11-25 ~17:20: usage at 88%: finish the running tasks and wind down; no new agents. Batch review waits for later.
 - 11-25 ~15:00: quiet-machine work (baseline, edit-speed stages) "would make sense to start after" her League game.
 - 11-25 ~12:50: "ok, ship." 0.4.7 (via standby maps-d6, after Belgrade setup +23% over her one-time 20% threshold).
 - 11-25 ~12:15: rest of the week 1-4 agents (not 2-8); usage at 83%, "dont worry about running out... dont want you
