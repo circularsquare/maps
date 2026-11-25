@@ -444,11 +444,13 @@ export class Tools {
     const offEdges = hidden.levels ? new Set(w.edges.filter((e) => levelHidden(e.levelMin) && levelHidden(e.levelMax)).map((e) => e.id)) : null;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
-    const tramOnly = station && !this.autoProbe ? stationOnTram.peek() : null, tramOf = station ? this.tramEdgeSet(w) : null;
+    const tramOnly = station && !this.autoProbe ? stationOnTram.peek() : null, tramOf = station ? this.tramEdgeSet(w) : null, buswayOf = station ? this.buswayEdgeSet(w) : null;
     for (const { edge, pts, ks } of nearEdges ?? [...n.edgePts].map(([edge, pts]) => ({ edge, pts, ks: null }))) {
       if (offEdges?.has(edge)) continue;
       // T-4010: a train station goes on train track only and a tram stop on tram track only
       if (tramOnly !== null && tramOf!.has(edge) !== tramOnly) continue;
+      // a busway holds no station: the pointer on one is a BRT station beside it (Auto picks the bus kind)
+      if (buswayOf?.has(edge)) continue;
       const er = doubleIds?.has(edge) ? laneReach : edgePx;
       let eb = er * er, eh: Snap | null = null;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
@@ -579,6 +581,12 @@ export class Tools {
   tramEdgeSet(w: NonNullable<ReturnType<typeof world.peek>>): Set<number> {
     if (this.tramEdges?.edges !== w.edges) this.tramEdges = { edges: w.edges, set: new Set(w.edges.filter((e) => e.kind === 2 || e.kind === 3).map((e) => e.id)) };
     return this.tramEdges.set;
+  }
+
+  buswayEdges: { edges: unknown; set: Set<number> } | null = null;
+  buswayEdgeSet(w: NonNullable<ReturnType<typeof world.peek>>): Set<number> {
+    if (this.buswayEdges?.edges !== w.edges) this.buswayEdges = { edges: w.edges, set: new Set(w.edges.filter((e) => e.kind === 4).map((e) => e.id)) };
+    return this.buswayEdges.set;
   }
 
   /** whether a station spot is on tram track (T-2926) */
