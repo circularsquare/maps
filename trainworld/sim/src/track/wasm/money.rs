@@ -115,8 +115,9 @@ impl TrackApi {
     /// T-4291: what the running lines need now of every fleet at once (`cars_needed`, `cars_needed_fast`, `buses_needed`,
     /// `boats_needed`, `trams_needed`, `boats_needed_small`, `boats_needed_large`, in that order): one working out of
     /// every line's weekends (a pass over the whole network's track limits) where each of those makes its own.
-    pub fn fleet_needed(&self) -> Vec<u32> {
-        cars_needed(&self.w).to_vec()
+    pub fn fleet_needed(&mut self) -> Vec<u32> {
+        self.kept_now();
+        self.kept.fleet().to_vec()
     }
     /// High-speed cars the running lines need now (T-817).
     pub fn cars_needed_fast(&self) -> u32 {
@@ -162,15 +163,19 @@ impl TrackApi {
     }
     /// T-2669: each line's running cost over the world price list, as `[line id, factor]` pairs (its
     /// countries' prices, worked out by the app); a line not listed pays the world price. Replaces
-    /// the last list.
+    /// the last list. T-4299: the lines whose factor moved are named to the kept money, which the clock drains the cash by.
     pub fn set_line_run_factors(&mut self, pairs: &[f64]) {
-        self.run_factor.clear();
+        let mut now: Vec<f64> = vec![];
         for p in pairs.chunks_exact(2) {
             let (id, f) = (p[0] as usize, p[1]);
             if !f.is_finite() || f <= 0.0 { continue }
-            if self.run_factor.len() <= id { self.run_factor.resize(id + 1, 1.0) }
-            self.run_factor[id] = f;
+            if now.len() <= id { now.resize(id + 1, 1.0) }
+            now[id] = f;
         }
+        let at = |v: &[f64], l: usize| v.get(l).copied().unwrap_or(1.0).to_bits();
+        let moved: Vec<u32> = (0..now.len().max(self.run_factor.len())).filter(|&l| at(&now, l) != at(&self.run_factor, l)).map(|l| l as u32).collect();
+        self.kept.note_lines(&moved);
+        self.run_factor = now;
     }
     /// T-2669: a line's running cost over the world price list (1 unless the app set one).
     pub fn line_run_factor(&self, line: u32) -> f64 {
@@ -184,8 +189,9 @@ impl TrackApi {
     }
     /// T-3542: `running_cost` in demand period `k % 5` (`PERIOD_HOURS`) on kind of day `k / 5`
     /// (weekdays, weekends): at the slot serving the period.
-    pub fn running_cost_period(&self, k: usize) -> f64 {
-        self.running_cost_period_in(k, f64::NAN)
+    pub fn running_cost_period(&mut self, k: usize) -> f64 {
+        self.kept_now();
+        self.kept.running((k / 5).min(DAY_ROWS - 1) * 5 + k % 5)
     }
     /// T-3542: `running_cost_period` of the lines on one local time, as `running_cost_in`.
     pub fn running_cost_period_in(&self, k: usize, shift: f64) -> f64 {
@@ -197,8 +203,58 @@ impl TrackApi {
     /// US$M, constructed ports (T-2193), upgrades US$M (T-3922)]. Ports are not among the stations. The
     /// upgrades are in the stations' and ports' figures too: a port's own in the ports', the rest (passages and
     /// buildings too) in the stations'.
-    pub fn upkeep(&self) -> Vec<f64> {
-        let n = &self.w.net;
+    pub fn upkeep(&mut self) -> Vec<f64> {
+        self.kept_now();
+        self.kept.upkeep(&self.w)
+    }
+    /// T-4299: what the model's kept money (`wasm/kept.rs`) gives against the same worked out from nothing, and against
+    /// the whole sums it stands for (to a part in 1e9: those add in another order): "" when both agree, else what
+    /// differs. For `?patch=check` and the tests. The kept money is read as any read between states reads it (not the
+    /// state's full read, which would mend a change nothing named); a change that full read found is reported too.
+    pub fn kept_check(&mut self, hours: &[f64]) -> String {
+        self.kept_now();
+        let mut whole = kept::Kept::from_whole(&self.w, &self.run_factor, hours.to_vec());
+        let mut out = vec![];
+        let same = |a: &[f64], b: &[f64]| a.len() == b.len() && a.iter().zip(b).all(|(x, y)| x.to_bits() == y.to_bits());
+        let near = |a: &[f64], b: &[f64]| a.len() == b.len() && a.iter().zip(b).all(|(x, y)| (x - y).abs() <= 1e-9 * x.abs().max(y.abs()).max(1e-6));
+        let (cross, meta, guards) = (self.crossings_whole(), self.profile_meta_whole(), self.guard_conflicts_whole());
+        let (k, h) = (&mut self.kept, &self.w);
+        let pairs: [(&str, Vec<f64>, Vec<f64>, Vec<f64>); 9] = [
+            ("upkeep", k.upkeep(h), whole.upkeep(h), self_whole_upkeep(h)),
+            ("costs", k.costs(h).to_vec(), whole.costs(h).to_vec(), { let (t, b) = h.net.total_and_built_cost(); vec![t, b] }),
+            ("fleet", k.fleet().iter().map(|&x| x as f64).collect(), whole.fleet().iter().map(|&x| x as f64).collect(), cars_needed(h).iter().map(|&x| x as f64).collect()),
+            ("running", (0..10).map(|i| k.running(i)).collect(), (0..10).map(|i| whole.running(i)).collect(), (0..10).map(|i| running_cost_with(h, &self.run_factor, (i / 5).min(DAY_ROWS - 1), h.net.period_slot()[i % 5], f64::NAN)).collect::<Vec<f64>>()),
+            ("shares", k.shares_for(h, hours), whole.shares_for(h, hours), shares_whole(h, hours)),
+            ("station upgrade upkeep", k.upgrade_upkeep(), whole.upgrade_upkeep(), upgrade_upkeep_whole(h)),
+            ("crossings", k.crossings(h), whole.crossings(h), cross),
+            ("guard conflicts", k.conflicts(h), whole.conflicts(h), guards),
+            ("profile meta", k.meta().iter().map(|&x| x as f64).collect(), whole.meta().iter().map(|&x| x as f64).collect(), meta.iter().map(|&x| x as f64).collect()),
+        ];
+        let flags = self.kept.flags_differ(&whole);
+        if !flags.is_empty() {
+            out.push(flags);
+        }
+        for (what, kept, fresh, sums) in pairs {
+            if !same(&kept, &fresh) {
+                out.push(format!("{what} kept {kept:?} against {fresh:?} from nothing"));
+            } else if !near(&kept, &sums) {
+                out.push(format!("{what} kept {kept:?} against the whole sums' {sums:?}"));
+            }
+        }
+        // (what the state's full read found since the last check, and what it would find now)
+        let found = self.kept.take_unnamed();
+        self.kept_with(true);
+        for why in [found, self.kept.take_unnamed()].into_iter().flatten() {
+            out.push(format!("{why} moved with nothing naming it to the kept money"));
+        }
+        out.join("; ")
+    }
+}
+
+/// `TrackApi::upkeep` worked out whole.
+fn self_whole_upkeep(w: &TrackWorld) -> Vec<f64> {
+    {
+        let n = &w.net;
         let (mut km, mut track) = (0.0, 0.0);
         for e in 0..n.edge_alive.len() {
             if let Some(u) = edge_upkeep(n, e) {
@@ -220,6 +276,28 @@ impl TrackApi {
         let ports = port_count * port_upkeep() + at_ports;
         vec![track + stations + buses + ports, track, stations, km, count, buses, bus_km, ports, port_count, ups]
     }
+}
+
+/// `TrackApi::line_upkeep_periods` worked out whole (before T-4299).
+fn shares_whole(w: &TrackWorld, hours: &[f64]) -> Vec<f64> {
+    let n = &w.net;
+    let mut slot_hours = [0.0; SLOTS];
+    for (p, &s) in n.period_slot().iter().enumerate() { slot_hours[s] += hours.get(p).copied().unwrap_or(0.0); }
+    let weights: Vec<f64> = w.svc.lines.iter().enumerate().map(|(l, s)| {
+        if !s.running { return 0.0 }
+        n.slots().map(|k| n.line_tph[l][k] as f64 * slot_hours[k]).sum()
+    }).collect();
+    upkeep_shares_of(w, weights)
+}
+
+/// `TrackApi::station_upgrade_upkeep` worked out whole (before T-4299).
+fn upgrade_upkeep_whole(w: &TrackWorld) -> Vec<f64> {
+    let (v, _) = w.net.upgrade_upkeep_by_node();
+    v.iter().enumerate().filter(|(_, &u)| u > 0.0).flat_map(|(n, &u)| [n as f64, u]).collect()
+}
+
+#[wasm_bindgen]
+impl TrackApi {
     /// Each running line's share of the upkeep a game day, US$M, as `[line, share]` pairs, then
     /// `[-1, rest]` for the track and stations no running line uses (T-867). Each edge's upkeep is
     /// split between the lines on it by their trains a day, each station's between the lines
@@ -235,15 +313,9 @@ impl TrackApi {
     /// T-3542: `line_upkeep` with `hours` a day in each demand period (`PERIOD_HOURS`), each period
     /// at the slot serving it; periods sharing a slot weigh as one stretch, so with every line on
     /// three rows it gives `line_upkeep`'s shares.
-    pub fn line_upkeep_periods(&self, hours: &[f64]) -> Vec<f64> {
-        let n = &self.w.net;
-        let mut slot_hours = [0.0; SLOTS];
-        for (p, &s) in n.period_slot().iter().enumerate() { slot_hours[s] += hours.get(p).copied().unwrap_or(0.0); }
-        let w: Vec<f64> = self.w.svc.lines.iter().enumerate().map(|(l, s)| {
-            if !s.running { return 0.0 }
-            n.slots().map(|k| n.line_tph[l][k] as f64 * slot_hours[k]).sum()
-        }).collect();
-        self.upkeep_shares(w)
+    pub fn line_upkeep_periods(&mut self, hours: &[f64]) -> Vec<f64> {
+        self.kept_now();
+        self.kept.shares_for(&self.w, hours)
     }
 }
 
@@ -251,12 +323,23 @@ impl TrackApi {
     /// The running lines' running cost per hour on kind of day `row` with each line at its rate in
     /// slot `lev`, US$M (`running_cost`).
     fn running_cost_at(&self, row: usize, lev: usize, shift: f64) -> f64 {
-        let n = &self.w.net;
+        running_cost_with(&self.w, &self.run_factor, row, lev, shift)
+    }
+    /// The upkeep shares from each line's weight (its trains a day), as `line_upkeep` gives them.
+    fn upkeep_shares(&self, w: Vec<f64>) -> Vec<f64> {
+        upkeep_shares_of(&self.w, w)
+    }
+}
+
+/// `TrackApi::running_cost_at` with each line's price factor in `run_factor` (T-2669; 1 for a line not in it).
+pub(super) fn running_cost_with(world: &TrackWorld, run_factor: &[f64], row: usize, lev: usize, shift: f64) -> f64 {
+    {
+        let n = &world.net;
         let (mut train_km, mut car_km) = ([0.0; FLEETS], [0.0; FLEETS]);
-        for (l, s) in self.w.svc.lines.iter().enumerate() {
+        for (l, s) in world.svc.lines.iter().enumerate() {
             if s.running && (shift.is_nan() || s.shift == shift) {
                 // T-2669: priced in its countries' money, so a km costs the factor's share
-                let tk = n.line_tph_on(l, row, lev) as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * self.line_run_factor(l as u32);
+                let tk = n.line_tph_on(l, row, lev) as f64 * s.live_runs() as f64 * s.runs[0].len / 1000.0 * run_factor.get(l).copied().unwrap_or(1.0);
                 let k = fleet_kind(n, l);
                 train_km[k] += tk;
                 car_km[k] += tk * s.cars as f64;
@@ -270,10 +353,13 @@ impl TrackApi {
         let trams = train_km[4] * tram.run_train_km + car_km[4] * tram.run_car_km;
         (ordinary + fast + bus + boats + trams) * ECONOMY / 1e6
     }
-    /// The upkeep shares from each line's weight (its trains a day), as `line_upkeep` gives them.
-    fn upkeep_shares(&self, w: Vec<f64>) -> Vec<f64> {
-        let n = &self.w.net;
-        let svc = &self.w.svc.lines;
+}
+
+/// `TrackApi::upkeep_shares` of `world` (each line's weight in `w`).
+fn upkeep_shares_of(world: &TrackWorld, w: Vec<f64>) -> Vec<f64> {
+    {
+        let n = &world.net;
+        let svc = &world.svc.lines;
         let weight = |l: u32| w.get(l as usize).copied().unwrap_or(0.0);
         // T-3474: a line running part of its plan shares only the track its trains take
         let weight_on = |l: u32, e: u32| if svc.get(l as usize).map_or(true, |s| s.runs_on(e)) { weight(l) } else { 0.0 };
@@ -294,7 +380,7 @@ impl TrackApi {
             if weight(l) <= 0.0 || !n.line_ok(l) { continue }
             let mut stops = if svc[l as usize].part.is_some() { svc[l as usize].stops.clone() } else { n.line_stops(l).to_vec() };
             // T-3348: and the platforms each run stops at
-            if let Some(ls) = self.w.svc.lines.get(l as usize).filter(|s| !s.is_bus()) {
+            if let Some(ls) = world.svc.lines.get(l as usize).filter(|s| !s.is_bus()) {
                 for r in 0..2 {
                     stops.extend((0..ls.runs[r].stop_idx.len()).filter_map(|k| ls.stop_node(r, k)));
                 }
@@ -408,9 +494,9 @@ impl TrackApi {
         self.w.net.wet_cache = on;
     }
     /// `[total_cost, built_cost]` in one pass (T-1540).
-    pub fn costs(&self) -> Vec<f64> {
-        let (t, b) = self.w.net.total_and_built_cost();
-        vec![t, b]
+    pub fn costs(&mut self) -> Vec<f64> {
+        self.kept_now();
+        self.kept.costs(&self.w).to_vec()
     }
     /// What constructing the whole blueprint would cost now.
     pub fn blueprint_cost(&self) -> f64 {

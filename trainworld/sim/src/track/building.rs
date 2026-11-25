@@ -281,24 +281,43 @@ pub fn members(net: &Network, c: &[P]) -> Vec<u32> {
     if c.len() < 3 {
         return vec![];
     }
-    let k = scale(net, c);
-    let tol = TOUCH_M * k;
-    let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
-    for p in c {
-        (x0, y0, x1, y1) = (x0.min(p[0]), y0.min(p[1]), x1.max(p[0]), y1.max(p[1]));
+    let near = Near::of(net, c);
+    (0..net.node_count() as u32).filter(|&n| near.member(net, c, n)).collect()
+}
+
+/// T-4299: whether station `n` is a member of the outline `c` (`members`, one node).
+pub fn member(net: &Network, c: &[P], n: u32) -> bool {
+    c.len() >= 3 && Near::of(net, c).member(net, c, n)
+}
+
+/// An outline's bounds and touching tolerance, as `members` tests a station against them.
+struct Near {
+    k: f64,
+    tol: f64,
+    b: [f64; 4],
+}
+
+impl Near {
+    fn of(net: &Network, c: &[P]) -> Near {
+        let k = scale(net, c);
+        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        for p in c {
+            (x0, y0, x1, y1) = (x0.min(p[0]), y0.min(p[1]), x1.max(p[0]), y1.max(p[1]));
+        }
+        Near { k, tol: TOUCH_M * k, b: [x0, y0, x1, y1] }
     }
-    (0..net.node_count() as u32)
-        .filter(|&n| {
-            let i = n as usize;
-            if !net.is_station(n) {
-                return false;
-            }
-            // a platform reaches at most its length from its node (more only on a sharp curve)
-            let r = net.node_platform[i] as f64 * 1.5 * k + tol;
-            let (x, y) = (net.node_x[i], net.node_y[i]);
-            x >= x0 - r && x <= x1 + r && y >= y0 - r && y <= y1 + r && touches(c, &platform_line(net, n), tol)
-        })
-        .collect()
+
+    fn member(&self, net: &Network, c: &[P], n: u32) -> bool {
+        let i = n as usize;
+        if !net.is_station(n) {
+            return false;
+        }
+        // a platform reaches at most its length from its node (more only on a sharp curve)
+        let r = net.node_platform[i] as f64 * 1.5 * self.k + self.tol;
+        let (x, y) = (net.node_x[i], net.node_y[i]);
+        let [x0, y0, x1, y1] = self.b;
+        x >= x0 - r && x <= x1 + r && y >= y0 - r && y <= y1 + r && touches(c, &platform_line(net, n), self.tol)
+    }
 }
 
 /// Why these corners cannot be a building (building `id` reshaped, `u32::MAX` for a new one); None

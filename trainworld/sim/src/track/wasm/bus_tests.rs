@@ -586,11 +586,11 @@ fn a_bus_line_runs_five_periods() {
     assert_eq!(a.line_row_headways(b), vec![480, 480, 480, 900, 1800]);
     let tph = |a: &TrackApi, s: usize| a.w.net.line_tph[b as usize][s] as f64;
     assert!((tph(&a, 1) - 7.5).abs() < 0.01, "midday at high's 8 minutes: {}", tph(&a, 1));
-    let cost = |a: &TrackApi| (0..5).map(|k| a.running_cost_period(k)).collect::<Vec<_>>();
-    let before = cost(&a);
+    let cost = |a: &mut TrackApi| (0..5).map(|k| a.running_cost_period(k)).collect::<Vec<_>>();
+    let before = cost(&mut a);
     assert_eq!(a.set_line_row_headways(b, vec![480, 1200, 480, 900, 1800]), 0, "{}", a.issues());
     assert!((tph(&a, 1) - 3.0).abs() < 0.01 && (tph(&a, 0) - 7.5).abs() < 0.01 && (tph(&a, 2) - 7.5).abs() < 0.01, "a 20 minute midday: {:?}", a.w.net.line_tph[b as usize]);
-    let after = cost(&a);
+    let after = cost(&mut a);
     assert!(after[1] < before[1] && [0, 2, 3, 4].iter().all(|&k| after[k] == before[k]), "only midday's cost moves: {before:?} {after:?}");
     // its buses by count, then a midday count of its own
     assert_eq!(a.clear_auto_headway(b), 0, "{}", a.issues());

@@ -1099,8 +1099,10 @@ impl TrackApi {
     /// T-4149: `line_weekend` then `line_row_weekend` of each line in `ids`, each as its length and its numbers. Each
     /// call alone works out every line's track limits (`Capacity::line_limits`, a pass over the whole network); here
     /// they are worked out once for all of them.
-    pub fn line_weekends(&self, ids: &[u32]) -> Vec<f64> {
-        let mut most = None;
+    pub fn line_weekends(&mut self, ids: &[u32]) -> Vec<f64> {
+        // (T-4299: the limits of this model state, shared with the stamps and the fleets' needs)
+        self.kept_now();
+        let mut most = self.kept.take_limits();
         let mut out = vec![];
         for &id in ids {
             for v in [self.line_weekend_in(id, &mut most), self.line_row_weekend_in(id, &mut most)] {
@@ -1108,6 +1110,7 @@ impl TrackApi {
                 out.extend(v);
             }
         }
+        self.kept.put_limits(most);
         out
     }
     /// T-3542: set line `id`'s whole trains on weekends per row by hand (`line_period_count` of them,

@@ -766,6 +766,9 @@ pub struct Service {
     /// them all (a world just made or reloaded).
     changed: Vec<u32>,
     pub changed_all: bool,
+    /// T-4299: the same lines for the model's kept money (`wasm/kept.rs`, `take_kept`), its own cursor
+    kept_changed: Vec<u32>,
+    kept_all: bool,
     /// Per line id, its own calendar (`Cal`): the kind of day of its holidays and its country's
     /// weekend. Not saved; the clock worker sends it (`TrackApi::set_line_rows`).
     pub cal: Vec<Cal>,
@@ -1456,6 +1459,28 @@ impl Service {
             self.changed_all = true;
         }
         self.changed.extend_from_slice(lines);
+        if self.kept_changed.len() > 1 << 20 {
+            self.kept_changed.clear();
+            self.kept_all = true;
+        }
+        self.kept_changed.extend_from_slice(lines);
+    }
+
+    /// Every line changed (a world just made or reloaded), for both readers.
+    pub fn note_all(&mut self) {
+        self.changed_all = true;
+        self.kept_all = true;
+    }
+
+    /// T-4299: the lines noted since the last call (`note_changed`), ascending, or None for every line.
+    pub fn take_kept(&mut self) -> Option<Vec<u32>> {
+        let mut v = std::mem::take(&mut self.kept_changed);
+        if std::mem::take(&mut self.kept_all) {
+            return None;
+        }
+        v.sort_unstable();
+        v.dedup();
+        Some(v)
     }
 
     /// The lines whose service changed since the last call, ascending; `[u32::MAX]` for all of them.

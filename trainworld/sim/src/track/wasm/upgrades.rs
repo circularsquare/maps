@@ -100,9 +100,9 @@ impl TrackApi {
 
     /// T-3922: stations whose upgrades pay upkeep (`Network::upgrade_upkeep_by_node`): node, upkeep a game day
     /// US$M, flat.
-    pub fn station_upgrade_upkeep(&self) -> Vec<f64> {
-        let (v, _) = self.w.net.upgrade_upkeep_by_node();
-        v.iter().enumerate().filter(|(_, &u)| u > 0.0).flat_map(|(n, &u)| [n as f64, u]).collect()
+    pub fn station_upgrade_upkeep(&mut self) -> Vec<f64> {
+        self.kept_now();
+        self.kept.upgrade_upkeep()
     }
 
     /// T-3740: stations with a fare zone: node, code (`StationData::fare`), flat.

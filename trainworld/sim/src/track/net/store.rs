@@ -177,6 +177,7 @@ impl Network {
             names_changed: vec![],
             names_all: true,
             repriced: false,
+            priced: vec![],
             node_wet: Default::default(),
             mask_epoch: 0,
             wet_cache: true,
@@ -262,6 +263,20 @@ impl Network {
 
     pub fn repriced(&self) -> bool {
         self.repriced
+    }
+
+    /// T-4299: the edges whose price moved outside an edit since the last call (a road tile's crossings, water,
+    /// terrain), ascending: the only edge numbers that move with no edit's `Dirty` naming them.
+    pub fn take_priced(&mut self) -> Vec<u32> {
+        let mut v = std::mem::take(&mut self.priced);
+        v.sort_unstable();
+        v.dedup();
+        v
+    }
+
+    /// T-4299: counts the water masks installed (a node's water, under its station's and junction's price).
+    pub fn mask_epoch(&self) -> u32 {
+        self.mask_epoch
     }
 
     /// The nodes whose station name was set (or cleared) since the last call, ascending; `[u32::MAX]`
@@ -650,9 +665,14 @@ impl Network {
     /// Build cost of every bus route, US$M: all of them, or the constructed ones. T-3378: lanes two BRT lines
     /// share are counted once (`brt_lane_m`).
     pub(super) fn bus_cost(&self, built: bool) -> f64 {
+        self.bus_cost_by(built, &|l| self.bus_road_m(l))
+    }
+
+    /// `bus_cost` with each bus line's road metres from `road` (T-4299: the kept money's, `bus_road_m` as last read).
+    pub(super) fn bus_cost_by(&self, built: bool, road: &dyn Fn(u32) -> f64) -> f64 {
         let road: f64 = (0..self.line_count() as u32)
             .filter(|&l| self.line_bus.get(l as usize).and_then(|b| b.as_ref()).is_some_and(|r| self.line_ok(l) && (!built || r.built)))
-            .map(|l| self.bus_road_m(l) / 1000.0 * BUS_ROUTE_COST_PER_KM)
+            .map(|l| road(l) / 1000.0 * BUS_ROUTE_COST_PER_KM)
             .sum();
         road + self.brt_lane_m(built) / 1000.0 * BRT_COST_PER_KM
     }

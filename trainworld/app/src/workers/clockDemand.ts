@@ -704,23 +704,47 @@ export function stationsKey(ni = api!.nodes_info()): string {
  * worked out again when the world changes. */
 let complexNodes: { version: number; of: Uint32Array } | null = null;
 export function complexOfNodes(): Uint32Array {
-  if (complexNodes?.version === version) return complexNodes.of;
   const a = api!;
+  // T-4299: the rows are the model's once a read has caught up with every edit. Between an edit and its state the stations
+  // it touched are read from the model in their place (review21); after a read that left regions for the next one (a rows
+  // state's focus: review25) every station is. Neither is kept.
+  const t = a.peek_touched(), whole = stateRows.behind || t[0] === 0xffffffff, live = whole || !(t.length === 1 && t[0] === 0);
+  if (!live && complexNodes?.version === version) return complexNodes.of;
   // T-4291: from the state's node rows (each kept row's platform line is the one `platformLineOf` gives, T-1382's check)
-  const rows = stateRows.modelNodes(), geo: StationGeo[] = [];
-  const top = rows.length ? rows[rows.length - 1].id : 0;
-  for (const r of rows) if (r.platform > 0) geo.push(rowGeo(r));
-  if (patchMode === "check") {
+  const geo: StationGeo[] = [];
+  let top = 0;
+  if (whole) {
+    const ni = a.nodes_info();
+    for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0) geo.push(stationGeo(a, ni, i));
+    top = ni.length ? ni[ni.length - 10] : 0;
+  } else {
+    const rows = stateRows.modelNodes();
+    top = rows.length ? rows[rows.length - 1].id : 0;
+    // (a touched node the model has no numbers for is gone)
+    const ids = Array.from(new Set(t.subarray(1 + t[0]))).sort((p, q) => p - q), now = new Map<number, StationGeo | null>();
+    const ni = ids.length ? a.nodes_info_of(Uint32Array.from(ids)) : new Float64Array(0);
+    for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0) now.set(ni[i], stationGeo(a, ni, i));
+    if (ni.length) top = Math.max(top, ni[ni.length - 10]);
+    let j = 0;
+    const touchedBelow = (id: number) => { for (; j < ids.length && ids[j] < id; j++) { const g = now.get(ids[j]); if (g) geo.push(g); } };
+    for (const r of rows) {
+      touchedBelow(r.id);
+      if (ids[j] === r.id) { const g = now.get(ids[j++]); if (g) geo.push(g); }
+      else if (r.platform > 0) geo.push(rowGeo(r));
+    }
+    touchedBelow(Infinity);
+  }
+  if (patchMode === "check" && !whole) {
     const ni = a.nodes_info(), was: StationGeo[] = [];
     for (let i = 0; i < ni.length; i += 10) if (ni[i + 7] > 0) was.push(stationGeo(a, ni, i));
-    if (was.length !== geo.length || was.some((g, k) => g.id !== geo[k].id || g.x !== geo[k].x || g.y !== geo[k].y || !Object.is(g.heading, geo[k].heading) || g.length !== geo[k].length || !sameLine(g.line, geo[k].line))) console.error("T-4291 check: the stations the complexes are made from differ from the model's");
+    if (was.length !== geo.length || was.some((g, k) => g.id !== geo[k].id || g.x !== geo[k].x || g.y !== geo[k].y || !Object.is(g.heading, geo[k].heading) || g.length !== geo[k].length || !sameLine(g.line, geo[k].line))) console.error(`T-4291 check: the stations the complexes are made from differ from the model's${live ? " (the rows with the touched stations read again)" : ""}`);
   }
   const fl = a.station_links(), links: [string, string][] = [];
   for (let k = 0; k + 1 < fl.length; k += 2) links.push([String(fl[k]), String(fl[k + 1])]);
   const cx = complexesOf(nodeComplexes, geo, links);
   const of = new Uint32Array(top + 1).fill(0xffffffff);
   for (const g of geo) of[Number(g.id)] = cx.of.get(g.id)!;
-  complexNodes = { version, of };
+  if (!live) complexNodes = { version, of };
   return of;
 }
 

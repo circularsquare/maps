@@ -195,7 +195,9 @@ fn game(right_hand: bool, sx: f64, quad: bool) -> TrackApi {
     a
 }
 
-fn fingerprint(a: &TrackApi) -> (String, Vec<(String, f64)>) {
+fn fingerprint(a: &mut TrackApi) -> (String, Vec<(String, f64)>) {
+    let guard = a.guard_conflicts();
+    let a = &*a;
     let w = a.world();
     let net = &w.net;
     let mut times = vec![];
@@ -242,7 +244,7 @@ fn fingerprint(a: &TrackApi) -> (String, Vec<(String, f64)>) {
         }
     }
     s += "## guard\n";
-    for c in a.guard_conflicts().chunks(5) {
+    for c in guard.chunks(5) {
         writeln!(s, "{c:?}").unwrap();
     }
     s += "## capacity\n";
@@ -309,7 +311,7 @@ fn main() {
         }
     };
     let load = ms(t);
-    let (fp, times) = fingerprint(&a);
+    let (fp, times) = fingerprint(&mut a);
     std::fs::write(out, &fp).expect("write fingerprint");
     eprintln!("load or build {load:.1} ms");
     for (what, t) in times {

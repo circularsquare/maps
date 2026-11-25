@@ -42,11 +42,16 @@ pub struct TrackApi {
     last: Option<EditResult>,
     /// T-4113: what the edits since `take_touched` touched
     touched: touched::Touched,
+    /// T-4299: the money a state reads, kept per record (`wasm/kept.rs`)
+    kept: kept::Kept,
     /// T-4249: an edit since `take_service_moved` rebuilt, rescheduled or re-timed some line's service
     service_moved: bool,
     /// T-4113: each line's stamp as `take_changed_lines` last took it (`TrackApi::stamped`)
     stamps: Vec<Option<u64>>,
     stamps_off: bool,
+    /// T-4299: the last stamps worked out for the noted lines (`peek_changed_lines`), at the kept money's model state:
+    /// `take_changed_lines` takes them again where nothing moved since (the edit's patch peeks, its state takes)
+    stamps_peeked: Option<(u64, Vec<u32>, (Vec<u32>, Vec<(u32, Option<u64>)>))>,
     issues: Vec<Issue>,
     /// Set when the last refusal was for money: (need, have).
     money_short: Option<(f64, f64)>,
@@ -277,10 +282,15 @@ fn pack_mask_in(frame: super::frame::Frame, mask: &Arc<RunMask>, lon: f64, lat: 
 /// Cars the running lines need: each line's busiest schedule's trains times its cars (T-028).
 /// Ordinary cars, then high-speed ones (T-817), then buses (T-1464), then boats (T-2193), then trams (T-2926).
 fn cars_needed(w: &TrackWorld) -> [u32; FLEETS] {
+    cars_needed_with(w, &mut None)
+}
+
+/// `cars_needed` with the track limits the weekend counts read shared through `most` (T-4299).
+fn cars_needed_with(w: &TrackWorld, most: &mut lines::Limits) -> [u32; FLEETS] {
     let mut out = [0; FLEETS];
     // T-3521: a train runs on whichever kind of day needs the most at any level
     let mut weekend = vec![0u32; w.svc.lines.len()];
-    for (l, c) in w.weekend_own() {
+    for (l, c) in w.weekend_own_in(most) {
         // (T-3542: at the places its rows use)
         let used = ROW_PLACES[w.net.rows(l) - ROWS_MIN];
         if let Some(x) = weekend.get_mut(l) { *x = used.iter().map(|&k| c[k]).max().unwrap_or(0); }
@@ -337,9 +347,13 @@ fn port_upkeep() -> f64 {
 /// A constructed bus route's upkeep a game day, US$M, a BRT one's lanes included (T-3907); None for a
 /// planned one (T-1464). `lanes`: each line's part of the lanes' upkeep, road metres (`Network::brt_upkeep_m`).
 fn bus_upkeep(n: &Network, l: u32, lanes: &[f64]) -> Option<f64> {
+    bus_upkeep_with(n, l, n.bus_road_m(l), lanes)
+}
+/// `bus_upkeep` with the route's road metres `road` (`Network::bus_road_m`) known (T-4299).
+fn bus_upkeep_with(n: &Network, l: u32, road: f64, lanes: &[f64]) -> Option<f64> {
     n.line_bus.get(l as usize)?.as_ref().filter(|r| r.built && n.line_ok(l)).map(|_| {
         // T-3907: a BRT route's road in town at street tram track's rate; T-3378: a lane two lines share, half each
-        let (road, town) = (n.bus_road_m(l), lanes.get(l as usize).copied().unwrap_or(0.0));
+        let town = lanes.get(l as usize).copied().unwrap_or(0.0);
         ((road - town) * UPKEEP_BUS_KM + town * UPKEEP_BRT_KM) / 1000.0 * ECONOMY / 1e6
     })
 }
@@ -411,9 +425,11 @@ impl TrackApi {
             w: TrackWorld::new(Network::new(origin_lon, origin_lat, right_hand)),
             last: None,
             touched: Default::default(),
+            kept: Default::default(),
             service_moved: true,
             stamps: vec![],
             stamps_off: false,
+            stamps_peeked: None,
             issues: vec![],
             money_short: None,
             cash: 6000.0,
@@ -606,6 +622,7 @@ impl TrackApi {
         net.streets = self.w.net.streets.clone();
         self.w = TrackWorld::new(net);
         self.touched.everything();
+        self.kept.everything();
         self.rebuild_water();
         true
     }
@@ -860,6 +877,7 @@ impl TrackApi {
                 }
                 self.w = TrackWorld::new(net);
                 self.touched.everything();
+                self.kept.everything();
                 self.old_names = level <= save::OLD_BOUND_NAMES;
                 if level <= save::OLD_STATION_WAYS && self.w.net.pin_station_runs() {
                     self.w.reload();
@@ -1016,6 +1034,7 @@ mod twin;
 mod onetrack;
 mod legs;
 mod touched;
+mod kept;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; FLEETS]) -> f64 {
@@ -2601,6 +2620,10 @@ mod upgrade_tests;
 /// T-1382: the changes the clock worker reads its state rows again for.
 #[cfg(test)]
 mod changed_tests;
+
+/// T-4299: the kept money against a whole rebuild after each kind of edit.
+#[cfg(test)]
+mod kept_tests;
 
 /// T-1964: station placements across joints between pieces of track.
 #[cfg(test)]

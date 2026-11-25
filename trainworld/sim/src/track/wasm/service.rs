@@ -77,7 +77,13 @@ impl TrackApi {
     /// Per profile `((line * 2 + run) * SLOTS + slot) * PROFILE_VARS + var`: first phase, phase
     /// count, trip seconds (run plus turnaround), path length m. Absent lines, slots not worked out
     /// and variants a run has not have count 0.
-    pub fn profile_meta(&self) -> Vec<f32> {
+    pub fn profile_meta(&mut self) -> Vec<f32> {
+        // (T-4299: each line's rows kept, `wasm/kept.rs`)
+        self.kept_now();
+        self.kept.meta()
+    }
+    /// `profile_meta` worked out whole (before T-4299), for `kept_check`.
+    pub(super) fn profile_meta_whole(&self) -> Vec<f32> {
         let mut out = vec![];
         let mut first = 0usize;
         for (li, l) in self.w.svc.lines.iter().enumerate() {
@@ -528,7 +534,13 @@ impl TrackApi {
     /// T-1966: the conflicts the map's train guard holds trains at: `[flat crossings, per crossing:
     /// edge 1, where it is along edge 1 from its node a (0..1), edge 2, along edge 2; junction
     /// pairs, per pair: node, one move's arriving and leaving path entries, the other's]`.
-    pub fn guard_conflicts(&self) -> Vec<f64> {
+    pub fn guard_conflicts(&mut self) -> Vec<f64> {
+        // (T-4299: the junction pairs kept per node, `wasm/kept.rs`)
+        self.kept_now();
+        self.kept.conflicts(&self.w)
+    }
+    /// `guard_conflicts` worked out whole (before T-4299), for `kept_check`.
+    pub(super) fn guard_conflicts_whole(&self) -> Vec<f64> {
         let net = &self.w.net;
         let mut out = vec![0.0];
         for c in net.crossings.iter().filter(|c| matches!(c.kind, CrossKind::Flat(_))) {

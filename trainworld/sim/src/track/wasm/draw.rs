@@ -1132,6 +1132,7 @@ impl TrackApi {
             // (a name moves no track, platform or service: nothing is derived again, and the next state reads the rows)
             let _ = self.w.net.take_touch();
             self.touched.note(&crate::track::world::Dirty { nodes: nodes.to_vec(), ..Default::default() });
+            self.kept.note_records(&[], nodes);
         }
         n
     }

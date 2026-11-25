@@ -20,7 +20,7 @@ fn trains(a: &TrackApi, line: u32) -> [f64; 3] {
 /// T-3542: figures to compare two builds to the bit: per line `line_summary`, the running cost per
 /// hour at each level of both kinds of day, and every trip drawn over a weekday and a Saturday with
 /// its train's position halfway (profile index cut to line and run, `TW_STRIDE` profiles a run).
-fn figures(a: &TrackApi, lines: &[u32]) -> String {
+fn figures(a: &mut TrackApi, lines: &[u32]) -> String {
     let stride: u32 = std::env::var("TW_STRIDE").ok().and_then(|s| s.parse().ok()).unwrap_or(a.profile_slots());
     let slot_of = |k: u32| if stride == 3 { k } else { [0, 0, 0, 1, 2][k as usize] };
     let mut s = String::new();
@@ -125,7 +125,7 @@ fn main() {
         std::fs::write(&path, format!("{:?}\n", a.lines_info())).unwrap();
         // T-3542: the save bytes after the load and after the edits, to compare two builds' saves
         std::fs::write(format!("{path}.save"), a.save()).unwrap();
-        std::fs::write(format!("{path}.figs"), figures(&a, &lines)).unwrap();
+        std::fs::write(format!("{path}.figs"), figures(&mut a, &lines)).unwrap();
     }
     // T-1924: per line after the load, tab-separated: id, name, km, then per level (high, medium,
     // low) trains an hour, round trip s, delay s and trains, to compare two builds' run times
@@ -254,7 +254,7 @@ fn main() {
     if let Ok(path) = std::env::var("TW_DUMP") {
         std::fs::write(format!("{path}.end"), format!("{:?}\n", a.lines_info())).unwrap();
         std::fs::write(format!("{path}.end.save"), a.save()).unwrap();
-        std::fs::write(format!("{path}.end.figs"), figures(&a, &lines)).unwrap();
+        std::fs::write(format!("{path}.end.figs"), figures(&mut a, &lines)).unwrap();
         // saved and loaded again (T-1787): the same figures, to the bit
         let mut b = TrackApi::new(-73.985, 40.758, true);
         let t = Instant::now();
@@ -266,7 +266,7 @@ fn main() {
             b.set_unlimited(true);
             b.set_now(now);
             std::fs::write(format!("{path}.reload.save"), b.save()).unwrap();
-            std::fs::write(format!("{path}.reload.figs"), figures(&b, &lines)).unwrap();
+            std::fs::write(format!("{path}.reload.figs"), figures(&mut b, &lines)).unwrap();
         }
     }
     kept(&a, "after the edits");

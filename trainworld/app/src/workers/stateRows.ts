@@ -282,6 +282,10 @@ export function upgradesOf(a: TrackApi): Map<number, number> {
   return out;
 }
 
+/** the sets an edge row reads (`StateRows.edgeSets`) and a node row (`StateRows.nodeSets`) */
+type EdgeSets = ReturnType<typeof StateRows.edgeSets>;
+type NodeSets = ReturnType<typeof StateRows.nodeSets>;
+
 /** a line with no phase tables (`TrackApi.line_phases` of a line with none) */
 const NO_TABLE = new Float32Array(0);
 
@@ -403,10 +407,15 @@ export class StateRows {
   private edgeList: ClockEdge[] = [];
   private rawNodes: ClockNode[] = [];
   private busTail: ClockNode[] = [];
+  /** T-4299: the bus stops' nodes by id (review21: `nodeNow` found them one by one) */
+  private busTailOf = new Map<number, ClockNode>();
   /** the number of the read that made the lists last handed out (`ClockState.rowsRead`) */
   get lastRead(): number { return this.log.next - 1; }
   /** T-4291: the model's node rows as the last read left them (names not folded), in id order; never to be changed */
   modelNodes(): readonly ClockNode[] { return this.rawNodes; }
+  /** T-4299: whether the last read left regions for the next one (a rows state's focus): the rows outside them are the
+   * model's, those in them may be from before an edit */
+  get behind(): boolean { return this.regions.behind(); }
   /** T-4291: the number of the read in progress, or of the last one once it is done */
   get readNumber(): number { return this.reading ? this.log.next : this.log.next - 1; }
   /** T-4291: the ids of kind `k` (0 edges, 1 nodes, 2 lines) whose row in the list changed or went in the reads after read `n`
@@ -426,7 +435,7 @@ export class StateRows {
   /** T-4291: the rows the last read handed out, by id: an edge's, a node's as shown (its name folded; a bus stop's too), a
    * line's */
   edgeNow(id: number): ClockEdge | undefined { return this.edgeRows.get(id); }
-  nodeNow(id: number): ClockNode | undefined { return this.folded.get(id)?.row ?? this.nodeRows.get(id) ?? this.busTail.find((n) => n.id === id); }
+  nodeNow(id: number): ClockNode | undefined { return this.folded.get(id)?.row ?? this.nodeRows.get(id) ?? this.busTailOf.get(id); }
   lineNow(id: number): ClockLine | undefined { return this.lineKept.get(id)?.row; }
 
   /** Forget every row: the next read is a full one. */
@@ -456,6 +465,8 @@ export class StateRows {
     this.nodeOwn.clear();
     this.carry.clear();
     this.lastSets.clear();
+    this.eSets = this.nSets = null;
+    this.flagsOwed = { edgesAll: true, nodesAll: true, edges: new Set(), nodes: new Set() };
     this.lastNodes = null;
     this.lastFoldKey = "";
     this.lastStations = [];
@@ -464,6 +475,7 @@ export class StateRows {
     this.edgeList = [];
     this.rawNodes = [];
     this.busTail = [];
+    this.busTailOf.clear();
     this.reading = false;
     // (a reader of the rows from before compares whole)
     this.log.add(true);
@@ -542,6 +554,7 @@ export class StateRows {
     const li = a.lines_info();
     a.set_line_stamps(StateRows.bounded);
     const touched = a.take_touched(), changed = a.take_changed_lines();
+    this.oweFlags(a.take_flag_changes());
     this.nameSent.clear();
     // every line again after a load or repricing; every edge and node after a load, the focus's first in a rows state
     const linesAll = touched[0] === ALL || (changed.length > 0 && changed[0] === ALL) || !this.lineKept.size;
@@ -640,7 +653,7 @@ export class StateRows {
   }
 
   /** the model's sets an edge row reads, each read whole */
-  private static edgeSets(a: TrackApi) {
+  static edgeSets(a: TrackApi) {
     const offEdges = new Set<number>(a.off_edges());
     const hsrEdges = new Set<number>(a.hsr_edges());
     const crossoverIds = a.crossover_edges(), crossoverPartners = a.crossover_partners();
@@ -670,11 +683,24 @@ export class StateRows {
 
   edges(a: TrackApi): ClockEdge[] {
     const sc = this.scoped(a);
-    const sets = StateRows.edgeSets(a);
     const kept = this.edgeRows;
     // T-4113: a record no edit touched whose sets are as last read is kept without a look
     const patch = !sc.walk, setMoved = new Set<number>();
-    for (const [k, v] of Object.entries(sets)) { if (patch) StateRows.moved(this.lastSets.get("e" + k), v, setMoved); this.lastSets.set("e" + k, v); }
+    let sets: EdgeSets;
+    const owed = this.flagsOwed;
+    if (sc.walk || owed.edgesAll || !this.eSets) {
+      sets = StateRows.edgeSets(a);
+      for (const [k, v] of Object.entries(sets)) { if (patch) StateRows.moved(this.lastSets.get("e" + k), v, setMoved); this.lastSets.set("e" + k, v); }
+    } else {
+      // T-4299: the sets as last read, patched by the edges the model says moved
+      sets = this.eSets;
+      const ids = [...owed.edges];
+      StateRows.patchEdgeSets(sets, a.edge_flags_of(Uint32Array.from(ids)), ids);
+      for (const id of ids) setMoved.add(id);
+    }
+    this.eSets = sets;
+    owed.edgesAll = false;
+    owed.edges.clear();
     for (const id of setMoved) {
       sc.edges.add(id);
       // (T-4291: a way or a join that moved moves what the rows at its ends derive from the track there, the unusable ends)
@@ -738,7 +764,7 @@ export class StateRows {
   }
 
   /** the model's sets a node row reads, each read whole */
-  private static nodeSets(a: TrackApi, ups: Map<number, number>) {
+  static nodeSets(a: TrackApi, ups: Map<number, number>) {
     const offStations = new Set<number>(a.off_stations());
     const namedStations = new Set<number>(a.named_stations());
     const unbound = new Set<number>(a.unbound_stations());
@@ -778,12 +804,28 @@ export class StateRows {
       ...(berth && berth.length === 2 ? { port: env.lngLat(berth[0], berth[1]) } : {}), ...(brtStation ? { brtStation: true as const } : {}) };
   }
 
-  nodes(a: TrackApi, env: RowEnv, ups: Map<number, number>): ClockNode[] {
+  nodes(a: TrackApi, env: RowEnv, given?: Map<number, number>): ClockNode[] {
     const sc = this.scoped(a);
     this.syncNames(a);
-    const sets = StateRows.nodeSets(a, ups);
     const patch = !sc.walk;
-    for (const [k, v] of Object.entries(sets)) { if (patch) StateRows.moved(this.lastSets.get("n" + k), v, sc.nodes); this.lastSets.set("n" + k, v); }
+    let sets: NodeSets;
+    // (with what moved since `begin`: an older save's stations unbound between two reads of the nodes, `adopt_old_names`)
+    this.oweFlags(a.take_flag_changes());
+    const owed = this.flagsOwed;
+    if (sc.walk || owed.nodesAll || !this.nSets) {
+      sets = StateRows.nodeSets(a, given ?? upgradesOf(a));
+      for (const [k, v] of Object.entries(sets)) { if (patch) StateRows.moved(this.lastSets.get("n" + k), v, sc.nodes); this.lastSets.set("n" + k, v); }
+    } else {
+      // T-4299: the sets as last read, patched by the nodes the model says moved
+      sets = this.nSets;
+      const ids = [...owed.nodes];
+      StateRows.patchNodeSets(sets, a.node_flags_of(Uint32Array.from(ids)), ids);
+      for (const id of ids) sc.nodes.add(id);
+    }
+    this.nSets = sets;
+    owed.nodesAll = false;
+    owed.nodes.clear();
+    const ups = sets.ups;
     for (const id of this.namesMoved) sc.nodes.add(id);
     this.namesMoved = [];
     const kept = this.nodeRows;
@@ -1177,6 +1219,7 @@ export class StateRows {
         if (at === undefined || was[at] !== n) chg.add(n.id);
       });
       for (const n of was) if (!ids.has(n.id)) { chg.add(n.id); this.ord[1] = true; }
+      this.busTailOf = new Map(tail.map((n) => [n.id, n]));
     }
     this.busTail = tail;
     for (const n of tail) nodes.push(n);
@@ -1198,6 +1241,53 @@ export class StateRows {
     for (const k of was.keys()) if (!now.has(k)) into.add(k);
   }
   private lastSets = new Map<string, Map<number, unknown> | Set<number>>();
+  /** T-4299: the sets the last read read, patched in place by the records the model says moved */
+  private eSets: EdgeSets | null = null;
+  private nSets: NodeSets | null = null;
+  /** T-4299: the records whose list flags the model said moved (`take_flag_changes`, taken by `begin`) and the sets have
+   * not been patched by yet, or every one: `edges` and `nodes` take them, so a read that stops before them (it threw)
+   * leaves them to the next one, as the model's log no longer has them */
+  private flagsOwed = { edgesAll: true, nodesAll: true, edges: new Set<number>(), nodes: new Set<number>() };
+
+  private oweFlags(fl: Uint32Array) {
+    const o = this.flagsOwed;
+    if (fl.length && fl[0] === ALL) { o.edgesAll = o.nodesAll = true; o.edges.clear(); o.nodes.clear(); return; }
+    for (let k = 1; k <= fl[0]; k++) o.edges.add(fl[k]);
+    for (let k = 1 + fl[0]; k < fl.length; k++) o.nodes.add(fl[k]);
+  }
+
+  /** T-4299: `edge_flags_of`'s rows (id, off, high speed, crossover, partner, way, joins, limit, ramp) into the sets, for
+   * `ids` (a gone edge has no row) */
+  private static patchEdgeSets(s: EdgeSets, f: ArrayLike<number>, ids: readonly number[]) {
+    for (const id of ids) { s.offEdges.delete(id); s.hsrEdges.delete(id); s.crossovers.delete(id); s.oneWays.delete(id); s.joins.delete(id); s.limits.delete(id); s.ramps.delete(id); }
+    for (let k = 0; k + 8 < f.length; k += 9) {
+      const id = f[k];
+      if (f[k + 1]) s.offEdges.add(id);
+      if (f[k + 2]) s.hsrEdges.add(id);
+      if (f[k + 3]) s.crossovers.set(id, f[k + 4] === 0xffffffff ? -1 : f[k + 4]);
+      if (f[k + 5]) s.oneWays.set(id, f[k + 5] as 1 | 2);
+      if (f[k + 6]) s.joins.set(id, f[k + 6]);
+      if (f[k + 7]) s.limits.set(id, f[k + 7]);
+      if (f[k + 8]) s.ramps.set(id, f[k + 8]);
+    }
+  }
+
+  /** T-4299: `node_flags_of`'s rows (id, off, named, unbound, one track, one platform, fare zone, upgrades, upgrade upkeep)
+   * into the sets, for `ids` */
+  private static patchNodeSets(s: NodeSets, f: ArrayLike<number>, ids: readonly number[]) {
+    for (const id of ids) { s.offStations.delete(id); s.namedStations.delete(id); s.unbound.delete(id); s.ones.delete(id); s.onePlatforms.delete(id); s.fares.delete(id); s.ups.delete(id); s.upUpkeep.delete(id); }
+    for (let k = 0; k + 8 < f.length; k += 9) {
+      const id = f[k];
+      if (f[k + 1]) s.offStations.add(id);
+      if (f[k + 2]) s.namedStations.add(id);
+      if (f[k + 3]) s.unbound.add(id);
+      if (f[k + 4]) s.ones.set(id, f[k + 4] as 1 | 2);
+      if (f[k + 5]) s.onePlatforms.add(id);
+      if (f[k + 6]) s.fares.set(id, f[k + 6]);
+      if (f[k + 7]) s.ups.set(id, f[k + 7]);
+      if (f[k + 8] > 0) s.upUpkeep.set(id, f[k + 8] * 1e6);
+    }
+  }
   /** the last read's model nodes, folded, and whether this read changed any */
   private lastNodes: ClockNode[] | null = null;
   private lastFoldKey = "";

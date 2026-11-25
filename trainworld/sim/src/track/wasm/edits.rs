@@ -20,6 +20,7 @@ impl TrackApi {
         match r {
             Ok(r) => {
                 self.touched.note(&r.dirty);
+                self.kept.note(&r.dirty);
                 let s = &r.dirty.service;
                 self.service_moved |= !(r.dirty.lines.is_empty() && s.rebuilt.is_empty() && s.recomputed.is_empty() && s.shared.is_empty() && s.demand.is_empty());
                 self.last = Some(r);
@@ -129,6 +130,7 @@ impl TrackApi {
     /// What owed services worked out touched, noted as an edit's is (`done`): for the rows and patch to come, the trips.
     fn note_dirty(&mut self, d: &crate::track::world::Dirty) {
         self.touched.note(d);
+        self.kept.note(d);
         let s = &d.service;
         self.service_moved |= !(d.lines.is_empty() && s.rebuilt.is_empty() && s.recomputed.is_empty() && s.shared.is_empty() && s.demand.is_empty());
     }

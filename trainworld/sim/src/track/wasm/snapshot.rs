@@ -27,17 +27,36 @@ impl TrackApi {
         if self.w.net.take_repriced() && v.first() != Some(&u32::MAX) {
             v = vec![u32::MAX];
         }
-        let (out, now) = self.stamped(v);
+        // (T-4299: the kept money first, whose model state the track limits are worked out for once; the state's first read,
+        // so with every line's money compared)
+        self.kept_with(true);
+        let (out, now) = match self.stamps_peeked.take() {
+            Some((g, noted, r)) if g == self.kept.gen && noted == v && !self.stamps_off => r,
+            _ => self.stamped_kept(v),
+        };
         self.keep_stamps(now);
         out
     }
     /// `take_changed_lines` without taking: what has changed since, for the phase tables to be read
     /// after the trials that pricing a planned line runs (T-1540).
-    pub fn peek_changed_lines(&self) -> Vec<u32> {
+    pub fn peek_changed_lines(&mut self) -> Vec<u32> {
         if self.w.net.repriced() {
             return vec![u32::MAX];
         }
-        self.stamped(self.w.svc.peek_changed()).0
+        // (T-4299: with the kept money's track limits, and kept for the take that follows)
+        self.kept_now();
+        let v = self.w.svc.peek_changed();
+        let r = self.stamped_kept(v.clone());
+        let out = r.0.clone();
+        self.stamps_peeked = Some((self.kept.gen, v, r));
+        out
+    }
+    /// `stamped` with the track limits of the kept money's model state
+    fn stamped_kept(&mut self, v: Vec<u32>) -> (Vec<u32>, Vec<(u32, Option<u64>)>) {
+        let mut most = self.kept.take_limits();
+        let r = self.stamped(v, &mut most);
+        self.kept.put_limits(most);
+        r
     }
     /// T-1382: the nodes whose station name was set or cleared since the last call, ascending, or
     /// `[u32::MAX]` when the caller knows none of them (a new network).
@@ -102,18 +121,25 @@ impl TrackApi {
     }
     /// T-4214: `nodes_info`'s numbers for the live nodes among `ids` (a gone one has none); the lines' conflict nodes
     /// are worked out only for a built junction among them.
-    pub fn nodes_info_of(&self, ids: &[u32]) -> Vec<f64> {
+    pub fn nodes_info_of(&mut self, ids: &[u32]) -> Vec<f64> {
+        // (T-4299: a junction's crossing moves from the pairs kept per node)
+        self.kept_now();
         let mut out = vec![];
-        let mut busy: Option<Vec<u32>> = None;
         for &k in ids {
-            self.node_info_into(k, &mut |k| busy.get_or_insert_with(|| crate::track::capacity::conflict_nodes(&self.w.net, &self.w.svc.lines)).binary_search(&k).is_ok(), &mut out);
+            self.node_info_into(k, &mut |k| self.kept.busy(k), &mut out);
         }
         out
     }
     /// Per crossing of two edges at one height, 6 numbers: x, y, kind (0 flat, 1 bad), level (a
     /// flat crossing's, else 0), built (1 when both its edges are constructed), tram tracks
     /// (`Network::crossing_trams`, T-3062). For the map's marks (T-629).
-    pub fn crossings_info(&self) -> Vec<f64> {
+    pub fn crossings_info(&mut self) -> Vec<f64> {
+        // (T-4299: the edges in use kept per line, `wasm/kept.rs`)
+        self.kept_now();
+        self.kept.crossings(&self.w)
+    }
+    /// `crossings_info` worked out whole (before T-4299), for `kept_check`.
+    pub(super) fn crossings_whole(&self) -> Vec<f64> {
         let n = &self.w.net;
         let mut out = vec![];
         let used = crate::track::capacity::edges_in_use(&self.w.svc.lines);

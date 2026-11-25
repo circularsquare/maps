@@ -329,7 +329,17 @@ Web first, so it can be shared as a link.
   reader patches by (T-4149). The
   run profiles' phase tables are kept per line the same way and laid end to end only when a line's
   differ; what the track model prices (the cost sums, the construct-all quote) asks the water mask
-  once for a node while the node and the mask stay as they are (T-1540). The construct-all quote and
+  once for a node while the node and the mask stay as they are (T-1540). The money and the lists a state reads whole
+  (upkeep, the cost sums, fleet needs, running cost, each line's upkeep share, the station upgrades' upkeep, the junction
+  conflicts, crossings, busy stations, `profile_meta` and the 15 flag lists) are kept per record in the track model
+  (`wasm/kept.rs`): a record's old part comes off and its new one goes on, summed exactly (steps of 2^-64), so a
+  fresh build gives the same bits and the old float sums agree to a part in 1e9. Parts move for the records an edit names (applied edits, the ends of
+  their edges, re-priced edges, the lines the service noted), the lines whose price factor the app moved and the
+  passages and buildings (set outside an edit); a load, a reload or a water mask change builds them whole. Each state's
+  first read also compares every line's money key and the passages and buildings, a net for a namer missing. The worker patches its flag lists from the
+  model's log of records whose flags moved (`take_flag_changes`). The track limits, markers, full track and turn limits
+  are still worked out whole, once per change. `?patch=check` compares all of it, as the reads between states read it,
+  with a whole build (`kept_check`), and reports anything that net caught [T-4299]. The construct-all quote and
   a planned line's price each run a trial construction, so they are no part of a state: the Build
   tab and the line panel ask for them (T-1171).
 - **Staying in step with the basemap** [T-075; notes/T-015.md, notes/T-075.md]: an empty MapLibre

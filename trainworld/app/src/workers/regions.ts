@@ -91,6 +91,12 @@ export class Regions {
   }
 
   get size() { return this.leaves.size; }
+  /** T-4299: the nodes and edges held, for `?patch=check` against the model's (review21: a record gone that no edit named
+   * would stay in its region) */
+  counts(): [number, number] { return [this.at.size, this.ends.size]; }
+  /** T-4299: whether regions are dirty, left by a read for the next one (a rows state's focus): their rows are older than
+   * the model */
+  behind(): boolean { return this.everything || this.dirty.size > 0; }
 
   private leafAt(x: number, y: number): Leaf {
     for (let level = 0; ; level++) {

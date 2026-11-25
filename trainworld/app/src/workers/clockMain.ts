@@ -436,20 +436,23 @@ function buildState(rowsOnly = false): ClockState {
   // (with `?patch=walk` a rows state is built as a full one, as before)
   rowsOnly &&= StateRows.bounded;
   stateRows.begin(a, rowsOnly ? { rect: viewRect() } : undefined);
+  if (patchMode === "check") {
+    const [n, e] = stateRows.regions.counts(), ni = a.nodes_info().length / 10, ei = a.edges_info().length / 10;
+    if (n !== ni || e !== ei) console.error(`T-4299 check: the regions hold ${n} nodes and ${e} edges, the model ${ni} and ${ei}`);
+  }
   const edges = stateRows.edges(a);
   const { drawn, speeds: speedParts } = rowsOnly ? { drawn: [], speeds: [] } : drawnLists(a, edges);
   const tq1 = performance.now(); timing.sEdges = tq1 - tq0;
-  const ups = upgradesOf(a);
   platformLines.sync(edges, stateRows.changes(0), (id) => stateRows.edgeNow(id));
   if (patchMode === "check") { const bad = platformLines.differs(edges); if (bad.length) console.error(`T-4291 check: the platforms' ${bad.join(", ")} laid from changes differ from a whole sync`); }
-  let nodes = stateRows.nodes(a, rowEnv, ups);
+  let nodes = stateRows.nodes(a, rowEnv);
   // T-3759: an older save's typed stations that showed their own names keep them, unbound (once a load,
   // not on undo)
   if (a.take_old_names()) {
     const apart = stateRows.oldApart();
     if (apart.length && a.adopt_old_names(new Uint32Array(apart)) === 0) {
       forget();
-      nodes = stateRows.nodes(a, rowEnv, ups);
+      nodes = stateRows.nodes(a, rowEnv);
     }
   }
   const stationCount = nodes.length;
@@ -461,7 +464,7 @@ function buildState(rowsOnly = false): ClockState {
   const w = stateRows.work;
   timing.sFold = w.foldMs;
   timing.nEdges = w.edges; timing.nNodes = w.nodes; timing.nLines = w.lines; timing.nBuses = w.buses; timing.nRegions = w.leaves; timing.nLeft = w.left;
-  if (patchMode === "check") checkRows({ edges, nodes, lines }, a, ups);
+  if (patchMode === "check") checkRows({ edges, nodes, lines }, a, upgradesOf(a));
   // a bus line's stops that are no station were added to the nodes by its row
   const busNodes = new Map(nodes.slice(stationCount).map((n) => [n.id, n]));
   lineFirstStops = new Map(lines.map((l) => {
@@ -543,6 +546,8 @@ function buildState(rowsOnly = false): ClockState {
   const fullTrack = PERIODS.map((_, p) => fullBySlot.get(slots[p]) ?? fullBySlot.set(slots[p], a.full_track_in(p)).get(slots[p])!);
   const tq4a = performance.now(); timing.sFull = tq4a - tq4;
   const [totalCost, builtCost] = a.costs();
+  // T-4299: the money kept per record against the same worked out from nothing
+  if (patchMode === "check") { const d = a.kept_check(PERIOD_HOURS); if (d) console.error(`T-4299 check: ${d}`); }
   const blueprintCost = Math.max(totalCost - builtCost, 0);
   const tq5 = performance.now(); timing.sSums = tq5 - tq4a; timing.sCosts = tq5 - tq4;
   // (a rows state carries none: the tables changed stay pending for the next full one)

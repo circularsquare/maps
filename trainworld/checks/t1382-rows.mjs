@@ -356,12 +356,15 @@ for (let seed = Number(process.env.FROM ?? 1); seed <= SEEDS; seed++) {
     rowsTotal += now.edges.length + now.nodes.length + now.lines.length;
     const old = new Set([...before.edges, ...before.nodes, ...before.lines]);
     for (const k of ['edges', 'nodes', 'lines']) for (const r of now[k]) if (old.has(r)) rowsKept++;
-    // the one-pass cost sums are the two passes' to the bit, and the two models agree on them
+    // the one-pass cost sums are the two passes' (T-4299: kept per record, summed exactly, so to a part in 1e9; the kept
+    // money against the same from nothing to the bit is `kept_check`), and the two models agree on them
     const cA = A.api.costs(), cB = B.api.costs();
+    const near = (x, y) => Math.abs(x - y) <= 1e-9 * Math.max(Math.abs(x), Math.abs(y), 1e-6);
     // (model A keeps the water under its nodes, B asks the mask every time; total_cost and built_cost
     // ask every time as well, in two passes; the quote is read from both, in step, after the rows)
     const qA = A.api.blueprint_cost_items(), qB = B.api.blueprint_cost_items();
-    const dc = !Object.is(cA[0], A.api.total_cost()) || !Object.is(cA[1], A.api.built_cost()) ? `costs() ${cA} against total_cost ${A.api.total_cost()} and built_cost ${A.api.built_cost()}` : !Object.is(cA[0], cB[0]) || !Object.is(cA[1], cB[1]) ? `the models' costs differ: ${cA} against ${cB}` : qA.length !== qB.length || qA.some((v, i) => !Object.is(v, qB[i])) ? `the models' construct-all quotes differ: ${Array.from(qA).slice(0, 14)} against ${Array.from(qB).slice(0, 14)}` : null;
+    const kept = A.api.kept_check(env.periodHours);
+    const dc = kept ? `T-4299: the kept money differs: ${kept}` : !near(cA[0], A.api.total_cost()) || !near(cA[1], A.api.built_cost()) ? `costs() ${cA} against total_cost ${A.api.total_cost()} and built_cost ${A.api.built_cost()}` : !Object.is(cA[0], cB[0]) || !Object.is(cA[1], cB[1]) ? `the models' costs differ: ${cA} against ${cB}` : qA.length !== qB.length || qA.some((v, i) => !Object.is(v, qB[i])) ? `the models' construct-all quotes differ: ${Array.from(qA).slice(0, 14)} against ${Array.from(qB).slice(0, 14)}` : null;
     if (dc) { failures++; console.log(`FAIL  seed ${seed} step ${step} ${kind}: ${dc}`); break; }
     // (the quotes above ran trials, which note the lines they recompute)
     const dt2 = tables ? tablesDifference(rows, A.api, 'after the read and the quotes\' trials') : null;

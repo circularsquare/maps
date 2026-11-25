@@ -27,6 +27,7 @@ impl TrackApi {
             return 1;
         }
         self.w.net.link(a, b);
+        self.kept.note_extras();
         self.cash -= price;
         self.link_charge = price;
         self.money_short = None;
@@ -39,7 +40,11 @@ impl TrackApi {
     }
     /// Undo a link between two stations. 0 done; 1 if they were not linked.
     pub fn unlink_stations(&mut self, a: u32, b: u32) -> u32 {
-        if self.w.net.unlink(a, b) { 0 } else { 1 }
+        if !self.w.net.unlink(a, b) {
+            return 1;
+        }
+        self.kept.note_extras();
+        0
     }
     /// The links whose two ends are stations now: node pairs, flat.
     pub fn station_links(&self) -> Vec<u32> {
@@ -427,6 +432,7 @@ impl TrackApi {
             let r = self.run(Op::Batch(ops));
             if r == 0 {
                 self.w.net.links.retain(|&[a, b]| st.binary_search(&a).is_err() && st.binary_search(&b).is_err());
+                self.kept.note_extras();
                 return 0;
             }
             self.release(&nn, &ne);

@@ -538,7 +538,11 @@ impl Network {
             all.extend_from_slice(&cross);
             all.sort_by(|x, y| x[0].total_cmp(&y[0]));
             self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &all);
-            self.edge_cost[i] = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
+            let price = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
+            if price.to_bits() != self.edge_cost[i].to_bits() {
+                self.priced.push(e);
+            }
+            self.edge_cost[i] = price;
         }
     }
 
@@ -570,6 +574,9 @@ impl Network {
             let price = self.edge_price(i, self.verts.get(self.edge_vert[i]), self.water.get(self.edge_water[i]), self.terrain_spans.get(self.edge_terrain[i]), self.road_spans.get(self.edge_roads[i]));
             // a block over edges whose ground is flat changes no line's rows, and a view brings many
             self.repriced |= (price - self.edge_cost[i]).abs() > 1e-9;
+            if price.to_bits() != self.edge_cost[i].to_bits() {
+                self.priced.push(e);
+            }
             self.edge_cost[i] = price;
         }
     }

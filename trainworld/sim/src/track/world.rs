@@ -548,7 +548,7 @@ impl TrackWorld {
         // (everything is worked out below)
         self.owed = None;
         self.owed_done = None;
-        self.svc.changed_all = true;
+        self.svc.note_all();
         self.svc_rest = None;
         self.net.touch_all();
         let t = self.net.take_touch();
@@ -1272,13 +1272,17 @@ impl TrackWorld {
 
     /// T-3521: each line's weekend counts where they differ from its weekday ones (`weekend_counts`).
     pub fn weekend_own(&self) -> Vec<(usize, [u32; 5])> {
+        self.weekend_own_in(&mut None)
+    }
+
+    /// `weekend_own` with the track limits shared through `most` (T-4299: once a model state, `wasm/kept.rs`).
+    pub(crate) fn weekend_own_in(&self, most: &mut Option<Vec<[(f64, u32); SLOTS]>>) -> Vec<(usize, [u32; 5])> {
         if !self.net.any_weekend() {
             return vec![];
         }
-        let mut most = None;
         (0..self.net.line_count())
             .filter(|&l| self.net.line_ok(l as u32) && self.svc.lines.get(l).is_some_and(|s| s.ok))
-            .filter_map(|l| self.weekend_counts_in(l, &mut most).map(|c| (l, c)))
+            .filter_map(|l| self.weekend_counts_in(l, most).map(|c| (l, c)))
             .collect()
     }
 

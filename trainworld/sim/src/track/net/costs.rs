@@ -252,6 +252,54 @@ impl Network {
         (t + self.passages_cost(false) + self.bus_cost(false) + halls, b + self.passages_cost(true) + self.bus_cost(true) + halls)
     }
 
+    /// T-4299: node `n`'s parts of `total_and_built_cost`: its station, its upgrades and its junction, to the total and to
+    /// the built cost, US$M (0 where none). They read the edges at it.
+    pub fn node_cost_parts(&self, n: usize) -> ([f64; 3], [f64; 3]) {
+        let (mut t, mut b) = ([0.0; 3], [0.0; 3]);
+        if !self.node_alive[n] {
+            return (t, b);
+        }
+        let wet = || self.node_is_wet(n);
+        if self.node_platform[n] > 0 {
+            t[0] = self.station_price(n, wet);
+            t[1] = self.upgrades_cost(n);
+            if self.node_built[n] {
+                b[0] = t[0];
+                b[1] = t[1];
+            }
+        }
+        let (all, built) = (self.priced_ends(n as u32, |_| true) >= 3, self.priced_ends(n as u32, |e| self.edge_built[e]) >= 3);
+        if all || built {
+            let junction = cost::junction_cost(self.node_level[n], self.node_flying[n], wet());
+            if all {
+                t[2] = junction;
+            }
+            if built {
+                b[2] = junction;
+            }
+        }
+        (t, b)
+    }
+
+    /// T-4299: the parts of `total_and_built_cost` no edge or node holds: the flat crossings, the passages, the bus routes
+    /// (`road`: a bus line's road metres) and the station buildings, (total, built), US$M. A pass over each of those.
+    pub fn other_cost_parts(&self, road: &dyn Fn(u32) -> f64) -> (f64, f64) {
+        let (mut t, mut b) = (0.0, 0.0);
+        for x in &self.crossings {
+            if let CrossKind::Flat(level) = x.kind {
+                if self.priced_crossing(x) {
+                    let price = cost::crossing_cost(level, self.water_mask.is_water(x.x, x.y));
+                    t += price;
+                    if self.edge_built[x.e1 as usize] && self.edge_built[x.e2 as usize] {
+                        b += price;
+                    }
+                }
+            }
+        }
+        let halls = super::building::value(self);
+        (t + self.passages_cost(false) + self.bus_cost_by(false, road) + halls, b + self.passages_cost(true) + self.bus_cost_by(true, road) + halls)
+    }
+
     /// Build cost of what is constructed, US$M (SPEC 6.4): constructed edges and stations, a
     /// junction once three of its edge ends are constructed, a flat crossing once both its edges
     /// are, a passage once both its stations are, station buildings always (T-2217).
@@ -300,7 +348,7 @@ impl Network {
         self.links_live().map(|p| (p, super::upgrades::passage_price(self.passage_m(p[0], p[1]))))
     }
 
-    pub(super) fn passages_cost(&self, built: bool) -> f64 {
+    pub fn passages_cost(&self, built: bool) -> f64 {
         self.passages().filter(|(p, _)| !built || p.iter().all(|&n| self.node_built[n as usize])).map(|x| x.1).sum()
     }
 

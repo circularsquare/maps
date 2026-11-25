@@ -886,6 +886,8 @@ pub struct Network {
     names_all: bool,
     /// Edge prices worked out again outside an edit (water or terrain installed), since `take_repriced`.
     repriced: bool,
+    /// T-4299: the edges whose price moved outside an edit (a road tile, water, terrain), since `take_priced`
+    priced: Vec<u32>,
     /// T-1540: whether each node lies on water, kept as (x, y, mask epoch, answer) and used only
     /// while the node is where it was and the mask the one it was asked of (`node_is_wet`).
     node_wet: std::cell::RefCell<Vec<(f64, f64, u32, bool)>>,

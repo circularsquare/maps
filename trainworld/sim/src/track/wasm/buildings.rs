@@ -45,6 +45,7 @@ impl TrackApi {
         }
         let id = self.w.net.buildings.len() as u32;
         self.w.net.buildings.push(Some(Building { name: name.trim().to_string(), corners: c }));
+        self.kept.note_extras();
         self.building_last = (id, price);
         0
     }
@@ -63,6 +64,7 @@ impl TrackApi {
             return 1;
         }
         self.w.net.buildings[id as usize].as_mut().unwrap().corners = c;
+        self.kept.note_extras();
         self.building_last = (u32::MAX, price);
         0
     }
@@ -84,6 +86,7 @@ impl TrackApi {
             return self.refuse(Issue::NoSuchBuilding { building: id });
         }
         self.w.net.buildings[id as usize] = None;
+        self.kept.note_extras();
         self.issues.clear();
         self.money_short = None;
         0
