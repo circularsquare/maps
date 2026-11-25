@@ -3,6 +3,7 @@ import type { CorridorBook, CorridorRows } from "../game/demand";
 import type { FrameSpec } from "../game/frame";
 import type { FareArea } from "../game/fareCurve";
 import { PERIODS } from "../game/periods";
+import type { Snapshot } from "./demandShown";
 
 /** `DemandApi.trip`'s answer layout (sim/src/demand/trip.rs `HEAD`, `PAIR_LEN`, `LEG_LEN`). */
 export const TRIP_LAYOUT = { HEAD: 48, PAIR_LEN: 20, LEG_LEN: 16 } as const;
@@ -255,7 +256,9 @@ export type ToDemand =
       split?: SplitPlan;
       /** T-2188: the idle refresh, a whole solve of the network solved last: the clusters holding a period from a
        * local solve (an edit's that ended there, a T-1609 refine) are solved whole in those periods */
-      refresh?: boolean }
+      refresh?: boolean;
+      /** T-4220: before its whole solve's first set-up, send what is on screen (`shown`) */
+      snap?: boolean }
   /** T-327: every worker has finished `round - 1` of `version`, so this worker may start `round`.
    * A worker ahead waits at the boundary holding its last round, so every worker holds the round
    * after the published one at some moment, and a question about it can be answered (the final
@@ -521,6 +524,8 @@ export type FromDemand =
   | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number }
   /** `localHeld` (T-2188): a cluster here holds a period from a local solve no whole solve has replaced since */
   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[]; localHeld?: boolean }
+  /** T-4220 (`solve.snap`): what this worker holds of the figures on screen, before the whole solve sets any of it up */
+  | { kind: "shown"; version: number; snap: Snapshot }
   /** a worker's `sub_sums` for one city once all its periods have `round` (sent unasked, T-119);
    * `local` (T-2532): an edit's local result's, which its whole solve's of the same round replace */
   | { kind: "sums"; version: number; round: number; city: CityId; mask: number; sums: Float32Array; everyday: Float32Array | null; day?: number; local?: true }

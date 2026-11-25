@@ -80,6 +80,7 @@ import {
   demandHeld,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
+import { SNAP_MAX_BYTES, ShownStore, type Snapshot } from "./demandShown";
 import { tracing } from "../game/freezeTrace";
 import { demandNote, startDemandTrace } from "./demandTrace";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad, smallDevice } from "./deviceMemory";
@@ -4004,6 +4005,31 @@ class DemandClient {
     });
   }
 
+  /** T-4220: the figures on screen as the solving workers hold them (`shown`), until a final replaces them */
+  readonly shownSnap = new ShownStore();
+
+  /** T-4220: a solving worker's snapshot of the figures on screen */
+  private shownIn(i: number, version: number, snap: Snapshot) {
+    if (i >= this.computeN) return;
+    const ok = this.shownSnap.merge(version, i, snap);
+    if (!import.meta.env.DEV) return;
+    const mb = (b: number) => Math.round(b / 2 ** 20);
+    // i18n-ignore
+    if (!ok) return console.info(`T4220 snapshot v${version}: worker ${i}'s past ${mb(SNAP_MAX_BYTES)} MB, none held`);
+    // i18n-ignore
+    if (snap.again) return console.info(`T4220 snapshot v${version} again, worker ${i}: ${snap.pops.length} populations, ${mb(snap.bytes)} MB, ${Math.round(snap.ms)} ms`);
+    const sent = [...this.shownSnap.sent(version).values()];
+    if (sent.length < this.computeN) return;
+    // i18n-ignore
+    console.info(`T4220 snapshot v${version}: ${this.shownSnap.pops.size} populations, ${this.shownSnap.periods()} periods, ${mb(this.shownSnap.bytes())} MB, ${Math.round(Math.max(...sent.map((w) => w.ms)))} ms (by worker ${sent.map((w) => Math.round(w.ms)).join(" and ")} ms, ${sent.map((w) => mb(w.bytes)).join(" and ")} MB sent)`);
+  }
+
+  /** T-4220: a whole solve sends what is on screen where an edit could be solved aside: a focus pool could run here
+   * and memory is not short (`?perfOff=editAside`: never) */
+  private snapOn(): boolean {
+    return !perfOff("editAside") && !perfOff("focus") && !smallDevice() && !addressLimited() && !this.memShort();
+  }
+
   private receive(i: number, msg: FromDemand) {
     this.heard[i] = { at: performance.now(), kind: msg.kind };
     if (msg.kind === "failed") return isMemoryFailure(msg.error) ? this.workerDied(i, msg.error) : this.fail(`worker ${i}: ${msg.error}`); // i18n-ignore
@@ -4020,6 +4046,7 @@ class DemandClient {
     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
     markStep();
     if (msg.kind === "unit") { this.inUnit[i] = { round: msg.round, period: msg.period, at: performance.now() }; return; }
+    if (msg.kind === "shown") return this.shownIn(i, msg.version, msg.snap);
     if (msg.kind === "result") this.inUnit[i] = null;
     if (msg.kind === "loads" && msg.to) {
       // T-3373 B: on to the cluster's other holders
@@ -4310,6 +4337,7 @@ class DemandClient {
     // T-2045: the focus pool is a game load's; an edit's network ends it
     if (!gameLoad) this.endFocus();
     else if (svc.stations.length) this.startFocus();
+    if (gameLoad) this.shownSnap.clear(); // (T-4220: another game's figures)
     demandUpdating.value = true;
     demandStep.value = { done: 0, of: 1 }; // T-1790: no count until the solve's own steps are known
     // T-1223: a game loaded with no stations ahead makes its fine set afresh; an edit marks its zones
@@ -4485,6 +4513,7 @@ class DemandClient {
     const focused = barrier && next.length > 0 && !perfOff("focusAhead") && this.focusSolves(svc, activeCity.peek());
     if (focused) this.cur.focused = true;
     const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}), ...(refresh ? { refresh } : {}) };
+    if (!barrier && this.snapOn()) msg.snap = true;
     this.freshParts = false;
     this.postSolve(msg);
     if (barrier) this.askTurn();
@@ -5636,6 +5665,7 @@ class DemandClient {
         for (const o of this.log) if (o.version < s.version) (o.results = []), (o.byRound = []), (o.clusterRes = undefined);
         this.aheadP.clear();
         this.cityVersion.clear();
+        this.shownSnap.dropTo(s.version); // (T-4220: what was on screen before this final)
         if (s === this.cur) {
           // T-4055: a pack that began opening during the solve (a zone at another level, a market) makes it stale:
           // its figures show, and its network waits to be solved again once the pack is open, that solve the final
