@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4297 [P1] {L:checks} Fix the review's findings on the batch18 landings (2026-11-25): Two real fixed (shared-slot rows' held rate, with a Rust test; guardedAfter for held trips); three T-4220 findings passed to aside7; the rest answered in notes. notes/T-4297.md.
 - T-4293 [P1] {L:edit-speed} New York edit timings rose over tonight's landings (2026-11-25): Noise: trees' single samples are cold first edits; master 800843cf0 station built 108 ms median (baseline 188), undo 131 (133); edit_bench compare fixed; pagestage3 fit to land; T-4294 filed. notes/T-4293.md.
 - T-4285 [P1] {L:checks} Fix the review's findings on the batch17 landings (2026-11-25): 7 findings real: 4 fixed (renderer fill, carried copy check and room, span drift); return-run caches by moving slot passed to netcut; worldDiff's sameBuilt and PerLine passed to pagestage3. notes/T-4285.md.
 - T-4283 [P1] {L:solve-speed} Weekend held count kept after a weekend headway change (2026-11-25): Ahead keeps the weekend headways; settle_kept and settle_kept_rest each dropped by their own day; new test fails before, passes after; Rust 796 + 1029 pass. notes/T-4283.md.
