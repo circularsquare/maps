@@ -2653,7 +2653,7 @@
   "trackInspector.oneWayAutoTip": "由連接的軌道決定",
   "trackInspector.reverse": "反轉方向",
   "trackInspector.shiftTip": "Shift+按一下加入選取。",
-  "trackInspector.slowest": "最急的彎道",
+  "trackInspector.slowest": "最低速限",
   "trackInspector.speedHsr": "高速列車在這裡最高可跑320 km/h，一般列車最高160 km/h",
   "trackInspector.speedLimit": "速限",
   "trackInspector.speedNormal": "列車在這裡最高可跑160 km/h。超過160需要高速軌道。",

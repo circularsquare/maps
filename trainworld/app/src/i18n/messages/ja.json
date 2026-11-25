@@ -2653,7 +2653,7 @@
   "trackInspector.oneWayAutoTip": "つながる線路に合わせて自動で設定",
   "trackInspector.reverse": "向きを反転",
   "trackInspector.shiftTip": "Shiftクリックで選択に追加します。",
-  "trackInspector.slowest": "最も急なカーブ",
+  "trackInspector.slowest": "最も低い制限速度",
   "trackInspector.speedHsr": "ここでは高速列車は最高320 km/h、通常の列車は最高160 km/hで走ります",
   "trackInspector.speedLimit": "制限速度",
   "trackInspector.speedNormal": "ここでは列車は最高160 km/hで走ります。160 km/hを超えるには高速線路が必要です。",

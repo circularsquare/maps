@@ -2653,7 +2653,7 @@
   "trackInspector.oneWayAutoTip": "Fixé par la voie qu’elle rejoint",
   "trackInspector.reverse": "Inverser le sens",
   "trackInspector.shiftTip": "Maj+clic pour ajouter à la sélection.",
-  "trackInspector.slowest": "Courbe la plus lente",
+  "trackInspector.slowest": "Limite la plus basse",
   "trackInspector.speedHsr": "Les trains à grande vitesse roulent jusqu’à 320 km/h ici, les trains normaux jusqu’à 160 km/h",
   "trackInspector.speedLimit": "Limite de vitesse",
   "trackInspector.speedNormal": "Les trains roulent jusqu’à 160 km/h ici. Au-delà, il faut une voie à grande vitesse.",

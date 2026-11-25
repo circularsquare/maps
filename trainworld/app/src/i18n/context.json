@@ -2516,7 +2516,7 @@
   "trackInspector.newLine": "Screen-reader label of the plus button in a track view that starts a new line.",
   "trackInspector.newLineTip": "Hover on the plus button in a track view. N is the keyboard shortcut.",
   "trackInspector.shiftTip": "Hover on a track view's title (not on touch screens): Shift+click on more track adds it, and the track in between, to the selection shown in the selection bar. Same wording as the last line of toolKeys.selectTip.",
-  "trackInspector.slowest": "Row label in a track view: the speed the tightest curve allows.",
+  "trackInspector.slowest": "Row label in a track view: the lowest speed limit along the piece, set by its tightest curve or a ramp.",
   "trackInspector.speedHsr": "Hover on the Top speed row of a high-speed track view.",
   "trackInspector.speedLimit": "Label of the row with the speed limit stepper in a track view (shown while the Limit button is on): the player's own limit for trains on this piece of track. The value is a speed such as 60 km/h.",
   "trackInspector.topSpeed": "Row label in a track view: the top speed this kind of track allows. The value is a speed such as 160 km/h.",

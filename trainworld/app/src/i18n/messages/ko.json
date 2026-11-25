@@ -2653,7 +2653,7 @@
   "trackInspector.oneWayAutoTip": "이어진 선로에 맞춰 정해짐",
   "trackInspector.reverse": "방향 뒤집기",
   "trackInspector.shiftTip": "Shift+클릭으로 선택에 추가해요.",
-  "trackInspector.slowest": "가장 급한 곡선",
+  "trackInspector.slowest": "가장 낮은 제한 속도",
   "trackInspector.speedHsr": "이곳에서 고속 열차는 최고 320 km/h, 일반 열차는 최고 160 km/h로 달려요",
   "trackInspector.speedLimit": "제한 속도",
   "trackInspector.speedNormal": "이곳에서 열차는 최고 160 km/h로 달려요. 160 km/h를 넘으려면 고속 선로가 필요해요.",

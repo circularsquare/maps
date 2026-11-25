@@ -2653,7 +2653,7 @@
   "trackInspector.oneWayAutoTip": "由所连接的轨道决定",
   "trackInspector.reverse": "反转方向",
   "trackInspector.shiftTip": "Shift点击加入选择。",
-  "trackInspector.slowest": "最急弯道",
+  "trackInspector.slowest": "最低限速",
   "trackInspector.speedHsr": "高速列车在这里最高可跑320 km/h，普通列车最高160 km/h",
   "trackInspector.speedLimit": "限速",
   "trackInspector.speedNormal": "列车在这里最高可跑160 km/h。超过160需要高速轨道。",

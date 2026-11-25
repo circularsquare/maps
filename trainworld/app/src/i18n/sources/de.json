@@ -2653,7 +2653,7 @@
   "trackInspector.oneWayAutoTip": "Set by the track it joins",
   "trackInspector.reverse": "Reverse direction",
   "trackInspector.shiftTip": "Shift+click to add to selection.",
-  "trackInspector.slowest": "Slowest curve",
+  "trackInspector.slowest": "Slowest limit",
   "trackInspector.speedHsr": "High-speed trains run up to 320 km/h here and normal trains up to 160 km/h",
   "trackInspector.speedLimit": "Speed limit",
   "trackInspector.speedNormal": "Trains run up to 160 km/h here. Over 160 needs high-speed track.",

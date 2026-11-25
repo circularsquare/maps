@@ -2519,7 +2519,7 @@
   "trackInspector.newLine": "New line",
   "trackInspector.newLineTip": "New line, starting at the stations on this track (N)",
   "trackInspector.shiftTip": "Shift+click to add to selection.",
-  "trackInspector.slowest": "Slowest curve",
+  "trackInspector.slowest": "Slowest limit",
   "trackInspector.speedHsr": "High-speed trains run up to 320 km/h here and normal trains up to 160 km/h",
   "trackInspector.speedLimit": "Speed limit",
   "trackInspector.topSpeed": "Top speed",

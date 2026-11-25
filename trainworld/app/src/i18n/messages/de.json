@@ -2653,7 +2653,7 @@
   "trackInspector.oneWayAutoTip": "Vom angeschlossenen Gleis vorgegeben",
   "trackInspector.reverse": "Richtung umkehren",
   "trackInspector.shiftTip": "Shift+Klick erweitert die Auswahl.",
-  "trackInspector.slowest": "Langsamste Kurve",
+  "trackInspector.slowest": "Niedrigstes Limit",
   "trackInspector.speedHsr": "Hochgeschwindigkeitszüge fahren hier bis 320 km/h, normale Züge bis 160 km/h",
   "trackInspector.speedLimit": "Tempolimit",
   "trackInspector.speedNormal": "Züge fahren hier bis 160 km/h. Darüber braucht es ein Hochgeschwindigkeitsgleis.",
