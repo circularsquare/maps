@@ -393,12 +393,12 @@ if (SYNTH) {
   client.onState = (s) => {
     const put = () => {
       // a train count: the same buffers with the new run profiles (T-229)
-      if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta);
+      if (s.service && renderer.net) renderer.setService(s.render.phases, s.render.meta, s.touched);
       else if (s.net) {
         const was = renderer.net;
         // T-4145: what is drawn ahead of the edits this network holds goes with it (built once, by setNetwork)
         const held = pendingTaken(client.orderOf(s), { net: true });
-        renderer.setNetwork(s.net); // built in the worker (T-063)
+        renderer.setNetwork(s.net, s.touched); // built in the worker (T-063)
         if (import.meta.env.DEV) checkHeld(s.net, held);
         renderer.netVersion = s.version;
         carryGrids(was, s.net, renderer.checkPatch); // T-1030

@@ -79,9 +79,30 @@ Web first, so it can be shared as a link.
   edit's new segments are written into the room where they belong and the slots they free are marked as
   holes, which the stroke shader skips; where the room there is too small a nearby stretch is laid out
   again, and only when that stretch would pass 64 times the new segments is the set laid out afresh
-  (in its buffers while they have room, else in larger ones). It keeps every network texture, writing
-  only the rows whose data changed (T-4262); the pick and snap grids are carried over through
-  the same runs instead of built again (T-1030).
+  (in its buffers while they have room, else in larger ones). A set's zoomed-out simplified copies are
+  carried through an edit (T-4274, `carryLod`): the significance of the runs it kept is copied from a run
+  start of both sets to the last one inside them and worked out only between; the copy the view shows
+  takes its merged segments over those ranges from the last copy, makes the rest and writes them into
+  its own slots (a sixteenth of room); the other copies are made again from the carried significance
+  when drawn. An edit that made more than a quarter of a set (and 20,000 segments) has its copies made
+  afresh between frames, as a new set's.
+  The trains' tables sit in slots of their own (`map/trainSlots.ts`, T-4274): each line's run holds a
+  slot in the per-sample tables (samples, bend codes, stretches, lanes, fill, levels) and one in the bend
+  points, each line one in the phase tables (with an eighth of room: a stop more changes a line's phase
+  count). A slot keeps its place while its line fits, a deleted line's goes to the next line it fits best,
+  and a line that outgrows its slot moves to the free room that fits it best or past the last; only the
+  index tables (a line row's first sample, a profile's first phase, a sample's first bend point) are
+  rewritten, so an edit writes only the lines it moved and those the clock worker names as changed (T-4280):
+  `ClockState.touched.paths` for samples and bends (named where a line is sampled again into other values),
+  `touched.phases` for the phase tables (since the last state that carried them, a network's or a train
+  count's), `NetPatch.stretches` and `lanes` for stretches and lanes (named where the build made a line's samples
+  again to other values, or moved its passing places). The renderer compares nothing then; a table last written
+  from other arrays than a list is about (the Traffic view's bands, the demand views' fill, hidden levels)
+  is compared line by line with them instead. The tables keep an eighth of room past the last slot, and
+  at least the largest line's; past that, or 2^19 bend points, they are laid out afresh. The network's
+  arrays stay packed for every reader on the CPU.
+  Other network textures are kept, written only in the rows whose data changed (T-4262); the pick and
+  snap grids are carried over through the same runs instead of built again (T-1030).
   Anything that cannot be taken as changes (a load, a new draw anchor, a mismatch) goes whole;
   `?patch=0` posts everything whole, `?patch=check` compares the changes with whole builds
   (notes/T-1029.md). Trains are instanced and positioned on the GPU from keyframes
@@ -261,7 +282,9 @@ Web first, so it can be shared as a link.
   model says they lie anywhere new on the track (`take_moved_lines`: their entries, offsets or length
   moved, or an edge under them was touched); a settle's new timing, or a rebuild onto the same track, keeps
   them. Each state names what it holds that the last one posted did not (`ClockState.touched`: the rows
-  changed or gone, the lines whose runs moved), the one list a reader patches by (T-4149). The
+  changed or gone, the lines whose run samples or bends differ from the last network's, compared only for
+  the lines sampled again, and those whose phase tables differ from the last posted, T-4280), the one list a
+  reader patches by (T-4149). The
   run profiles' phase tables are kept per line the same way and laid end to end only when a line's
   differ; what the track model prices (the cost sums, the construct-all quote) asks the water mask
   once for a node while the node and the mask stay as they are (T-1540). The construct-all quote and

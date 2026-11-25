@@ -886,6 +886,9 @@ export interface EditTouched {
   nodes: number[];
   lines: number[];
   paths: number[];
+  /** T-4280: the lines whose phase tables may differ from those of the last state posted that carried them (a network's or
+   * a train count's) */
+  phases: number[];
 }
 
 /** T-3803: the money record (the last one posted is `base`) as its changes (workers/valuePatch.ts), null when none */
@@ -924,9 +927,9 @@ export interface ClockState {
   /** `?patch=check`: the rows in full, for the client to compare its rebuilt ones with */
   checkRows?: { edges: ClockEdge[]; nodes: ClockNode[]; lines: ClockLine[] };
   /** T-4149: what the edits since the last state posted touched, the one list a reader patches by: the ids of the edges,
-   * nodes and lines whose rows changed or are gone, and the lines whose drawn runs moved since the last network posted
-   * (`paths`). `all`: everything may have changed, the state or its network posted whole (a load, an anchor move,
-   * `?patch=0`). */
+   * nodes and lines whose rows changed or are gone, the lines whose drawn run samples or bends differ from the last network
+   * posted's (`paths`), and those whose phase tables may (`phases`). `all`: everything may have changed, the state or its
+   * network posted whole (a load, an anchor move, `?patch=0`). */
   touched?: EditTouched;
   /** stations the player linked into one complex (T-197): node id pairs, flat */
   links: number[];

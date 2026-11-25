@@ -278,6 +278,12 @@ export class StateRows {
    * answers (T-1540): the same array until a line's tables change */
   private phaseTables = new Map<number, Float32Array>();
   private phaseAll: Float32Array | null = null;
+  /** T-4280: the lines whose phase tables may differ from those last posted (`ClockState.touched.phases`), and whether
+   * every line's may (the rows read whole) */
+  phasesMoved = new Set<number>();
+  phasesAll = true;
+  /** a state carrying the phase tables was posted (a network's, or a train count's) */
+  phasesPosted() { this.phasesMoved.clear(); this.phasesAll = false; }
   /** the tables changed since `phaseAll` was laid out, which of them, and whether any changed in length */
   private phaseStale = false;
   private phaseDirty = new Set<number>();
@@ -292,6 +298,9 @@ export class StateRows {
   static wholePhases = 48;
   /** T-4113: false makes every read call every record's own calls (the walk before regions; `?bounded=0`) */
   static bounded = true;
+  /** T-4280: `?patch=check`: every other read of the phase tables takes them whole, so both ways name what changed */
+  static alternate = false;
+  private phaseCalls = 0;
   /** T-4113: the regions' station cap and the focus budget (the rows check sweeps them) */
   static regionCap = REGION_CAP;
   static focusBudget = FOCUS_BUDGET;
@@ -325,6 +334,8 @@ export class StateRows {
     this.phaseDirty.clear();
     this.phasePending.clear();
     this.phaseSeen = new Set();
+    this.phasesMoved.clear();
+    this.phasesAll = true;
     this.regions.reset();
     this.scope = null;
     this.busKept.clear();
@@ -953,7 +964,7 @@ export class StateRows {
     if (moved.length && moved[0] === ALL) for (const id of this.phaseSeen) ids.add(id);
     else for (const id of moved) if (this.phaseSeen.has(id)) ids.add(id);
     this.phaseReads = ids.size;
-    if (ids.size > StateRows.wholePhases) this.splitPhases(a);
+    if (ids.size > (StateRows.alternate && this.phaseCalls++ % 2 ? -1 : StateRows.wholePhases)) this.splitPhases(a, true);
     else {
       for (const id of ids) this.readPhases(a, id);
       for (const id of this.phaseTables.keys()) if (!this.phaseSeen.has(id)) this.dropPhases(id);
@@ -988,6 +999,7 @@ export class StateRows {
     if (old ? sameNumbers(old, t) : t.length === 0) return;
     this.phaseStale = true;
     this.phaseDirty.add(id);
+    this.phasesMoved.add(id);
     if (old?.length !== t.length) this.phaseLayout = true;
     if (t.length) this.phaseTables.set(id, t); else this.phaseTables.delete(id);
   }
@@ -995,12 +1007,14 @@ export class StateRows {
   private dropPhases(id: number) {
     this.phaseTables.delete(id);
     this.phaseStale = this.phaseLayout = true;
+    this.phasesMoved.add(id);
   }
 
   /** All the lines' tables in one call, for an edit that changed many of them (a call each costs
-   * more past `wholePhases`): the answer is that array, and each line's table a view of it. */
-  private splitPhases(a: TrackApi) {
-    const whole = a.phases(), meta = a.profile_meta();
+   * more past `wholePhases`): the answer is that array, and each line's table a view of it. `named`: the lines whose
+   * tables differ from the last are named as changed (T-4280), else every line is. */
+  private splitPhases(a: TrackApi, named = false) {
+    const whole = a.phases(), meta = a.profile_meta(), was = new Map(this.phaseTables);
     this.phaseTables.clear();
     for (const id of this.phaseSeen) {
       const m = id * META_PER_LINE;
@@ -1009,6 +1023,10 @@ export class StateRows {
       for (let p = 0; p < PROFILES_PER_LINE; p++) count += meta[m + p * 4 + 1];
       if (count > 0) this.phaseTables.set(id, whole.subarray(meta[m] * 4, (meta[m] + count) * 4));
     }
+    // (as `readPhases` names them; this read is a pass over every table anyway)
+    if (!named) this.phasesAll = true;
+    else for (const [id, t] of this.phaseTables) if (!sameNumbers(was.get(id) ?? NO_TABLE, t)) this.phasesMoved.add(id);
+    for (const id of was.keys()) if (!this.phaseTables.has(id)) this.phasesMoved.add(id);
     this.phaseAll = whole;
     this.phaseStale = this.phaseLayout = false;
     this.phaseDirty.clear();

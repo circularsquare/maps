@@ -112,12 +112,12 @@ export function visibleRanges(levels: ChunkBoxes, count: number, project: (x: nu
  * Peucker's distance where the point splits its run, no more than the point that split before it,
  * so every tolerance's kept points are DP's at that tolerance. Infinity where a run starts: runs are
  * joined segments of one line or track, edge, level, flags, stretch and (within SPEED_STEP) speed.
- * Worked out from run start `a` until `deadline` (performance.now ms) has passed: returns where it
- * stopped, `s.count` once done. */
-export function significance(s: Strokes, speed: Float32Array | null, sig: Float32Array, a = 0, deadline = Infinity): number {
+ * Worked out from run start `a` until `deadline` (performance.now ms) has passed or the run start `end`
+ * (`runBreak`) is reached: returns where it stopped, `end` once done. */
+export function significance(s: Strokes, speed: Float32Array | null, sig: Float32Array, a = 0, deadline = Infinity, end = s.count): number {
   const n = s.count, seg = s.seg;
   const st = s.stretch, bd = s.band, stack: number[] = [];
-  for (let k = 0; a < n; k++) {
+  for (let k = 0; a < end; k++) {
     if ((k & 255) === 255 && performance.now() > deadline) return a;
     let b = a + 1;
     for (; b < n && b - a < MAX_RUN; b++) {
@@ -152,7 +152,45 @@ export function significance(s: Strokes, speed: Float32Array | null, sig: Float3
     }
     a = b;
   }
-  return n;
+  return end;
+}
+
+/** T-4274: whether a run of `significance` starts at segment `b` (0 < b < count) wherever the run before it began:
+ * its own break from segment `b - 1` (those of speed and `MAX_RUN` depend on where the run began) */
+export function runBreak(s: Strokes, b: number): boolean {
+  const seg = s.seg, o = b * 4, a = b - 1;
+  if (Math.abs(seg[o] - seg[o - 2]) + Math.abs(seg[o + 1] - seg[o - 1]) > 1e-3) return true;
+  if (s.colour[b] !== s.colour[a] || s.edge[b] !== s.edge[a] || s.level[b] !== s.level[a] || s.flags[b] !== s.flags[a]) return true;
+  if (s.stretch && s.stretch[b] !== s.stretch[a]) return true;
+  return !!s.band && (bandDiffers(s.band, a, b) || (s.flags[a] & F_EASE) !== 0);
+}
+
+/**
+ * T-4274: an edit's set's `significance` from the last set's `old` (complete), `runs` the patch's (start, count, old start
+ * or -1, `NetPatch`): copied over each kept run from a run start of both sets to the last run start inside it (a run's
+ * tolerances depend only on its own segments, and the runs from a run start only on the segments from there), worked
+ * out between. `copied`: those ranges (start, end, old start).
+ */
+export function patchSignificance(s: Strokes, speed: Float32Array | null, runs: Int32Array, old: Float32Array): { sig: Float32Array; copied: number[]; worked: number } {
+  const n = s.count, sig = new Float32Array(n), copied: number[] = [], oldN = old.length;
+  for (let k = 0; k < runs.length; k += 3) {
+    const st = runs[k], c = runs[k + 1], o = runs[k + 2];
+    if (o < 0 || c < 1) continue;
+    let p = st;
+    if (!((p === 0 || runBreak(s, p)) && old[o] === Infinity)) for (p++; p < st + c && !runBreak(s, p); p++);
+    let q = st + c;
+    if (!((q === n || runBreak(s, q)) && (o + c === oldN || old[o + c] === Infinity))) for (q--; q > p && !runBreak(s, q); q--);
+    if (q <= p) continue;
+    sig.set(old.subarray(o + p - st, o + q - st), p);
+    copied.push(p, q, o + p - st);
+  }
+  let worked = 0, x = 0;
+  for (let j = 0; j <= copied.length; j += 3) {
+    const y = j < copied.length ? copied[j] : n;
+    if (y > x) worked += significance(s, speed, sig, x, Infinity, y) - x;
+    if (j < copied.length) x = copied[j + 1];
+  }
+  return { sig, copied, worked };
 }
 
 /** The strokes with every start point under `tol` dropped, each merged segment carrying its first
@@ -172,10 +210,19 @@ export function simplifiedLater(s: Strokes, sig: Float32Array, tol: number, spee
   for (let i = 0; i < n; i++) if (sig[i] > tol) m++;
   const first = new Uint32Array(m);
   for (let i = 0, k = 0; i < n; i++) if (sig[i] > tol) first[k++] = i;
-  const seg = new Float32Array(m * 4), colour = new Uint32Array(m), edge = new Uint32Array(m), level = new Float32Array(m), flags = new Float32Array(m);
-  const sp = speed ? new Float32Array(m) : undefined, lane = s.lane ? new Uint8Array(m * 2) : undefined, stretch = s.stretch ? new Float32Array(m) : undefined, band = s.band ? new Int16Array(m * BAND_STRIDE) : undefined;
-  const fill = (from: number, to: number) => {
-    for (let k = from; k < Math.min(to, m); k++) {
+  const out = mergedArrays(s, m, speed);
+  return { strokes: out, first, fill: (from, to) => fillMerged(out, s, first, speed, from, to) };
+}
+
+/** a simplified copy's arrays for `m` merged segments of `s` */
+function mergedArrays(s: Strokes, m: number, speed: Float32Array | null): Strokes {
+  return { seg: new Float32Array(m * 4), colour: new Uint32Array(m), edge: new Uint32Array(m), level: new Float32Array(m), flags: new Float32Array(m), speed: speed ? new Float32Array(m) : undefined, dist: new Float32Array(0), stretch: s.stretch ? new Float32Array(m) : undefined, lane: s.lane ? new Uint8Array(m * 2) : undefined, band: s.band ? new Int16Array(m * BAND_STRIDE) : undefined, count: m };
+}
+
+/** merged segments `from` to `to` of a simplified copy `out` of `s` (`first`: each one's first segment) */
+function fillMerged(out: Strokes, s: Strokes, first: Uint32Array, speed: Float32Array | null, from: number, to: number) {
+  const m = out.count, n = s.count, { seg, colour, edge, level, flags } = out, sp = out.speed, lane = out.lane, stretch = out.stretch, band = out.band;
+  for (let k = from; k < Math.min(to, m); k++) {
       const i = first[k], last = (k + 1 < m ? first[k + 1] : n) - 1;
       seg[k * 4] = s.seg[i * 4];
       seg[k * 4 + 1] = s.seg[i * 4 + 1];
@@ -200,7 +247,49 @@ export function simplifiedLater(s: Strokes, sig: Float32Array, tol: number, spee
         band[o + 4] = b[oi + 4];
         band[o + 5] = b[ol + 5];
       }
-    }
+  }
+}
+
+/**
+ * T-4274: an edit's set's simplified copy at tolerance `tol` from the last set's (`old`, made from the significance
+ * `patchSignificance` copied over `copied`): its merged segments over those ranges copied from the old copy's, the rest
+ * made; `runs` (start, count, old start or -1) as a patch's, for the copy's buffers. Null when the old copy was made with
+ * another kind of speed.
+ */
+export function patchSimplified(s: Strokes, sig: Float32Array, tol: number, speed: Float32Array | null, old: { strokes: Strokes; first: Uint32Array }, copied: readonly number[]): { strokes: Strokes; first: Uint32Array; runs: Int32Array } | null {
+  const ob = old.strokes, of = old.first;
+  if (!ob.speed !== !speed || !ob.lane !== !s.lane || !ob.stretch !== !s.stretch || !ob.band !== !s.band) return null;
+  const n = s.count, firsts: number[] = [], runs: number[] = [];
+  /** the old copy's first merged segment starting at or after old segment `v` */
+  const lower = (v: number) => {
+    let lo = 0, hi = of.length;
+    while (lo < hi) { const mid = (lo + hi) >> 1; if (of[mid] < v) lo = mid + 1; else hi = mid; }
+    return lo;
   };
-  return { strokes: { seg, colour, edge, level, flags, speed: sp, dist: new Float32Array(0), stretch, lane, band, count: m }, first, fill };
+  let x = 0;
+  for (let j = 0; j <= copied.length; j += 3) {
+    const y = j < copied.length ? copied[j] : n, k0 = firsts.length;
+    for (let i = x; i < y; i++) if (sig[i] > tol) firsts.push(i);
+    if (firsts.length > k0) runs.push(k0, firsts.length - k0, -1);
+    if (j === copied.length) break;
+    const p = copied[j], q = copied[j + 1], op = copied[j + 2], a = lower(op), b = lower(op + q - p), k1 = firsts.length;
+    for (let i = a; i < b; i++) firsts.push(of[i] - op + p);
+    if (b > a) runs.push(k1, b - a, a);
+    x = q;
+  }
+  const first = Uint32Array.from(firsts), out = mergedArrays(s, first.length, speed);
+  for (let r = 0; r < runs.length; r += 3) {
+    const k = runs[r], c = runs[r + 1], a = runs[r + 2];
+    if (a < 0) { fillMerged(out, s, first, speed, k, k + c); continue; }
+    out.seg.set(ob.seg.subarray(a * 4, (a + c) * 4), k * 4);
+    out.colour.set(ob.colour.subarray(a, a + c), k);
+    out.edge.set(ob.edge.subarray(a, a + c), k);
+    out.level.set(ob.level.subarray(a, a + c), k);
+    out.flags.set(ob.flags.subarray(a, a + c), k);
+    if (out.speed) out.speed.set(ob.speed!.subarray(a, a + c), k);
+    if (out.stretch) out.stretch.set(ob.stretch!.subarray(a, a + c), k);
+    if (out.lane) out.lane.set(ob.lane!.subarray(a * 2, (a + c) * 2), k * 2);
+    if (out.band) out.band.set(ob.band!.subarray(a * BAND_STRIDE, (a + c) * BAND_STRIDE), k * BAND_STRIDE);
+  }
+  return { strokes: out, first, runs: Int32Array.from(runs) };
 }

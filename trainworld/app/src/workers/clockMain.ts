@@ -115,6 +115,8 @@ export function forget(all = false) {
     lineBends.clear();
     backDrawn.clear();
     pathsMoved.clear();
+    dropped.clear();
+    droppedBack.clear();
     pathsAllMoved = true;
     // (the model's list of lines that moved starts again with this: every line is sampled anew anyway)
     api?.take_moved_lines();
@@ -131,23 +133,48 @@ export function forget(all = false) {
   // same track run where they ran. A bus or ferry line's runs follow its route and keep the older rule.
   const moved = a.take_moved_lines();
   if (moved[0] === 0xffffffff) {
+    for (const l of lineMerc.keys()) keepRun0(l);
+    for (const l of backDrawn.keys()) keepBack(l);
     lineDrawn.clear(); lineMerc.clear(); lineBends.clear(); backDrawn.clear();
-    pathsAllMoved = true;
-  } else for (const l of moved) { dropDrawnLine(l); pathsMoved.add(l); }
-  for (const l of a.dirty_lines()) if (a.is_bus(l) || a.is_ferry(l)) { dropDrawnLine(l); pathsMoved.add(l); }
+  } else for (const l of moved) dropDrawnLine(l);
+  for (const l of a.dirty_lines()) if (a.is_bus(l) || a.is_ferry(l)) dropDrawnLine(l);
   // (a way back is not on the edges' lines: any track edit may move one)
-  if (edges.length) backDrawn.clear();
+  if (edges.length) {
+    for (const l of backDrawn.keys()) keepBack(l);
+    backDrawn.clear();
+  }
 }
 
+/** T-4280: the run samples and bends of lines dropped since the last network was posted, as they were drawn: a line sampled
+ * again is named in `pathsMoved` only where its new ones differ (bus lines are dropped on most edits, onto the same route) */
+const dropped = new Map<number, { merc: Float64Array; bends: Float32Array }>();
+const droppedBack = new Map<number, { merc: Float64Array; bends: Float32Array }>();
+function keepRun0(l: number) {
+  const m = lineMerc.get(l);
+  if (m) dropped.set(l, { merc: m, bends: lineBends.get(l) ?? NO_PHASES });
+}
+function keepBack(l: number) {
+  const b = backDrawn.get(l);
+  if (b) droppedBack.set(l, { merc: b.merc, bends: b.bends });
+}
+/** whether a run sampled again (`merc`, `bends`) differs from its samples before (`was`, none: a run new to the drawing) */
+function resampled(was: { merc: Float64Array; bends: Float32Array } | undefined, merc: Float64Array, bends: Float32Array): boolean {
+  if (!was || was.merc.length !== merc.length || was.bends.length !== bends.length) return true;
+  for (let k = 0; k < merc.length; k++) if (was.merc[k] !== merc[k]) return true;
+  for (let k = 0; k < bends.length; k++) if (was.bends[k] !== bends[k]) return true;
+  return false;
+}
 function dropDrawnLine(l: number) {
+  keepRun0(l); keepBack(l);
   lineDrawn.delete(l); lineMerc.delete(l); lineBends.delete(l); backDrawn.delete(l);
 }
-/** T-4149: the lines whose drawn runs moved since the last network was posted (`ClockState.touched.paths`), or all of them */
+/** T-4149: the lines whose drawn runs moved since the last network was posted (`ClockState.touched.paths`), or all of them;
+ * T-4280: a line is named where it was sampled again into other samples or bends than before (`resampled`) */
 export const pathsMoved = new Set<number>();
 export let pathsAllMoved = false;
 /** T-4149: every drawn position moved since the last network was posted (the view's anchor): `touched.all` */
 export let drawnAllMoved = false;
-export function pathsPosted() { pathsMoved.clear(); pathsAllMoved = false; drawnAllMoved = false; }
+export function pathsPosted() { pathsMoved.clear(); pathsAllMoved = false; drawnAllMoved = false; dropped.clear(); droppedBack.clear(); }
 /** The view's anchor moved (T-307): every drawn position again, relative to the new anchor */
 export function forgetDrawn() { edgeDrawn.clear(); lineDrawn.clear(); drawnAllMoved = true; }
 
@@ -248,7 +275,10 @@ export function drawnLine(a: TrackApi, id: number): Float32Array {
       m = new Float64Array(p.length);
       for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
       lineMerc.set(id, m);
-      lineBends.set(id, bendsOf(a.run_bends(id, 0, SAMPLE_STEP, BEND_TOL_M), m));
+      const bends = bendsOf(a.run_bends(id, 0, SAMPLE_STEP, BEND_TOL_M), m);
+      lineBends.set(id, bends);
+      if (resampled(dropped.get(id), m, bends)) pathsMoved.add(id);
+      dropped.delete(id);
     }
     d = localOf(m, 2);
     lineDrawn.set(id, d);
@@ -265,7 +295,10 @@ function drawnBack(a: TrackApi, id: number, back: readonly number[]): Float32Arr
     const p = a.run_polyline(id, 1, SAMPLE_STEP);
     const m = new Float64Array(p.length);
     for (let k = 0; k < p.length; k += 2) m.set(toMerc01(...packLngLat(p[k], p[k + 1])), k);
+    const was = c ?? droppedBack.get(id);
+    droppedBack.delete(id);
     backDrawn.set(id, (c = { key, merc: m, bends: bendsOf(a.run_bends(id, 1, SAMPLE_STEP, BEND_TOL_M), m), at: null, d: null }));
+    if (resampled(was, m, c.bends)) pathsMoved.add(id);
   }
   if (!c.d || c.at !== anchor()) {
     c.d = localOf(c.merc, 2);
@@ -293,6 +326,7 @@ function buildState(rowsOnly = false): ClockState {
   stateRows.bind(a, frame);
   // T-4113: `?patch=walk` makes every record's own calls on every read, as before regions (for timing against)
   StateRows.bounded = patchMode !== "walk";
+  StateRows.alternate = patchMode === "check";
   // (with `?patch=walk` a rows state is built as a full one, as before)
   rowsOnly &&= StateRows.bounded;
   stateRows.begin(a, rowsOnly ? { rect: viewRect() } : undefined);

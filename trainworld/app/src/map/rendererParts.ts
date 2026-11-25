@@ -249,6 +249,10 @@ export interface StrokeLodState {
   bands: Map<number, StrokeBand>;
   /** the zoom band whose copy is being made (`workBand`), null for none */
   making: number | null;
+  /** T-4274: the zoom band whose copy was drawn last and the stroke redraw that drew it (`strokeRedraws`): an edit carries
+   * that copy while the view shows it (`carryLod`) */
+  drawn?: number;
+  drawnAt?: number;
 }
 /** a simplified copy of a stroke set for one zoom band, with the arrays its buffers hold (T-1644) */
 export interface StrokeBand { vao: StrokeVao; strokes: Strokes; first: Uint32Array; boxes: ChunkBoxes; v: number; res: { del: () => void }[]; wm: Float32Array | null; fu: Float32Array | null }

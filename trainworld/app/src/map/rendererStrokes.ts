@@ -3,7 +3,7 @@
 import { type Project } from "./stationGeometry";
 import { F_HOLE, forPieces, planPatch, slotRanges, slotShare, wholeItems, wholeLayout } from "./strokeSlots";
 import { pxPerUnitAt } from "./geo";
-import { chunkBoxes, mergeRanges, significance, simplifiedLater, visibleRanges, type ChunkBoxes } from "./strokeLod";
+import { chunkBoxes, mergeRanges, patchSignificance, patchSimplified, significance, simplified, simplifiedLater, visibleRanges, type ChunkBoxes } from "./strokeLod";
 import { StrokeGather } from "./strokeGather";
 import { type Strokes } from "./network";
 import { BAND_STRIDE } from "./lineBands";
@@ -139,11 +139,12 @@ export function attrib(rnd: NetworkRenderer, prog: WebGLProgram, name: string, b
  * (start, count, old start or -1, `NetPatch`) that make these from them. `more`: the `a_wmul` values when worked
  * out already, and the `a_full` values, or "later" for an `a_full` written by its caller (T-2403); `fullKept`: the
  * old buffers' `a_full` holds these values on the runs kept; `room` (a network's set, T-4262): its segments laid
- * out in slots with room between them (strokeSlots.ts), an edit's written into the set's own buffers where it
- * changed them, the set returned (new buffers only when the set outgrows them). Without `room`, or with
+ * out in slots with room between them (strokeSlots.ts; a number: that share of room, else `slotShare.room`), an edit's
+ * written into the set's own buffers where it changed them, the set returned (new buffers only when the set outgrows
+ * them). Without `room`, or with
  * `?perfOff=keepGl`: new buffers, the unchanged runs copied on the GPU from the old ones and only the new segments
  * uploaded. */
-export function strokes(rnd: NetworkRenderer, s: Strokes, list = rnd.res, from?: { old: StrokeVao; runs: Int32Array } | null, more?: { wmul?: Float32Array | null; full?: Float32Array | "later"; fullKept?: boolean; room?: boolean }): StrokeVao {
+export function strokes(rnd: NetworkRenderer, s: Strokes, list = rnd.res, from?: { old: StrokeVao; runs: Int32Array } | null, more?: { wmul?: Float32Array | null; full?: Float32Array | "later"; fullKept?: boolean; room?: boolean | number }): StrokeVao {
   if (more?.room && rnd.keepGl && more.full !== "later") return slotted(rnd, s, list, from ?? null, more);
   const gl = rnd.gl;
   const n = s.count;
@@ -258,8 +259,8 @@ const bufOf = (v: StrokeVao, i: number) => (i < WMUL ? v.attribs![i].buf : i ===
 /** T-4262 stage 2: a network's stroke set in slots (strokeSlots.ts): an edit's segments written into the last set's
  * buffers where `planPatch` puts them, the slots they free marked as holes; laid out afresh in new buffers when
  * there is no last set or it has too little room. */
-function slotted(rnd: NetworkRenderer, s: Strokes, list: { del: () => void }[], from: { old: StrokeVao; runs: Int32Array } | null, more: { full?: Float32Array | "later"; fullKept?: boolean }): StrokeVao {
-  const gl = rnd.gl, n = s.count;
+function slotted(rnd: NetworkRenderer, s: Strokes, list: { del: () => void }[], from: { old: StrokeVao; runs: Int32Array } | null, more: { full?: Float32Array | "later"; fullKept?: boolean; room?: boolean | number }): StrokeVao {
+  const gl = rnd.gl, n = s.count, share = typeof more.room === "number" ? more.room : slotShare.room;
   const old = from?.old.layout && from.old.attribs?.length === STROKE_ATTRIBS.length ? from.old : null;
   const plan = old ? planPatch(old.layout!, from!.runs, n) : null;
   const given = more.full instanceof Float32Array ? more.full : null;
@@ -273,8 +274,8 @@ function slotted(rnd: NetworkRenderer, s: Strokes, list: { del: () => void }[], 
   const valuesOf = valuesFor(s, more, held);
   if (!plan) {
     // laid out afresh: in the last set's buffers while they have room for it, else in new ones with room
-    const reuse = old && old.layout!.cap >= n + Math.floor((n * slotShare.room) / 2) ? old : null;
-    const layout = wholeLayout(n, reuse ? reuse.layout!.cap : undefined), items = wholeItems(layout);
+    const reuse = old && old.layout!.cap >= n + Math.floor((n * share) / 2) ? old : null;
+    const layout = wholeLayout(n, reuse ? reuse.layout!.cap : n + Math.max(Math.floor(n * share), slotShare.min)), items = wholeItems(layout);
     const bufs: WebGLBuffer[] = [];
     for (let i = 0; i <= FULL; i++) {
       const buf = reuse ? bufOf(reuse, i) : gl.createBuffer()!;
@@ -470,12 +471,14 @@ export function pickStrokes(rnd: NetworkRenderer, s: StrokeVao | null, src: Stro
     // the full set is drawn until the band is made (T-2403)
     const band = st.bands.get(bz) ?? workBand(rnd, s, st, src, bz, lines);
     if (band && band.vao.count < s.count) {
+      st.drawn = bz;
+      st.drawnAt = rnd.strokeRedraws;
       if (lines && band.v !== rnd.perSegV) {
         band.v = rnd.perSegV;
         band.wm = bandWmul(rnd, band.first);
         band.fu = bandFull(rnd, band.strokes, band.first, 0, band.first.length, rnd.linesFull);
-        rewrite(rnd, band.vao.wmulBuf, band.wm ?? plainWmul(band.first.length));
-        rewrite(rnd, band.vao.fullBuf, band.fu);
+        writeSegs(rnd, band.vao, band.vao.wmulBuf, band.wm ?? plainWmul(band.first.length), 3);
+        writeSegs(rnd, band.vao, band.vao.fullBuf, band.fu, 2);
       }
       vao = band.vao;
       boxes = band.boxes;
@@ -495,7 +498,7 @@ export function pickStrokes(rnd: NetworkRenderer, s: StrokeVao | null, src: Stro
   for (let i = 1; i < ranges.length; i += 2) total += ranges[i];
   if (!total) return { vao, ranges };
   // (the full set's segments as the slots they are in, T-4262; the gathered instances are read from the arrays)
-  if (!rnd.strokeGather || total > GATHER_MAX) return { vao, ranges: mergeRanges(vao === s && s.layout ? slotRanges(s.layout, ranges) : ranges, RANGE_GAP) };
+  if (!rnd.strokeGather || total > GATHER_MAX) return { vao, ranges: mergeRanges(vao.layout ? slotRanges(vao.layout, ranges) : ranges, RANGE_GAP) };
   let g = rnd.gathers.get(s);
   if (!g) rnd.gathers.set(s, (g = new StrokeGather(rnd.gl, (name) => rnd.strokeLoc[name])));
   const b = used?.strokes ?? src;
@@ -570,7 +573,8 @@ export function workBand(rnd: NetworkRenderer, s: StrokeVao, st: StrokeLodState,
       if (at >= m) phase = 3;
     } else {
       const res: { del: () => void }[] = [];
-      const vao = strokes(rnd, b, res, null, { wmul: wm, full: full! });
+      // (in slots, T-4274: an edit writes only the merged segments it made, `carryLod`)
+      const vao = strokes(rnd, b, res, null, { wmul: wm, full: full!, room: BAND_ROOM });
       st.bands.set(bz, { vao, strokes: b, first: f, boxes: boxes!, v, res, wm: lines ? wm : null, fu: lines ? full : null });
       st.making = null;
       return true;
@@ -646,18 +650,100 @@ export function dropLodOf(rnd: NetworkRenderer, v: StrokeVao) {
   rnd.gathers.delete(v);
 }
 
-/** T-4262: row spans (start, count pairs, each list in order) joined into one list in order */
-export function joinRows(lists: readonly (readonly number[])[]): number[] {
-  const all: [number, number][] = [];
-  for (const l of lists) for (let i = 0; i + 1 < l.length; i += 2) all.push([l[i], l[i] + l[i + 1]]);
-  all.sort((a, b) => a[0] - b[0]);
-  const out: number[] = [];
-  for (const [s, e] of all) {
-    const k = out.length;
-    if (k && out[k - 2] + out[k - 1] >= s) out[k - 1] = Math.max(out[k - 2] + out[k - 1], e) - out[k - 2];
-    else out.push(s, e - s);
+/**
+ * T-4274: an edit's set `now`'s significance and simplified copies carried from `old`'s (the set before it, its
+ * significance complete) through the patch's `runs`, so only the runs the edit made are worked out and written
+ * (`patchSignificance`, `patchSimplified`); the copies' culling boxes kept up to their first change. The copies
+ * carried, or null, with nothing carried, when there is nothing to carry or the edit made more than a quarter of the
+ * set (and `CARRY_MIN` segments): that is worked out whole between frames, as a new set's.
+ * Called once the network's traffic marks and widths are set (`linesFull`, `linesWmul`).
+ */
+export function carryLod(rnd: NetworkRenderer, old: StrokeVao, now: StrokeVao, src: Strokes, runs: Int32Array, lines: boolean): StrokeBand[] | null {
+  const st = rnd.lodOf.get(old);
+  if (!st?.sig || st.working || st.sigAt < st.sig.length || st.making !== null) return null;
+  let made = 0;
+  for (let k = 0; k < runs.length; k += 3) if (runs[k + 2] < 0) made += runs[k + 1];
+  if (made > Math.max(src.count / 4, CARRY_MIN)) return null;
+  const t0 = performance.now();
+  const speed = src.speed ? shownSpeed(src.speed, src.trainSpeed?.length === src.speed.length ? src.trainSpeed : undefined) : null;
+  if (!speed !== !st.speed) return null;
+  const { sig, copied, worked } = patchSignificance(src, speed, runs, st.sig);
+  const next: StrokeLodState = { boxes: null, speed, sig, sigAt: src.count, working: false, bands: new Map(), making: null, drawn: st.drawn, drawnAt: st.drawnAt };
+  // (only the copy the view shows now: the others are made again from the significance when drawn, as before)
+  const shown = st.drawnAt === rnd.strokeRedraws ? st.drawn : undefined;
+  const carried: StrokeBand[] = [];
+  let wrote = 0;
+  for (const [bz, band] of st.bands) {
+    const p = band.vao.layout && bz === shown ? patchSimplified(src, sig, LOD_TOL_PX / pxPerUnitAt(bz), speed, band, copied) : null;
+    if (!p) { for (const r of band.res) r.del(); continue; }
+    const b = p.strokes, f = p.first, m = b.count, runsB = madeAgain(b, p.runs);
+    const wm = lines ? bandWmul(rnd, f) : null, fu = bandFull(rnd, b, f, 0, m, lines ? rnd.linesFull : null);
+    const list: { del: () => void }[] = [];
+    const vao = strokes(rnd, b, list, { old: band.vao, runs: runsB }, { wmul: wm, full: fu, fullKept: true, room: true });
+    let res = band.res;
+    if (vao !== band.vao) { for (const r of band.res) r.del(); res = list; }
+    let upTo = m;
+    for (let k = 0; k < runsB.length; k += 3) if (runsB[k + 2] !== runsB[k]) { upTo = runsB[k]; break; }
+    for (let k = 0; k < runsB.length; k += 3) if (runsB[k + 2] < 0) wrote += runsB[k + 1];
+    // (v -2: its widths and marks were current, so this network's are once the marks are kept and the widths plain)
+    const nb: StrokeBand = { vao, strokes: b, first: f, boxes: chunkBoxes(b.seg, m, { boxes: band.boxes, upTo }), v: lines && band.v === rnd.perSegV ? -2 : -1, res, wm: lines ? wm : null, fu: lines ? fu : null };
+    next.bands.set(bz, nb);
+    carried.push(nb);
   }
-  return out;
+  rnd.lodOf.delete(old);
+  rnd.gathers.get(old)?.dispose();
+  rnd.gathers.delete(old);
+  rnd.lodOf.set(now, next);
+  rnd.lodMs += performance.now() - t0;
+  rnd.lodCarried = { worked, of: src.count, wrote, bands: carried.length, ms: performance.now() - t0 };
+  if (rnd.checkPatch) {
+    const whole = new Float32Array(src.count);
+    significance(src, speed, whole);
+    if (!sameBits(whole, sig)) console.error("T-4274 check: the significance carried through the edit differs from a whole one");
+    for (const [bz, nb] of next.bands) {
+      const w = simplified(src, whole, LOD_TOL_PX / pxPerUnitAt(bz), speed);
+      const keys = ["seg", "colour", "edge", "level", "flags", "speed", "stretch", "lane", "band"] as const;
+      const off = keys.filter((k) => !sameBits(w.strokes[k] as ArrayBufferView | undefined, nb.strokes[k] as ArrayBufferView | undefined));
+      if (!sameBits(w.first, nb.first)) off.push("first" as never);
+      if (off.length) console.error(`T-4274 check: the simplified copy for zoom ${bz} carried through the edit differs from a whole one in ${off.join(", ")}`);
+      checkStrokes(rnd, `zoom ${bz} copy`, nb.vao, nb.strokes);
+      // (a copy's widths and marks are its network's once current: else they are written whole before it is drawn)
+      if (!lines || nb.v === -2) checkFull(rnd, nb.vao, nb.strokes, nb.fu ?? bandFull(rnd, nb.strokes, nb.first, 0, nb.first.length, null), lines ? nb.wm ?? plainWmul(nb.strokes.count) : undefined);
+    }
+  }
+  return carried;
+}
+
+/** segments an edit may make and still have its set's copies carried (`carryLod`) */
+const CARRY_MIN = 20000;
+/** the room a simplified copy keeps in its slots: a sixteenth (a quarter on her Asia save was 5.7 MB for two zoom
+ * bands), so an edit lays out again a stretch of a few blocks around its merged segments */
+const BAND_ROOM = 1 / 16;
+
+/** a carried copy's runs with the start of each kept one that carries on a run of `a_full` from before it (its
+ * distances along that run may differ) made again */
+function madeAgain(b: Strokes, runs: Int32Array): Int32Array {
+  const out: number[] = [], g = b.seg;
+  const joined = (i: number) => b.colour[i] === b.colour[i - 1] && b.edge[i] === b.edge[i - 1] && g[i * 4] === g[i * 4 - 2] && g[i * 4 + 1] === g[i * 4 - 1];
+  for (let r = 0; r < runs.length; r += 3) {
+    let k = runs[r], c = runs[r + 1], a = runs[r + 2];
+    if (a >= 0) {
+      let t = 0;
+      while (t < c && k + t > 0 && joined(k + t)) t++;
+      if (t) out.push(k, t, -1), (k += t), (c -= t), (a += t);
+    }
+    if (c > 0) out.push(k, c, a);
+  }
+  return Int32Array.from(out);
+}
+
+/** two arrays' bytes alike (both absent alike) */
+function sameBits(a: ArrayBufferView | undefined, b: ArrayBufferView | undefined): boolean {
+  if (!a || !b) return !a === !b;
+  if (a.byteLength !== b.byteLength) return false;
+  const x = new Uint8Array(a.buffer, a.byteOffset, a.byteLength), y = new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
+  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+  return true;
 }
 
 /** Rewrite a dynamic buffer in place (sizes never change between `setNetwork`s). */

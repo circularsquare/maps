@@ -1281,6 +1281,8 @@ export class ClockClient {
   /** The state's network made whole from the last (`mergeNet`); false when it cannot be. */
   private takeNet(st: ClockState): boolean {
     if (st.service) {
+      // (T-4280: its phase tables are posted as the lines changed since the last posted, which needs that network)
+      if (!this.lastNet) return false;
       this.lastService = { phases: st.render.phases, meta: st.render.meta };
       return true;
     }

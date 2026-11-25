@@ -14,7 +14,7 @@ import { StateRows, weekendsOf } from "./stateRows";
 import type { ClockEdge, ClockLine, ClockNode, ClockState, EditTouched, MoneyPatch, MoneyState } from "./protocol";
 import { diffValue } from "./valuePatch";
 import { complexOfNodes } from "./clockDemand";
-import { diagramIn, drawnAllMoved, edgeMerc, pathsAllMoved, pathsMoved, pathsPosted, rowEnv } from "./clockMain";
+import { diagramIn, drawnAllMoved, edgeMerc, pathsAllMoved, pathsMoved, pathsPosted, rowEnv, stateRows } from "./clockMain";
 import { diagramCities, diagramInside, frame, send, timing } from "./clockState";
 
 // ---------------------------------------------------------------- the network diagram's graph (T-2159)
@@ -394,17 +394,24 @@ function rowsDelta<T extends { id: number }>(rows: T[], by: Map<number, T>, ids:
 }
 
 /** T-4149: a state's `touched` from its rows' deltas and the lines whose runs moved; the drawn runs' list starts again
- * once a network is posted */
+ * once a network is posted, the phase tables' (T-4280) once a state carrying them is */
 function touchedOf(s: ClockState, ...d: { rows: { id: number }[]; gone: number[] }[]): EditTouched {
-  // (a line whose row is gone has no drawn runs, also where the model's list of moved lines ran over and said all)
+  // (a line whose row is gone has no drawn runs)
   for (const id of d[2].gone) pathsMoved.add(id);
   const [edges, nodes, lines] = d.map((x) => [...x.rows.map((r) => r.id), ...x.gone]);
-  const paths = pathsAllMoved ? [...new Set([...pathsMoved, ...s.lines.map((l) => l.id)])] : [...pathsMoved];
-  const t: EditTouched = drawnAllMoved ? touchedAll() : { edges, nodes, lines, paths };
-  if (s.net) pathsPosted();
+  const every = (kept: Set<number>) => [...new Set([...kept, ...s.lines.map((l) => l.id)])];
+  const paths = pathsAllMoved ? every(pathsMoved) : [...pathsMoved];
+  const phases = stateRows.phasesAll ? every(stateRows.phasesMoved) : [...stateRows.phasesMoved];
+  const t: EditTouched = drawnAllMoved ? touchedAll() : { edges, nodes, lines, paths, phases };
+  listsPosted(s);
   return t;
 }
-const touchedAll = (): EditTouched => ({ all: true, edges: [], nodes: [], lines: [], paths: [] });
+const touchedAll = (): EditTouched => ({ all: true, edges: [], nodes: [], lines: [], paths: [], phases: [] });
+/** the lists `touched` is made from start again with what state `s` posts */
+function listsPosted(s: ClockState) {
+  if (s.net) pathsPosted();
+  if (s.net || s.service) stateRows.phasesPosted();
+}
 
 /** Post a state, its edges, nodes and lines as only those that changed since the last state posted
  * (T-648, T-1029: copying them to the main thread and back into objects was most of a state's time
@@ -415,7 +422,7 @@ export function postState(s: ClockState, transfer: Transferable[]) {
     rowsDelta(s.nodes, posted.nodes, posted.nodeIds);
     rowsDelta(s.lines, posted.lines, posted.lineIds);
     posted.edgeIds = s.edges.map((e) => e.id); posted.nodeIds = s.nodes.map((n) => n.id); posted.lineIds = s.lines.map((l) => l.id);
-    if (s.net) pathsPosted();
+    listsPosted(s);
     send({ kind: "state", state: { ...s, ...moneyPost(s.money!), touched: touchedAll() } }, transfer);
     return;
   }

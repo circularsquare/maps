@@ -29,16 +29,18 @@ import { ParkingLots } from "./parkingLots";
 import { BuildingFloors } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_STRIDE } from "./facilityPlace";
-import { F_BLUEPRINT, platformShapeAt, sampleValue, stationIndexOf, type NetworkBuffers, type Strokes } from "./network";
+import { backBaseOf, F_BLUEPRINT, platformShapeAt, sampleValue, stationIndexOf, type NetPatch, type NetworkBuffers, type Strokes } from "./network";
+import { BEND_LIMIT, PHASE_ROOM, bendRows, blankSlots, checkSlots, phaseRows, phasesFromFirst, planSlots, putSlots, sampleRows, slottedLineTable, slottedMeta, trainNamesTest, type SlotLayout, type SlotNames, type SlotSrc, type SlotTex } from "./trainSlots";
+import type { EditTouched } from "../workers/protocol";
 import { aheadChevrons, aheadEmpty, aheadParts, joinStations, noAhead, standInStations, type AheadModel } from "./lineAhead";
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_RANGE, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
 import { codeHidden, hidden as vis, levelHidden, levelShown, pickSkip } from "./visibility";
-import { EPOCH_S, STAGE_WAIT_MS, TripArgs, LINE_PX, noBays, BAYS, StationGroups, DrawOptions, StrokeVao, TexName, plainWmul, fullAttr, STROKE_ATTRIBS, STILL_MAX_MS, StrokeLodState, NetworkLayers, TRAIN_MAX_MPS, CROWD_STEP_S } from "./rendererParts";
+import { EPOCH_S, STAGE_WAIT_MS, TripArgs, LINE_PX, noBays, BAYS, StationGroups, DrawOptions, StrokeVao, TexName, plainWmul, fullAttr, STROKE_ATTRIBS, STILL_MAX_MS, StrokeLodState, NetworkLayers, TRAIN_MAX_MPS, CROWD_STEP_S, type StrokeBand } from "./rendererParts";
 export { EPOCH_S, laneState, passingState, CROWD_ZOOM, CONFLICT_ZOOM } from "./rendererParts";
 export type { StationGroups, DrawOptions, NetworkLayers } from "./rendererParts";
-import { texture, buffer, attrib, strokes, checkStrokes, checkFull, checkTextures, dropLodOf, keepTexture, changedRows, joinRows, unchangedRuns, writeSegs, writeSegRange, type KeptTex, type TexKind } from "./rendererStrokes";
+import { texture, buffer, attrib, strokes, checkStrokes, checkFull, checkTextures, carryLod, dropLodOf, keepTexture, changedRows, unchangedRuns, writeSegs, writeSegRange, type KeptTex, type TexKind } from "./rendererStrokes";
 import { drawFrame, bindTrainTextures } from "./rendererDraw";
 
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
@@ -438,6 +440,9 @@ export class NetworkRenderer {
   quiet = false;
   /** T-4262: bytes sent to the GPU, copied on it and allocated there since the page opened (checks and profiles read them) */
   gpuBytes = { up: 0, copy: 0, alloc: 0 };
+  /** T-4274: the last network's simplified copies carried through its edit (`carryLod`): segments whose significance was
+   * worked out, of the set's, merged segments written, copies, ms; null when none were */
+  lodCarried: { worked: number; of: number; wrote: number; bands: number; ms: number } | null = null;
   /** T-4262 stage 2: stroke sets laid out whole (a network posted whole, or room run out near an edit) */
   slotLayouts = 0;
   /** T-4262: a network takes the GL objects of the one before and writes only what differs (`?perfOff=keepGl`: each
@@ -460,6 +465,8 @@ export class NetworkRenderer {
   linesWmul: Float32Array | null = null;
   linesFull: Float32Array | null = null;
   perSegV = 0;
+  /** T-4274: stroke redraws so far (the simplified copy an edit carries is the one the last drew) */
+  strokeRedraws = 0;
   /** stroke instances the last stroke redraw drew, and ms spent simplifying (checks read them) */
   strokeInstances = 0;
   lodMs = 0;
@@ -570,7 +577,7 @@ export class NetworkRenderer {
   /** The demand views (T-084) for the network now drawn, or null for the plain drawing. The
    * arrays must be sized for `this.net` (map/demandLayers.ts builds them from it). */
   setLayers(l: NetworkLayers | null) {
-    const n = this.net;
+    const n = this.net, t0 = performance.now();
     if (!n || !this.lines) return;
     this.layersSrc = l;
     const lines = this.lines;
@@ -601,23 +608,11 @@ export class NetworkRenderer {
       this.putLane(n);
     }
     if (wmulChanged || !this.keepGl) this.perSegV++;
-    const samples = Math.max(1, n.samples.length / 2);
-    if (this.keepGl) {
-      this.putTexture("fill", l ? l.fill : this.blankFill(samples), "rg32f", TEX_W);
-      this.fillStale = false;
-      return;
-    }
-    const upload = (tex: WebGLTexture | null, data: Float32Array, kind: "r32f" | "rg32f") => {
-      const gl = this.gl;
-      const comps = kind === "r32f" ? 1 : 2;
-      const height = Math.max(1, Math.ceil(samples / TEX_W));
-      const padded = new Float32Array(TEX_W * height * comps);
-      padded.set(data.subarray(0, Math.min(data.length, padded.length)));
-      if (kind === "rg32f" && !l) padded.fill(-1);
-      gl.bindTexture(gl.TEXTURE_2D, tex);
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TEX_W, height, kind === "r32f" ? gl.RED : gl.RG, gl.FLOAT, padded);
-    };
-    upload(this.tex.fill, l ? l.fill : new Float32Array(samples * 2), "rg32f");
+    this.fillSrc = l ? l.fill : null;
+    this.putTrain("fill", n);
+    this.fillStale = false;
+    if (this.checkPatch && this.keepGl) this.checkTrains(["fill", "lane"], n);
+    this.layersMs = performance.now() - t0;
   }
 
   /** T-819, T-2236: in the traffic view (`traffic`), the edges whose track is at capacity, drawn
@@ -695,9 +690,10 @@ export class NetworkRenderer {
   }
   anyFull = false;
 
-  /** Replace everything drawn but the trips (an edit). */
-  setNetwork(n: NetworkBuffers) {
-    const gl = this.gl;
+  /** Replace everything drawn but the trips (an edit). `touched`: its state's (T-4280: the lines whose trains' tables
+   * changed, as the worker names them) */
+  setNetwork(n: NetworkBuffers, touched?: EditTouched | null) {
+    const gl = this.gl, t0 = performance.now();
     this.dropPlaced(); // T-1407: the network drawn now has the segment its stand-in showed
     // (T-4145: what is drawn ahead was cleared by game/pending.ts just before, `setAhead`)
     // T-1028: an edit's network posted as changes to the one drawn keeps the strokes' unchanged runs
@@ -729,12 +725,14 @@ export class NetworkRenderer {
     // a set keeps its simplified copies and culling boxes while none of its segments changed, and the culling boxes
     // of the chunks before its first change
     const linesSame = this.lines === oldLines && !!patch && unchangedRuns(patch.lines, this.lines.count);
-    for (const [old, now, runs] of [[oldTrack, this.track, patch?.track], [oldLines, this.lines, patch?.lines]] as const) {
+    // (T-4274: their simplified copies carried through the edit once the marks and widths are set, below)
+    const lod: [StrokeVao, StrokeVao, Int32Array | undefined, Strokes, boolean][] = [];
+    for (const [old, now, runs, src, isLines] of [[oldTrack, this.track, patch?.track, n.track, false], [oldLines, this.lines, patch?.lines, n.lines, true]] as const) {
       if (!old) continue;
       if (old !== now || !runs || !unchangedRuns(runs, now.count)) {
         const boxes = this.lodOf.get(old)?.boxes;
         if (boxes && runs && this.keepGl && runs[0] === 0 && runs[2] === 0) now.boxesFrom = { boxes, upTo: runs[1] };
-        dropLodOf(this, old);
+        lod.push([old, now, runs, src, isLines]);
       }
       if (old !== now) for (const r of old.res ?? []) r.del();
     }
@@ -749,8 +747,17 @@ export class NetworkRenderer {
     this.fullKeys = keys;
     this.fullKey = key;
     this.fullDrawn = n.lines.count ? `1/${n.lines.count}/${key}` : "";
+    const carried: StrokeBand[] = [];
+    this.lodCarried = null;
+    for (const [old, now, runs, src, isLines] of lod) {
+      const c = this.keepGl && this.strokeLod && runs ? carryLod(this, old, now, src, runs, isLines) : null;
+      if (c) carried.push(...c);
+      else dropLodOf(this, old);
+    }
     // (the simplified copies take the widths and marks again when either changed)
     if (!linesSame || !full.kept || this.linesWmul !== wmulWas) this.perSegV++;
+    // a copy carried with the marks and plain widths it had, which were written, holds this network's
+    for (const b of carried) if (b.v === -2) b.v = full.kept && !this.linesWmul && !wmulWas ? this.perSegV : -1;
     if (patch && this.checkPatch) {
       checkStrokes(this, "track", this.track, n.track);
       checkStrokes(this, "lines", this.lines, n.lines);
@@ -771,42 +778,38 @@ export class NetworkRenderer {
       if (field && [field].flat().every((f) => same.has(f)) && this.tex[name]) return;
       this.putTexture(name, ...make());
     };
-    put("phases", "phases", () => [n.phases.length ? n.phases : new Float32Array(4), "rgba32f", TEX_W]);
-    put("meta", "meta", () => [n.meta.length ? n.meta : new Float32Array(4), "rgba32f", TEX_W]);
-    put("samples", "samples", () => [n.samples.length ? n.samples : new Float32Array(2), "rg32f", TEX_W]);
-    put("bendAt", ["samples", "sampleBend"], () => [n.sampleBend?.length ? n.sampleBend : new Float32Array(Math.max(1, n.samples.length / 2)), "r32f", TEX_W]);
-    put("bends", "bends", () => [n.bends?.length ? n.bends : new Float32Array(2), "rg32f", TEX_W]);
+    // T-4274: the trains' tables in slots of their own (trainSlots.ts), written only where a line's moved or changed
+    const tt = performance.now();
+    const keep = this.keepGl, was0 = this.sampleSlots, bendsWere = this.bendSlots, base = backBaseOf(n.lineTable, n.meta);
+    const rows = sampleRows(n.lineTable, base);
+    this.sampleSlots = planSlots(keep ? was0 : null, rows, TEX_W);
+    if (!(keep && this.bendSlots && this.sampleSlots === was0 && same.has("sampleBend") && same.has("bends")))
+      this.bendSlots = planSlots(keep ? this.bendSlots : null, n.sampleBend ? bendRows(n.sampleBend, rows) : [], TEX_W, BEND_LIMIT);
+    const phasesWere = this.phaseSlots;
+    if (!(keep && phasesWere && same.has("meta"))) this.phaseSlots = this.planPhases(n.meta);
+    // T-4280: each table written where the worker names a line changed since the network before (or its slot moved)
+    const names = patch && was && touched && !touched.all ? trainNames(was, n, touched, patch, bendsWere, this.bendSlots!) : null;
+    this.trainNamed = names ? { paths: touched!.paths.length, phases: touched!.phases.length, stretches: patch!.stretches.length, lanes: patch!.lanes.length } : null;
+    for (const name of ["samples", "bendAt", "bends", "phases", "stretch"] as const) this.putTrain(name, n, names?.[name]);
+    const sw = this.slotTex.samples!.wrote, tw = this.slotTex.stretch!.wrote;
+    this.trainsWrote = sw === "all" || tw === "all" ? "all" : new Set([...sw, ...tw]);
+    put("lines", null, () => [slottedLineTable(n.lineTable.length ? n.lineTable : new Float32Array(4), base, this.sampleSlots!), "rgba32f", LINES_W]);
+    if (!(this.phaseSlots === phasesWere && same.has("meta") && this.tex.meta)) this.putTexture("meta", slottedMeta(n.meta.length ? n.meta : new Float32Array(4), this.phaseSlots!), "rgba32f", TEX_W);
     // the Traffic view's bands were the last network's
-    const hadTraffic = this.trafficBands !== null;
     this.trafficBands = null;
-    const passChanged = n.samplePass ? !same.has("samplePass") : this.hadSamplePass;
     this.hadSamplePass = !!n.samplePass;
     this.passing = false;
     for (let i = 0; i < n.stationCount && !this.passing; i++) this.passing = (n.stations[i * 3 + 2] & ST_PASSING) !== 0;
-    if (hadTraffic || passChanged || !(same.has("sampleLane") && same.has("sampleBand") && this.tex.lane)) this.putLane(n);
-    put("lines", "lineTable", () => [n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W]);
+    this.putLane(n, names?.lane);
+    this.trainMs = performance.now() - tt;
     put("colours", "lineColours", () => [this.shownColours(n), "rgba8", LINES_W]);
     this.hiddenFor = null;
-    // the demand views' fill (T-084) is `setLayers`'s, which follows each network; T-4262: until it comes, blank from
-    // the next frame (`freshFill`) rather than at once, so it is written once
-    if (this.keepGl) this.fillStale = true;
-    else put("fill", null, () => [new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W]);
+    // the demand views' fill (T-084) is `setLayers`'s, which follows each network; T-4262: until it comes, the last
+    // network's, with the lines written above blank from the next frame (`freshFill`)
+    this.fillStale = true;
     const cars = n.lineCars ?? new Float32Array(Math.max(1, n.lineTable.length / 4)).fill(8);
     this.maxCars = Math.max(1, ...cars);
     put("cars", "lineCars", () => [cars, "r32f", LINES_W]);
-    // each train sample's stop-to-stop stretch (run 0's numbering), where a trip's loads are
-    // looked up (T-164)
-    put("stretch", "sampleStretch", () => {
-      if (n.sampleStretch) return [n.sampleStretch, "r32f", TEX_W];
-      const nSamples = Math.max(1, n.samples.length / 2);
-      const stretch = new Float32Array(nSamples).fill(-1);
-      if (n.sampleStroke && n.lines.stretch)
-        for (let k = 0; k < nSamples; k++) {
-          const i = n.sampleStroke[k];
-          if (i >= 0) stretch[k] = n.lines.stretch[i];
-        }
-      return [stretch, "r32f", TEX_W];
-    });
     this.crowds = new PlatformCrowds(n.stationCount);
 
     this.stationVao = gl.createVertexArray()!;
@@ -860,7 +863,12 @@ export class NetworkRenderer {
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     if (!aheadEmpty(this.ahead) || this.aheadDrawn) this.buildAhead();
-    if (this.checkPatch && this.keepGl) this.texturesRead = checkTextures(this);
+    if (this.checkPatch && this.keepGl) {
+      this.texturesRead = checkTextures(this);
+      this.checkTrains(["samples", "bendAt", "bends", "phases", "stretch", "lane"], n);
+      if (!phasesFromFirst(n.meta, phaseRows(n.meta))) console.error("T-4274 check: a line's phases do not start at its first profile's first phase");
+    }
+    this.netMs = performance.now() - t0;
   }
   /** `?patch=check`: how many kept textures the last check read back (T-4262) */
   texturesRead = 0;
@@ -963,13 +971,104 @@ export class NetworkRenderer {
 
   /** Only the service changed (a train count, T-229): the run profiles' phase tables and meta are
    * replaced and every other buffer kept, rather than uploading the whole network again. */
-  setService(phases: Float32Array, meta: Float32Array) {
+  setService(phases: Float32Array, meta: Float32Array, touched?: EditTouched | null) {
     const n = this.net;
     if (!n) return;
+    // (T-4280: the lines whose tables the worker names as changed since the last it posted)
+    const named = touched && !touched.all ? { keys: namedKeys(touched.phases, false), from: [n.phases] } : null;
     n.phases = phases;
     n.meta = meta;
-    this.putTexture("phases", phases.length ? phases : new Float32Array(4), "rgba32f", TEX_W);
-    this.putTexture("meta", meta.length ? meta : new Float32Array(4), "rgba32f", TEX_W);
+    this.phaseSlots = this.planPhases(meta);
+    this.putTrain("phases", n, named);
+    if (this.checkPatch && this.keepGl) this.checkTrains(["phases"], n);
+    this.putTexture("meta", slottedMeta(meta.length ? meta : new Float32Array(4), this.phaseSlots), "rgba32f", TEX_W);
+  }
+
+  /** T-4274: the trains' tables' layouts (trainSlots.ts): per line's run its samples' slot and its bend points', per line
+   * its phases'; and the tables written through them */
+  sampleSlots: SlotLayout | null = null;
+  bendSlots: SlotLayout | null = null;
+  phaseSlots: SlotLayout | null = null;
+  slotTex: Partial<Record<SlotName, SlotTex>> = {};
+  /** the keys the last network's samples and stretches were written for, or "all" (`freshFill`) */
+  trainsWrote: Set<number> | "all" = "all";
+  /** T-4274: bytes sent to each network texture since the page opened (`gpuBytes.up`, by texture) */
+  texSent: Record<string, number> = {};
+  /** T-4280: per train table, writes that compared the values (no list named the lines changed, or the table was last
+   * written from other arrays than the list's), since the page opened: an edit's network adds none */
+  trainCompares: Record<string, number> = {};
+  /** T-4280: how many lines the last network's lists named, null when it had none */
+  trainNamed: { paths: number; phases: number; stretches: number; lanes: number } | null = null;
+  /** T-4280: ms of the last `setNetwork`, of its trains' tables, and of the last `setLayers` */
+  netMs = 0;
+  trainMs = 0;
+  layersMs = 0;
+  /** the demand views' fill last given (`setLayers`), null: blank */
+  private fillSrc: Float32Array | null = null;
+  private stretchFor: { n: NetworkBuffers; v: Float32Array } | null = null;
+
+  private planPhases(meta: Float32Array): SlotLayout {
+    return planSlots(this.keepGl ? this.phaseSlots : null, phaseRows(meta), TEX_W, Infinity, PHASE_ROOM);
+  }
+  /** T-4274: train table `name`'s kind, layout and sources for network `n` */
+  private trainSrc(name: SlotName, n: NetworkBuffers): [TexKind, SlotLayout, SlotSrc] | null {
+    const S = this.sampleSlots, B = this.bendSlots, P = this.phaseSlots;
+    if (!S || !B || !P) return null;
+    switch (name) {
+      case "samples": return ["rg32f", S, { srcs: [n.samples], per: [2] }];
+      case "bendAt": return ["r32f", S, { srcs: [n.sampleBend], per: [1], shift: (k) => (B.at.get(k) ?? 0) - (B.first.get(k) ?? 0) }];
+      case "bends": return ["rg32f", B, { srcs: [n.bends], per: [2] }];
+      case "phases": return ["rgba32f", P, { srcs: [n.phases], per: [4] }];
+      case "stretch": return ["r32f", S, { srcs: [this.stretchOf(n)], per: [1] }];
+      case "lane": {
+        const lane = n.sampleLane?.length ? n.sampleLane : undefined, band = this.trafficBands?.sample ?? n.sampleBand, pass = n.samplePass;
+        return ["rgba32f", S, { srcs: [lane, band, pass], per: [1, 2, 1], pack: (out, f, c) => packLane(out, f, c, lane, band, pass) }];
+      }
+      case "fill": return ["rg32f", S, { srcs: [this.fillSrc ?? this.blankFill(Math.max(1, n.samples.length / 2))], per: [2] }];
+      case "slevel": return ["r32f", S, { srcs: [this.sampleLv ?? undefined], per: [1] }];
+    }
+  }
+  /** T-4274: train table `name` written for network `n` through its layout */
+  private putTrain(name: SlotName, n: NetworkBuffers, named?: SlotNames | null) {
+    const t = this.trainSrc(name, n);
+    if (!t) return;
+    const u0 = this.gpuBytes.up;
+    const k = putSlots(this, this.slotTex[name] ?? null, t[0], TEX_W, t[1], t[2], named);
+    if (k.compared) this.trainCompares[name] = (this.trainCompares[name] ?? 0) + 1;
+    this.slotTex[name] = k;
+    this.tex[name] = k.tex;
+    this.texSent[name] = (this.texSent[name] ?? 0) + this.gpuBytes.up - u0;
+  }
+  /** `?patch=check` (T-4274): train tables `names` read back, each line's slot against the network's values */
+  private checkTrains(names: SlotName[], n: NetworkBuffers) {
+    const bad: string[] = [];
+    for (const name of names) {
+      const k = this.slotTex[name], t = this.trainSrc(name, n);
+      if (!k || !t) continue;
+      const keys = checkSlots(this, k, TEX_W, t[1], t[2]);
+      if (keys.length) bad.push(`${name} (${keys.length} slots, keys ${keys.slice(0, 4).join(" ")})`);
+    }
+    if (bad.length) console.error(`T-4274 check: the trains' tables in slots differ from the network's: ${bad.join(", ")}`);
+  }
+  /** each train sample's stop-to-stop stretch (run 0's numbering), where a trip's loads are looked up (T-164) */
+  private stretchOf(n: NetworkBuffers): Float32Array {
+    if (n.sampleStretch) return n.sampleStretch;
+    if (this.stretchFor?.n === n) return this.stretchFor.v;
+    const nSamples = Math.max(1, n.samples.length / 2);
+    const stretch = new Float32Array(nSamples).fill(-1);
+    if (n.sampleStroke && n.lines.stretch)
+      for (let k = 0; k < nSamples; k++) {
+        const i = n.sampleStroke[k];
+        if (i >= 0) stretch[k] = n.lines.stretch[i];
+      }
+    this.stretchFor = { n, v: stretch };
+    return stretch;
+  }
+  /** T-3420: per sample its height in levels, for the cars on a hidden level (null: none hidden) */
+  putLevels(lv: Float32Array | null) {
+    this.sampleLv = lv;
+    if (lv && this.net) this.putTrain("slevel", this.net);
+    else if (this.tex.slevel) this.dropTexture("slevel");
   }
 
   /** each network texture's GL object, freed when it is replaced (T-1028: kept across edits while its
@@ -977,26 +1076,9 @@ export class NetworkRenderer {
   texRes: Partial<Record<TexName, { del: () => void }[]>> = {};
   /** per sample: how far apart its tracks are (T-658) and its line's band's shift as drawn (T-1799),
    * line widths and metres (T-2132) */
-  putLane(n: NetworkBuffers) {
-    const m = Math.max(1, n.samples.length / 2), lane = n.sampleLane?.length ? n.sampleLane : undefined, band = this.trafficBands?.sample ?? n.sampleBand, pass = n.samplePass;
-    // T-4262: with the inputs there as before, only the rows (TEX_W samples) where one differs are made again
-    const was = this.laneIn;
-    const rows = this.keepGl && was && was.m === m && !was.lane === !lane && !was.band === !band && !was.pass === !pass && this.keptTex.lane?.data === was.v
-      ? joinRows([lane ? changedRows(was.lane!, lane, TEX_W) : [], band ? changedRows(was.band!, band, 2 * TEX_W) : [], pass ? changedRows(was.pass!, pass, TEX_W) : []])
-      : null;
-    const v = rows ? was!.v : new Float32Array(m * 4);
-    if (!rows) packLane(v, 0, m, lane, band, pass);
-    else for (let i = 0; i + 1 < rows.length; i += 2) packLane(v, rows[i] * TEX_W, Math.min(m, (rows[i] + rows[i + 1]) * TEX_W), lane, band, pass);
-    if (rows && this.checkPatch) {
-      const whole = new Float32Array(m * 4);
-      packLane(whole, 0, m, lane, band, pass);
-      if (!sameWords(whole, v)) console.error("T-4262 check: the lanes made again by rows differ from whole ones");
-    }
-    this.laneIn = { m, lane, band, pass, v };
-    if (!rows || rows.length) this.putTexture("lane", v, "rgba32f", TEX_W, rows ?? undefined);
+  putLane(n: NetworkBuffers, named?: SlotNames | null) {
+    this.putTrain("lane", n, named);
   }
-  /** T-4262: what the lane texture was last made from, and the array it holds */
-  laneIn: { m: number; lane?: Float32Array; band?: Float32Array; pass?: Float32Array; v: Float32Array } | null = null;
   /** T-4262: the demand views' fill is the last network's until `setLayers` puts this one's (`freshFill`) */
   fillStale = false;
   private blank: Float32Array | null = null;
@@ -1007,9 +1089,19 @@ export class NetworkRenderer {
   }
   /** Before a frame draws: a network's fill blank while `setLayers` has not put one (T-4262). */
   freshFill() {
-    if (!this.fillStale || !this.net) return;
+    const S = this.sampleSlots;
+    if (!this.fillStale || !this.net || !S) return;
     this.fillStale = false;
-    this.putTexture("fill", this.blankFill(Math.max(1, this.net.samples.length / 2)), "rg32f", TEX_W);
+    // T-4274: blank where the last network's fill is not this one's (a line written or moved since the fill was), else blank whole
+    const k = this.slotTex.fill, w = this.trainsWrote;
+    if (!k || !this.keepGl || w === "all" || k.layout.base !== S.base || k.rows < Math.ceil(S.cap / TEX_W)) {
+      this.fillSrc = null;
+      this.putTrain("fill", this.net);
+      return;
+    }
+    const keys: number[] = [];
+    for (const [key, a] of S.at) if (w.has(key) || k.layout.at.get(key) !== a || k.layout.count.get(key) !== S.count.get(key)) keys.push(key);
+    if (keys.length) blankSlots(this, k, TEX_W, S, keys, -1);
   }
 
   /** T-4262: the network textures kept from one network to the next (`keepTexture`) */
@@ -1028,7 +1120,9 @@ export class NetworkRenderer {
       this.texRes[name] = list;
       return;
     }
+    const u0 = this.gpuBytes.up;
     const next = keepTexture(this, k, data, kind, width, rows);
+    this.texSent[name] = (this.texSent[name] ?? 0) + this.gpuBytes.up - u0;
     if (k && next !== k) this.gl.deleteTexture(k.tex);
     this.keptTex[name] = next;
     this.tex[name] = next.tex;
@@ -1039,6 +1133,9 @@ export class NetworkRenderer {
     const k = this.keptTex[name];
     if (k) this.gl.deleteTexture(k.tex);
     delete this.keptTex[name];
+    const s = this.slotTex[name as SlotName];
+    if (s) this.gl.deleteTexture(s.tex);
+    delete this.slotTex[name as SlotName];
     this.tex[name] = null;
   }
 
@@ -1132,9 +1229,7 @@ export class NetworkRenderer {
     this.hiddenV = vis.v;
     if (this.tex.colours) this.putTexture("colours", this.shownColours(n), "rgba8", LINES_W);
     this.hideStations(n);
-    this.sampleLv = vis.levels ? this.sampleLevels(n) : null;
-    if (this.sampleLv) this.putTexture("slevel", this.sampleLv, "r32f", TEX_W);
-    else if (this.tex.slevel) this.dropTexture("slevel");
+    this.putLevels(vis.levels ? this.sampleLevels(n) : null);
     const L = n.lines, T = n.track;
     if (vis.lines.size || vis.levels || vis.blueprints) {
       const bp = vis.blueprints;
@@ -1182,7 +1277,8 @@ export class NetworkRenderer {
     this.res = [];
     this.texRes = {};
     this.keptTex = {};
-    this.laneIn = null;
+    this.slotTex = {};
+    this.sampleSlots = this.bendSlots = this.phaseSlots = null;
     this.fullKey = null;
     for (const k of Object.keys(this.tex) as TexName[]) this.tex[k] = null;
     this.track = this.lines = null;
@@ -1405,15 +1501,46 @@ export class NetworkRenderer {
   }
 }
 
-/** per sample (`from` to `to`), the lane texture's four numbers (`putLane`) */
-function packLane(v: Float32Array, from: number, to: number, lane?: Float32Array, band?: Float32Array, pass?: Float32Array) {
-  for (let k = from; k < to; k++) {
-    v[k * 4] = lane ? lane[k] ?? 1 : 1;
-    v[k * 4 + 1] = band?.[k * 2] ?? 0;
-    v[k * 4 + 2] = band?.[k * 2 + 1] ?? 0;
-    v[k * 4 + 3] = pass?.[k] ?? 1e9;
+/** the lane texture's four numbers of `count` samples from `first` into `v` from 0 (`putLane`) */
+function packLane(v: Float32Array, first: number, count: number, lane?: Float32Array, band?: Float32Array, pass?: Float32Array) {
+  for (let i = 0; i < count; i++) {
+    const k = first + i;
+    v[i * 4] = lane ? lane[k] ?? 1 : 1;
+    v[i * 4 + 1] = band?.[k * 2] ?? 0;
+    v[i * 4 + 2] = band?.[k * 2 + 1] ?? 0;
+    v[i * 4 + 3] = pass?.[k] ?? 1e9;
   }
 }
+
+/** T-4280: per line id its keys in the per-sample tables (`runs`: its run 0 and its return run's own way back, trainSlots.ts
+ * `sampleRows`), else its phase tables' (its id) */
+function namedKeys(ids: readonly number[], runs: boolean): Set<number> {
+  const out = new Set<number>();
+  for (const id of ids) if (runs) out.add(id * 2).add(id * 2 + 1); else out.add(id);
+  if (trainNamesTest.drop) for (const k of out) { out.delete(k); break; }
+  return out;
+}
+
+/** T-4280: the lists the trains' tables are written by, against network `was`'s own arrays: the samples and bends of the
+ * lines whose drawn runs changed (`touched.paths`; `bendAt` also where a line's bend points moved slot, since its codes
+ * point at them), the phase tables of `touched.phases`, the stretches and lanes of the patch's `stretches` and `lanes` */
+function trainNames(was: NetworkBuffers, n: NetworkBuffers, touched: EditTouched, patch: NetPatch, bendsWere: SlotLayout | null, bends: SlotLayout): Partial<Record<SlotName, SlotNames>> {
+  const paths = namedKeys(touched.paths, true), bendAt = new Set(paths);
+  if (bends !== bendsWere) for (const [k, a] of bends.at) if (bendsWere?.at.get(k) !== a) bendAt.add(k);
+  const lane = namedKeys(patch.lanes, true);
+  // (near the bend points a code can hold, the clock worker draws the runs past it straight, wherever they lie: compared)
+  const cut = Math.max(was.bends?.length ?? 0, n.bends?.length ?? 0) / 2 + 32 >= BEND_LIMIT;
+  return {
+    samples: { keys: paths, from: [was.samples] },
+    ...(cut ? {} : { bendAt: { keys: bendAt, from: [was.sampleBend] }, bends: { keys: paths, from: [was.bends] } }),
+    phases: { keys: namedKeys(touched.phases, false), from: [was.phases] },
+    stretch: { keys: namedKeys(patch.stretches, true), from: [was.sampleStretch] },
+    lane: { keys: lane, from: [was.sampleLane?.length ? was.sampleLane : undefined, was.sampleBand, was.samplePass] },
+  };
+}
+
+/** the trains' tables kept in slots (trainSlots.ts) */
+type SlotName = "samples" | "bendAt" | "bends" | "phases" | "stretch" | "lane" | "fill" | "slevel";
 
 /** two float arrays bit for bit */
 function sameWords(a: Float32Array, b: Float32Array): boolean {

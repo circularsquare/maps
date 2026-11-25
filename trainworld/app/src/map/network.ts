@@ -242,6 +242,30 @@ export interface NetPatch {
   ranges: Record<StrokeKind, Int32Array>;
   /** patch: from, to, count triples of the runs of the last network's segments that moved (T-1509) */
   moves?: Record<StrokeKind, Int32Array>;
+  /** T-4280: the lines whose per-sample stretches (`sampleStretch`) differ from the last build's, and those whose lanes,
+   * bands or passing values do (`sampleLane`, `sampleBand`, `samplePass`): their samples made again to other values, or
+   * their passing stations elsewhere along them */
+  stretches: number[];
+  lanes: number[];
+}
+
+/** a run with no passing places (`linePassing`) */
+const NO_PASS: number[] = [];
+
+/** T-4280: whether two runs' samples give other per-sample stretches (1: `sampleStretch`) or lanes or bands (2:
+ * `sampleLane`, `sampleBand`) */
+function sampleValuesDiffer(a: LineSamples, b: LineSamples): number {
+  if (a.count !== b.count) return 3;
+  let out = 0;
+  if (a.lane.length !== b.lane.length || a.band.length !== b.band.length) out = 2;
+  for (let k = 0; !out && k < a.lane.length; k++) if (a.lane[k] !== b.lane[k]) out = 2;
+  for (let k = 0; !out && k < a.band.length; k++) if (a.band[k] !== b.band[k]) out = 2;
+  const sa = a.c.strokes.stretch, sb = b.c.strokes.stretch;
+  for (let k = 0; k < a.count; k++) {
+    const fa = a.rel[k], fb = b.rel[k];
+    if ((fa < 0 ? -1 : sa?.[fa]) !== (fb < 0 ? -1 : sb?.[fb])) return out | 1;
+  }
+  return out;
 }
 
 /** T-2258: the shortest segment of built track and line strokes, plane m. The shader shifts a band
@@ -1642,6 +1666,8 @@ export interface NetCache {
   outside: Map<number, { side: EdgeSide; ways: Map<number, number[]>; c: unknown; rh: boolean | undefined; v: number }>;
   /** the passing tracks' strokes (`passingTracks`) and what they were made from */
   passTracks: Map<number, { key: unknown[]; calls: StrokeAdd[] }>;
+  /** T-4280: per sampled run (its line table row), where along it its trains pass at passing stations (`linePassing`), when anywhere */
+  passOf: Map<number, number[]>;
   /** the nodes a line's edge ends at, and the edges and counts they are from */
   lined: { side: EdgeSide; counts: Map<number, number>; lined: Set<number> } | null;
   nodes: { rows: readonly ClockState["nodes"][number][]; st?: ClockState["nodes"][number][]; jn?: ClockState["nodes"][number][]; stationIds?: string[] } | null;
@@ -1651,7 +1677,7 @@ export interface NetCache {
   last: { serial: number; track: EdgeEntry[]; lines: LineEntry[]; trackCount: number; lineCount: number; pts: Map<number, Float32Array> } | null;
 }
 
-export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), trains: new Map(), samples: new Map(), passages: new Map(), facilities: newFacilityCache(), bands: newBandState(), side: null, lineRows: new Map(), counts: null, ways: null, lined: null, turnbacks: new Map(), outside: new Map(), passTracks: new Map(), nodes: null, loop: null, serial: 0, last: null });
+export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), trains: new Map(), samples: new Map(), passages: new Map(), facilities: newFacilityCache(), bands: newBandState(), side: null, lineRows: new Map(), counts: null, ways: null, lined: null, turnbacks: new Map(), outside: new Map(), passTracks: new Map(), passOf: new Map(), nodes: null, loop: null, serial: 0, last: null });
 
 /**
  * T-1170: the cache's pieces moved to a new draw anchor, so the next build reuses them rather than
@@ -2159,6 +2185,9 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   let lineCount = 0;
   const linesSeen: NetCache["lines"] = new Map();
   const samplesSeen: NetCache["samples"] = new Map();
+  /** T-4280: `NetPatch.stretches` and `lanes`, and each run's passing places (`NetCache.passOf`) */
+  const stretchesNew = new Set<number>(), lanesNew = new Set<number>();
+  const passOf: NetCache["passOf"] = new Map();
   const lineIds: string[] = [];
   /** the row each line's piece stands for now */
   const lineRows: NetCache["lineRows"] = new Map();
@@ -2361,6 +2390,10 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
           }
         }
         sm = { c: c!, path, count, step, lens, rel, lane, band: bandOf, bus: !!l.bus };
+        // T-4280: named for the renderer where the values it draws with differ (most made again are the same)
+        const differ = was ? sampleValuesDiffer(was, sm) : 3;
+        if (differ & 1) stretchesNew.add(l.id);
+        if (differ & 2) lanesNew.add(l.id);
       }
       samplesSeen.set(slot, sm!);
       const stretchOf = c!.strokes.stretch!, rel = sm!.rel;
@@ -2371,10 +2404,11 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
       }
       sampleLane.set(sm!.lane, first);
       if (sm!.band.length) sampleBand.set(sm!.band, first * 2);
+      let mine = NO_PASS;
       if (passingAt.size && !l.bus) {
         // (a return run's own stops go on a scratch list: the outer tracks are drawn from its path's)
         // (T-3348: the return run stops at its own platforms where they differ)
-        const mine = linePassing(back ? { ...l, path: path as number[], stops: (l.backStops ?? l.stops).slice().reverse() } : l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, back ? [] : passing);
+        mine = linePassing(back ? { ...l, path: path as number[], stops: (l.backStops ?? l.stops).slice().reverse() } : l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, back ? [] : passing);
         for (let k = 0; k < count && mine.length; k++) {
           let v = 1e9;
           for (let j = 0; j < mine.length; j += 4) {
@@ -2384,6 +2418,9 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
           samplePass[first + k] = v;
         }
       }
+      // (T-4280: the same passing places along the same samples give the same values)
+      if (mine.length) passOf.set(slot, mine);
+      if (!sameArray(cache.passOf.get(slot) ?? NO_PASS, mine)) lanesNew.add(l.id);
     };
     runSamples(l.id, l.path, l.planPath ? c.firstStroke.slice(runStart, runEnd) : c.firstStroke, false);
     const slot = backSlotOf(r.lineTable, r.meta, l.id);
@@ -2775,12 +2812,15 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   cache.turnbacks = turnbacksSeen;
   cache.outside = outsideSeen;
   cache.passTracks = passSeen;
+  cache.passOf = passOf;
   const serial = ++cache.serial, last = cache.last;
   const patch: NetPatch | undefined = last ? {
     base: last.serial,
     track: strokeRuns(trackParts, (p) => p.strokes.count, last.track),
     lines: strokeRuns(lineParts, (p) => p.strokes.count, last.lines),
     oldTrack: last.trackCount, oldLines: last.lineCount, same: [], edgeIds: Uint32Array.from(trackOrder), modes: { track: "whole", lines: "whole" }, ranges: { track: new Int32Array(0), lines: new Int32Array(0) },
+    stretches: [...stretchesNew],
+    lanes: [...lanesNew],
   } : undefined;
   cache.last = { serial, track: trackParts, lines: lineParts, trackCount, lineCount, pts: edgePts };
   return {

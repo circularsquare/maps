@@ -11,7 +11,7 @@ import { StrokeCache } from "./strokeCache";
 import { STENCIL_BIT } from "./buildingFloors";
 import { backBaseOf, type NetworkBuffers } from "./network";
 import { BAND_GAP_PX } from "./lineBands";
-import { DOUBLE_WIDTH, HOT_STATIONS, SEL_MAX, SEL_STRIDE, SINGLE_WIDTH, TEX_W, TRAM_WIDTH } from "./rendererShaders";
+import { DOUBLE_WIDTH, HOT_STATIONS, SEL_MAX, SEL_STRIDE, SINGLE_WIDTH, TRAM_WIDTH } from "./rendererShaders";
 import { hidden as vis } from "./visibility";
 import { TRACK_RGB, BAD_RGB, BP_MID_RGB, BP_RAIL_RGB, BP_RAIL_SHARE, BP_NARROW, TRAIN_PX, LINE_PX, HSR_WIDTH, HSR_STRIPE_PX, setSelLines, GHOST_MIN_PX, LANE_M, BAND_FOLD_PX, MUTE, BAND_GAP, smoothstep, laneState, passingState, CONFLICT_ZOOM, CROWD_RGB, TRACK_IN_BOX, StationGroups, DrawOptions, StrokeVao, GHOST_OUTLINE_PX } from "./rendererParts";
 import type { NetworkRenderer } from "./renderer";
@@ -211,6 +211,7 @@ function strokeDraws(rnd: NetworkRenderer, c: Ctx2) {
   const picked = new Map<StrokeVao, { vao: StrokeVao; ranges: number[] | null }>();
   if (redraw) {
     rnd.strokeInstances = 0;
+    rnd.strokeRedraws++;
     for (const [s, src, isLines] of [[rnd.track, n.track, false], [rnd.lines, n.lines, true]] as const) {
       const p = pickStrokes(rnd, s, src, isLines, zoom, dpr, lanes.grow, project, vp[0] / dpr, vp[1] / dpr);
       if (s && p) picked.set(s, p);
@@ -683,7 +684,7 @@ function trainsPass(rnd: NetworkRenderer, c: Ctx3) {
     gl.uniform1f(rnd.trainU.u_keep, rnd.net?.keep ?? 1);
     // T-3420: cars on a hidden level, by their sample's height
     gl.uniform1i(rnd.trainU.u_level_hide, vis.levels);
-    if (vis.levels && !rnd.tex.slevel) rnd.putTexture("slevel", rnd.sampleLevels(n), "r32f", TEX_W);
+    if (vis.levels && !rnd.tex.slevel) rnd.putLevels(rnd.sampleLevels(n));
     gl.activeTexture(gl.TEXTURE13);
     gl.bindTexture(gl.TEXTURE_2D, rnd.tex.slevel);
     gl.uniform1i(rnd.trainU.u_slevel, 13);
