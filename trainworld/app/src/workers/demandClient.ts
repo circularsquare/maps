@@ -335,6 +335,18 @@ function everyPeriodOnce(parts: { mask: number }[]): boolean {
   }
   return m === ALL_PERIODS;
 }
+/** T-4265: bubble sums' parts added into one, as `cellModes` adds them (in period order, so the bubbles are the same to
+ * the bit) */
+function mergeSums(parts: readonly { mask: number; sums: Float32Array; everyday: Float32Array | null }[]): { mask: number; sums: Float32Array; everyday: Float32Array | null } {
+  let mask = 0, sums: Float32Array | null = null, everyday: Float32Array | null = null;
+  for (const p of [...parts].sort((a, b) => a.mask - b.mask)) {
+    mask |= p.mask;
+    if (!sums) sums = p.sums.slice();
+    else addInto(sums, p.sums);
+    if (p.everyday) { if (!everyday) everyday = p.everyday.slice(); else addInto(everyday, p.everyday); }
+  }
+  return { mask, sums: sums!, everyday };
+}
 /** `into[k] += from[k]` for every k of `into` */
 function addInto(into: Float32Array | Float64Array, from: ArrayLike<number>) {
   for (let k = 0; k < into.length; k++) into[k] += from[k];
@@ -413,6 +425,8 @@ const LOCAL_SHARE = import.meta.env.DEV ? new URLSearchParams(location.search).g
 /** T-3503: what the last regional answers may hold (a zone's answer is 48 bytes a square: New York about 2 MB,
  * and a zone asks for about ten kinds and days) */
 const LAST_REG_BYTES = 48e6;
+/** T-4277: the zones whose airports' trips across their line `lastAir` keeps (a few terminal cells each) */
+const LAST_AIR_ZONES = 256;
 /** T-3503: `regLegs`' kinds: longer trips (bit 0), commutes (bit 1), each everyday kind (bit 2 + k) */
 const REG_COMMUTES = 2;
 const REG_ALL = 3 | EVERYDAY_KEYS.reduce((b, _, k) => b | (1 << (2 + k)), 0);
@@ -1561,6 +1575,7 @@ class DemandClient {
   private lodReset(saved: string[] | null, built: string[][] | null = null) {
     this.lodZones = null;
     this.lastReg.clear();
+    this.lastAir.clear();
     this.savedFine = saved;
     this.fine = new Set();
     this.touched.clear();
@@ -4146,6 +4161,10 @@ class DemandClient {
       if (list) list.push({ mask: msg.mask, sums: msg.sums, everyday: msg.everyday });
       // (T-4265: or the final shown's, as a zone off screen's come after its results, when the next solve went at that final)
       else if (this.cur && (msg.version === this.cur.version || (msg.round >= ROUNDS && msg.version === this.shownOf(msg.city)))) this.pushed.set(key, [{ mask: msg.mask, sums: msg.sums, everyday: msg.everyday }]);
+      // (T-4277: a final's, kept through the next solve, added into one as soon as it is whole: those that come after the
+      // next solve went would otherwise be held a solving worker's copy each until its end)
+      const kept = msg.round >= ROUNDS ? this.pushed.get(key) : undefined;
+      if (kept && kept.length > 1 && everyPeriodOnce(kept)) this.pushed.set(key, [mergeSums(kept)]);
       return;
     }
     if (msg.kind === "ready") {
@@ -4885,7 +4904,7 @@ class DemandClient {
    * airports: each 6 km zone's spread over its terminal cells by their airport legs in `weights`
    * (eight blocks; T-3503: the residents' end comes with the other trips, `regionalInto`). As they
    * were when the workers cannot say. */
-  private async airportAcross(modes: Float32Array, weights: Float32Array, cells: CityCells, city: CityId, version: number, other: CityId | undefined, t: Target): Promise<void> {
+  private async airportAcross(modes: Float32Array, weights: Float32Array, cells: CityCells, city: CityId, version: number, other: CityId | undefined, t: Target, keep?: string): Promise<void> {
     const n = cells.n;
     if (modes.length !== 8 * n || weights.length !== 8 * n) return;
     const ends = [[], [3, 4, 5, 7]].map((blocks) => {
@@ -4915,28 +4934,42 @@ class DemandClient {
       [r.legs0, r.legs1].forEach((v, e) => { if (v.length === sums[e].length) addInto(sums[e], v); });
     }
     if (mask !== ALL_PERIODS) return;
+    const put: number[] = [], add: number[] = [];
     ends.forEach(({ at }, e) => {
       const s = sums[e], o = 3 * e;
       at.forEach((c, i) => {
         const rail = Math.max(0, s[3 * i + 1]), walk = Math.max(0, s[3 * i + 2]);
-        modes[o * n + c] += rail;
-        modes[(o + 1) * n + c] += walk;
-        modes[(o + 2) * n + c] += Math.max(0, s[3 * i] - rail - walk);
+        const v = [rail, walk, Math.max(0, s[3 * i] - rail - walk)];
+        for (let b = 0; b < 3; b++) { modes[(o + b) * n + c] += v[b]; put.push((o + b) * n + c); add.push(v[b]); }
       });
     });
+    if (keep === undefined) return;
+    this.lastAir.delete(keep);
+    this.lastAir.set(keep, { n: modes.length, at: Int32Array.from(put), add: Float64Array.from(add) });
+    for (const k of this.lastAir.keys()) { if (this.lastAir.size <= LAST_AIR_ZONES) break; this.lastAir.delete(k); }
   }
+  /** T-4277: what `airportAcross` last added to a zone's bubbles, by zone and day (`city:day`), for while the workers
+   * solve the zone again, as `lastReg` is for the rest of its trips with other places */
+  private lastAir = new Map<string, { n: number; at: Int32Array; add: Float64Array }>();
 
   /** T-3503: the trips with other places added to a zone's legs of every purpose (`everydayToo`) or
    * of work alone: under every purpose the airports' from across the zone line too, at their
    * terminals by the Airport purpose's legs. */
   private async withRegional(modes: Float32Array, city: CityId, version: number, other: CityId | undefined, t: Target, everydayToo: boolean): Promise<void> {
     await this.regionalInto(modes, city, version, other, t, everydayToo ? REG_ALL : REG_COMMUTES);
-    // (T-4265: none while the workers solve the zone again: their airport legs would come back empty after a pass)
-    if (!everydayToo || AIRPORT_KIND < 0 || this.gone(city, version)) return;
+    if (!everydayToo || AIRPORT_KIND < 0) return;
+    const key = `${city}:${shownDay.peek()}`;
+    // (T-4265: while the workers solve the zone again, the last answer alone: their airport legs would come back empty
+    // after a pass)
+    if (this.gone(city, version)) {
+      const last = this.lastAir.get(key);
+      if (last && last.n === modes.length) for (let i = 0; i < last.at.length; i++) modes[last.at[i]] += last.add[i];
+      return;
+    }
     const [air, cells] = await Promise.all([this.purposeModes("airport", other), this.cityCells(other)]);
     if (!air || !cells) return;
     const w = concat([air.homeRail, air.homeWalk, air.homeDrive, air.workRail, air.workWalk, air.workDrive, air.homeNone, air.workNone]);
-    await this.airportAcross(modes, w, cells, city, version, other, t);
+    await this.airportAcross(modes, w, cells, city, version, other, t, key);
   }
 
   /** T-3503: each zone's 600 m squares and its cells' shares of them (static for a pack's cells). */
@@ -5116,18 +5149,8 @@ class DemandClient {
       const [v, r, id] = k.split(":");
       if (Number(v) === running) continue;
       if (!(Number(r) >= ROUNDS && Number(v) === this.shownOf(id as CityId))) this.pushed.delete(k);
-      // (added up as `cellModes` adds them, in period order, so the bubbles are the same to the bit: one worker's
-      // memory however many solving workers sent them)
-      else if (parts.length > 1 && everyPeriodOnce(parts)) {
-        let mask = 0, sums: Float32Array | null = null, everyday: Float32Array | null = null;
-        for (const p of [...parts].sort((a, b) => a.mask - b.mask)) {
-          mask |= p.mask;
-          if (!sums) sums = p.sums.slice();
-          else addInto(sums, p.sums);
-          if (p.everyday) { if (!everyday) everyday = p.everyday.slice(); else addInto(everyday, p.everyday); }
-        }
-        this.pushed.set(k, [{ mask, sums: sums!, everyday }]);
-      }
+      // (one worker's memory however many solving workers sent them)
+      else if (parts.length > 1 && everyPeriodOnce(parts)) this.pushed.set(k, [mergeSums(parts)]);
     }
   }
   /** T-4265: no worker holds zone `id`'s figures of solve `version` any more: the newer solve in hand solves its cluster.

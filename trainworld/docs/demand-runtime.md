@@ -251,10 +251,10 @@ network the map does not show yet); others are answered at once ("Clusters" belo
 Its bubbles do not wait (T-4265, notes/T-4265.md): they are drawn from the sums the page kept of the
 final it shows, and the aux worker maps those onto cells while the zone's network has the subzones of
 that final (every network it was set on since its layout last changed, `layoutSpan`, Rust
-`layout_kept`; else the bubbles wait as before). Their trips with other places are the last answered
-for the zone and day (`lastReg`), none for a zone not drawn since the game loaded, and the airport
-trips across the zone line are left out, since the workers' market no longer holds that final either
-(the solving workers are not asked: an answer would wait behind a pass and come back empty). A
+`layout_kept`; else the bubbles wait as before). Their trips with other places, the airports' across the zone line
+included, are the last answered for the zone and day (`lastReg`, `lastAir`, T-4277), none for a zone not drawn
+since the game loaded, since the workers' market no longer holds that final either (the solving workers are not
+asked: an answer would wait behind a pass and come back empty). A
 station's riders, a bubble selection, a zone's trips by length and one purpose's bubbles still wait.
 
 ## Clusters

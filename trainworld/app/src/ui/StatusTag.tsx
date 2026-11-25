@@ -109,9 +109,12 @@ function leftNow(part: "all" | "view" = "all"): { ms: number; bounded: boolean }
   return s ? { ms: Math.max(0, s.leftMs - (now - s.at)), bounded: est !== null && bounded } : null;
 }
 
-/** T-4264: the tag's bar's place (`barPlace`) in the wait on show. Another kind of wait, or the tag gone over a second,
- * starts it from empty (a held edit's solve follows the one before it within that). */
+/** T-4264: the tag's bar's place (`barPlace`) in the wait on show, where it is a guess. Another kind of wait, or the tag
+ * gone over a second, starts it from empty (a held edit's solve follows the one before it within that). */
 let tagPlace: BarPlace = { best: 0 };
+/** T-4277: the place of a bar on the running solve's share, one through the whole wait whatever the tag says meanwhile
+ * (calculating, data or bubbles waiting, a click), so a pan between them never takes the bar back */
+let solvePlace: BarPlace = { best: 0 };
 let placeKind: string | null = null, goneAt = 0;
 function placeFor(kind: string): BarPlace {
   if (kind !== placeKind || (goneAt && performance.now() - goneAt > 1000)) tagPlace = { best: 0 };
@@ -129,13 +132,15 @@ effect(() => {
   clearTimeout(solveEnd);
   if (demandUpdating.value) solvingSince ??= performance.now();
   // (a held edit's solve is sent just after the final before it: the same wait goes on)
-  else solveEnd = window.setTimeout(() => { if (!demandUpdating.peek()) solvingSince = null; }, 1000);
+  // (the wait is over: its bar and its count of time left with it)
+  else solveEnd = window.setTimeout(() => { if (!demandUpdating.peek()) { solvingSince = null; solvePlace = { best: 0 }; editShown.all = editShown.view = null; } }, 1000);
 });
 // T-3925: a newer edit stopped the solve and started a new one: its wait starts from 0
 effect(() => {
   if (!solveRestarted.value) return;
   solvingSince = performance.now();
   tagPlace = { best: 0 };
+  solvePlace = { best: 0 };
   editShown.all = editShown.view = null;
 });
 /** a share of a wait, and whether it is bounded: past half on the bar only then (`barPlace`) */
@@ -345,7 +350,10 @@ export function StatusTag() {
   else {
     const guess = work ? work.share : timeShare(kind);
     if (work) stopWaitTimer();
-    share = barPlace(placeFor(kind), guess, work?.bounded ? work.share : null);
+    // (every work but the downloads' is the running solve's share)
+    const onSolve = !!work && !onTerrain;
+    if (onSolve) tagGone();
+    share = barPlace(onSolve ? solvePlace : placeFor(kind), guess, work?.bounded ? work.share : null);
   }
   if (failed || placedShare !== null) stopWaitTimer();
   // T-2756: a slow wait says why, where the page can tell
