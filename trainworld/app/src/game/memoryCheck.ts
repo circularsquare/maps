@@ -24,14 +24,18 @@ const WASM_BASE_GB = 0.29;
 /** GB the page takes besides the solving workers (map, network, the clock worker, the aux worker),
  * and per zone (T-3071: New York's real save peaks 2.4 GB at one worker, all of China 4.5) */
 const PAGE_GB = 1.8, PAGE_GB_PER_ZONE = 0.005;
+/** T-4263: GB of the aux worker's WebAssembly memory, which holds a commute copy of every zone open fine (T-1169): its
+ * floor, then per million local trips a day of those zones (Anita's 162-zone Asia save: 257 MB for 1,576 million; New
+ * York's real save 32-65 MB) */
+const AUX_BASE_GB = 0.03, AUX_GB_PER_MTRIPS = 0.00015;
 /** a browser worker's memory cannot pass 4 GB; past this a solve stops partway */
 const WORKER_CAP_GB = 3.5;
 /** of a device reporting under 8 GB (`navigator.deviceMemory`, which never reports more than 8), the
  * share a game may take */
 const DEVICE_SHARE = 0.75;
 
-/** `wasmGB`: a solving worker's WebAssembly memory; `workerGB` with its JS heap */
-export interface MemoryNeed { zones: number; wasmGB: number; workerGB: number; workers: number; totalGB: number }
+/** `wasmGB`: a solving worker's WebAssembly memory; `workerGB` with its JS heap; `auxGB`: the aux worker's WebAssembly memory */
+export interface MemoryNeed { zones: number; wasmGB: number; workerGB: number; auxGB: number; workers: number; totalGB: number }
 
 /** The memory a game reaching `zones` will take, its biggest zone fine (coarse with the setting) and the others coarse. */
 export function memoryNeed(zones: readonly string[]): MemoryNeed {
@@ -40,7 +44,7 @@ export function memoryNeed(zones: readonly string[]): MemoryNeed {
   const wasmGB = WASM_BASE_GB + GB_PER_MTRIPS * ((coarseDemand() ? COARSE_SHARE : 1) * most + COARSE_SHARE * (trips - most)) / 1e6;
   const workerGB = WORKER_BASE_GB + wasmGB;
   const workers = workersFor(workerGB * 2 ** 30);
-  return { zones: zones.length, wasmGB, workerGB, workers, totalGB: PAGE_GB + PAGE_GB_PER_ZONE * zones.length + poolBytes(workerGB * 2 ** 30, workers) / 2 ** 30 };
+  return { zones: zones.length, wasmGB, workerGB, auxGB: AUX_BASE_GB + AUX_GB_PER_MTRIPS * trips / 1e6, workers, totalGB: PAGE_GB + PAGE_GB_PER_ZONE * zones.length + poolBytes(workerGB * 2 ** 30, workers) / 2 ** 30 };
 }
 
 const gb = (n: number) => (n < 10 ? n.toFixed(1) : n.toFixed(0));

@@ -1212,7 +1212,8 @@ class DemandClient {
       if (!reached?.size) return;
       if (this.lod === "auto" && !this.lodZones) this.initFine([...this.withoutBroken(new Set(reached))]);
       // T-3373: a big save's pool is cut before its packs open, by their estimate
-      this.capAhead(memoryNeed([...reached]).wasmGB * 2 ** 30 + MEM_WORKER);
+      const need = memoryNeed([...reached]);
+      this.capAhead(need.wasmGB * 2 ** 30 + MEM_WORKER, need.auxGB * 2 ** 30);
       // T-1533: the zone in view's pack first (T-2453: then the selected zone's), then the markets,
       // then the other zones
       const firsts = this.firstZones();
@@ -3591,12 +3592,15 @@ class DemandClient {
   }
 
   /** T-3373: a loading save's pool cut to what workers of `perWorker` bytes may be (`workersFor`), before
-   * its packs open; `capPool` judges again by what they then hold. T-3757: with "Use more cores", by the budget alone,
-   * the rest of the page guessed as `capPool` does (a 7,000-station save otherwise loaded on 5 workers, 13 GB). */
-  private capAhead(perWorker: number) {
+   * its packs open; `capPool` judges again by what they then hold. T-3757: by the budget too, the rest of the page
+   * guessed as `capPool` does (a 7,000-station save otherwise loaded on 5 workers, 13 GB). T-4263: `capPool`'s own
+   * test, the aux worker (`auxWasm` bytes of WASM) counted as it counts it: a pool it would cut after the load's
+   * first final is solved again whole on the rest, every question waiting for that (minutes on a big save). */
+  private capAhead(perWorker: number, auxWasm: number) {
     if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null || this.solving()) return;
-    const byBudget = () => poolIn(perWorker, this.computeN, memBudget() - outsideWasmBytes(perWorker, 0));
-    const n = Math.min(this.computeN, shareCapped() ? workersFor(perWorker) : byBudget());
+    const aux = auxWasm * MEM_NEED[0] + MEM_BASE + MEM_WORKER;
+    const byBudget = poolIn(perWorker, this.computeN, memBudget() - Math.max(MEM_OTHER, outsideWasmBytes(perWorker - MEM_WORKER, auxWasm)) - aux);
+    const n = Math.min(this.computeN, byBudget, shareCapped() ? workersFor(perWorker) : Infinity);
     if (n < this.computeN) { this.shrink(n, `about ${mb(perWorker)} MB a solving worker by the save's zones`); noteLoadWorkers(n); } // i18n-ignore (T-3933: a planned cut is what the load runs)
   }
 

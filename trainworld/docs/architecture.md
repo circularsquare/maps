@@ -520,10 +520,13 @@ Web first, so it can be shared as a link.
   together (need plus 0.15 GB each) would pass 17.5% of that budget (`SOLVING_SHARE`, T-3373: 1.4 GB on a
   reported 8, so New York's real save runs 2 and all of China 1; memory over speed, Anita 2026-11-16; not with
   Settings' "Use more cores" on, whose player chose speed). The
-  same test runs whenever a zone opens in a solving worker while no solve is out, and a loading save's pool is
-  cut before its packs open, by `memoryCheck`'s estimate of a worker for the zones its stations reach
-  (`capAhead`). The periods are dealt again (`periods`, taken up between solves) and every worker composes
-  afresh; no figure changes. The pool grows back (T-1366) once it is quiet, as for a restart: up to its size at
+  same test runs whenever a zone opens in a solving worker while no solve is out and once the pool is quiet after a
+  final (T-3757), and a loading save's pool is cut before its packs open by the same test on `memoryCheck`'s
+  estimates of a solving worker and of the aux worker for the zones its stations reach (`capAhead`; with the aux
+  worker counted, T-4263, the pool a load runs on is the one the test keeps after its first final). The periods are
+  dealt again (`periods`, taken up between solves) and every worker composes afresh; no figure changes. A pool cut
+  after a solve holds periods it never solved, so the network is solved once more and questions wait for that final
+  (4-6 minutes on a 160-zone Asia save on one worker). The pool grows back (T-1366) once it is quiet, as for a restart: up to its size at
   the start, to the most solving workers that fit 95% of both limits, each counted at the most any of them holds
   or needs, and never within 2 minutes of its last change (doubled by each cut after a growth, so zones opening
   and closing near the line cannot start and stop workers in turn). A new worker opens what the pool holds as a
