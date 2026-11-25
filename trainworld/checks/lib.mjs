@@ -4,9 +4,9 @@
 //   import { playwright, launchChrome, collectErrors } from './lib.mjs';
 import { spawn } from 'node:child_process';
 import { readdir, mkdtemp, mkdir, rm, stat } from 'node:fs/promises';
-import { existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
+import { dirname, isAbsolute, join } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { corePlan, chromeAffinity, workersInit } from './cores.mjs';
@@ -199,10 +199,18 @@ export async function loadApp(spec) {
   const bundle = await build({
     configFile: false, logLevel: 'silent',
     plugins: virtual ? [{ name: 'app-entry', resolveId(id) { if (id.endsWith('app-entry')) return '\0app-entry'; }, load(id) { if (id === '\0app-entry') return spec.replaceAll('@app', app); } }] : [],
+    worker: { format: 'es' }, // the app's own setting: its workers import modules with top-level await (i18n)
     build: { write: false, minify: false, lib: { entry: virtual ? 'app-entry' : `${app}/${spec}`, formats: ['es'] } },
   });
-  const code = (Array.isArray(bundle) ? bundle[0] : bundle).output.find((o) => o.type === 'chunk').code;
-  return import('data:text/javascript;base64,' + Buffer.from(code).toString('base64'));
+  // written out, since the entry imports its own chunks (a dynamic import, the workers' files) by relative path
+  const out = (Array.isArray(bundle) ? bundle[0] : bundle).output;
+  const dir = await mkdtemp(join(tmpdir(), 'tw-loadapp-'));
+  process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
+  for (const o of out) {
+    mkdirSync(dirname(join(dir, o.fileName)), { recursive: true });
+    writeFileSync(join(dir, o.fileName), o.type === 'chunk' ? o.code : o.source);
+  }
+  return import(pathToFileURL(join(dir, out.find((o) => o.type === 'chunk' && o.isEntry).fileName)).href);
 }
 
 /**

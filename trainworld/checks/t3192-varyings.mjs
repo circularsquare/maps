@@ -64,6 +64,7 @@ const bundle = await build({
     },
   }],
   // (no module's side effects: only what the shader strings are made of is kept, and nothing that wants a browser)
+  worker: { format: 'es' },
   build: { write: false, minify: false, lib: { entry: 'glsl-entry', formats: ['es'] }, rollupOptions: { treeshake: { moduleSideEffects: false } } },
 });
 const code = (Array.isArray(bundle) ? bundle[0] : bundle).output.find((o) => o.type === 'chunk').code;
