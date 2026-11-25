@@ -211,7 +211,8 @@ Web first, so it can be shared as a link.
   `TrackWorld::moves_no_train`), and that set no line's trains, rates, rows or twin (a twin made or let go goes the
   whole way: `sets_rates`), the trains needed are those needed already, so it goes on the undo history and is
   answered at once, its services owed (`commit_local`). The follow-up's first piece works them out for every such
-  edit since (`settle_owed`), as one edit making all their changes, before the state reads them, and drops the drawn
+  edit since (`settle_owed`), as one edit making all their changes, before the state reads them (`?patch=check` names a
+  state built while any are owed), and drops the drawn
   lines they moved; any other commit, an undo or redo and a trial with services work them out first (a refused one
   leaves what they touched for that piece), a save does, and autosave waits for them. Rows sent to answer an edit
   before its state hold them. An undo puts back exactly

@@ -428,6 +428,8 @@ function viewRect(): [number, number, number, number] | undefined {
 function buildState(rowsOnly = false): ClockState {
   const tq0 = performance.now();
   const a = api!;
+  // T-4272: the runs and rows of what answered edits still owe are their old ones until the follow-up's first step
+  if (patchMode === "check" && a.owes()) console.error("T-4272 check: a state was built while answered edits still owe their services");
   if (patchMode === "0") stateRows.reset();
   stateRows.bind(a, frame);
   // T-4113: `?patch=walk` makes every record's own calls on every read, as before regions (for timing against)

@@ -2,7 +2,9 @@
 // lines, the station buildings' kept layouts) against one built from scratch, after every edit of a random series on a
 // real save: the worker's own code (`stateSteps` in workers/clockMain.ts) run in Node on the track model (WASM), with
 // `?patch=check` on, which builds every network a second time from a new cache and compares the two byte for byte
-// (T-1029, `checkNet`), and works the bands out whole beside the kept ones (T-2238, `setBandCheck`). Between full
+// (T-1029, `checkNet`), and works the bands out whole beside the kept ones (T-2238, `setBandCheck`). Each seed first puts
+// a station between the stops of a line on blueprint track (T-4281: its services owed until the follow-up's first step,
+// which every state here takes first, as the worker's do). Between full
 // states: builds dropped part way (an edit came between their pieces, as in the worker), rows states, undo and redo
 // chains, and now and then a move of the draw anchor. Any check's error fails the run.
 //   node trainworld/checks/t4153-net.mjs [seeds] [steps] [asia|nyc]   (from the maps root; 2 seeds of 12 steps on asia,
@@ -52,8 +54,10 @@ function rng(seed) {
   return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 2 ** 32);
 }
 
+/** the seed's track model */
+let cur = null;
 function load() {
-  const api = new app.TrackApi(SAVE === 'asia' ? 139.7 : -73.985, SAVE === 'asia' ? 35.7 : 40.758, true);
+  const api = (cur = new app.TrackApi(SAVE === 'asia' ? 139.7 : -73.985, SAVE === 'asia' ? 35.7 : 40.758, true));
   if (!api.load(saveBytes)) throw new Error('save did not load');
   api.set_unlimited(true);
   app.putApi(api);
@@ -77,8 +81,17 @@ function moveAnchor(dLng, dLat) {
   app.posted.net = null;
   app.sender.forget();
 }
+/** the follow-up's first step (clockFollowUp.ts `settleOwed`): what edits answered from what they touch owe (a station
+ * or delete that moves no running line's trains, T-4272) worked out and taken in, before any state reads the model */
+function settle() {
+  if (!cur.settle_owed()) return;
+  app.forget();
+  cur.take_service_moved();
+  cur.take_settled_demand();
+}
 /** a full state's pieces; `stopAt`: dropped after that many, as when an edit comes between them */
 function state(stopAt = Infinity) {
+  settle();
   const g = app.stateSteps(false, undefined, false);
   for (let k = 0; ; k++) {
     if (k >= stopAt) return false;
@@ -327,6 +340,20 @@ const SCENES = {
     return [() => api.delete_edge(double.id), () => api.undo()];
   },
 };
+/** netfix8's scene (T-4281): four pieces of blueprint track in a line, stations on the 2nd and 4th nodes and a line between
+ * them, which runs no trains (nothing on it is built), then a station on the track between its stops: an edit answered
+ * from what it touches, its services owed until the follow-up's first step. 0 when applied. */
+function plannedStation(api, o, rnd) {
+  const c = lay(api, o, rnd, 4, 500, 1);
+  if (!c) return -1;
+  for (const k of [1, 3]) if (api.add_station(1, c.ids[k], 0, 0, 120, 'Birch') !== 0) return -1;
+  if (api.set_line_with_trains(api.new_line_id(), Uint32Array.from([c.ids[1], c.ids[3]]), 2, 2, 2, 30, 60, 8, 0xff0000, 'Plan') !== 0) return -1;
+  app.forget();
+  state();
+  const m = o.model(), [a, b] = [1, 2].map((k) => m.nodes.find((n) => n.id === c.ids[k]));
+  const e = m.edges.find((x) => (x.a === a.id && x.b === b.id) || (x.a === b.id && x.b === a.id));
+  return e ? api.add_station(2, e.id, (a.x + b.x) / 2, (a.y + b.y) / 2, 160, 'Oak') : -1;
+}
 // (the lined pass's own fault, the changed edges' ends left unlooked at, shows in the same edit)
 SCENES.lined = SCENES['st-lined'];
 const weights = { building: 2, byBuilding: 4, byStation: 3, aroundStation: 4, nearChange: 3, shortShared: 2, trunkStation: 3, stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2, trackStation: 3, routeFromNode: 2, deleteEdge: 2, doubleUp: 2, moveNode: 2, construct: 2, oneWay: 2 };
@@ -346,6 +373,15 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
   if (SELF === 'fault' && SCENES[faultArg] && !plan) { console.log(`FAIL  seed ${seed}: the ${faultArg} scene could not be set up`); process.exit(2); }
   app.forget();
   state();
+  if (!SELF) {
+    // (its own numbers, so the series after it is each seed's as before)
+    const r = plannedStation(api, o, rng(seed * 104729));
+    const k = api.owes() ? 'plannedStation (owed)' : 'plannedStation';
+    if (r === 0) applied[k] = (applied[k] ?? 0) + 1;
+    app.forget();
+    state();
+    if (errors.length) { console.log(`FAIL  seed ${seed}, a station between a planned line's stops: ${errors.slice(0, 3).join(' | ').slice(0, 600)}`); failures++; }
+  }
   if (SELF === 'strokes' || SELF === 'splice') {
     // (a station on track the longest line shares, in its middle: the knots of its band after it move a little)
     const m = o.model(), count = new Map(), at = new Map(m.nodes.map((q) => [q.id, q]));
@@ -374,6 +410,7 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
     let r;
     try { r = plan ? plan[step]() : o[kind](o.model()); } catch (e) { console.log(`FAIL  seed ${seed} step ${step} ${kind}: the model threw ${e.message}`); failures++; break; }
     app.forget();
+    settle();
     if (r === 0) applied[kind] = (applied[kind] ?? 0) + 1;
     const x = plan ? 0.5 : rnd();
     // (a build dropped part way, its edit's follow-up begun when the next edit came: the cache is as the last finished one left it)
