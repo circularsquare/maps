@@ -29,7 +29,7 @@ import { trackAt } from "./pick";
 import { marksLayer, placeAt } from "./screenPlace";
 import { touchInput } from "./touch";
 import { hidden, onBlueprintsHidden } from "./visibility";
-import { curveLabelled, curveLabels, CurveLabelPool, rampLabels, type CurveLabel } from "./trackTagRows";
+import { curveLabelled, curveLabels, CurveLabelPool, rampLabels, slowestFirst, type CurveLabel } from "./trackTagRows";
 
 /** A PI of a stretch, pack metres. */
 export interface EdgePi {
@@ -226,15 +226,15 @@ export class EdgeEditor {
     const labels: CurveLabel[] = !on
       ? []
       : pv
-        ? [...rampLabels(pv.ramps), ...curveLabels(pv.verts)]
+        ? slowestFirst(rampLabels(pv.ramps), curveLabels(pv.verts))
         : this.shape.legacy
           ? []
-          : this.shape.pis
+          : slowestFirst(this.shape.pis
               .filter((c) => curveLabelled(c.used, c.kmh))
               .map((c) => {
                 const [x, y] = this.local({ x: c.mx, y: c.my });
                 return { x, y, kmh: c.kmh };
-              });
+              }));
     this.labels.place(labels, (x, y) => this.overlay.toScreen(x, y), this.overlay.cssW, this.overlay.cssH);
     if (pv && !pv.ok && this.drag) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[this.drag.i]));

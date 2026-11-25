@@ -36,7 +36,7 @@ import type { PreviewAnswer } from "../workers/clockClient";
 import { MARKS_ZOOM, NODE_HIT_PX } from "./dragHandles";
 import { marksLayer, onScreen, placeAt } from "./screenPlace";
 import { hidden, onBlueprintsHidden } from "./visibility";
-import { curveLabels, CurveLabelPool } from "./trackTagRows";
+import { curveLabels, CurveLabelPool, slowestFirst } from "./trackTagRows";
 
 /** A click, not a drag: the pointer moved less than this (px). */
 const CLICK_PX = 4;
@@ -153,7 +153,7 @@ export class BlueprintBox {
     }
     for (let i = k; i < this.squares.length; i++) this.squares[i].style.display = "none";
     const pv = m?.preview;
-    this.labels.place(pv ? curveLabels(pv.verts) : [], (x, y) => this.overlay.toScreen(x, y), cw, ch);
+    this.labels.place(pv ? slowestFirst(curveLabels(pv.verts)) : [],(x, y) => this.overlay.toScreen(x, y), cw, ch);
     if (m && pv && !pv.ok && m.px !== undefined) {
       this.tag.textContent = describeIssues(pv.issues) || t("blueprintBox.cannotMove");
       this.tag.style.display = "";

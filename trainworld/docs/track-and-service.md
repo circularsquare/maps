@@ -240,8 +240,9 @@ Full design, numbers and sources: `notes/T-008.md`.
   that its ramps' length gets refused (a platform or crossing on a long ramp, no room for a bridge's
   or an over-track ramp) is laid again with 200 m ramps, then the floor, before it is refused or a
   ramp over track gives way to a flat crossing (`draw.rs` `route_op`, `ramp_tries`). The preview
-  colours the ramp by its speed and labels a ramp slower than the track's cap as a curve is. A
-  piece is never cut where a ramp is. Nodes and platforms sit at whole levels. Tracks cross freely
+  colours the ramp by its speed and labels, as a curve is, each stretch of 10 m or more where a ramp
+  is the lowest limit (`geom::ramp_stretches`; none under a tighter curve); a curve's label takes a
+  slower ramp's limit at its middle (T-4349). A piece is never cut where a ramp is. Nodes and platforms sit at whole levels. Tracks cross freely
   where their heights differ by a level or more; at the same level they make a flat crossing; in
   between is invalid.
 
@@ -1168,7 +1169,7 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   number of pieces, constructed or blueprint). It lowers the piece's cap
   (`Network::v_cap`; the kind's own is `v_kind_cap`), so every train on it, the run times, headway fleets, routing
   times, the map's speed colours and the stop-time hover ("A speed limit on the track") follow; with a line's limit
-  too, the lower holds. The track panel's "Slowest curve" and the curve labels stay the curves'. A split keeps it on
+  too, the lower holds. The track panel's "Slowest curve" and the curve labels leave it out. A split keeps it on
   both halves; pieces join under a new station only where their limits match (`unjoin_near`, as for one-way track).
   Saved in the `LPS1` block (count, then edge index and km/h), save level 20; old saves load with none.
 - **Both pairs of quad track** (T-3333, Anita 2026-11-12; notes/T-3333.md; `track/twin.rs`, `wasm/twin.rs`): a rail

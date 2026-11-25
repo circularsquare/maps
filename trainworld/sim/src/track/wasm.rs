@@ -1090,21 +1090,25 @@ fn design_corners(net: &Network, d: &mut EdgeData, moved: &[(u32, f64, f64)], ma
 }
 
 /// Per vertex of a fitted alignment: x, y (the middle of its curve, or the vertex where it has
-/// none), radius used (0 = no curve), speed limit km/h.
-fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>, cap: f64) {
+/// none), radius used (0 = no curve), speed limit km/h (`vertex_kmh`; `old` as `geom::limits`).
+fn vertex_rows(f: &geom::Fit, verts: &[Pi], out: &mut Vec<f64>, cap: f64, old: bool) {
+    let ramps: Vec<(f64, f64, f64)> = geom::ramp_limits(&f.vert, old).collect();
     for (i, v) in verts.iter().enumerate() {
         let rad = f.radius.get(i).copied().unwrap_or(0.0);
         let (x, y) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i]); (x, y) } else { (v.x, v.y) };
-        out.extend([x, y, rad, vertex_kmh(f, i, cap)]);
+        out.extend([x, y, rad, vertex_kmh(f, i, cap, &ramps)]);
     }
 }
 
-/// The speed limit of vertex `i`'s curve in fit `f`, km/h, up to `cap` (m/s): the cap where it has none
-/// or (T-3883) one too slight to limit speed (`MIN_TURN`), as trains run it.
-fn vertex_kmh(f: &geom::Fit, i: usize, cap: f64) -> f64 {
+/// The speed limit at the middle of vertex `i`'s curve in fit `f`, km/h, as trains run it: the
+/// lowest of its curve, `cap` (m/s) and (T-4349) a ramp there (`ramps`: `geom::ramp_limits`). A
+/// vertex with no curve, or (T-3883) one too slight to limit speed (`MIN_TURN`), has the cap.
+fn vertex_kmh(f: &geom::Fit, i: usize, cap: f64, ramps: &[(f64, f64, f64)]) -> f64 {
     let rad = f.radius.get(i).copied().unwrap_or(0.0);
     let slight = f.pieces.iter().zip(&f.piece_at_vertex).any(|(p, &at)| at as usize == i && p.k != 0.0 && p.turn() < MIN_TURN);
-    if rad > 0.0 && !slight { (A_LAT * rad).sqrt().min(cap) * 3.6 } else { cap * 3.6 }
+    let v = if rad > 0.0 && !slight { (A_LAT * rad).sqrt().min(cap) } else { cap };
+    let s = f.vert_s.get(i).copied().unwrap_or(f64::NAN);
+    ramps.iter().filter(|r| r.0 <= s && s <= r.1).fold(v, |v, r| v.min(r.2)) * 3.6
 }
 
 /// Hops already searched while trying stops (T-237): `(from, to, side arrived on at from, want
@@ -2290,7 +2294,7 @@ pub fn ghost_tangent(x: f64, y: f64, dir: f64, tx: f64, ty: f64, level: i8, scal
     let mut out = vec![end, c[0], c[1], c[2], speeds.len() as f64];
     out.extend(speeds.iter().map(|&v| v as f64));
     out.extend([1.0, f64::NAN, f.len, verts.len() as f64, f64::NAN]);
-    vertex_rows(&f, &verts, &mut out, kind.v_cap());
+    vertex_rows(&f, &verts, &mut out, kind.v_cap(), geom::ramps().old);
     render_samples(&f.pieces, &f.vert, &mut out);
     out
 }

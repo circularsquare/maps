@@ -350,18 +350,24 @@ export function curveLabels(verts: Float64Array): CurveLabel[] {
 }
 
 /** T-3168: a label for each flyover crossing leg's slowest curve (`PreviewAnswer.legs`), beside the
- * route's own; listed first, so where two would overlap the tighter side's shows. */
+ * route's own. */
 export function legCurveLabels(legs: Float64Array | undefined): CurveLabel[] {
   const out: CurveLabel[] = [];
   for (let k = 0; legs && k + 3 < legs.length; k += 4) if (curveLabelled(legs[k + 2], legs[k + 3])) out.push({ x: legs[k], y: legs[k + 1], kmh: legs[k + 3] });
   return out;
 }
 
-/** T-3027: a label for each ramp slower than the track's top speed (`PreviewAnswer.ramps`), as a curve's. */
+/** T-3027: a label for each stretch where a ramp is the lowest limit (`PreviewAnswer.ramps`), as a curve's. */
 export function rampLabels(ramps: Float32Array | undefined): CurveLabel[] {
   const out: CurveLabel[] = [];
   for (let k = 0; ramps && k + 2 < ramps.length; k += 3) out.push({ x: ramps[k], y: ramps[k + 1], kmh: ramps[k + 2] });
   return out;
+}
+
+/** Track speed labels in the order `placeCurveLabels` takes them: slowest first, so where two would
+ * overlap the slower shows (T-4349: a ramp's beside a tighter curve's). */
+export function slowestFirst(...lists: CurveLabel[][]): CurveLabel[] {
+  return lists.flat().sort((a, b) => a.kmh - b.kmh);
 }
 
 /** A curve label's content (T-417; the radius left out, T-530): the speed limit on the speed colour,

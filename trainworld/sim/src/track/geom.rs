@@ -543,10 +543,39 @@ pub fn ramp_spans(vert: &[[f64; 2]]) -> impl Iterator<Item = (f64, f64, f64)> + 
     vert.windows(2).filter(|w| w[0][1] != w[1][1] && w[1][0] - w[0][0] > 1e-6).map(|w| (w[0][0], w[1][0], (w[1][0] - w[0][0]) * LEVEL_H / (w[1][1] - w[0][1]).abs()))
 }
 
+/// The ramps of `vert` that have a speed limit: start, end and limit, m/s (`ramp_speed`).
+pub fn ramp_limits(vert: &[[f64; 2]], old: bool) -> impl Iterator<Item = (f64, f64, f64)> + '_ {
+    ramp_spans(vert).map(move |(a, b, l)| (a, b, ramp_speed(l, old))).filter(|r| r.2.is_finite())
+}
+
+/// A stretch at a ramp's limit shorter than this (m) is none a train could reach: a hair of straight
+/// between the arcs of a curve split into corners (`ramp_stretches`).
+pub const RAMP_STRETCH_MIN_M: f64 = 10.0;
+
+/// The stretches of `lims` where a ramp is the lowest limit, a run of them at one speed as one, at
+/// least `RAMP_STRETCH_MIN_M` long: start, end, m/s. A ramp under a slower curve has none there.
+pub fn ramp_stretches(lims: &[Limit]) -> Vec<(f64, f64, f64)> {
+    let mut out: Vec<(f64, f64, f64)> = vec![];
+    let mut joined = false;
+    for l in lims {
+        if !l.ramp {
+            joined = false;
+            continue;
+        }
+        match out.last_mut() {
+            Some(r) if joined && r.2 == l.v => r.1 = l.s1,
+            _ => out.push((l.s0, l.s1, l.v)),
+        }
+        joined = true;
+    }
+    out.retain(|r| r.1 - r.0 >= RAMP_STRETCH_MIN_M);
+    out
+}
+
 /// The speed limits along an alignment, in order from its start and covering it: each piece's
 /// curve speed capped at `cap`, and a ramp's (`ramp_speed`) where that is lower (T-3027).
 pub fn limits(pieces: &[Piece], vert: &[[f64; 2]], old: bool, cap: f64) -> Vec<Limit> {
-    let ramps: Vec<(f64, f64, f64)> = ramp_spans(vert).map(|(a, b, l)| (a, b, ramp_speed(l, old))).filter(|r| r.2 < cap).collect();
+    let ramps: Vec<(f64, f64, f64)> = ramp_limits(vert, old).filter(|r| r.2 < cap).collect();
     let mut out = Vec::with_capacity(pieces.len() + 2 * ramps.len());
     for (j, p) in pieces.iter().enumerate() {
         let v = p.v_curve().min(cap);
@@ -917,6 +946,42 @@ mod tests {
         assert_eq!(ramp_for(160.0, RAMP_FLOOR), 200);
         assert_eq!(ramp_for(120.0, RAMP_FLOOR), 160);
         assert_eq!(ramp_for(80.0, TRAM_RAMP_FLOOR), 100);
+    }
+
+    /// T-4349: a ramp is the limit only where it is the lowest. Under a tighter curve it holds no
+    /// stretch, nor on a hair of straight between two corners' arcs; past the curve's end it holds the
+    /// rest; on a gentler curve it holds all of itself, as one stretch across the curve's end.
+    #[test]
+    fn a_ramp_holds_only_where_it_is_the_lowest_limit() {
+        let p = |x: f64, y: f64, r: f64, l: i8| Pi::new(x, y, r, l);
+        let stretches = |f: &Fit| ramp_stretches(&limits(&f.pieces, &f.vert, false, 320.0 / 3.6));
+        // 200 m (160 km/h) centred on a 1000 m leg, 400 to 600 m along it
+        let corner = |r: f64| with_ramps(Ramps::exact(200.0), || fit(&[p(0.0, 0.0, 0.0, 0), p(1000.0, 0.0, r, 0), p(1000.0, 1000.0, 0.0, 1)]));
+        // a 700 m curve (100 km/h) reaches 700 m along it: the ramp limits nothing
+        let f = corner(700.0);
+        assert!(f.issues.is_empty());
+        assert!(stretches(&f).is_empty(), "{:?}", stretches(&f));
+        // a 560 m curve (89 km/h) ends partway along the ramp: the ramp holds the rest, from there
+        let f = corner(560.0);
+        let arc = f.pieces.iter().find(|p| p.k != 0.0).unwrap();
+        let ramp = ramp_spans(&f.vert).next().unwrap();
+        let s = stretches(&f);
+        assert!(ramp.0 < arc.s0 + arc.len && arc.s0 + arc.len < ramp.1, "{ramp:?}");
+        assert!(s.len() == 1 && (s[0].0 - arc.s0 - arc.len).abs() < 1e-6 && (s[0].1 - ramp.1).abs() < 1e-6 && (s[0].2 * 3.6 - 160.0).abs() < 1e-9, "{s:?}");
+        // a 150 m ramp (120 km/h) across the end of a 1707 m curve (156 km/h): all of it, as one
+        let f = with_ramps(Ramps::exact(150.0), || fit(&[p(0.0, 0.0, 0.0, 0), p(1000.0, 0.0, 1707.0, 0), p(2000.0, 1000.0, 0.0, 1)]));
+        let lims = limits(&f.pieces, &f.vert, false, 320.0 / 3.6);
+        assert_eq!(lims.iter().filter(|l| l.ramp).count(), 2, "{lims:?}");
+        let s = ramp_stretches(&lims);
+        assert!(s.len() == 1 && (s[0].1 - s[0].0 - 150.0).abs() < 1e-6 && (s[0].2 * 3.6 - 120.0).abs() < 1e-9, "{s:?}");
+        // a curve split into two 45 degree corners of 447 m with 2 mm of straight between their arcs, the
+        // 200 m ramp across the join: the straight is at the ramp's limit, but too short to hold a train
+        let (r, h) = (447.0, std::f64::consts::FRAC_1_SQRT_2);
+        let leg = 2.0 * r * (std::f64::consts::PI / 8.0).tan() + 0.002;
+        let f = with_ramps(Ramps::exact(200.0), || fit(&[p(-1000.0, 0.0, 0.0, 0), p(0.0, 0.0, r, 0), p(leg * h, leg * h, r, 1), p(leg * h, leg * h + 1000.0, 0.0, 1)]));
+        let lims = limits(&f.pieces, &f.vert, false, 320.0 / 3.6);
+        assert!(f.issues.is_empty() && lims.iter().any(|l| l.ramp && l.s1 - l.s0 < 0.01), "{lims:?}");
+        assert!(ramp_stretches(&lims).is_empty());
     }
 
     #[test]

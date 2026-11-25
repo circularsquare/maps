@@ -314,9 +314,11 @@ Track is drawn through points, double and quad alike [T-418, T-422, T-423]. The 
   into several corners); the same labels show while a selected blueprint stretch is reshaped or a
   node dragged (`placeCurveLabels`, `map/trackTagRows.ts`). They show only for curves on screen and never
   over one another (64 by 22 px), at most 300, so a long snapped route zoomed out keeps a few
-  [T-727d]. A flyover the route makes adds one label at its crossing leg's slowest curve, beside
-  that leg, so the map shows both sides' speeds; it is placed first, so where the two would
-  overlap the leg's (the slower) shows [T-3168].
+  [T-727d]; where two would overlap the slower shows (`slowestFirst`, T-4349). A curve's label is
+  the limit at its middle, a ramp's there if that is lower; while drawing and reshaping, a
+  stretch where a ramp is the lowest limit gets its own label, and a ramp under a tighter curve
+  none [T-3027, T-4349]. A flyover the route makes adds one label at its crossing leg's slowest
+  curve, beside that leg, so the map shows both sides' speeds [T-3168].
 - **Loose ends** [T-416, T-1485, T-1522, T-1534; `map/endMarkers.ts`]: while the track or station tool is on, a
   small hollow ring in the accent colour marks each loose end (a node with one piece of track and
   no station) within 160 px of the pointer, and only where the track is visibly drawn: built track

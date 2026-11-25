@@ -507,7 +507,7 @@ fn main() {
             eprintln!("line {li} ({}) turns back partway at path nodes {r:?}", lines[li]["name"].as_str().unwrap_or(""));
         }
     }
-    // where trains slow most: per edge, seconds a train loses to curves and caps below the top
+    // where trains slow most: per edge, seconds a train loses to curves, ramps and caps below the top
     // speed over its pieces, times the lines on it (T-1305 stage 3)
     if args.iter().any(|a| a == "--slow") {
         let mut on = vec![0u32; w.net.edge_count()];
@@ -521,12 +521,11 @@ fn main() {
             if !w.net.edge_alive[e] || on[e] == 0 {
                 continue;
             }
-            let cap = w.net.v_cap(e as u32);
+            let cap = w.net.v_cap(e as u32).min(V_TOP);
             let (mut s, mut vmin) = (0.0, f64::INFINITY);
-            for pc in w.net.edge_pieces(e as u32) {
-                let v = pc.v_curve().min(cap).min(V_TOP);
-                vmin = vmin.min(v);
-                s += pc.len * (1.0 / v - 1.0 / V_TOP);
+            for l in w.net.edge_limits(e as u32, cap) {
+                vmin = vmin.min(l.v);
+                s += (l.s1 - l.s0) * (1.0 / l.v - 1.0 / V_TOP);
             }
             lost.push((s * on[e] as f64, e, vmin * 3.6, w.net.edge_len[e]));
         }

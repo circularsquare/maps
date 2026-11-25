@@ -799,7 +799,7 @@ impl TrackApi {
                 self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, cap, false));
                 self.preview_lanes.resize(self.preview_speeds.len(), 0);
                 let mut rows = vec![];
-                vertex_rows(&f, leg, &mut rows, cap);
+                vertex_rows(&f, leg, &mut rows, cap, false);
                 if let Some(slow) = rows.chunks_exact(4).filter(|r| r[2] > 0.0).min_by(|a, b| a[3].total_cmp(&b[3])) {
                     self.preview_leg_rows.extend_from_slice(slow);
                 }

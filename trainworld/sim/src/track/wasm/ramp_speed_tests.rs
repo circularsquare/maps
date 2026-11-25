@@ -171,6 +171,38 @@ fn ramp_ends_laid_by_bridges_and_crossings_hold_no_train() {
     assert!((slow - 320.0).abs() < 1e-6, "over track: {slow}");
 }
 
+/// T-4349: what the map shows on a curve on a ramp is what trains run at. A tight curve (100 km/h) on
+/// a 150 km/h ramp: the curve's figure and no ramp label. A gentle curve (250) on that ramp: the ramp's.
+#[test]
+fn a_curve_on_a_ramp_shows_the_lower_of_the_two() {
+    // the curve's row in a preview (`preview_route`'s vertex rows) and in the built piece's `edge_pis`
+    let curve_kmh = |pv: &[f64]| pv[5..5 + 4 * pv[3] as usize].chunks_exact(4).find(|r| r[2] > 0.0).map(|r| r[3]).unwrap();
+    let ramp_kmh = |a: &TrackApi| a.preview_ramp_labels().chunks_exact(3).map(|r| r[2]).collect::<Vec<_>>();
+    let built_kmh = |a: &TrackApi| a.edge_pis(alive(a)[0])[6];
+    for (b, c, r, want, ramp) in [
+        // 90 degrees at 700 m: the 188 m ramp lies on the curve
+        ((1000.0, 0.0), (1000.0, 1000.0), 700.0, (1.1f64 * 700.0).sqrt() * 3.6, vec![]),
+        // 2 degrees at 4383 m, 100 m before the end: the ramp holds the curve's middle
+        ((1000.0, 0.0), (1000.0 + 100.0 * 2f64.to_radians().cos(), 100.0 * 2f64.to_radians().sin()), 4383.0, 150.0, vec![150.0]),
+    ] {
+        let mut a = api();
+        a.set_route_hsr(true);
+        a.set_design_speed(150.0);
+        let (bx, by) = base(&a);
+        let e = [0.0, 0.0, bx, by, 0.0, 0.0, 0.0, bx + c.0, by + c.1, 1.0];
+        let pis = [bx + b.0, by + b.1, r, 0.0];
+        let pv = a.preview_route(&e, &pis, 2, false);
+        assert_eq!(pv[0], 1.0, "{}", a.issue_kinds());
+        assert!((slowest_preview(&a) - want).abs() < 0.5, "{r} m: track {}", slowest_preview(&a));
+        assert!((curve_kmh(&pv) - want).abs() < 0.5, "{r} m: curve label {}", curve_kmh(&pv));
+        assert_eq!(ramp_kmh(&a), ramp, "{r} m: ramp labels");
+        assert_eq!(a.add_route(&e, &pis, 2, false), 0, "{}", a.issue_kinds());
+        assert_eq!(a.w.net.edge_ramp[alive(&a)[0] as usize], 188);
+        assert!((built(&a).0 - want).abs() < 0.5, "{r} m: trains {}", built(&a).0);
+        assert!((built_kmh(&a) - want).abs() < 0.5, "{r} m: built curve label {}", built_kmh(&a));
+    }
+}
+
 #[test]
 fn a_split_keeps_the_ramp_where_it_was() {
     let mut a = api();

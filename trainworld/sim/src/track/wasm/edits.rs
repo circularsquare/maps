@@ -596,19 +596,20 @@ impl TrackApi {
 
     /// An edge's PIs for editing (T-064): `[drawn through its points (T-079: 1, else 0), then per
     /// PI x, y, set radius (0 = auto), level, the radius the fit uses (0 = no curve), the curve's
-    /// speed limit km/h, x, y of the middle of its curve]`. A T-079 edge lists the points it was
-    /// drawn through, with the curves they will make once it is reshaped (`editable`).
+    /// speed limit km/h (`vertex_kmh`), x, y of the middle of its curve]`. A T-079 edge lists the
+    /// points it was drawn through, with the curves they will make once it is reshaped (`editable`).
     pub fn edge_pis(&self, id: u32) -> Vec<f64> {
         let Some(d) = self.editable(id) else { return vec![] };
         let net = &self.w.net;
-        let f = net.fit(&vertices_of(net, &d, &[]));
+        let f = net.fit_edge(id, &vertices_of(net, &d, &[]));
+        let ramps: Vec<(f64, f64, f64)> = geom::ramp_limits(&f.vert, net.edge_ramps(id).old).collect();
         let mut out = vec![!net.edge_thru[id as usize].is_empty() as u8 as f64];
         // T-1898: high-speed track's curves are labelled up to its own cap, not 160
         let top = d.kind.v_cap();
         for (i, p) in d.pis.iter().enumerate() {
             let rad = f.radius.get(i + 1).copied().unwrap_or(0.0);
             let (mx, my) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i + 1]); (x, y) } else { (p.x, p.y) };
-            out.extend([p.x, p.y, p.radius, p.level as f64, rad, vertex_kmh(&f, i + 1, top), mx, my]);
+            out.extend([p.x, p.y, p.radius, p.level as f64, rad, vertex_kmh(&f, i + 1, top, &ramps), mx, my]);
         }
         out
     }
@@ -684,7 +685,7 @@ impl TrackApi {
         for (verts, kind, _, rs) in &shapes {
             let f = geom::with_ramps(*rs, || self.w.net.fit(verts));
             out.push(verts.len() as f64);
-            vertex_rows(&f, verts, &mut out, kind.v_cap());
+            vertex_rows(&f, verts, &mut out, kind.v_cap(), rs.old);
             let mut pts = vec![];
             render_samples(&f.pieces, &f.vert, &mut pts);
             out.push((pts.len() / 3) as f64);
@@ -857,23 +858,20 @@ impl TrackApi {
         }));
         self.last = None;
         let mut out = vec![ok, cost, f.len, verts.len() as f64, mult];
+        let old = geom::ramps().old;
         if shape.is_empty() {
-            vertex_rows(&f, verts, &mut out, kind.v_cap());
+            vertex_rows(&f, verts, &mut out, kind.v_cap(), old);
         } else {
-            vertex_rows(&self.w.net.fit(verts), verts, &mut out, kind.v_cap());
+            vertex_rows(&self.w.net.fit(verts), verts, &mut out, kind.v_cap(), old);
         }
         render_samples(&f.pieces, &f.vert, &mut out);
-        let old = geom::ramps().old;
         self.preview_speeds = render_speeds(&f.pieces, &f.vert, kind.v_cap(), old);
         self.preview_lanes = vec![lane_of(tracks); self.preview_speeds.len()];
         self.preview_ramps.clear();
         if !f.pieces.is_empty() {
-            for (a, b, per_level) in geom::ramp_spans(&f.vert) {
-                let v = geom::ramp_speed(per_level, old);
-                if v < kind.v_cap() - 1e-6 {
-                    let (x, y, _) = geom::pos_at(&f.pieces, (a + b) / 2.0);
-                    self.preview_ramps.extend([x, y, (v * 3.6).round()]);
-                }
+            for (a, b, v) in geom::ramp_stretches(&geom::limits(&f.pieces, &f.vert, old, kind.v_cap())) {
+                let (x, y, _) = geom::pos_at(&f.pieces, (a + b) / 2.0);
+                self.preview_ramps.extend([x, y, (v * 3.6).round()]);
             }
         }
         out
@@ -885,8 +883,9 @@ impl TrackApi {
         self.preview_speeds.clone()
     }
 
-    /// T-3027: the last route or edge preview's ramps that hold trains under the track's top speed:
-    /// x, y (the ramp's middle) and km/h each, for a label like a curve's.
+    /// T-3027: the last route or edge preview's stretches where a ramp holds trains under the track's
+    /// top speed and under its curves there (T-4349): x, y (the stretch's middle) and km/h each, for a
+    /// label like a curve's.
     pub fn preview_ramp_labels(&self) -> Vec<f64> {
         self.preview_ramps.clone()
     }

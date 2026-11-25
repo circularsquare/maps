@@ -13,7 +13,7 @@ import { type PreviewAnswer } from "../workers/clockClient";
 import { toLngLat, toLocal } from "./geo";
 import { circleOnScreen, drawTangent, endHeading } from "./curveCircle";
 import { placeAt } from "./screenPlace";
-import { curveLabels, legCurveLabels, placeCurveLabels, placementTag, rampLabels } from "./trackTagRows";
+import { curveLabels, legCurveLabels, placeCurveLabels, placementTag, rampLabels, slowestFirst } from "./trackTagRows";
 import { MODE_ICON_COLOURS } from "../game/palette";
 import { TRACK_SPECS } from "../game/trackKinds";
 import { logShare } from "./modeBar";
@@ -113,7 +113,7 @@ export function placeMarks(tk: Tools) {
     else put(el(tk, k++, "pi-mark"), ...toLocal(start.lng, start.lat));
     if (pv) {
       const from = k;
-      k += placeCurveLabels([...legCurveLabels(pv.legs), ...rampLabels(pv.ramps), ...curveLabels(pv.verts)], (x, y) => tk.screen(x, y), tk.overlay.cssW, tk.overlay.cssH, (i) => el(tk, from + i, "pi-label"));
+      k += placeCurveLabels(slowestFirst(legCurveLabels(pv.legs), rampLabels(pv.ramps), curveLabels(pv.verts)), (x, y) => tk.screen(x, y), tk.overlay.cssW, tk.overlay.cssH, (i) => el(tk, from + i, "pi-label"));
     }
   }
   for (let i = k; i < tk.marks.length; i++) tk.marks[i].style.display = "none";
