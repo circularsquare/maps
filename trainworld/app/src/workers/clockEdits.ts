@@ -11,7 +11,7 @@ import { FARE_BASELINE, FARE_E, keepOwn } from "../game/income";
 import { type SaveHeader } from "./saveFile";
 import type { EditOp, PaidFor, PiInput, RouteAsk, RouteEnd, StationAt } from "./protocol";
 import { saves } from "./slots";
-import { addPorts, newLineRows, newLineWeekends, nextBusName, renameComplex, renameStation } from "./clockDemand";
+import { addPorts, newLineRows, newLineWeekends, nextBusName, renameComplex, renameStation, renameStations } from "./clockDemand";
 import { cityFares, setLineFare } from "./clockFares";
 import { stateRows } from "./clockMain";
 import { gameNow } from "./clockMoney";
@@ -233,6 +233,8 @@ function applyInner(op: EditOp): Applied {
       return { r: renameStation(a, op.node, op.name) };
     case "renameComplex":
       return { r: renameComplex(a, op.node, op.name) };
+    case "renameStations":
+      return { r: renameStations(a, op.nodes, op.names) };
     case "bindStation":
       return { r: a.set_station_bound(op.node, op.bound) };
     case "bindAll":

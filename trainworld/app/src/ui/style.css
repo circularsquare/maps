@@ -1009,6 +1009,13 @@ rect.now { fill-opacity: .45; }
 .order li.drop-before { box-shadow: inset 0 2px 0 var(--accent); }
 .order li.drop-after { box-shadow: inset 0 -2px 0 var(--accent); }
 .h .sort-stops { margin-left: 8px; font-weight: 400; }
+/* T-4259: a line's stations renamed together, a box per station on the line's bar */
+.stops.rename li { min-height: 28px; }
+.rename-box { flex: 1; min-width: 0; height: 24px; box-sizing: border-box; margin: 0; padding: 0 4px; font: inherit; color: var(--text);
+  background: var(--bg); border: 1px solid var(--rule); border-radius: 0; }
+.rename-box:focus { border-color: var(--accent); outline: 0; }
+.rename-box.changed { font-weight: 700; }
+.rename-stops .line-stop-actions { margin: 8px 0 12px; }
 /* T-1464: a bus line's stops: a square at each end, a ring at a station, small rings for the street stops */
 .bus-stops { list-style: none; margin: 0; padding: 0; }
 .bus-stops li { display: flex; align-items: center; gap: 8px; min-height: 25px; }
@@ -1054,9 +1061,10 @@ rect.now { fill-opacity: .45; }
 .stops .route-mark.crossing::after { transform: rotate(-45deg); }
 /* T-1168: the stops with the related lines; the drawing (--gw wide, the line at --spine) is one SVG
    beside the rows, so the rows draw no bar or dot of their own */
-.h .related-toggle { align-self: center; margin-left: 6px; color: var(--muted); width: 22px; min-width: 22px; height: 22px; }
-.h .related-toggle svg { width: 19px; height: 19px; }
-.h .related-toggle:hover { color: var(--text); }
+.h .related-toggle, .h .rename-toggle { align-self: center; margin-left: 6px; color: var(--muted); width: 22px; min-width: 22px; height: 22px; }
+.h .related-toggle svg, .h .rename-toggle svg { width: 19px; height: 19px; }
+.h .related-toggle:hover, .h .rename-toggle:hover { color: var(--text); }
+.h .related-toggle + .rename-toggle { margin-left: 2px; }
 .h .btn.related-toggle.on { background: var(--tint); color: var(--text); }
 .related { position: relative; }
 .related-draw { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 1; }

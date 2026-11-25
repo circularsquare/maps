@@ -34,6 +34,7 @@ import { Alert, Check, Chip, Icon, Row, Segmented, shakeEl, Stepper, SwapLabel }
 import { PurposeSplit } from "./PurposeSplit";
 import { ONLY_NEXT, ONLY_TIP, OnlyArrow, OnlyIcon } from "./stopOnly";
 import { RelatedStops, useTightTimes } from "./RelatedStops";
+import { RenameStops } from "./RenameStops";
 import { ROUND_MAX, TALL_MAX } from "../../game/relatedLayout";
 import { BusInspector } from "./BusInspector";
 import { locateStation } from "../locate";
@@ -706,6 +707,9 @@ function RailLineInspector({ id }: { id: string }) {
   const [drag, setDrag] = useState<{ from: number; gap: number } | null>(null);
   const draggedRow = useRef(false);
   useEffect(() => setPendingAt(null), [l?.num, editingStops]);
+  // T-4259: the stations' names typed in boxes over the stops list, until Rename or Cancel; never while stops are edited
+  const [renaming, setRenaming] = useState(false);
+  useEffect(() => setRenaming(false), [l?.num, editingStops]);
   // T-3089: a row's station is lit on the map while the pointer is on it; a row that goes takes the light with it
   useEffect(() => () => setListHot(null), [l?.num, w?.version]);
   // T-3232: a stop click's guessed row goes with the world that holds it
@@ -1026,18 +1030,26 @@ function RailLineInspector({ id }: { id: string }) {
     <>
       <div class="h divided">
         {tr("lineInspector.stops")}
-        {l.stops.length >= 2 && (
+        {l.stops.length >= 2 && !renaming && (
           <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")}
             aria-label={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
           </button>
         )}
+        {!editingStops && !renaming && l.stops.length > 0 && (
+          <button class="btn icon mini rename-toggle" data-tip={tr("lineInspector.renameStations") + "\n" + tr("lineInspector.renamePaste")} aria-label={tr("lineInspector.renameStations")} onClick={() => setRenaming(true)}>
+            <Icon.rename />
+          </button>
+        )}
         {editingStops && st.hand && (
           <button class="btn text mini sort-stops" data-tip={tr("lineInspector.sortStopsTip")} onClick={sortStops}>{tr("lineInspector.sortStops")}</button>
         )}
-        <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>
+        {!renaming && <span class="right muted small">{tr("cityDetails.boardingsToday")}</span>}
       </div>
-      {related ? (
+      {renaming ? (
+        <RenameStops colour={shown} onClose={() => setRenaming(false)}
+          order={(turned ? turned.rows.map((row) => row.i) : flip ? l.stops.map((_, k) => nStops - 1 - k) : l.stops.map((_, i) => i)).map((i) => l.stops[i])} />
+      ) : related ? (
         <div class={orderClass + (turned ? " turned-rel" : "")} onDblClick={onListDblClick}>
           <RelatedStops l={l} stopS={st.stopS[0]} colour={shown} loop={loopOnce && !turned} flip={flip} rows={turned?.rows}
             lRow={turned ? (k, drawn, marks) => stopRow(turned.rows[k].i, drawn, marks, turned.rows[k]) : stopRow}

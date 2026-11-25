@@ -471,6 +471,36 @@ impl TrackApi {
         self.run(Op::Batch(ops))
     }
 
+    /// The line panel's Rename stations: several stations renamed as one undoable edit. `kinds[i]` says how
+    /// `nodes[i]` takes `names[i]`, as the app's `renameStation` works it out: 0 its own name only (as
+    /// `set_station_own`), 1 its own name and its part in the complex's (`set_station_own` with `also_name`),
+    /// 2 the name typed as the player's (`type_station_name`, a bound station's complex head). A node met
+    /// twice takes both changes (an unbound station that is also its complex's head), the later name winning.
+    pub fn rename_stations(&mut self, nodes: &[u32], names: Vec<String>, kinds: &[u8]) -> u32 {
+        let mut order: Vec<u32> = vec![];
+        let mut data: std::collections::HashMap<u32, StationData> = std::collections::HashMap::new();
+        for ((&node, name), &kind) in nodes.iter().zip(names).zip(kinds) {
+            if name.is_empty() {
+                continue;
+            }
+            let Some(old) = data.get(&node).cloned().or_else(|| self.w.net.station_data(node)) else { continue };
+            let new = match kind {
+                0 => StationData { own: name, ..old },
+                1 => StationData { name: name.clone(), named: true, own: name, ..old },
+                _ => StationData { name, named: true, ..old },
+            };
+            if !data.contains_key(&node) {
+                order.push(node);
+            }
+            data.insert(node, new);
+        }
+        if order.is_empty() {
+            return 0;
+        }
+        let ops = order.into_iter().map(|node| Op::Station { node, data: data.remove(&node) }).collect();
+        self.run(Op::Batch(ops))
+    }
+
     /// T-3759: after an older save loads (`take_old_names`), these typed stations keep showing their own
     /// names: each is unbound with its stored name. Not an edit the player made, so not on undo.
     pub fn adopt_old_names(&mut self, nodes: &[u32]) -> u32 {

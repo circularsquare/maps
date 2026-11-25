@@ -114,6 +114,8 @@ export type EditOp =
   | { op: "stationProps"; node: NodeId; platform: number; name: string }
   /** T-3759: rename a station: an unbound one alone, a bound one renames its complex */
   | { op: "renameStation"; node: NodeId; name: string }
+  /** the line panel's Rename stations: each of `nodes` renamed to `names[i]` as `renameStation` does, one undo */
+  | { op: "renameStations"; nodes: NodeId[]; names: string[] }
   /** T-3759: rename the complex station `node` is in (its unbound stations keep their names) */
   | { op: "renameComplex"; node: NodeId; name: string }
   /** T-3759: bind a station to its complex's name, or unbind it */

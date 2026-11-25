@@ -298,11 +298,24 @@ export function renameComplex(a: TrackApi, node: number, name: string): number {
   if (stateRows.complexSize(node) <= 1 && a.station_own(node)) return a.set_station_own(node, name, true);
   return a.type_station_name(stateRows.headOf(node) ?? node, name);
 }
+/** T-4259 (omi-key's PR 35): the line panel's Rename stations: each station renamed as `renameStation` does (an
+ * unbound one alone, a bound one's complex through its head), all as one undo (`TrackApi.rename_stations`). */
+export function renameStations(a: TrackApi, nodes: number[], names: string[]): number {
+  const to: number[] = [], as: string[] = [], kinds: number[] = [];
+  nodes.forEach((node, i) => {
+    const name = names[i]?.trim();
+    if (!name) return;
+    if (a.station_own(node)) to.push(node), kinds.push(stateRows.complexSize(node) <= 1 ? 1 : 0);
+    else to.push(stateRows.headOf(node) ?? node), kinds.push(2);
+    as.push(name);
+  });
+  return to.length ? a.rename_stations(new Uint32Array(to), as, new Uint8Array(kinds)) : 0;
+}
 /** T-3793: an edit that changes only what a station or line is called (asked before it is applied): no train's run
  * changes, and the network drawn has no names in it. T-4147: and a new line with no stops. */
 export function nameOnly(op: EditOp): boolean {
   switch (op.op) {
-    case "renameStation": case "renameComplex": case "bindStation": case "bindAll": return true;
+    case "renameStation": case "renameComplex": case "renameStations": case "bindStation": case "bindAll": return true;
     case "stationProps": return op.platform === stateRows.nodeRow(op.node)?.platform;
     // T-4147: a line with no stops draws nothing and carries no train, so its list entry needs only the rows
     case "addLine": return op.stops.length === 0;
