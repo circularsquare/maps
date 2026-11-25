@@ -39,6 +39,9 @@ export interface Beside {
   /** per edge, per edge beside it anywhere: [its offset averaged over every sample where they are
    * side by side (m, left of the first's a to b), rel, samples] */
   pair: Map<number, Map<number, [number, number, number]>>;
+  /** T-4153: the edges whose samples or pairs the call made again, null when any may differ from the last call's (the
+   * maps are the last call's, changed in place, when it gives a list) */
+  remade?: readonly number[] | null;
 }
 
 interface Prep {
@@ -180,12 +183,17 @@ const overlaps = (a: Prep["box"], b: Prep["box"], pad: number) => !(a[2] + pad <
 /**
  * Per edge of `ids` (edges that carry lines), its samples and what runs beside each. `pts`: each
  * edge's local polyline (x, y, z triples, a to b); `ends` its nodes. `within`: CORRIDOR_M unless a
- * check asks otherwise.
+ * check asks otherwise. `changes` (T-4153): the edges whose points, ends or place in `ids` may differ from the last
+ * call's, so the call looks again only at those and the edges near them, and changes the last call's maps in place.
  */
-export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, { a: number; b: number }>, within = CORRIDOR_M, st: BesideState = sharedBeside): Beside {
+export function besideSamples(ids: readonly number[] | ReadonlyMap<number, unknown>, pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, { a: number; b: number }>, within = CORRIDOR_M, st: BesideState = sharedBeside, changes?: { edges: Iterable<number>[]; has: (id: number) => boolean }): Beside {
   useBeside(st);
   if (within !== cacheWithin) (cache = new Map()), (lastOut = null);
   cacheWithin = within;
+  if (changes && lastOut) {
+    const out = besideChanged(changes, pts, ends, within);
+    if (out) return out;
+  }
   const list: Prep[] = [];
   let raw = new Map<number, Raw>();
   const changed: Prep["box"][] = [];
@@ -193,7 +201,7 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
   let kMax = 1;
   // (T-4153: the edges in id order, which no edit moves, so the order of each sample's records, and the ribbons walked
   // from them, is the same as from scratch whatever order the lines name the edges in)
-  const byId = [...ids].sort((a, b) => a - b);
+  const byId = (Array.isArray(ids) ? [...ids] : [...(ids as ReadonlyMap<number, unknown>).keys()]).sort((a, b) => a - b);
   for (const id of byId) {
     const p = pts.get(id), ed = ends.get(id);
     if (!p || !ed) continue;
@@ -218,145 +226,20 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
   // every change, past MANY_TESTS all worked out again; a long line removed costs the edges near its track)
   const redo: Prep[] = [];
   const many = changed.length * list.length > MANY_TESTS;
-  const all: Prep["box"] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const b of changed) (all[0] = Math.min(all[0], b[0])), (all[1] = Math.min(all[1], b[1])), (all[2] = Math.max(all[2], b[2])), (all[3] = Math.max(all[3], b[3]));
+  const all = boxOfAll(changed);
   for (const e of list) {
     const r = raw.get(e.id);
     if (!r || many || (changed.length && overlaps(all, e.box, reach) && changed.some((b) => overlaps(b, e.box, reach)))) redo.push(e);
   }
-  if (!redo.length && !changed.length && lastOut && raw.size === cache.size) return lastOut;
+  if (!redo.length && !changed.length && lastOut && raw.size === cache.size) {
+    lastOut.remade = [];
+    return lastOut;
+  }
   if (redo.length) {
-    let bx0 = Infinity, by0 = Infinity, bx1 = -Infinity, by1 = -Infinity;
-    for (const e of redo) {
-      bx0 = Math.min(bx0, e.box[0]);
-      by0 = Math.min(by0, e.box[1]);
-      bx1 = Math.max(bx1, e.box[2]);
-      by1 = Math.max(by1, e.box[3]);
-    }
-    const area: Prep["box"] = [bx0, by0, bx1, by1];
-    // a grid of the segments of every edge near those, cells several reaches wide
+    const area = boxOfAll(redo.map((e) => e.box));
+    // (every edge near those, whose segments they are looked for among)
     const near = redo.length === list.length ? list : list.filter((e) => overlaps(e.box, area, reach));
-    const cell = 3 * reach;
-    const grid = new Map<number, number[]>();
-    // (a small integer, wrapping every 32768 cells: cells that share one are only looked at twice)
-    const key = (ix: number, iy: number) => ((ix & 32767) << 15) | (iy & 32767);
-    near.forEach((e, ei) => {
-      const P = e.p;
-      for (let j = 0; j + 1 < P.length / 3; j++) {
-        const ax = P[j * 3], ay = P[j * 3 + 1], bx = P[j * 3 + 3], by = P[j * 3 + 4];
-        const cx0 = Math.floor(Math.min(ax, bx) / cell), cx1 = Math.floor(Math.max(ax, bx) / cell);
-        const cy0 = Math.floor(Math.min(ay, by) / cell), cy1 = Math.floor(Math.max(ay, by) / cell);
-        for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++) {
-          const c = key(cx, cy);
-          const v = grid.get(c);
-          if (v) v.push(ei * 1048576 + j);
-          else grid.set(c, [ei * 1048576 + j]);
-        }
-      }
-    });
-    const bestD = new Float64Array(near.length).fill(Infinity), bestJ = new Int32Array(near.length), bestT = new Float64Array(near.length);
-    const touched: number[] = [];
-    const index = new Map(near.map((e, i) => [e.id, i]));
-    for (const e of redo) {
-      const me = index.get(e.id)!, P = e.p, m = P.length / 3, total = e.cum[m - 1];
-      const rec: number[][] = [];
-      const carry = new Map<number, boolean>();
-      // the other edges in or next to its cells: none (most track in the country) and every sample
-      // is empty; else a sample is only looked at near one of their boxes
-      const cells = new Set<number>(), cand = new Set<number>();
-      for (let j = 0; j + 1 < m; j++) {
-        const cx0 = Math.floor(Math.min(P[j * 3], P[j * 3 + 3]) / cell) - 1, cx1 = Math.floor(Math.max(P[j * 3], P[j * 3 + 3]) / cell) + 1;
-        const cy0 = Math.floor(Math.min(P[j * 3 + 1], P[j * 3 + 4]) / cell) - 1, cy1 = Math.floor(Math.max(P[j * 3 + 1], P[j * 3 + 4]) / cell) + 1;
-        for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++) cells.add(key(cx, cy));
-      }
-      for (const c of cells) for (const code of grid.get(c) ?? []) {
-        const fi = Math.floor(code / 1048576);
-        if (fi !== me) cand.add(fi);
-      }
-      const boxes: Prep["box"][] = [];
-      for (const fi of cand) if (!carriesOn(e, near[fi]) && overlaps(e.box, near[fi].box, reach)) boxes.push(near[fi].box);
-      if (!boxes.length) {
-        raw.set(e.id, noRecords(e));
-        continue;
-      }
-      let seg = 0;
-      for (let i = 0; i < e.n; i++) {
-        const want = ((i + 0.5) / e.n) * total;
-        while (seg < m - 2 && e.cum[seg + 1] < want) seg++;
-        const sl = e.cum[seg + 1] - e.cum[seg], f = sl > 0 ? (want - e.cum[seg]) / sl : 0;
-        const dx = P[seg * 3 + 3] - P[seg * 3], dy = P[seg * 3 + 4] - P[seg * 3 + 1], dl = Math.hypot(dx, dy) || 1;
-        const px = P[seg * 3] + dx * f, py = P[seg * 3 + 1] + dy * f, tx = dx / dl, ty = dy / dl;
-        const r = HOLD * within * e.k;
-        let inBox = false;
-        for (let q = 0; q < boxes.length && !inBox; q++) {
-          const b = boxes[q];
-          inBox = px > b[0] - r && px < b[2] + r && py > b[1] - r && py < b[3] + r;
-        }
-        if (!inBox) {
-          rec.push(NONE);
-          continue;
-        }
-        const found: number[] = [];
-        for (let cx = Math.floor((px - r) / cell); cx <= Math.floor((px + r) / cell); cx++) for (let cy = Math.floor((py - r) / cell); cy <= Math.floor((py + r) / cell); cy++) {
-          const v = grid.get(key(cx, cy));
-          if (!v) continue;
-          for (const code of v) {
-            const fi = Math.floor(code / 1048576);
-            if (fi === me) continue;
-            let on = carry.get(fi);
-            if (on === undefined) carry.set(fi, (on = carriesOn(e, near[fi])));
-            if (on) continue;
-            const j = code - fi * 1048576, Q = near[fi].p;
-            const ax = Q[j * 3], ay = Q[j * 3 + 1], ex = Q[j * 3 + 3] - ax, ey = Q[j * 3 + 4] - ay, l2 = ex * ex + ey * ey;
-            const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / l2)) : 0;
-            const d = (ax + ex * t - px) ** 2 + (ay + ey * t - py) ** 2;
-            if (d > r * r) continue;
-            if (bestD[fi] === Infinity) touched.push(fi);
-            if (d < bestD[fi]) {
-              bestD[fi] = d;
-              bestJ[fi] = j;
-              bestT[fi] = t;
-            }
-          }
-        }
-        for (const fi of touched) {
-          const F = near[fi], Q = F.p, j = bestJ[fi], t = bestT[fi];
-          const ex = Q[j * 3 + 3] - Q[j * 3], ey = Q[j * 3 + 4] - Q[j * 3 + 1], el = Math.hypot(ex, ey) || 1;
-          const c = (tx * ex + ty * ey) / el;
-          if (Math.abs(c) >= COS_MIN) {
-            const qx = Q[j * 3] + ex * t, qy = Q[j * 3 + 1] + ey * t;
-            // left of the direction (tx, ty), local y pointing south, is (ty, -tx)
-            const off = ((qx - px) * ty - (qy - py) * tx) / e.k;
-            const u = (F.cum[j] + t * el) / F.cum[F.cum.length - 1];
-            found.push(F.id, off, Math.min(F.n - 1, Math.floor(u * F.n)), c > 0 ? 1 : -1);
-          }
-          bestD[fi] = Infinity;
-        }
-        touched.length = 0;
-        rec.push(found);
-      }
-      // past `within` (up to HOLD times it) a neighbour stays beside only along from where it was
-      // within, so a track at about `within` does not come and go
-      const held = new Map<number, Uint8Array>();
-      rec.forEach((v, i) => {
-        for (let q = 0; q < v.length; q += 4) {
-          let h = held.get(v[q]);
-          if (!h) held.set(v[q], (h = new Uint8Array(e.n)));
-          h[i] = Math.abs(v[q + 1]) <= within ? 2 : 1;
-        }
-      });
-      for (const h of held.values()) {
-        for (let i = 1; i < h.length; i++) if (h[i] === 1 && h[i - 1] === 2) h[i] = 2;
-        for (let i = h.length - 2; i >= 0; i--) if (h[i] === 1 && h[i + 1] === 2) h[i] = 2;
-      }
-      rec.forEach((v, i) => {
-        if (!v.length) return;
-        const keep: number[] = [];
-        for (let q = 0; q < v.length; q += 4) if (held.get(v[q])![i] === 2) keep.push(v[q], v[q + 1], v[q + 2], v[q + 3]);
-        rec[i] = keep;
-      });
-      raw.set(e.id, packRaw(e, rec));
-    }
+    for (const [id, r] of recordsOf(redo, near, reach, within)) raw.set(id, r);
     // (those new since the last call came last)
     const sorted = new Map<number, Raw>();
     for (const id of byId) {
@@ -371,30 +254,270 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
   const redone: number[] = [];
   for (const id of raw.keys()) if (whole || raw.get(id) !== cache.get(id)) redone.push(id);
   for (const id of cache.keys()) if (!raw.has(id)) redone.push(id);
-  const targets = (r: Raw | undefined, f: (t: number) => void) => { if (r) for (let x = 0; x < r.edge.length; x++) f(r.edge[x]); };
   if (whole) seenBy = new Map();
+  const remake = seersMoved(redone, (g) => (whole ? undefined : cache.get(g)), (g) => raw.get(g));
+  cache = raw;
+  for (const id of [...made.keys()]) if (!raw.has(id)) (made.delete(id), seenBy.delete(id));
+  remakeSamples(remake);
+  const out: Beside = { edges: new Map(), pair: new Map(), remade: null };
+  for (const id of raw.keys()) {
+    const m = made.get(id)!;
+    out.edges.set(id, m.samples);
+    for (const [f, x] of m.sums) putPair(out, id, f, x);
+  }
+  return (lastOut = out);
+}
+
+const boxOfAll = (boxes: readonly Prep["box"][]): Prep["box"] => {
+  const all: Prep["box"] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const b of boxes) (all[0] = Math.min(all[0], b[0])), (all[1] = Math.min(all[1], b[1])), (all[2] = Math.max(all[2], b[2])), (all[3] = Math.max(all[3], b[3]));
+  return all;
+};
+
+/** the pair of edges `id` and `f` (f the higher id) side by side: [offset sum, rel, samples], put both ways */
+function putPair(out: Beside, id: number, f: number, [sum, rel, n]: [number, number, number]) {
+  const side = (a: number, b: number, x: [number, number, number]) => {
+    let m = out.pair.get(a);
+    if (!m) out.pair.set(a, (m = new Map()));
+    m.set(b, x);
+  };
+  side(id, f, [sum / n, rel, n]);
+  side(f, id, [(-sum / n) * rel, rel, n]);
+}
+
+/**
+ * T-4153: the last call's samples and pairs brought up to date in place where `changes` say edges may differ: those
+ * whose points, ends or place among the edges with lines changed are prepared again, and the edges near them worked out
+ * again as a whole call would (in id order where order counts). Null when so much changed that a whole call is quicker.
+ */
+function besideChanged(changes: { edges: Iterable<number>[]; has: (id: number) => boolean }, pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, { a: number; b: number }>, within: number): Beside | null {
+  const out = lastOut!;
+  const changed: Prep["box"][] = [], fresh = new Map<number, Prep>(), gone: number[] = [];
+  const looked = new Set<number>();
+  for (const list of changes.edges) for (const id of list) {
+    if (looked.has(id)) continue;
+    looked.add(id);
+    const old = cache.get(id), p = pts.get(id), ed = ends.get(id), carries = !!p && !!ed && changes.has(id);
+    if (carries && old && old.prep.p === p && old.prep.a === ed!.a && old.prep.b === ed!.b) continue;
+    if (old) changed.push(old.prep.box);
+    const e = carries ? prepOf(id, p!, ed!.a, ed!.b) : null;
+    if (e) {
+      fresh.set(id, e);
+      changed.push(e.box);
+    } else if (old) gone.push(id);
+  }
+  if (!changed.length) {
+    out.remade = [];
+    return out;
+  }
+  // (the most local units a metre of any edge, as a whole call takes it)
+  let kMax = 1, n = fresh.size;
+  for (const [id, r] of cache) if (!fresh.has(id)) { n++; if (r.prep.k > kMax) kMax = r.prep.k; }
+  for (const e of fresh.values()) if (e.k > kMax) kMax = e.k;
+  if (changed.length * n > MANY_TESTS) return null;
+  const reach = HOLD * within * kMax, all = boxOfAll(changed);
+  const goneSet = new Set(gone);
+  const now = (fn: (e: Prep) => void) => {
+    for (const [id, r] of cache) if (!fresh.has(id) && !goneSet.has(id)) fn(r.prep);
+    for (const e of fresh.values()) fn(e);
+  };
+  const redo: Prep[] = [];
+  now((e) => { if (fresh.has(e.id) || (overlaps(all, e.box, reach) && changed.some((b) => overlaps(b, e.box, reach)))) redo.push(e); });
+  // (in id order, as a whole call works them out)
+  redo.sort((a, b) => a.id - b.id);
+  const area = boxOfAll(redo.map((e) => e.box)), near: Prep[] = [];
+  now((e) => { if (overlaps(e.box, area, reach)) near.push(e); });
+  near.sort((a, b) => a.id - b.id);
+  const got = recordsOf(redo, near, reach, within);
+  const redone = [...got.keys(), ...gone];
+  const was = new Map<number, Raw | undefined>();
+  for (const g of redone) was.set(g, cache.get(g));
+  for (const [id, r] of got) cache.set(id, r);
+  for (const id of gone) cache.delete(id);
+  const remake = seersMoved(redone, (g) => was.get(g), (g) => cache.get(g));
+  const oldSums = new Map<number, Map<number, [number, number, number]> | undefined>();
+  for (const id of gone) {
+    oldSums.set(id, made.get(id)?.sums);
+    made.delete(id);
+    seenBy.delete(id);
+  }
+  for (const f of remake) if (!oldSums.has(f)) oldSums.set(f, made.get(f)?.sums);
+  const remade = remakeSamples(remake);
+  // the samples and pairs of the edges whose own changed, in the last call's maps
+  const touched = [...gone, ...remade];
+  for (const f of touched) {
+    for (const g of oldSums.get(f)?.keys() ?? []) {
+      out.pair.get(f)?.delete(g);
+      out.pair.get(g)?.delete(f);
+    }
+    const m = made.get(f);
+    if (!m) {
+      out.edges.delete(f);
+      if (!out.pair.get(f)?.size) out.pair.delete(f);
+      continue;
+    }
+    out.edges.set(f, m.samples);
+  }
+  for (const f of remade) for (const [g, x] of made.get(f)!.sums) putPair(out, f, g, x);
+  out.remade = touched;
+  return out;
+}
+
+/** each sample's records of the edges `redo` (in id order): the other edges of `near` beside it there */
+function recordsOf(redo: readonly Prep[], near: readonly Prep[], reach: number, within: number): Map<number, Raw> {
+  const raw = new Map<number, Raw>();
+  const cell = 3 * reach;
+  // a grid of the segments of every edge near those, cells several reaches wide
+  const grid = new Map<number, number[]>();
+  // (a small integer, wrapping every 32768 cells: cells that share one are only looked at twice)
+  const key = (ix: number, iy: number) => ((ix & 32767) << 15) | (iy & 32767);
+  near.forEach((e, ei) => {
+    const P = e.p;
+    for (let j = 0; j + 1 < P.length / 3; j++) {
+      const ax = P[j * 3], ay = P[j * 3 + 1], bx = P[j * 3 + 3], by = P[j * 3 + 4];
+      const cx0 = Math.floor(Math.min(ax, bx) / cell), cx1 = Math.floor(Math.max(ax, bx) / cell);
+      const cy0 = Math.floor(Math.min(ay, by) / cell), cy1 = Math.floor(Math.max(ay, by) / cell);
+      for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++) {
+        const c = key(cx, cy);
+        const v = grid.get(c);
+        if (v) v.push(ei * 1048576 + j);
+        else grid.set(c, [ei * 1048576 + j]);
+      }
+    }
+  });
+  const bestD = new Float64Array(near.length).fill(Infinity), bestJ = new Int32Array(near.length), bestT = new Float64Array(near.length);
+  const touched: number[] = [];
+  const index = new Map(near.map((e, i) => [e.id, i]));
+  for (const e of redo) {
+    const me = index.get(e.id)!, P = e.p, m = P.length / 3, total = e.cum[m - 1];
+    const rec: number[][] = [];
+    const carry = new Map<number, boolean>();
+    // the other edges in or next to its cells: none (most track in the country) and every sample
+    // is empty; else a sample is only looked at near one of their boxes
+    const cells = new Set<number>(), cand = new Set<number>();
+    for (let j = 0; j + 1 < m; j++) {
+      const cx0 = Math.floor(Math.min(P[j * 3], P[j * 3 + 3]) / cell) - 1, cx1 = Math.floor(Math.max(P[j * 3], P[j * 3 + 3]) / cell) + 1;
+      const cy0 = Math.floor(Math.min(P[j * 3 + 1], P[j * 3 + 4]) / cell) - 1, cy1 = Math.floor(Math.max(P[j * 3 + 1], P[j * 3 + 4]) / cell) + 1;
+      for (let cx = cx0; cx <= cx1; cx++) for (let cy = cy0; cy <= cy1; cy++) cells.add(key(cx, cy));
+    }
+    for (const c of cells) for (const code of grid.get(c) ?? []) {
+      const fi = Math.floor(code / 1048576);
+      if (fi !== me) cand.add(fi);
+    }
+    const boxes: Prep["box"][] = [];
+    for (const fi of cand) if (!carriesOn(e, near[fi]) && overlaps(e.box, near[fi].box, reach)) boxes.push(near[fi].box);
+    if (!boxes.length) {
+      raw.set(e.id, noRecords(e));
+      continue;
+    }
+    let seg = 0;
+    for (let i = 0; i < e.n; i++) {
+      const want = ((i + 0.5) / e.n) * total;
+      while (seg < m - 2 && e.cum[seg + 1] < want) seg++;
+      const sl = e.cum[seg + 1] - e.cum[seg], f = sl > 0 ? (want - e.cum[seg]) / sl : 0;
+      const dx = P[seg * 3 + 3] - P[seg * 3], dy = P[seg * 3 + 4] - P[seg * 3 + 1], dl = Math.hypot(dx, dy) || 1;
+      const px = P[seg * 3] + dx * f, py = P[seg * 3 + 1] + dy * f, tx = dx / dl, ty = dy / dl;
+      const r = HOLD * within * e.k;
+      let inBox = false;
+      for (let q = 0; q < boxes.length && !inBox; q++) {
+        const b = boxes[q];
+        inBox = px > b[0] - r && px < b[2] + r && py > b[1] - r && py < b[3] + r;
+      }
+      if (!inBox) {
+        rec.push(NONE);
+        continue;
+      }
+      const found: number[] = [];
+      for (let cx = Math.floor((px - r) / cell); cx <= Math.floor((px + r) / cell); cx++) for (let cy = Math.floor((py - r) / cell); cy <= Math.floor((py + r) / cell); cy++) {
+        const v = grid.get(key(cx, cy));
+        if (!v) continue;
+        for (const code of v) {
+          const fi = Math.floor(code / 1048576);
+          if (fi === me) continue;
+          let on = carry.get(fi);
+          if (on === undefined) carry.set(fi, (on = carriesOn(e, near[fi])));
+          if (on) continue;
+          const j = code - fi * 1048576, Q = near[fi].p;
+          const ax = Q[j * 3], ay = Q[j * 3 + 1], ex = Q[j * 3 + 3] - ax, ey = Q[j * 3 + 4] - ay, l2 = ex * ex + ey * ey;
+          const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * ex + (py - ay) * ey) / l2)) : 0;
+          const d = (ax + ex * t - px) ** 2 + (ay + ey * t - py) ** 2;
+          if (d > r * r) continue;
+          if (bestD[fi] === Infinity) touched.push(fi);
+          if (d < bestD[fi]) {
+            bestD[fi] = d;
+            bestJ[fi] = j;
+            bestT[fi] = t;
+          }
+        }
+      }
+      for (const fi of touched) {
+        const F = near[fi], Q = F.p, j = bestJ[fi], t = bestT[fi];
+        const ex = Q[j * 3 + 3] - Q[j * 3], ey = Q[j * 3 + 4] - Q[j * 3 + 1], el = Math.hypot(ex, ey) || 1;
+        const c = (tx * ex + ty * ey) / el;
+        if (Math.abs(c) >= COS_MIN) {
+          const qx = Q[j * 3] + ex * t, qy = Q[j * 3 + 1] + ey * t;
+          // left of the direction (tx, ty), local y pointing south, is (ty, -tx)
+          const off = ((qx - px) * ty - (qy - py) * tx) / e.k;
+          const u = (F.cum[j] + t * el) / F.cum[F.cum.length - 1];
+          found.push(F.id, off, Math.min(F.n - 1, Math.floor(u * F.n)), c > 0 ? 1 : -1);
+        }
+        bestD[fi] = Infinity;
+      }
+      touched.length = 0;
+      rec.push(found);
+    }
+    // past `within` (up to HOLD times it) a neighbour stays beside only along from where it was
+    // within, so a track at about `within` does not come and go
+    const held = new Map<number, Uint8Array>();
+    rec.forEach((v, i) => {
+      for (let q = 0; q < v.length; q += 4) {
+        let h = held.get(v[q]);
+        if (!h) held.set(v[q], (h = new Uint8Array(e.n)));
+        h[i] = Math.abs(v[q + 1]) <= within ? 2 : 1;
+      }
+    });
+    for (const h of held.values()) {
+      for (let i = 1; i < h.length; i++) if (h[i] === 1 && h[i - 1] === 2) h[i] = 2;
+      for (let i = h.length - 2; i >= 0; i--) if (h[i] === 1 && h[i + 1] === 2) h[i] = 2;
+    }
+    rec.forEach((v, i) => {
+      if (!v.length) return;
+      const keep: number[] = [];
+      for (let q = 0; q < v.length; q += 4) if (held.get(v[q])![i] === 2) keep.push(v[q], v[q + 1], v[q + 2], v[q + 3]);
+      rec[i] = keep;
+    });
+    raw.set(e.id, packRaw(e, rec));
+  }
+  return raw;
+}
+
+/** the edges whose samples are to be made again: each edge redone, and every edge its records named before (`was`) or
+ * name now (`now`); `seenBy` brought up to date */
+function seersMoved(redone: readonly number[], was: (g: number) => Raw | undefined, now: (g: number) => Raw | undefined): Set<number> {
+  const targets = (r: Raw | undefined, f: (t: number) => void) => { if (r) for (let x = 0; x < r.edge.length; x++) f(r.edge[x]); };
   const remake = new Set<number>();
   for (const g of redone) {
-    if (raw.has(g)) remake.add(g);
-    if (!whole) targets(cache.get(g), (t) => { seenBy.get(t)?.delete(g); remake.add(t); });
-    targets(raw.get(g), (t) => {
+    if (now(g)) remake.add(g);
+    targets(was(g), (t) => { seenBy.get(t)?.delete(g); remake.add(t); });
+    targets(now(g), (t) => {
       let s = seenBy.get(t);
       if (!s) seenBy.set(t, (s = new Set()));
       s.add(g);
       remake.add(t);
     });
   }
-  cache = raw;
-  const pos = new Map<number, number>();
-  for (const id of raw.keys()) pos.set(id, pos.size);
-  for (const id of [...made.keys()]) if (!raw.has(id)) (made.delete(id), seenBy.delete(id));
-  // per edge to make again, the records of the edges seeing it (sample, place in it), in the order
-  // the edges are given, each seeing edge's records read once
+  return remake;
+}
+
+/** the samples (`made`) of the edges `remake` made again from `cache`; those whose samples changed */
+function remakeSamples(remake: ReadonlySet<number>): number[] {
+  // per edge to make again, the records of the edges seeing it (sample, place in it), in id order of the edges seeing
+  // it, each seeing edge's records read once
   const seers = new Set<number>();
-  for (const f of remake) if (raw.has(f)) for (const g of seenBy.get(f) ?? []) if (raw.has(g)) seers.add(g);
+  for (const f of remake) if (cache.has(f)) for (const g of seenBy.get(f) ?? []) if (cache.has(g)) seers.add(g);
   const seenAt = new Map<number, number[]>();
-  for (const g of [...seers].sort((a, b) => pos.get(a)! - pos.get(b)!)) {
-    const { first, edge } = raw.get(g)!;
+  for (const g of [...seers].sort((a, b) => a - b)) {
+    const { first, edge } = cache.get(g)!;
     if (first) for (let i = 0; i + 1 < first.length; i++) for (let x = first[i]; x < first[i + 1]; x++) {
       if (!remake.has(edge[x])) continue;
       let s = seenAt.get(edge[x]);
@@ -402,8 +525,9 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
       s.push(g, i, x);
     }
   }
+  const changed: number[] = [];
   for (const f of remake) {
-    const r = raw.get(f);
+    const r = cache.get(f);
     if (!r) continue;
     // the mirror of each record of an edge seeing f, where f's sample there did not see that edge
     // itself, after that sample's own records
@@ -411,7 +535,7 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
     // through for each: a sample in a bundle of thirty tracks takes hundreds)
     const nS = r.prep.n, F0 = r.first, extra = new Map<number, number[]>(), lists = new Map<number, Set<number>>(), by = seenAt.get(f) ?? [];
     for (let t = 0; t < by.length; t += 3) {
-      const g = by[t], i = by[t + 1], U = raw.get(g)!, x = by[t + 2], s = U.at[x];
+      const g = by[t], i = by[t + 1], U = cache.get(g)!, x = by[t + 2], s = U.at[x];
       let has = lists.get(s);
       if (!has) {
         has = new Set();
@@ -458,20 +582,7 @@ export function besideSamples(ids: readonly number[], pts: ReadonlyMap<number, F
     // the same samples as before stay the same object, which tells `lineBands` nothing changed there
     if (was && was.n === r.prep.n && Object.is(was.len, len) && sameArr(was.first, first) && sameArr(was.edge, edge) && sameArr(was.off, off) && sameArr(was.at, at) && sameArr(was.rel, rel)) continue;
     made.set(f, { samples: { n: r.prep.n, len, first, edge, off, at, rel }, sums });
+    changed.push(f);
   }
-  const out: Beside = { edges: new Map(), pair: new Map() };
-  const side = (a: number, b: number, x: [number, number, number]) => {
-    let m = out.pair.get(a);
-    if (!m) out.pair.set(a, (m = new Map()));
-    m.set(b, x);
-  };
-  for (const id of raw.keys()) {
-    const m = made.get(id)!;
-    out.edges.set(id, m.samples);
-    for (const [f, [sum, rel, n]] of m.sums) {
-      side(id, f, [sum / n, rel, n]);
-      side(f, id, [(-sum / n) * rel, rel, n]);
-    }
-  }
-  return (lastOut = out);
+  return changed;
 }

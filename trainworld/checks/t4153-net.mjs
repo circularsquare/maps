@@ -182,7 +182,7 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
     else if (process.env.VERBOSE) console.log('seed', seed, 'step', step, kind, r === 0 ? 'applied' : 'refused ' + r);
   }
 }
-console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}; line entries' strokes copied: ${app.netWork.entriesAll}, line samples copied: ${app.netWork.keptAll}`);
+console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}; line entries' strokes copied: ${app.netWork.entriesAll}, line samples copied: ${app.netWork.keptAll}; band builds that followed the network's changed edges: ${app.bandWork.followed}`);
 if (SELF) {
   const what = SELF === 'strokes' ? "lines' entries are copied whatever their knots" : 'the kept orders are trusted';
   console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test (${SELF}): ${failures ? `the check fails when ${what}` : `the check did not notice when ${what}`}`);

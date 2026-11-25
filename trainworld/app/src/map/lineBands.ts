@@ -47,6 +47,8 @@ const MAX_TRACKS = 32;
  * apart or less, swapping sides at interlockings), not the double-track edges of a four-track trunk
  * (8 m apart): their order on the ground is not kept */
 const COINCIDE_M = 6;
+/** the pair rule's metres are summed in parts of a metre this fine (T-4153) */
+const PAIR_FIX = 1024;
 /** a band's shift is stored as a share of this many line widths (`Strokes.band`, Int16 normalised) */
 export const BAND_RANGE = 16;
 /** and the metres from its track to its ribbon's middle as a share of this many (SPAN_M halved, with room) */
@@ -139,37 +141,62 @@ interface Ribbon {
   flip: boolean;
 }
 
-/** The bands of every line. `pts`: each edge's local polyline (x, y, z triples, a to b). */
-export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown>; state?: BandState; ends?: Map<number, BandEdge> }): LineBands {
-  const beside = useBands(opts?.state).beside;
+/** The bands of every line. `pts`: each edge's local polyline (x, y, z triples, a to b). A later call compares its maps
+ * with this call's, so a caller does not change a map it has passed. `changed` (T-4153): the edges whose row or points
+ * may differ from those in the maps given (the network's last finished build), so a call made right after one on those
+ * maps follows only them and the lines whose paths changed. */
+export function lineBands(lines: readonly BandLine[], edges: readonly BandEdge[], pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown>; state?: BandState; ends?: Map<number, BandEdge>; changed?: BandChanges }): LineBands {
+  const st = useBands(opts?.state), beside = st.beside;
   const o = { ...opts, beside };
   const ends = opts?.ends ?? new Map(edges.map((e) => [e.id, e]));
   if (!opts?.debug) { bandWork.orders = 0; bandWork.pairs = 0; bandWork.passed = 0; bandWork.lines = 0; bandWork.whole = 0; }
   const rail = lines.filter((l) => l.ok && !l.bus && l.path.length);
-  // T-4153: the same line rows (so the same paths) and the same rows and points of every edge they use as last time:
-  // the same bands, known without laying out every path again
-  if (!opts?.debug && last?.rail && last.mode === `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}` && last.rail.length === rail.length && rail.every((l, i) => sameBandLine(l, last!.rail![i])) && last.usedIds.every((e, i) => pts.get(e) === last!.used[i][0] && ends.get(e)?.a === last!.used[i][1] && ends.get(e)?.b === last!.used[i][2])) {
+  const mode = `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}`;
+  // (a fresh pass, for `rule` and the check, lays every path out again)
+  const fresh = () => linesOn(rail);
+  if (opts?.debug) return bands(rail, fresh(), ends, pts, o);
+  // T-4153: the lines on each edge kept, changed only where a line's path did
+  const kept = (st.on ??= { on: new Map(), rows: new Map() });
+  const moved = patchOn(kept, rail);
+  const on = kept.on;
+  /** the edges whose row or points may differ from the last call's, when the network says (null: any may) */
+  const delta = last && last.mode === mode && opts?.changed && opts.changed.pts === last.pts && opts.changed.ends === last.ends ? opts.changed.edges : null;
+  // the same paths, and the same points and ends of every edge they use: the same bands, known without laying out a path
+  if (last && last.mode === mode && !moved.lines.size && sameUsed(on, pts, ends, last, delta)) {
     let whole: LineBands | null = null;
-    const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, linesOn(rail), ends, pts, { ...o, fresh: true })).rule(edge, x, y);
-    // (rows equal to the kept ones: the next call finds them by identity)
-    last.rail = rail;
+    const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, fresh(), ends, pts, { ...o, fresh: true })).rule(edge, x, y);
+    last = { ...last, pts, ends, rail };
     return { ...last.out, rule, corridor: last.corridor.slice() };
   }
-  const on = linesOn(rail);
-  const used = [...on.keys()].map((e) => [pts.get(e), ends.get(e)?.a, ends.get(e)?.b] as const);
   // (T-3939: `rule` is asked of a kept result by one whole pass, on this call's points)
   let whole: LineBands | null = null;
-  const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, on, ends, pts, { ...o, fresh: true })).rule(edge, x, y);
-  const out = bands(rail, on, ends, pts, o);
-  if (bandCheck && !opts?.debug) {
-    // (T-4153: the corridors from scratch too, or a slip in their kept samples is in both)
-    const bad = bandsDiffer(out, bands(rail, on, ends, pts, { ...o, fresh: true, beside: newBesideState() }));
+  const rule = (edge: number, x: number, y: number) => (whole ??= bands(rail, fresh(), ends, pts, { ...o, fresh: true })).rule(edge, x, y);
+  const follow = !!delta && memo?.mode === mode;
+  if (follow) bandWork.followed++;
+  const out = bands(rail, on, ends, pts, { ...o, delta: follow ? { edges: delta!, moved } : undefined });
+  if (bandCheck) {
+    // (T-4153: the corridors and the lines on each edge from scratch too, or a slip in what is kept is in both)
+    const bad = bandsDiffer(out, bands(rail, fresh(), ends, pts, { ...o, fresh: true, beside: newBesideState() }));
     if (bad) console.error(`T-2238 check: bands worked out again for an edit differ from a whole pass: ${bad}`);
   }
   // (a copy: the clock worker transfers the array it posts.) T-3939: kept without `rule`, whose closure holds the
   // whole of `bands`' working set (18 MB on a 13-zone Tokyo game)
-  last = { used, usedIds: [...on.keys()], rail, mode: `${opts?.corridors ?? CORRIDORS},${opts?.within ?? ""},${bandMode}`, out: { of: out.of, own: out.own, order: out.order, rule, corridor: out.corridor }, corridor: out.corridor.slice() };
+  last = { pts, ends, rail, mode, out: { of: out.of, own: out.own, order: out.order, rule, corridor: out.corridor }, corridor: out.corridor.slice() };
   return out;
+}
+
+/** T-4153: the edges whose row or points may differ from those of the maps given (`pts`, `ends`) */
+export interface BandChanges { pts: ReadonlyMap<number, Float32Array>; ends: ReadonlyMap<number, BandEdge>; edges: ReadonlySet<number> }
+
+/** every edge the lines use has the same points and ends as at the last call (only those `delta` names may not) */
+function sameUsed(on: ReadonlyMap<number, unknown>, pts: ReadonlyMap<number, Float32Array>, ends: ReadonlyMap<number, BandEdge>, was: LastBands, delta: ReadonlySet<number> | null): boolean {
+  const same = (e: number) => pts.get(e) === was.pts.get(e) && ends.get(e)?.a === was.ends.get(e)?.a && ends.get(e)?.b === was.ends.get(e)?.b;
+  if (delta) {
+    for (const e of delta) if (on.has(e) && !same(e)) return false;
+    return true;
+  }
+  for (const e of on.keys()) if (!same(e)) return false;
+  return true;
 }
 
 /** T-4153: two rail lines the bands read alike (their id, path and whether a bus) */
@@ -220,7 +247,62 @@ function bandsDiffer(a: LineBands, b: LineBands): string {
   return lines.length || recs || order ? `lines ${lines.slice(0, 8).join(", ")}${lines.length > 8 ? "..." : ""}; Traffic records ${recs}; edges' orders ${order}` : "";
 }
 
-interface LastBands { used: (readonly [Float32Array | undefined, number | undefined, number | undefined])[]; usedIds: number[]; rail: readonly BandLine[]; mode: string; out: LineBands; corridor: Float32Array }
+/** the last call: the maps it was given, its lines and what it gave */
+interface LastBands { pts: ReadonlyMap<number, Float32Array>; ends: ReadonlyMap<number, BandEdge>; rail: readonly BandLine[]; mode: string; out: LineBands; corridor: Float32Array }
+type OnEdge = { line: BandLine; k: number };
+/** T-4153: per edge the lines on it, as `linesOn` lays them out, and the rows they are of, by id */
+interface KeptOn { on: Map<number, OnEdge[]>; rows: Map<number, BandLine> }
+/** what `patchOn` changed: the lines whose paths changed, came or went, and the edges on their paths as they were and are */
+interface OnMoved { lines: Set<number>; edges: Set<number> }
+/** `kept` brought to `rail`: a line on a new path taken off the edges of its last one and put on those of its new one (in
+ * id order on each, at its first entry there), a line on the same path given its new row */
+function patchOn(kept: KeptOn, rail: readonly BandLine[]): OnMoved {
+  const out: OnMoved = { lines: new Set(), edges: new Set() };
+  const { on, rows } = kept;
+  const drop = (l: BandLine) => {
+    for (const p of l.path) {
+      const e = p >> 1, v = on.get(e);
+      out.edges.add(e);
+      if (!v) continue;
+      const i = v.findIndex((x) => x.line.id === l.id);
+      if (i < 0) continue;
+      v.splice(i, 1);
+      if (!v.length) on.delete(e);
+    }
+  };
+  const put = (l: BandLine) => {
+    l.path.forEach((p, k) => {
+      const e = p >> 1;
+      let v = on.get(e);
+      if (!v) on.set(e, (v = []));
+      out.edges.add(e);
+      let i = 0;
+      while (i < v.length && v[i].line.id < l.id) i++;
+      if (i < v.length && v[i].line.id === l.id) return;
+      v.splice(i, 0, { line: l, k });
+    });
+  };
+  let n = 0;
+  for (const l of rail) {
+    const was = rows.get(l.id);
+    if (was) n++;
+    if (was === l) continue;
+    if (was && sameBandLine(was, l)) {
+      // (the same path: its entries read the new row)
+      for (const p of l.path) for (const x of on.get(p >> 1) ?? []) if (x.line.id === l.id) x.line = l;
+    } else {
+      if (was) drop(was);
+      put(l);
+      out.lines.add(l.id);
+    }
+    rows.set(l.id, l);
+  }
+  if (n < rows.size) {
+    const now = new Set(rail.map((l) => l.id));
+    for (const [id, l] of [...rows]) if (!now.has(id)) { drop(l); rows.delete(id); out.lines.add(id); }
+  }
+  return out;
+}
 
 /** per edge: the lines on it, each with its first entry in its path */
 function linesOn(rail: readonly BandLine[]): Map<number, { line: BandLine; k: number }[]> {
@@ -240,7 +322,7 @@ let last: LastBands | null = null;
 /** T-4153: what `lineBands` keeps between calls (the last result, the bands' memo, the kept orders, the corridors'
  * samples), one per network cache (map/network.ts `NetCache`), so a build from scratch beside the kept one
  * (`?patch=check`) neither reads nor moves it; the module's variables hold the one in use */
-export interface BandState { last: LastBands | null; memo: BandMemo | null; orders: ReturnType<typeof newOrders>; beside: BesideState }
+export interface BandState { last: LastBands | null; memo: BandMemo | null; orders: ReturnType<typeof newOrders>; beside: BesideState; on?: KeptOn }
 export const newBandState = (): BandState => ({ last: null, memo: null, orders: newOrders(), beside: newBesideState() });
 let sharedBands: BandState | null = null;
 let bandsInUse: BandState | null = null;
@@ -258,12 +340,17 @@ function useBands(st: BandState | undefined): BandState {
  * over to each edge's points in the moved frame (`moved`, old array to new), as if worked out on them. */
 export function shiftKept(moved: ReadonlyMap<Float32Array, Float32Array>, state?: BandState) {
   const st = useBands(state);
-  if (last) last = { ...last, used: last.used.map(([p, a, b]) => [p && (moved.get(p) ?? p), a, b] as const) };
+  if (last) last = { ...last, pts: new Map([...last.pts].map(([e, p]) => [e, moved.get(p) ?? p])) };
   shiftBeside(moved, st.beside);
 }
 
 /** a recipe of a line's own: its ribbon (`rk` its lines and edges as text, `rib` them interleaved), slot and sign */
 interface OwnRecipe { key: string; rk: string; rib: number[]; slot: number; sgn: number }
+/** T-4153: the recipe of every knot where a line is alone on its track: a ribbon of one slot of no line (its width none),
+ * whose Traffic shift is none, as a ribbon of the line alone has on any edge. One for all such places, so a line's
+ * profile there has no knots but its entries' ends, the same across an edit elsewhere on it, and a cut there makes no
+ * recipe. */
+const ALONE: OwnRecipe = { key: "|/0/1", rk: "|", rib: [-1, -1], slot: 0, sgn: 1 };
 /** a ribbon change of a line for T-2140's alignment: its group (the bigger ribbon's lines), where, and
  * how far it reaches, local units */
 interface AlignAt {
@@ -284,8 +371,10 @@ interface AlignAt {
 /** past this (local units, or metres along a path) two ribbon changes are not the same: a path's
  * metres can move in the last bits when an edge on it is cut in two */
 const ALIGN_SAME = 1e-3;
+/** (T-4153: its curve's place is compared from the change, `c - g`, as the other lines of its group read it, not in path
+ * metres, which a cut earlier on the line moves) */
 const sameChange = (a: AlignAt, b: AlignAt) => a.key === b.key && a.prio === b.prio && a.enter === b.enter
-  && Math.abs(a.x - b.x) < ALIGN_SAME && Math.abs(a.y - b.y) < ALIGN_SAME && Math.abs(a.g - b.g) < ALIGN_SAME && Math.abs(a.c - b.c) < ALIGN_SAME
+  && Math.abs(a.x - b.x) < ALIGN_SAME && Math.abs(a.y - b.y) < ALIGN_SAME && Math.abs((a.c - a.g) - (b.c - b.g)) < ALIGN_SAME
   && Math.abs(a.L - b.L) < ALIGN_SAME && (Object.is(a.px, b.px) || Math.abs(a.px - b.px) < ALIGN_SAME) && (Object.is(a.py, b.py) || Math.abs(a.py - b.py) < ALIGN_SAME);
 /** T-2238: one line's bands as last worked out, with its recipes numbered in the order it first used
  * them, and what they were made from: the edges it read (`deps`), the boxes it looked for tracks in
@@ -347,7 +436,7 @@ interface OrderMemo {
 /** the kept orders; per edge the orders that read it; each edge's row and points at the last call */
 /** (`readBy` only grows, so it can name an order that no longer reads an edge, which is then worked out again for
  * nothing; it is laid out again from the kept orders once it holds three times what they read, `live`) */
-const newOrders = () => ({ memo: new Map<number, OrderMemo>(), readBy: new Map<number, number[]>(), entries: 0, live: 0, rows: new Map<number, BandEdge>(), pts: new Map<number, Float32Array | undefined>() });
+const newOrders = () => ({ memo: new Map<number, OrderMemo>(), readBy: new Map<number, number[]>(), entries: 0, live: 0, rows: new Map<number, BandEdge>(), pts: new Map<number, Float32Array | undefined>(), order: new Map<number, number[]>() });
 let orders = newOrders();
 /** (`added`: the reads `m` has that the edge's last order did not) */
 function setOrder(edge: number, m: OrderMemo | null, added: ArrayLike<number> = m?.reads ?? []) {
@@ -373,17 +462,28 @@ function addReads(edge: number, reads: ArrayLike<number>) {
 }
 /** the edges whose kept order read an edge whose row or points changed since the last call; `gone` gets the edges
  * gone since */
-function staleOrders(ends: ReadonlyMap<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, gone: number[]): Set<number> {
+function staleOrders(ends: ReadonlyMap<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, gone: number[], only?: ReadonlySet<number>): Set<number> {
   const out = new Set<number>();
   const moved = (e: number) => { for (const x of orders.readBy.get(e) ?? []) out.add(x); };
-  for (const [e, row] of ends) {
+  const look = (e: number, row: BandEdge) => {
     const p = pts.get(e);
-    if (orders.rows.get(e) === row && orders.pts.get(e) === p) continue;
+    if (orders.rows.get(e) === row && orders.pts.get(e) === p) return;
     moved(e);
     orders.rows.set(e, row);
     orders.pts.set(e, p);
+  };
+  const lost = (e: number) => { moved(e); gone.push(e); orders.rows.delete(e); orders.pts.delete(e); };
+  // (T-4153: only the edges that may have changed, when the network says which)
+  if (only) {
+    for (const e of only) {
+      const row = ends.get(e);
+      if (row) look(e, row);
+      else if (orders.rows.has(e)) lost(e);
+    }
+    return out;
   }
-  if (orders.rows.size > ends.size) for (const e of [...orders.rows.keys()]) if (!ends.has(e)) { moved(e); gone.push(e); orders.rows.delete(e); orders.pts.delete(e); }
+  for (const [e, row] of ends) look(e, row);
+  if (orders.rows.size > ends.size) for (const e of [...orders.rows.keys()]) if (!ends.has(e)) lost(e);
   return out;
 }
 /** checks/t4153-net.mjs --self-test: every kept order trusted, which its check must catch */
@@ -391,7 +491,7 @@ let selfTest = false;
 export function bandSelfTest(on: boolean) { selfTest = on; }
 /** T-4153: what the last call worked out again (counts, for the network build's work line): orders with any pair of
  * lines walked again, those pairs, and pairs kept whose lines' paths changed within their walks */
-export const bandWork = { orders: 0, pairs: 0, passed: 0, lines: 0, whole: 0, passedAll: 0 };
+export const bandWork = { orders: 0, pairs: 0, passed: 0, lines: 0, whole: 0, passedAll: 0, followed: 0 };
 function sameOrderLines(m: OrderMemo, v: readonly { line: BandLine; k: number }[], diffOf: (q: number[], p: number[]) => PathDiff | null): boolean {
   if (m.lines.length !== v.length) return false;
   for (let i = 0; i < v.length; i++) {
@@ -421,7 +521,9 @@ function stepsOf(d: PathDiff, k: number, fwd: boolean): [number, number, number]
 /** past this many edges changed, every line is worked out again */
 const MEMO_EDGES = 400;
 
-function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]>, ends: Map<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown>; fresh?: boolean; beside?: BesideState }): LineBands {
+/** `delta` (T-4153): the edges whose row or points may differ from the last call's and the lines `patchOn` moved, so the
+ * passes over every edge follow those alone */
+function bands(rail: BandLine[], on: Map<number, OnEdge[]>, ends: Map<number, BandEdge>, pts: ReadonlyMap<number, Float32Array>, opts?: { corridors?: boolean; within?: number; debug?: Map<number, unknown>; fresh?: boolean; beside?: BesideState; delta?: { edges: ReadonlySet<number>; moved: OnMoved } }): LineBands {
   // the unit direction an edge leaves a node in, y up (local y points south)
   const leave = new Map<number, [number, number]>();
   /** T-4153: the edges an edge's order read (their ends and points), while it is worked out */
@@ -501,7 +603,8 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     walkEnd = 0;
     return 0;
   };
-  const order = new Map<number, number[]>();
+  // (T-4153: the kept orders' own map, set and deleted where an edge's order is worked out)
+  const order = !opts?.debug && !opts?.fresh ? orders.order : new Map<number, number[]>();
   /** T-4153: the steps the last `compare`'s walks ended at (`walkEnd`), the second -1 when not walked */
   let walk1 = 0, walk2 = -1;
   /** < 0: `x` left of `y` in the edge's a to b direction. Looked at first ahead in the lower-id
@@ -521,11 +624,12 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   // T-4153: an edge's order kept while its lines, their paths and every edge the comparisons read are as last time;
   // and where some changed, each pair's answer kept while its walks read the same of their paths (`walkNow`)
   const keepOrders = !opts?.debug && !opts?.fresh;
+  const delta = keepOrders ? opts?.delta : undefined;
   const gone: number[] = [];
-  const stale = keepOrders ? staleOrders(ends, pts, gone) : null;
+  const stale = keepOrders ? staleOrders(ends, pts, gone, delta?.edges) : null;
   // (the lines on an edge gone that their paths still name: a walk along it would now end there)
-  const broken = new Set<number>();
-  for (const e of gone) for (const x of on.get(e) ?? []) broken.add(x.line.id);
+  const broken = new Set<number>(), brokenPaths: number[][] = [];
+  for (const e of gone) for (const x of on.get(e) ?? []) if (!broken.has(x.line.id)) (broken.add(x.line.id), brokenPaths.push(x.line.path));
   const diffs = new Map<number[], { p: number[]; d: PathDiff | null }>();
   const diffOf = (q: number[], p: number[]) => {
     let x = diffs.get(q);
@@ -549,9 +653,25 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     }
     return J + n - (wx![1] - wx![0]);
   };
+  // T-4153: with `delta`, only the edges whose order can differ: those whose lines or their paths changed (`patchOn`), those
+  // whose kept order read an edge that changed, and those of a line on an edge gone
+  let visit: Iterable<number> = on.keys();
+  if (delta) {
+    const v = new Set(delta.moved.edges);
+    for (const e of stale!) v.add(e);
+    for (const p of brokenPaths) for (const q of p) v.add(q >> 1);
+    visit = v;
+  }
   const visited = new Set<number>();
-  for (const [edge, v] of on) {
-    if (v.length < 2) continue;
+  for (const edge of visit) {
+    const v = on.get(edge);
+    if (!v || v.length < 2) {
+      if (delta) {
+        order.delete(edge);
+        if (orders.memo.has(edge)) setOrder(edge, null);
+      }
+      continue;
+    }
     visited.add(edge);
     const was = stale ? orders.memo.get(edge) : undefined;
     const fresh = !was || stale!.has(edge);
@@ -626,7 +746,10 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       orderReads = null;
     }
   }
-  if (keepOrders) for (const edge of [...orders.memo.keys()]) if (!visited.has(edge)) setOrder(edge, null);
+  if (keepOrders && !delta) {
+    for (const edge of [...orders.memo.keys()]) if (!visited.has(edge)) setOrder(edge, null);
+    for (const edge of [...order.keys()]) if (!visited.has(edge)) order.delete(edge);
+  }
   const rule = (edge: number, x: number, y: number) => {
     const v = on.get(edge), a = v?.find((s) => s.line.id === x), b = v?.find((s) => s.line.id === y);
     return a && b ? compare(edge, a, b) : 0;
@@ -635,7 +758,9 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
 
   // ---- the ribbon at each place
   const useCorridors = (opts?.corridors ?? CORRIDORS) && on.size > 1;
-  const beside: Beside = useCorridors ? besideSamples([...on.keys()], pts, ends, opts?.within, opts?.beside) : { edges: new Map(), pair: new Map() };
+  // (T-4153: with `delta`, the corridors look again only at the edges that changed or whose lines did)
+  const besideIn = delta && { edges: [delta.edges, delta.moved.edges], has: (e: number) => on.has(e) };
+  const beside: Beside = useCorridors ? besideSamples(on, pts, ends, opts?.within, opts?.beside, besideIn || undefined) : { edges: new Map(), pair: new Map() };
   const samples = beside.edges;
   const lowest = (e: number) => {
     const od = order.get(e);
@@ -654,6 +779,8 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   // in l's travel, summed over every place the two are beside, and the places; then +1: line l is left
   // of line m in l's travel (ties within COINCIDE_M: +1, the lower number on the left of its travel,
   // wherever the two meet), -1 right, none: never beside
+  // (T-4153: the metres summed as whole PAIR_FIX parts, so the sums are the same whatever order the corridors' records
+  // come in, which they keep from call to call)
   const pairSums = new Map<string, [number, number]>();
   for (const [e, nb] of beside.pair) {
     if (!on.has(e)) continue;
@@ -663,13 +790,13 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       const lf = lowest(f);
       if (le >= lf) continue;
       const key = `${le},${lf}`, s = pairSums.get(key) ?? [0, 0];
-      s[0] += x[0] * dirOn(e, le) * x[2];
+      s[0] += Math.round(x[0] * x[2] * PAIR_FIX) * dirOn(e, le);
       s[1] += x[2];
       pairSums.set(key, s);
     }
   }
   const rel = new Map<string, number>();
-  for (const [key, s] of pairSums) rel.set(key, Math.abs(s[0] / s[1]) < COINCIDE_M ? 1 : s[0] > 0 ? -1 : 1);
+  for (const [key, s] of pairSums) rel.set(key, Math.abs(s[0] / s[1]) < COINCIDE_M * PAIR_FIX ? 1 : s[0] > 0 ? -1 : 1);
   /** the pair rules read since `relReads` was set (what a ribbon's order depends on) */
   let relReads: string[] | null = null;
   const relOf = (l: number, m: number): number => {
@@ -680,13 +807,14 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
 
   // ---- T-2238: what changed since the last call, and so the lines to work out again
   const mode = `${useCorridors},${opts?.within ?? ""},${bandMode}`;
-  const mm: BandMemo = !opts?.debug && !opts?.fresh && memo && memo.mode === mode ? memo : { mode, fp: new Map(), ribbons: new Map(), rel: new Map(), lines: new Map(), serial: 0, changedAt: new Map(), recBase: -1 };
+  const mmKept = !opts?.debug && !opts?.fresh && !!memo && memo.mode === mode;
+  const mm: BandMemo = mmKept ? memo! : { mode, fp: new Map(), ribbons: new Map(), rel: new Map(), lines: new Map(), serial: 0, changedAt: new Map(), recBase: -1 };
   if (!opts?.debug && !opts?.fresh) memo = mm;
   /** edges whose part in any line's bands may differ: their points, samples, lines or those lines' directions */
   const changedEdges = new Set<number>();
   // (T-4153: each edge's record changed in place, no text made of it; `oldPts` the points a changed one had)
   const oldPts = new Map<number, Float32Array | undefined>();
-  for (const [e, v] of on) {
+  const record = (e: number, v: readonly OnEdge[]) => {
     // (an edge's lines in order, or as `on` lists them where it has no order, read in place)
     const ed = ends.get(e), od = order.get(e), n = od ? od.length : v.length, p = pts.get(e), sm = samples.get(e);
     let f = mm.fp.get(e);
@@ -694,14 +822,37 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     let same = f.a === (ed?.a ?? -1) && f.b === (ed?.b ?? -1) && f.pts === p && f.samples === sm && f.ids.length === n && f.dirs.length === v.length;
     for (let i = 0; same && i < n; i++) same = f.ids[i] === (od ? od[i] : v[i].line.id);
     for (let i = 0; same && i < v.length; i++) same = f.dirs[i] === (v[i].line.path[v[i].k] & 1);
-    if (same) continue;
+    if (same) return;
     changedEdges.add(e);
     oldPts.set(e, f.pts);
     f.a = ed?.a ?? -1; f.b = ed?.b ?? -1; f.pts = p; f.samples = sm;
     f.ids = linesOf(e).slice();
     f.dirs = v.map((x) => x.line.path[x.k] & 1);
+  };
+  const dropRecord = (e: number) => {
+    const f = mm.fp.get(e);
+    if (!f) return;
+    changedEdges.add(e);
+    oldPts.set(e, f.pts);
+    mm.fp.delete(e);
+    mm.ribbons.delete(e);
+  };
+  if (delta && beside.remade && mmKept) {
+    // T-4153: only the edges whose record can differ: those whose row or points may have, whose lines did, whose order was
+    // worked out again, and whose samples the corridors made again
+    const look = new Set<number>(delta.edges);
+    for (const e of delta.moved.edges) look.add(e);
+    for (const e of visit) look.add(e);
+    for (const e of beside.remade) look.add(e);
+    for (const e of look) {
+      const v = on.get(e);
+      if (v) record(e, v);
+      else dropRecord(e);
+    }
+  } else {
+    for (const [e, v] of on) record(e, v);
+    for (const e of [...mm.fp.keys()]) if (!on.has(e)) dropRecord(e);
   }
-  for (const [e, f] of mm.fp) if (!on.has(e)) { changedEdges.add(e); oldPts.set(e, f.pts); mm.fp.delete(e); mm.ribbons.delete(e); }
   // a pair rule that is new, gone or changed: only what read it is worked out again
   const relChanged = new Set<string>();
   for (const [k, v] of rel) if (mm.rel.get(k) !== v) relChanged.add(k);
@@ -1074,6 +1225,15 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
   };
   const ribKeys = new WeakMap<Ribbon, string>();
   const recipeIn = (o: Own, r: Ribbon, slot: number, sgn: number) => {
+    // T-4153: a line alone on its track has one recipe wherever it is (`ALONE`): its Traffic shift is none on any edge
+    if (r.lines.length === 1) {
+      let id = o.idx.get(ALONE.key);
+      if (id === undefined) {
+        o.recipes.push(ALONE);
+        o.idx.set(ALONE.key, (id = o.recipes.length - 1));
+      }
+      return id;
+    }
     let rk = ribKeys.get(r);
     if (rk === undefined) ribKeys.set(r, (rk = `${r.lines.join(",")}|${r.edges.join(",")}`));
     const key = `${rk}/${slot}/${sgn > 0 ? 1 : 0}`;
@@ -1356,7 +1516,7 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       const at: number[] = [0, end];
       for (const s of steps) if (s.L > 0) for (let i = 0; i < SMOOTH_KNOTS; i++) {
         const m = s.c + s.L * (i / (SMOOTH_KNOTS - 1) - 0.5);
-        if (m > 0 && m < end) at.push(Math.round(m * 100) / 100);
+        if (m > 0 && m < end) at.push(m);
       }
       const ms = Float64Array.from(at).sort();
       const S3 = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
@@ -1615,7 +1775,6 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
       profile: w.profile, recs: Float32Array.from(w.recs), recPos: Int32Array.from(w.recPos), nRecords: w.nRecords,
     });
   }
-
   // ---- the network's table and profiles: ribbons and recipes numbered in the order the lines first use them
   const of = new Map<number, BandProfile>(), ownOf = new Map<number, BandProfile>();
   const tRibbons: number[] = [], tRecipes: number[] = [];
@@ -1650,28 +1809,27 @@ function bands(rail: BandLine[], on: Map<number, { line: BandLine; k: number }[]
     }
     return map;
   });
-  const tRecords = new Float32Array(nRec);
-  nRec = 0;
-  // (T-4153: a line's records as the last table had them, numbered alike, are copied from it)
-  const prev = !opts?.debug && !opts?.fresh && last && mm.recBase >= 0 ? last.corridor : null;
-  rail.forEach((l, k) => {
-    const lm = mm.lines.get(l.id)!, map = maps[k], t = lm.tab;
-    if (prev && t && t.map.length === map.length && t.map.every((v, i) => v === map[i])) tRecords.set(prev.subarray(mm.recBase + t.at, mm.recBase + t.at + lm.recs.length), nRec);
-    else {
-      tRecords.set(lm.recs, nRec);
-      for (const x of lm.recPos) tRecords[nRec + x] = map[lm.recs[x]];
-    }
-    lm.tab = { map, at: nRec };
-    nRec += lm.recs.length;
-  });
-  mm.recBase = 3 + tRibbons.length + tRecipes.length;
-  const corridor = new Float32Array(3 + tRibbons.length + tRecipes.length + nRec);
+  // (the records written in place, after the ribbons and recipes)
+  const base = 3 + tRibbons.length + tRecipes.length, corridor = new Float32Array(base + nRec);
   corridor[0] = nRibbons;
   corridor.set(tRibbons, 1);
   corridor[1 + tRibbons.length] = tRecipes.length / RECIPE;
   corridor.set(tRecipes, 2 + tRibbons.length);
   corridor[2 + tRibbons.length + tRecipes.length] = nRecords;
-  corridor.set(tRecords.subarray(0, nRec), 3 + tRibbons.length + tRecipes.length);
+  nRec = 0;
+  // (T-4153: a line's records as the last table had them, numbered alike, are copied from it)
+  const prev = !opts?.debug && !opts?.fresh && last && mm.recBase >= 0 ? last.corridor : null;
+  rail.forEach((l, k) => {
+    const lm = mm.lines.get(l.id)!, map = maps[k], t = lm.tab;
+    if (prev && t && t.map.length === map.length && t.map.every((v, i) => v === map[i])) corridor.set(prev.subarray(mm.recBase + t.at, mm.recBase + t.at + lm.recs.length), base + nRec);
+    else {
+      corridor.set(lm.recs, base + nRec);
+      for (const x of lm.recPos) corridor[base + nRec + x] = map[lm.recs[x]];
+    }
+    lm.tab = { map, at: nRec };
+    nRec += lm.recs.length;
+  });
+  mm.recBase = base;
   return { of, own: ownOf, order, rule, corridor };
 }
 
@@ -1700,6 +1858,34 @@ export function profileAt(b: BandProfile, k: number, f: number): [number, number
   }
   const x = o + (c - 1) * KNOT;
   return [b[x + 1], b[x + 2], b[x + 4]];
+}
+
+/** `profileAt`'s shift and metres written to `out[o]` and `out[o + 1]` (turned round with `flip`), the same numbers
+ * made without arrays (T-4153: a line's train samples read it once each) */
+export function profileInto(b: BandProfile, k: number, f: number, out: Float32Array, o: number, flip: boolean): void {
+  const n = b[0], k0 = 2 + n + b[1 + k] * KNOT, c = b[2 + k] - b[1 + k], s = flip ? -1 : 1;
+  if (c <= 0) {
+    out[o] = 0;
+    out[o + 1] = 0;
+    return;
+  }
+  if (f <= b[k0]) {
+    out[o] = s * b[k0 + 1];
+    out[o + 1] = s * b[k0 + 4];
+    return;
+  }
+  for (let i = 1; i < c; i++) {
+    const x = k0 + i * KNOT;
+    if (f <= b[x]) {
+      const p = x - KNOT, d = b[x] - b[p], t = d > 0 ? (f - b[p]) / d : 1;
+      out[o] = s * (b[p + 1] + (b[x + 1] - b[p + 1]) * t);
+      out[o + 1] = s * (b[p + 4] + (b[x + 4] - b[p + 4]) * t);
+      return;
+    }
+  }
+  const x = k0 + (c - 1) * KNOT;
+  out[o] = s * b[x + 1];
+  out[o + 1] = s * b[x + 4];
 }
 
 /** `TrafficBands.pick` holds a shift as a share of this many times BAND_RANGE line widths, since a

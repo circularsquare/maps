@@ -17,7 +17,7 @@ import { M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_RAMPEND, M_REPE
 import { repeatedEdge } from "../game/repeatTrack";
 import { newFacilityCache, placeFacilities, type FacilityCache } from "./facilityPlace";
 import { buildingsDrawn, type BuildingDraw } from "./buildingNet";
-import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, bandWork, KNOT, lineBands, newBandState, profileAt, shiftKept, type BandProfile, type BandState } from "./lineBands";
+import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE, bandKnots, bandWork, KNOT, lineBands, newBandState, profileInto, shiftKept, type BandProfile, type BandState } from "./lineBands";
 export { bandWork };
 import { BOX_TOUCH_M, DEMAND_MERGE_M, offsetsReach, polylineGap } from "../game/complexes";
 import { acrossAt, endClear, singleSplitEnds, splitValue, TURNBACK_M, type SplitEnd } from "./terminalBays";
@@ -2192,7 +2192,10 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
   for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
   lap("lines.arrays");
   // lines sharing track side by side (T-1799)
-  const bands = lineBands(s.lines, s.edges, edgePts, { state: cache.bands, ends: edgeEnds });
+  // (T-4153: the edges whose row or points may differ from the last finished build's, which the bands' last call most
+  // likely had, so the bands look at those alone)
+  const changed = dirty && kept0 && prevSide ? { pts: kept0.edgePts, ends: prevSide.edgeEnds, edges: diff!.removed.length ? new Set([...dirty, ...diff!.removed.map((e) => e.id)]) : dirty } : undefined;
+  const bands = lineBands(s.lines, s.edges, edgePts, { state: cache.bands, ends: edgeEnds, changed });
   lap("lines.bands");
   for (const l of lineDrawOrder(s.lines)) {
     if (!l.ok) continue;
@@ -2323,7 +2326,8 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
         for (let k = 0; k < count; k++) {
           const at = k * step;
           while (j < path.length - 1 && at > end) end += lens[++j];
-          if (j < upTo && k < was!.count) {
+          // (a sample past the path's end is on its last entry, which need not be where the last path had it)
+          if (j < upTo && k < was!.count && (at <= end || j === was!.path.length - 1)) {
             rel[k] = was!.rel[k];
             lane[k] = was!.lane[k];
             if (bandOf.length) (bandOf[k * 2] = was!.band[k * 2]), (bandOf[k * 2 + 1] = was!.band[k * 2 + 1]);
@@ -2342,9 +2346,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
             const f = back ? fwdOf(p >> 1) : j;
             if (f === undefined) continue;
             const flip = back && (l.path[f] & 1) !== (p & 1);
-            const v = profileAt(c!.band, f, flip ? 1 - along : along);
-            bandOf[k * 2] = flip ? -v[0] : v[0];
-            bandOf[k * 2 + 1] = flip ? -v[2] : v[2];
+            profileInto(c!.band, f, flip ? 1 - along : along, bandOf, k * 2, flip);
           }
         }
         sm = { c: c!, path, count, step, lens, rel, lane, band: bandOf, bus: !!l.bus };
