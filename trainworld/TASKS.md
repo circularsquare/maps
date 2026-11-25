@@ -185,7 +185,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-23: "edit speed is actually still kind of a problem... noticeable on my end for big worlds... i feel like there was a point at which we had edit speed almost instant, but then might have regressed". Mostly placing track and editing stops. T-3550, T-1211, T-3804, T-1031 are back at P2 under this.
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-24, agent cutstretch2)
   - Context: You, 11-23: "this is the entire issue". Stage 3 (tree bandorders): band orders kept through a cut path, and a removed line no longer redoes every corridor. Asia network build in Node: a station on its longest trunk 0.62-0.69 to 0.31-0.49 s, a line removed 0.82-0.85 to 0.28-0.36 s. Left: each line whose path is cut is redone whole.
   - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
   - Other: notes/T-4153.md stage 3 "What is left"
@@ -209,11 +209,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
   - Other: notes/T-4209.md
-- T-4249 [P2] {L:edit-speed} A station's own leftover waits on big saves
+- T-4249 [P2] {L:edit-speed} A station's own leftover waits on big saves (taking, 2026-11-24, agent stationclick)
   - Context: From T-4240 (11-25): after its fix a station on your Asia save shows up in 0.75 s. Of the edit's own part, trips are still re-sent after an edit that changes no train's run, and the station check still runs in the worker at the click (most of the 174 ms before the apply).
   - Goal: Neither paid by an edit that doesn't need it.
   - Other: notes/T-4240.md
-- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched
+- T-4214 [P1] {L:edit-speed} Clickable map patched with what each edit touched (taking, 2026-11-24, agent stationclick)
   - Context: Waiting clicks landed 11-24 (7ff71c929). The clickable map patched with each edit's pieces (stage C, kept off the panels' world) is built in tree mapcfix, not landed. You, 11-24: work at the root cause, "something like a silo approach". Left: the station name wait, a track run's placing wait, drawings at the click. Gemini: artifacts/trainworld/gemini/rootcause-plan-answer.md.
   - Goal: After each edit the clickable map takes only the touched pieces, so no click waits for the whole network; no name or placing wait for stations and track runs.
   - Other: notes/T-4214.md
@@ -244,10 +244,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
   - Other: notes/T-4225.md
-- T-4193 [P2] {L:loading} Bus zones' streets before the network on load (taking, 2026-11-24, agent busload)
-  - Context: From T-4188 (11-24): Community save jwxidghd never loads on a phone because the clock worker re-solves train counts once per zone its 92 bus lines touch (20 passes, 34-58 s each). Loading those zones' streets first got the network in 17.7 s on an emulated iPhone. The prototype can change figures.
-  - Goal: Only the bus routes' zones fetched (19, not 47), one pass; a bus-heavy real save's figures compared before and after.
-  - Other: notes/T-4188.md; patch artifacts/trainworld/t4188/instrumented-and-prototype.patch
 - T-4191 [P3] {L:loading} Edits in a new game's first seconds open zones twice
   - Context: From T-4055 (11-24): an edit made while a new game's load hold is on opens its zones coarse, then the level check reopens them fine: an extra download and solve for nothing.
   - Goal: Those zones open once, at the level they end at.
@@ -361,6 +357,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4242 [P2] {L:timetables} Weekend riders follow weekend trains
   - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
+- T-4252 [P2] {L:checks} Gemini agents that make code changes (taking, 2026-11-24, agent geminirun)
+  - Context: You, 11-25: Claude usage will run out before Gemini's; "i'd also like to set it up so that we can use gemini neons to make code changes / handle tasks, like claude subagents." Today gemini_audit.py runs agy read-only; Gemini's code tasks run in Antigravity and you pass them on.
+  - Goal: A Gemini Neon agent works a brief in its own worktree (edits, typecheck, tests), reports to the inbox like a Claude agent, and can't commit, push, deploy or touch 8800.
 - T-4250 [P2] {L:route-choice} A short line beside a crowded long one stays empty
   - Context: A player report (via your scratch pad, 11-25): line B runs a short part of long line A to relieve it, but A stays over 130% there while B sits near 60%. Maybe real (riders going past B's end), maybe riders not weighing A's crowding when picking a train. Reach: some, anyone adding a relief line.
   - Goal: The code says why; fixed if riders whose trip fits B ignore A's crowding.
@@ -476,6 +475,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4229 [P3] {L:map-look} Station names stay after zooming in
   - Context: Player report 11-20 (board g170): after zooming in once, station names stay on screen. Reach: few, one report.
   - Goal: Station names follow the map at every zoom.
+- T-4253 [P2] {L:fares} A line's fare multiple up to 10x
+  - Context: Players ask for a higher per-line fare multiple. You, 11-25: "we should raise max allowed to like 10x (we can reject it if the base fare times the mult is like over a thousand dollars i guess)".
+  - Goal: A line's fare multiple goes up to 10x; one whose base fare times the multiple is over US$1,000 is refused with a message.
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
@@ -927,7 +929,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Goal: The settle stops once lines hold nearly still; that save opens in under a minute; NYC lines within 1%.
   - Other: notes/T-4188.md
 - T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-24, agent aside1)
-  - Context: Design approved 11-24 ("ok, we can build 4220"): 9 stages, 12-14 h. You, 11-24: "edits made during remaining full passes should ideally get fast numbers ... we need to do some sort of batching". On Asia an edit during the refresh or an intercity re-solve waits 100-250 s; the design gives lone-edit time (8-40 s). Gemini reviewed it.
+  - Context: Design approved 11-24: 9 stages, 12-14 h. Stage 1 is built in tree aside1: each whole re-solve keeps a snapshot of the figures on screen (real New York save: 10 MB, under 20 ms, figures unchanged). Next is stage 2, stand-ins. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time
@@ -1055,6 +1057,14 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.
   - Other: notes/T-1354.md
+- T-4254 [P2] {L:open-source} Port PR 31, bus trunk stretches kept on edit
+  - Context: xoaninc's PR 31 (11-24): editing a bus route keeps trunk road speeds on the legs the edit didn't touch. Gemini's survey (11-25): applies cleanly, no problems found. A bug fix, not bus tuning.
+  - Goal: Ported with credit; an edited bus route keeps its trunk speeds. Replying on the PR is yours.
+  - Other: notes/pr-survey-2026-11-25.md
+- T-4255 [P2] {L:open-source} Port PR 29, cached paths in stop-marker scans
+  - Context: Leni-Vienne's PR 29 (11-22): the stop-marker scan keeps shortest-path trees instead of redoing them. Gemini's survey (11-25): two small conflicts (keep edge_barred for busways and the 3-argument carry_worth); adds up to 19 MiB of WASM heap on the small-device setting.
+  - Goal: Ported with credit, those kept, its heap capped; faster stop markers on big networks, measured.
+  - Other: notes/pr-survey-2026-11-25.md; T-4045
 - T-3523 [P3] {L:open-source} Make the public repo the real one
   - Context: Your pad, 2026-11-17: with many pull requests, applying them is clunky, and contributors can't see what we're already working on. You chose 2026-11-17: "lets work on making the public repo the real one. we can do it some time after 0.4 publish." About 1-2 days: private notes and tooling split out, every commit public.
   - Goal: The public repo is where trainworld is developed; pull requests merge there directly, and nothing private lands in it. The design goes to you before it is built.

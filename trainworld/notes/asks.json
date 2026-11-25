@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-24-13",
+    "title": "Pull request calls",
+    "text": "Pull request calls from Gemini's survey (notes/pr-survey-2026-11-25.md), each with its recommendation: #16 branch lines: close (line groups cover it; T-3444 is changing paths). #22 level focus row on the map: close (Settings > Show levels has it). #30 Auto bus catchments stop at rail-linked stops: port (a bug: a 9.6 km walk past 9 rail stations; shifts Auto bus riders). #32 bus routes prefer trunk roads at 1.4x: close (buses settled; too strong in suburbs). #34 capacity section runs on through a one-way pair: port after an NYC figure diff. #35 rename a line's stations together: port with small fixes. Already done here, close with thanks: #21 (T-3474), #24 (T-3659). Porting on my own call: #31 (T-4254), #29 (T-4255); #23 stays a reference for T-3659.",
+    "since": "2026-11-24",
+    "by": "maps-3e"
+  }
+]

@@ -127,10 +127,10 @@ the orchestrator in Windows Terminal, not the VS Code panel.
 
 Risky changes (sim, saves, demand numbers, money) are reviewed in batches (11-20, T-3902; her 11-24: review, not
 playtest). Land each on master as its own commit once its builder's tests and one in-game run pass. Then one review per
-batch on master: a fresh Sonnet agent given each change's Goal and the batch's diff, not the builders' reports, reads
-the diff and the code around it and lists how it breaks, interactions included: what the player does, what goes wrong,
-the line. Gemini reviews the same diff (Tools below); the reviewer checks each Gemini finding against the code. Play
-only to confirm a finding the reading can't settle. Pass or fail with evidence per change; no benchmarks. A failure is
+batch on master, by Gemini (Tools below): given each change's Goal and the batch's diff, not the builders' reports, it
+reads the diff and the code around it and lists how it breaks, interactions included: what the player does, what goes
+wrong, the line. A batch that changes saves or could lose data also gets a fresh Sonnet reviewer on the same diff. The
+agent that fixes a finding checks it against the code first. Play only to confirm a finding the reading can't settle. Pass or fail with evidence per change; no benchmarks. A failure is
 fixed on master by a fix agent, or that commit is reverted if the fix is big; publishing waits until the batch passes.
 8800 is rebuilt right after the batch lands, without waiting for the review (11-21); if the batch raises the save level,
 tell her a save made there may not load if a change is reverted. Own review before landing: anything that could stop an
@@ -186,11 +186,15 @@ she thinks it's ready; then run the skill. Keep the checks it needs (smoke, perf
   read-only, about 2 minutes. Every flagged line (OVER, HIGH, SOON, MISSING) goes in that day's report to her with
   what docs/ops-checks.md says to do about it.
 
+- **Gemini first for reading and review** (her 11-25: Claude usage runs out before Gemini's). Gemini: batch and
+  design reviews, PR surveys, sorting player requests, task sweeps, scoping a task from the code ("the code says
+  why", what a change would touch), research reading. Claude: orchestration and bookkeeping, code that lands, anything
+  that runs the game, checks or benchmarks, player text. Gemini code agents: T-4252.
 - **Gemini as adversarial reviewer** on every risky batch and every big design before it's built (her 11-24: "if we run
   out i'll likely upgrade the sub"):
   `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (read-only, sandboxed, Gemini 4 Neon
   medium by default, her pick; its top comment). It can't run commands: write the diff to a file under artifacts/trainworld/gemini/ and name it in the
-  brief (diff plus the task's Goal, "try to break it"). A finding is checked by a Claude agent before anyone acts on it. It doesn't run the game
+  brief (diff plus the task's Goal, "try to break it"). A finding is checked against the code by the agent that acts on it. It doesn't run the game
   or write code here; Gemini's own code tasks run in Antigravity and she passes them on to land.
 
 ## Traps

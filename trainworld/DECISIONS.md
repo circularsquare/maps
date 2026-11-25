@@ -137,6 +137,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-054): Commute demand leaves out people who work at home: the home end is LODES jobs by home block times (1 - tract work-from-home share), the work end each sector's jobs times its industry's share, so Midtown loses more than the Bronx. notes/T-054.md
 
 ## Fares and money
+- 2026-11-25 (Anita, T-4253): A line's fare multiple may go up to 10x, refused when the base fare times it is over US$1,000.
 - 2026-11-23 (Anita): A new game starts with $10B (older entries said $6B; the code's $10B is right).
 
 - 2026-11-21 (Anita, T-3922): Station upgrades, passages and buildings pay 0.1% of their price a game day (Anita's call), replacing no upkeep. On a 2,647-station save that is US$3.6M a day against US$22,000M fares; kept at the game's own ratio rather than raised.
@@ -304,7 +305,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
-- 2026-11-24 (Anita): Gemini reviews adversarially, sparingly (its quota runs out fast): when she asks, or when the orchestrator suggests it for a risky landing or big design; a Claude agent verifies a finding before action.
+- 2026-11-25 (Anita): Claude usage runs out before Gemini's, so Gemini takes most reading and review (docs/orchestrator.md "Tools"), and Gemini Neon agents are to make code changes like Claude subagents (T-4252). Replaces 11-24's "Gemini sparingly".
 - 2026-11-24 (T-4166): The AWS bench installs Node, Chrome and Rust on each machine instead of keeping an image (6-8 minutes, under a cent, against a snapshot billing every month) and ships only the files the save reads. Its numbers never go in the home ledgers (Linux, SwiftShader).
 - 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it (profile removed, guard.py and awslib refuse it; its scripts kept as a record). AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).
 

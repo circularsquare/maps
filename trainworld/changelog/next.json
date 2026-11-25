@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c012",
+      "text": "saves with many bus lines load much faster",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4193",
+      "by": "busload",
+      "at": "2026-11-25T00:23:30Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c011",
       "text": "bus trips now count bus minutes a bit longer, waits of at least 2 minutes and a 500 m walk",
       "edited": null,
