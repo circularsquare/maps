@@ -1982,7 +1982,8 @@ function spliceOf(was: SweepIn, wasPath: readonly number[], now: SweepIn, path: 
     break;
   }
   // to the first node past a quiet place after x1 (the last bands' sweep was quiet there too, its steps before alike or
-  // ended before x1), with the steps that start before that node
+  // ended before x1), with the steps that start before that node or at it (one of no length there has passed when the
+  // node's value is taken, `sweepKnots`)
   let e1 = n, k1 = ns, last = true;
   if (x1 < Infinity) for (let K = Math.max(0, ns - Q); K <= ns; K++) {
     const g = Math.max(x1, pmh[K] + 1);
@@ -1993,7 +1994,7 @@ function spliceOf(was: SweepIn, wasPath: readonly number[], now: SweepIn, path: 
     e1 = k;
     last = false;
     k1 = K;
-    while (k1 < ns && sml[k1] < S[e1]) k1++;
+    while (k1 < ns && sml[k1] <= S[e1]) k1++;
     break;
   }
   return { e0, e1, k0, k1, first: k0 === 0, last, grow: n - m, pre, suf };
