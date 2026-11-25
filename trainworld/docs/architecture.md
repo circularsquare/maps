@@ -74,8 +74,10 @@ Web first, so it can be shared as a link.
   is posted whole, as the last network's with no arrays, or as only its new segments, which the page
   writes over the ones they replace in the arrays it has (a segment that moves, because one was
   inserted or removed before it, makes the set whole again; `map/strokePost.ts`, T-1381); the renderer
-  copies the unchanged runs on the GPU and keeps textures whose data is the same (T-1028), and the
-  pick and snap grids are carried over through the same runs instead of built again (T-1030).
+  copies the unchanged runs on the GPU (T-1028), writes the new segments into the drawn buffers where no
+  run moved, else into the last network's buffers kept for 20 s, and keeps every network texture,
+  writing only the rows whose data changed (T-4262); the pick and snap grids are carried over through
+  the same runs instead of built again (T-1030).
   Anything that cannot be taken as changes (a load, a new draw anchor, a mismatch) goes whole;
   `?patch=0` posts everything whole, `?patch=check` compares the changes with whole builds
   (notes/T-1029.md). Trains are instanced and positioned on the GPU from keyframes

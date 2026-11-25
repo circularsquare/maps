@@ -27,6 +27,7 @@ function frameSetup(rnd: NetworkRenderer, cam: Camera, time: number, zoom: numbe
   rnd.releaseStaged(time);
   const n = rnd.net;
   if (!n) return null;
+  rnd.freshFill();
   if (rnd.hiddenFor !== n || rnd.hiddenV !== vis.v) rnd.applyHidden(n);
   const uTime = rnd.sync(time);
   rnd.bubbles.hide();
@@ -108,7 +109,9 @@ function beginStrokes(rnd: NetworkRenderer, c: Ctx1) {
   if (redraw && buses) {
     const sh = shadeColours();
     rnd.buses.draw(lc, a, vp, zoom, dpr, { wLine, casing, wSel, rail: BP_RAIL_RGB, railShare: BP_RAIL_SHARE, sel: opt.selLine, hot: opt.hotLine ?? -1, lit: opt.hotBuses ?? [], litStops: opt.hotStops ?? [], dim: opt.dimOthers ?? 1, shades: sh, fill: rgbf(sh.casing), casingRgb: rgbf(sh.casing),
-      paint: opt.byLevel ? "level" : opt.bySpeed ? "speed" : opt.byProfit ? "profit" : null, phases: n.phases, meta: n.meta, trackRgb: TRACK_RGB });
+      paint: opt.byLevel ? "level" : opt.bySpeed ? "speed" : opt.byProfit ? "profit" : null, phases: n.phases, meta: n.meta, trackRgb: TRACK_RGB,
+      // (the strokes' cache has a stencil; the canvas has one when `hasStencil`; another target is asked)
+      stencil: !rnd.keepGl ? undefined : cache ? true : c.view ? undefined : rnd.hasStencil });
   }
 }
 

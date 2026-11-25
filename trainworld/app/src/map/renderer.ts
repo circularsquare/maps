@@ -38,7 +38,12 @@ import { codeHidden, hidden as vis, levelHidden, levelShown, pickSkip } from "./
 import { EPOCH_S, STAGE_WAIT_MS, TripArgs, LINE_PX, noBays, BAYS, StationGroups, DrawOptions, StrokeVao, TexName, plainWmul, fullAttr, STROKE_ATTRIBS, STILL_MAX_MS, StrokeLodState, NetworkLayers, TRAIN_MAX_MPS, CROWD_STEP_S } from "./rendererParts";
 export { EPOCH_S, laneState, passingState, CROWD_ZOOM, CONFLICT_ZOOM } from "./rendererParts";
 export type { StationGroups, DrawOptions, NetworkLayers } from "./rendererParts";
-import { texture, buffer, attrib, strokes, checkStrokes, checkFull, dropLod, rewrite } from "./rendererStrokes";
+import { texture, buffer, attrib, strokes, checkStrokes, checkFull, checkTextures, dropLodOf, rewrite, keepTexture, changedRows, joinRows, unchangedRuns, spareOf, dropSpare, type KeptTex, type TexKind } from "./rendererStrokes";
+
+/** T-4262: how long after a network its stroke sets' old buffers are kept for the next one to copy into, ms: an
+ * edit's network then needs no new buffers, whose allocation was most of the GPU's work after one (about 40 MB on her
+ * Asia save), at the cost of holding a second copy of the strokes meanwhile */
+const SPARE_MS = 20000;
 import { drawFrame, bindTrainTextures } from "./rendererDraw";
 
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
@@ -436,6 +441,11 @@ export class NetworkRenderer {
    * preview, highlight, demand views and the like put on the GPU, so the caches know to redraw */
   uploads = 0;
   quiet = false;
+  /** T-4262: bytes sent to the GPU, copied on it and allocated there since the page opened (checks and profiles read them) */
+  gpuBytes = { up: 0, copy: 0, alloc: 0 };
+  /** T-4262: a network takes the GL objects of the one before and writes only what differs (`?perfOff=keepGl`: each
+   * network's textures and stroke buffers made anew, its traffic marks and lanes worked out whole, as before) */
+  keepGl = !perfOff("keepGl");
   /** T-1639: off with `?perfOff=strokeCull` and `?perfOff=strokeLod` */
   strokeCull = !perfOff("strokeCull");
   strokeLod = !perfOff("strokeLod");
@@ -464,10 +474,24 @@ export class NetworkRenderer {
     const g = gl as unknown as Record<string, unknown> & { twCounted?: boolean };
     if (!g.twCounted) {
       g.twCounted = true;
+      const view = (v: unknown) => (ArrayBuffer.isView(v) ? v : null);
+      /** bytes a call sends, copies or allocates (T-4262), as `gpuBytes` counts them */
+      const count = (name: string, a: unknown[]) => {
+        const b = this.gpuBytes;
+        if (name === "bufferData") { const v = view(a[1]); if (v) b.up += v.byteLength; else if (typeof a[1] === "number") b.alloc += a[1]; }
+        else if (name === "bufferSubData") { const v = view(a[2]); if (v) b.up += typeof a[4] === "number" ? a[4] * ((v as Float32Array).BYTES_PER_ELEMENT ?? 1) : v.byteLength; }
+        else if (name === "copyBufferSubData") b.copy += a[4] as number;
+        else if (name === "texImage2D") { const v = view(a[8]); if (v) b.up += v.byteLength; }
+        else if (name === "texSubImage2D") {
+          const comps = a[6] === gl.RED ? 1 : a[6] === gl.RG ? 2 : 4;
+          b.up += (a[4] as number) * (a[5] as number) * comps * (a[7] === gl.FLOAT ? 4 : 1);
+        }
+      };
       for (const name of ["bufferData", "bufferSubData", "copyBufferSubData", "texImage2D", "texSubImage2D", "deleteBuffer", "deleteTexture", "deleteVertexArray"]) {
         const f = g[name] as (...args: unknown[]) => unknown;
         g[name] = (...args: unknown[]) => {
           if (!this.quiet) this.uploads++;
+          count(name, args);
           return f.apply(gl, args);
         };
       }
@@ -563,7 +587,12 @@ export class NetworkRenderer {
         if (tb) (wm[i * 3 + 1] = tb.seg[i * 2]), (wm[i * 3 + 2] = tb.seg[i * 2 + 1]);
       }
     }
-    if (lines.count) rewrite(this, lines.wmulBuf, wm ?? plainWmul(lines.count));
+    // T-4262: widths all plain (the Line view's: every width 1, no band shift) are drawn as the plain widths, and
+    // only the rows that differ from what the buffer holds are written
+    if (wm && this.keepGl && isPlainWmul(wm)) wm = null;
+    const wmulChanged = lines.count > 0 && (!this.keepGl || !!wm || !lines.wmulPlain) && writeWmul(this, lines, wm);
+    lines.wmulPlain = !wm;
+    lines.wmulHeld = wm;
     this.lineWidths = ok ? l.lineWidth : null;
     this.linesWmul = wm;
     this.trafficWidths = !!l?.traffic;
@@ -574,8 +603,13 @@ export class NetworkRenderer {
       if (tb) for (let i = 0; i < tb.sample.length; i += 2) this.trafficReach = Math.max(this.trafficReach, Math.abs(tb.sample[i]));
       this.putLane(n);
     }
-    this.perSegV++;
+    if (wmulChanged || !this.keepGl) this.perSegV++;
     const samples = Math.max(1, n.samples.length / 2);
+    if (this.keepGl) {
+      this.putTexture("fill", l ? l.fill : this.blankFill(samples), "rg32f", TEX_W);
+      this.fillStale = false;
+      return;
+    }
     const upload = (tex: WebGLTexture | null, data: Float32Array, kind: "r32f" | "rg32f") => {
       const gl = this.gl;
       const comps = kind === "r32f" ? 1 : 2;
@@ -613,30 +647,54 @@ export class NetworkRenderer {
   }
   writeFull() {
     const l = this.lines, n = this.net;
+    const { keys, key } = this.fullInputs();
+    const drawn = `${n ? 1 : 0}/${l?.count}/${key}`;
+    this.fullKeys = keys;
+    if (!l || !l.count || !n || drawn === this.fullDrawn) return;
+    this.fullDrawn = drawn;
+    const { out, any } = this.fullValues(n, keys, null, null);
+    this.anyFull = any;
+    rewrite(this, l.fullBuf, out);
+    this.linesFull = out;
+    this.fullKey = key;
+    this.perSegV++;
+  }
+  /** T-4262: what the lines' traffic marks were last worked out from (`fullInputs`), so a network's runs copied from
+   * the one before keep theirs */
+  fullKey: string | null = null;
+  /** the crowded stretches (line * 4096 + stretch) drawn, and the marks' inputs as text: the edges at capacity and those */
+  private fullInputs(): { keys: Map<number, CrowdedStretch>; key: string } {
     const keys = new Map<number, CrowdedStretch>();
     const b = this.board, fs = this.fullTraffic ? b?.crowdStretches : undefined;
     for (let k = 0; b && fs && k < fs.length; k += 2) {
       const j = k / 2;
       keys.set(fs[k] * 4096 + fs[k + 1], { load: b.crowdLoads[j] ?? 0, hour: b.crowdHours[j] ?? 0 });
     }
-    const drawn = `${n ? 1 : 0}/${l?.count}/${[...(this.fullEdges ?? [])].join(",")}/${[...keys].map(([k, v]) => `${k}:${v.load}:${v.hour}`).join(",")}`;
-    this.fullKeys = keys;
-    if (!l || !l.count || !n || drawn === this.fullDrawn) return;
-    this.fullDrawn = drawn;
+    return { keys, key: `${[...(this.fullEdges ?? [])].join(",")}/${[...keys].map(([k, v]) => `${k}:${v.load}:${v.hour}`).join(",")}` };
+  }
+  /** The lines' `a_full` for `n`: worked out whole, or with `runs` (the patch's) those of the runs kept copied from
+   * `old`, the last network's, made from the same inputs (`kept`); `any`: some segment is marked. */
+  private fullValues(n: NetworkBuffers, keys: Map<number, CrowdedStretch>, runs: Int32Array | null, old: Float32Array | null): { out: Float32Array; kept: boolean; any: boolean } {
+    const L = n.lines, f = this.fullEdges, stretch = L.stretch;
     // the shader's a_full: -1 track at capacity, else the stretch's load over the rated load
-    const f = this.fullEdges, stretch = n.lines.stretch;
+    const marked = !!f?.size || keys.size > 0;
+    const marks = marked ? (i: number) => {
+      if (f?.size && f.has(L.edge[i])) return -1;
+      const s = keys.size && stretch ? keys.get(L.colour[i] * 4096 + stretch[i]) : undefined;
+      return s ? s.load : 0;
+    } : undefined;
+    let out: Float32Array;
+    if (runs && old) {
+      out = new Float32Array(Math.max(1, L.count) * 2);
+      for (let k = 0; k < runs.length; k += 3) {
+        const s = runs[k], c = runs[k + 1], o = runs[k + 2];
+        if (o >= 0) out.set(old.subarray(o * 2, (o + c) * 2), s * 2);
+        else out.set(fullAttr(L, c, marks, s).subarray(0, c * 2), s * 2);
+      }
+    } else out = fullAttr(L, L.count, marks);
     let any = false;
-    const out = fullAttr(n.lines, l.count, (i) => {
-      if (f?.size && f.has(n.lines.edge[i])) return (any = true), -1;
-      const s = keys.size && stretch ? keys.get(n.lines.colour[i] * 4096 + stretch[i]) : undefined;
-      const v = s ? s.load : 0;
-      if (v !== 0) any = true;
-      return v;
-    });
-    this.anyFull = any;
-    rewrite(this, l.fullBuf, out);
-    this.linesFull = out;
-    this.perSegV++;
+    for (let i = 0; marked && !any && i < L.count; i++) any = out[i * 2] !== 0;
+    return { out, kept: !!(runs && old), any };
   }
   anyFull = false;
 
@@ -661,21 +719,59 @@ export class NetworkRenderer {
     this.chevronsAhead = false;
     this.lots.setNetwork(n.lots);
     this.floors.setNetwork(n.buildings);
-    const oldTrack = this.track, oldLines = this.lines;
-    this.track = strokes(this, n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track } : null);
-    // its a_full is `writeFull`'s, just below
-    this.lines = strokes(this, n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null, { full: "later" });
-    for (const r of [...(oldTrack?.res ?? []), ...(oldLines?.res ?? [])]) r.del();
-    dropLod(this);
-    this.linesWmul = this.linesFull = null;
-    this.perSegV++;
+    const oldTrack = this.track, oldLines = this.lines, wmulWas = this.linesWmul;
+    // the lines' traffic marks (T-819); T-4262: on the runs an edit's network copies, the last network's while what
+    // they are made from is as it was
+    const { keys, key } = this.fullInputs();
+    const oldFull = this.linesFull;
+    const fullRuns = this.keepGl && patch && oldLines && oldFull && this.fullKey === key && oldFull.length === Math.max(1, oldLines.count) * 2 ? patch.lines : null;
+    const full = this.fullValues(n, keys, fullRuns, oldFull);
+    // (the sets' buffers made with room, so the set after next can be copied into them: `spare`)
+    const spare = this.spare;
+    this.track = strokes(this, n.track, [], patch && oldTrack ? { old: oldTrack, runs: patch.track, spare: spare.track } : null, { room: true });
+    if (this.track !== oldTrack && patch && oldTrack && this.keepGl) spare.track = null;
+    this.lines = strokes(this, n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines, spare: spare.lines } : null, { full: full.out, fullKept: full.kept, room: true });
+    if (this.lines !== oldLines && patch && oldLines && this.keepGl) spare.lines = null;
+    // T-4262: a set written in place keeps its buffers, and its simplified copies and culling boxes while none of its
+    // segments changed
+    const linesSame = this.lines === oldLines && !!patch && unchangedRuns(patch.lines, this.lines.count);
+    for (const [old, now, runs] of [[oldTrack, this.track, patch?.track], [oldLines, this.lines, patch?.lines]] as const) {
+      if (!old) continue;
+      if (old !== now) {
+        // (the culling boxes of the chunks before the first change are the last set's)
+        const boxes = this.lodOf.get(old)?.boxes;
+        if (boxes && runs && this.keepGl && runs[0] === 0 && runs[2] === 0) now.boxesFrom = { boxes, upTo: runs[1] };
+        dropLodOf(this, old);
+        // T-4262: its buffers are the next set's to copy into, for a while (`SPARE_MS`)
+        const kind = old === oldTrack ? "track" : "lines";
+        dropSpare(this, spare[kind]);
+        spare[kind] = spareOf(this, old);
+      } else if (!runs || !unchangedRuns(runs, now.count)) dropLodOf(this, now);
+    }
+    clearTimeout(this.spareTimer);
+    if (spare.track || spare.lines) this.spareTimer = setTimeout(() => this.dropSpares(), SPARE_MS);
+    // the demand widths the runs kept had, the new segments' plain, until `setLayers` (T-4262: `wmulHeld`)
+    if (this.lines.count && !this.lines.wmulPlain && !this.lines.wmulHeld) {
+      rewrite(this, this.lines.wmulBuf, plainWmul(this.lines.count));
+      this.lines.wmulPlain = true;
+    }
+    this.linesWmul = this.lines.wmulPlain ? null : this.lines.wmulHeld ?? null;
+    this.linesFull = n.lines.count ? full.out : null;
+    this.anyFull = full.any;
+    this.fullKeys = keys;
+    this.fullKey = key;
+    this.fullDrawn = n.lines.count ? `1/${n.lines.count}/${key}` : "";
+    // (the simplified copies take the widths and marks again when either changed)
+    if (!linesSame || !full.kept || this.linesWmul !== wmulWas) this.perSegV++;
     if (patch && this.checkPatch) {
       checkStrokes(this, "track", this.track, n.track);
       checkStrokes(this, "lines", this.lines, n.lines);
       checkFull(this, this.track, n.track);
+      checkFull(this, this.lines, n.lines, full.out, this.linesWmul ?? plainWmul(this.lines.count));
+      if (full.kept && !sameWords(full.out, this.fullValues(n, keys, null, null).out)) console.error("T-4262 check: the lines' traffic marks kept by runs differ from whole ones");
     }
-    this.fullDrawn = "";
-    this.writeFull();
+    // (the picture changed, whatever was uploaded)
+    this.uploads++;
     this.turnback = n.turnbacks?.count ? strokes(this, n.turnbacks) : null;
     // blueprint track sorts last (network.ts)
     this.hasBlueprint = n.track.count > 0 && (n.track.flags[n.track.count - 1] & F_BLUEPRINT) !== 0;
@@ -703,7 +799,10 @@ export class NetworkRenderer {
     put("lines", "lineTable", () => [n.lineTable.length ? n.lineTable : new Float32Array(4), "rgba32f", LINES_W]);
     put("colours", "lineColours", () => [this.shownColours(n), "rgba8", LINES_W]);
     this.hiddenFor = null;
-    put("fill", null, () => [new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W]);
+    // the demand views' fill (T-084) is `setLayers`'s, which follows each network; T-4262: until it comes, blank from
+    // the next frame (`freshFill`) rather than at once, so it is written once
+    if (this.keepGl) this.fillStale = true;
+    else put("fill", null, () => [new Float32Array(Math.max(1, n.samples.length / 2) * 2).fill(-1), "rg32f", TEX_W]);
     const cars = n.lineCars ?? new Float32Array(Math.max(1, n.lineTable.length / 4)).fill(8);
     this.maxCars = Math.max(1, ...cars);
     put("cars", "lineCars", () => [cars, "r32f", LINES_W]);
@@ -773,7 +872,10 @@ export class NetworkRenderer {
     gl.bindVertexArray(null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     if (!aheadEmpty(this.ahead) || this.aheadDrawn) this.buildAhead();
+    if (this.checkPatch && this.keepGl) this.texturesRead = checkTextures(this);
   }
+  /** `?patch=check`: how many kept textures the last check read back (T-4262) */
+  texturesRead = 0;
 
   /** T-4145: what is drawn ahead of the network (game/pending.ts makes it, map/lineAhead.ts) */
   ahead: AheadModel = noAhead();
@@ -888,21 +990,80 @@ export class NetworkRenderer {
   /** per sample: how far apart its tracks are (T-658) and its line's band's shift as drawn (T-1799),
    * line widths and metres (T-2132) */
   putLane(n: NetworkBuffers) {
-    const m = Math.max(1, n.samples.length / 2), lane = n.sampleLane, band = this.trafficBands?.sample ?? n.sampleBand, v = new Float32Array(m * 4);
-    for (let k = 0; k < m; k++) {
-      v[k * 4] = lane?.length ? lane[k] ?? 1 : 1;
-      v[k * 4 + 1] = band?.[k * 2] ?? 0;
-      v[k * 4 + 2] = band?.[k * 2 + 1] ?? 0;
-      v[k * 4 + 3] = n.samplePass?.[k] ?? 1e9;
+    const m = Math.max(1, n.samples.length / 2), lane = n.sampleLane?.length ? n.sampleLane : undefined, band = this.trafficBands?.sample ?? n.sampleBand, pass = n.samplePass;
+    // T-4262: with the inputs there as before, only the rows (TEX_W samples) where one differs are made again
+    const was = this.laneIn;
+    const rows = this.keepGl && was && was.m === m && !was.lane === !lane && !was.band === !band && !was.pass === !pass && this.keptTex.lane?.data === was.v
+      ? joinRows([lane ? changedRows(was.lane!, lane, TEX_W) : [], band ? changedRows(was.band!, band, 2 * TEX_W) : [], pass ? changedRows(was.pass!, pass, TEX_W) : []])
+      : null;
+    const v = rows ? was!.v : new Float32Array(m * 4);
+    if (!rows) packLane(v, 0, m, lane, band, pass);
+    else for (let i = 0; i + 1 < rows.length; i += 2) packLane(v, rows[i] * TEX_W, Math.min(m, (rows[i] + rows[i + 1]) * TEX_W), lane, band, pass);
+    if (rows && this.checkPatch) {
+      const whole = new Float32Array(m * 4);
+      packLane(whole, 0, m, lane, band, pass);
+      if (!sameWords(whole, v)) console.error("T-4262 check: the lanes made again by rows differ from whole ones");
     }
-    this.putTexture("lane", v, "rgba32f", TEX_W);
+    this.laneIn = { m, lane, band, pass, v };
+    if (!rows || rows.length) this.putTexture("lane", v, "rgba32f", TEX_W, rows ?? undefined);
+  }
+  /** T-4262: what the lane texture was last made from, and the array it holds */
+  laneIn: { m: number; lane?: Float32Array; band?: Float32Array; pass?: Float32Array; v: Float32Array } | null = null;
+  /** T-4262: the demand views' fill is the last network's until `setLayers` puts this one's (`freshFill`) */
+  fillStale = false;
+  private blank: Float32Array | null = null;
+  /** per train sample, no fill known (-1), for `m` samples: one array while `m` stays */
+  blankFill(m: number): Float32Array {
+    if (this.blank?.length !== m * 2) this.blank = new Float32Array(m * 2).fill(-1);
+    return this.blank;
+  }
+  /** Before a frame draws: a network's fill blank while `setLayers` has not put one (T-4262). */
+  freshFill() {
+    if (!this.fillStale || !this.net) return;
+    this.fillStale = false;
+    this.putTexture("fill", this.blankFill(Math.max(1, this.net.samples.length / 2)), "rg32f", TEX_W);
   }
 
-  putTexture(name: TexName, data: ArrayBufferView, kind: "r32f" | "rg32f" | "rgba32f" | "rgba8", width: number) {
+  /** T-4262: the last network's stroke sets' buffers, which the next network's copy into (`strokes`), and when they go */
+  spare: { track: StrokeVao | null; lines: StrokeVao | null } = { track: null, lines: null };
+  spareTimer = 0;
+  dropSpares() {
+    clearTimeout(this.spareTimer);
+    // (deleting them changes nothing drawn: the strokes' cache is not drawn again for it)
+    this.uncached(() => {
+      dropSpare(this, this.spare.track);
+      dropSpare(this, this.spare.lines);
+    });
+    this.spare = { track: null, lines: null };
+  }
+  /** T-4262: the network textures kept from one network to the next (`keepTexture`) */
+  keptTex: Partial<Record<TexName, KeptTex>> = {};
+  /** Network texture `name` from `data`: the one kept written where it differs (`rows`: start and count pairs of the
+   * rows that do, when known), or one made anew. */
+  putTexture(name: TexName, data: ArrayBufferView, kind: TexKind, width: number, rows?: readonly number[]) {
     for (const r of this.texRes[name] ?? []) r.del();
-    const list: { del: () => void }[] = [];
-    this.tex[name] = texture(this, data, kind, width, list);
-    this.texRes[name] = list;
+    this.texRes[name] = [];
+    const k = this.keptTex[name] ?? null;
+    if (!this.keepGl) {
+      if (k) this.gl.deleteTexture(k.tex);
+      delete this.keptTex[name];
+      const list: { del: () => void }[] = [];
+      this.tex[name] = texture(this, data, kind, width, list);
+      this.texRes[name] = list;
+      return;
+    }
+    const next = keepTexture(this, k, data, kind, width, rows);
+    if (k && next !== k) this.gl.deleteTexture(k.tex);
+    this.keptTex[name] = next;
+    this.tex[name] = next.tex;
+  }
+  dropTexture(name: TexName) {
+    for (const r of this.texRes[name] ?? []) r.del();
+    this.texRes[name] = [];
+    const k = this.keptTex[name];
+    if (k) this.gl.deleteTexture(k.tex);
+    delete this.keptTex[name];
+    this.tex[name] = null;
   }
 
   /** The drawing tool's alignment, or null. */
@@ -997,7 +1158,7 @@ export class NetworkRenderer {
     this.hideStations(n);
     this.sampleLv = vis.levels ? this.sampleLevels(n) : null;
     if (this.sampleLv) this.putTexture("slevel", this.sampleLv, "r32f", TEX_W);
-    else if (this.tex.slevel) { for (const r of this.texRes.slevel ?? []) r.del(); this.texRes.slevel = []; this.tex.slevel = null; }
+    else if (this.tex.slevel) this.dropTexture("slevel");
     const L = n.lines, T = n.track;
     if (vis.lines.size || vis.levels || vis.blueprints) {
       const bp = vis.blueprints;
@@ -1044,6 +1205,10 @@ export class NetworkRenderer {
   restore() {
     this.res = [];
     this.texRes = {};
+    this.keptTex = {};
+    this.laneIn = null;
+    this.fullKey = null;
+    this.spare = { track: null, lines: null };
     for (const k of Object.keys(this.tex) as TexName[]) this.tex[k] = null;
     this.track = this.lines = null;
     this.lodOf.clear();
@@ -1263,4 +1428,48 @@ export class NetworkRenderer {
     gl.deleteBuffer(out);
     return res;
   }
+}
+
+/** per sample (`from` to `to`), the lane texture's four numbers (`putLane`) */
+function packLane(v: Float32Array, from: number, to: number, lane?: Float32Array, band?: Float32Array, pass?: Float32Array) {
+  for (let k = from; k < to; k++) {
+    v[k * 4] = lane ? lane[k] ?? 1 : 1;
+    v[k * 4 + 1] = band?.[k * 2] ?? 0;
+    v[k * 4 + 2] = band?.[k * 2 + 1] ?? 0;
+    v[k * 4 + 3] = pass?.[k] ?? 1e9;
+  }
+}
+
+/** two float arrays bit for bit */
+function sameWords(a: Float32Array, b: Float32Array): boolean {
+  if (a.length !== b.length) return false;
+  const x = new Uint32Array(a.buffer, a.byteOffset, a.length), y = new Uint32Array(b.buffer, b.byteOffset, b.length);
+  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return false;
+  return true;
+}
+
+/** widths that draw as the plain ones: every width 1, no band shift */
+function isPlainWmul(wm: Float32Array): boolean {
+  for (let i = 0; i < wm.length; i += 3) if (wm[i] !== 1 || wm[i + 1] !== 0 || wm[i + 2] !== 0) return false;
+  return true;
+}
+
+/** T-4262: segments a row of the widths' rows compared and written (3 numbers each) */
+const WMUL_ROW = 1024;
+
+/** The lines' `a_wmul` as `wm` (null: plain): only the rows that differ from what the buffer holds (`wmulHeld`) when
+ * it holds demand widths and `wm` is some; whole otherwise. Whether anything was written. */
+function writeWmul(rnd: NetworkRenderer, v: StrokeVao, wm: Float32Array | null): boolean {
+  const held = v.wmulPlain ? null : v.wmulHeld;
+  if (!rnd.keepGl || !held || !wm || held.length !== wm.length) {
+    rewrite(rnd, v.wmulBuf, wm ?? plainWmul(v.count));
+    return true;
+  }
+  const rows = changedRows(held, wm, WMUL_ROW * 3);
+  if (!rows.length) return false;
+  const gl = rnd.gl, per = WMUL_ROW * 3;
+  gl.bindBuffer(gl.ARRAY_BUFFER, v.wmulBuf);
+  for (let i = 0; i + 1 < rows.length; i += 2) gl.bufferSubData(gl.ARRAY_BUFFER, rows[i] * per * 4, wm.subarray(rows[i] * per, Math.min(wm.length, (rows[i] + rows[i + 1]) * per)));
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  return true;
 }

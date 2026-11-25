@@ -25,11 +25,14 @@ const MAX_RUN = 512;
  * each level above one per FAN boxes of the one below, up to a level of at most FAN boxes. */
 export type ChunkBoxes = Float32Array[];
 
-export function chunkBoxes(seg: Float32Array, count: number): ChunkBoxes {
+/** `from` (T-4262): an earlier set's boxes, whose chunks wholly before segment `upTo` are these segments' too. */
+export function chunkBoxes(seg: Float32Array, count: number, from?: { boxes: ChunkBoxes; upTo: number }): ChunkBoxes {
   const chunks = Math.max(1, Math.ceil(count / CHUNK));
   const levels = [new Float32Array(chunks * 4)];
   const l0 = levels[0];
-  for (let c = 0; c < chunks; c++) {
+  const kept = from ? Math.max(0, Math.min(Math.floor(Math.min(from.upTo, count) / CHUNK), from.boxes[0].length / 4, chunks)) : 0;
+  if (kept) l0.set(from!.boxes[0].subarray(0, kept * 4));
+  for (let c = kept; c < chunks; c++) {
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (let i = c * CHUNK, e = Math.min(count, i + CHUNK) * 4; i * 4 < e; i++) {
       const o = i * 4;

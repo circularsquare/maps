@@ -53,7 +53,13 @@ export function setSelLines(gl: WebGL2RenderingContext, u: Record<string, WebGLU
 
 export function shownSpeed(limit: Float32Array, trains?: Float32Array): Float32Array {
   if (!trains || trains.length !== limit.length) return limit;
-  return limit.map((v, i) => (trains[i] >= 0 ? trains[i] : v));
+  // (a loop: `map` with a closure took 18 ms over her Asia save's track in the frame after each edit, T-4262)
+  const out = new Float32Array(limit.length);
+  for (let i = 0; i < limit.length; i++) {
+    const t = trains[i];
+    out[i] = t >= 0 ? t : limit[i];
+  }
+  return out;
 }
 /** The ghost of track being placed (T-1038, Anita: "a decent minimum width ... see the track in full
  * length"), drawn as blueprint track with a thin dark outline (T-1054): never thinner than this
@@ -172,6 +178,13 @@ export interface StrokeVao {
   count: number;
   /** the per-segment width multipliers, rewritten by `setLayers` */
   wmulBuf: WebGLBuffer;
+  /** T-4262: `wmulBuf` holds the plain widths (`plainWmul`), or else `wmulHeld`, a copy of what it holds */
+  wmulPlain?: boolean;
+  wmulHeld?: Float32Array | null;
+  /** T-4262: bytes each buffer has room for, the attributes' then `wmulBuf`'s and `fullBuf`'s */
+  caps?: number[];
+  /** T-4262: the last set's culling boxes, whose chunks before segment `upTo` are this set's too (`chunkBoxes`) */
+  boxesFrom?: { boxes: ChunkBoxes; upTo: number };
   /** per segment its traffic mark (T-819, `writeFull`) and where along its run it starts (`fullAttr`) */
   fullBuf: WebGLBuffer;
   /** the network's strokes (T-1028): each attribute's buffer and bytes a segment, in `STROKE_ATTRIBS`

@@ -492,6 +492,8 @@ export interface BusStyle {
   phases: Float32Array;
   meta: Float32Array;
   trackRgb: Float32Array;
+  /** T-4262: the target drawn into has a stencil buffer; absent: asked of GL (a getParameter waits for the GPU) */
+  stencil?: boolean;
 }
 
 export type BusPaintKind = "speed" | "profit" | "level" | null;
@@ -929,7 +931,7 @@ export class BusLayer {
     // corridor widened by half the outline and 0 inside it narrowed by half, so what stays 1 is a ring
     // along the edge, however the segments and caps overlap; the colour pass then draws the ring once
     // (the stencil goes to 0 where it draws).
-    if (this.byId.has(s.sel) && s.sel !== this.muted && !this.byId.get(s.sel)!.ferry && (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0) {
+    if (this.byId.has(s.sel) && s.sel !== this.muted && !this.byId.get(s.sel)!.ferry && (s.stencil ?? (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0)) {
       const edge = 2 * CORRIDOR_M * (b.k.get(s.sel) ?? 1) * pxPerUnitAt(zoom) * dpr, half = 0.5 * OUTLINE_PX * dpr;
       gl.uniform1i(u.u_pass, 2);
       gl.uniform1i(u.u_only, s.sel);
@@ -1018,7 +1020,7 @@ export class BusLayer {
    * stencil a segment's band is cut out of its own middle only. */
   private drawLanes(b: Built, s: BusStyle, bus: number, dpr: number, zoom: number) {
     const gl = this.gl!, u = this.su;
-    const stencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
+    const stencil = s.stencil ?? (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     gl.uniform1i(u.u_pass, 5);
     gl.uniform1i(u.u_only, -1);
     gl.uniform1f(u.u_width, bus);
