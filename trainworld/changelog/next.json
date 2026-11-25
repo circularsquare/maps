@@ -6,13 +6,14 @@
       "id": "c032",
       "text": "placing stations and deleting new track respond faster on big networks",
       "edited": null,
-      "hidden": false,
+      "hidden": true,
       "task": "T-4272",
       "by": "answerfirst",
       "at": "2026-11-25T05:39:28Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-25T05:50:06Z"
     },
     {
       "id": "c031",

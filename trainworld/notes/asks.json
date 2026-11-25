@@ -40,5 +40,19 @@
     "text": "New text from T-4273: the help panel's Keys list gets \"R  Rename the open station\" (new). R because F2 already hides the interface. OK, or another key?",
     "since": "2026-11-25",
     "by": "maps-c5"
+  },
+  {
+    "id": "a-2026-11-25-3",
+    "title": "Weekend solve",
+    "text": "Weekend riders (T-4242, C:\\Users\\anita\\projects\\maps\\trainworld\\notes\\T-4242.md): a weekend-only short-turn gets no weekend riders because weekend riders are the weekday solve scaled. The fix: where a city's weekend trains differ in a period, solve that period again on the weekend trains (nothing changes where they match). It reverses your calls \"no second solve\" (T-266) and \"crowd them rather than lose them\" (T-3521): cut weekend trains would now lose fares. Cost where weekends differ: loads about 45-55% longer on 3 workers (NYC 78-81 s to about 115-120 s), up to twice as long on 1 worker; about 7% more memory per worker. About 10-12 h. Build it? Your call; I lean yes since players see it, but the load cost is real.",
+    "since": "2026-11-25",
+    "by": "maps-c5"
+  },
+  {
+    "id": "a-2026-11-25-4",
+    "title": "Buy trains after the confirm",
+    "text": "Edit speed (T-4272): a station on a running line's track can't be confirmed quickly today, because the game first works out whether you can afford the extra trains that headway lines sharing that track would need (369 ms on your Asia save). Proposal: confirm the station from its own checks, then buy those trains right after, letting cash dip below zero the way loans can. Then every station and delete is confirmed from local checks. OK? I'd say yes.",
+    "since": "2026-11-25",
+    "by": "maps-c5"
   }
 ]

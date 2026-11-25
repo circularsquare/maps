@@ -201,9 +201,12 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4276 [P2] {L:timetables} Timetable for a whole line group
   - Context: A player (X, 11-24): "Currently, the timetable only displays one route at a time. I'd like to be able to display all the routes in a group together." You, 11-24: file it.
   - Goal: A line group's panel shows one timetable with every line of the group, each line's trains told apart.
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
+  - Context: Click run on your Asia save on 8800 (ff532d4e9, 11-25): first station confirmed 558 ms after the press, later ones 2.2 s (p90 2.9 s). Each waits for the click before it, whose follow-up redoes whole-save steps in blocks of 0.4-2.5 s (notes/T-4267-measure.md).
+  - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
 - T-4272 [P1] {L:edit-speed} {waits:Anita} A click confirmed from what it touches (taking, 2026-11-24, agent answerfirst)
   - Need from Anita: A station on a running line's track can make headway lines need more trains. Buy them right after the confirm, cash dipping below zero if short? I'd say yes
-  - Context: Stations and deletes on track no running line uses are now confirmed from their own checks, 95-207 ms on your Asia save. On a running line's track they still wait 0.15-0.6 s for the trains they need to be worked out.
+  - Context: Stations and deletes on track no running line uses now skip the train work before their answer (16-72 ms of worker time on your Asia save; answers 95-207 ms in a run). On a running line's track they still wait 0.15-0.6 s for the trains they need.
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
 - T-4199 [P2] {L:loading} {after:0.4.6} Corridors and corridor book built with the packs
@@ -218,6 +221,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4262 stage 2 (11-25): the drawn track and lines no longer move on the GPU after an edit. The trains' tables (samples, phases, bends) are still in line order, so a line that changes length moves every line after it: on your Asia save 20 MB uploaded per deleted line.
   - Goal: Deleting a line or editing a station uploads only the changed lines' rows of the trains' tables.
   - Other: notes/T-4262.md
+- T-4280 [P2] {L:edit-speed} Edits name the lines they changed for the renderer (taking, 2026-11-25, agent linenames)
+  - Context: From T-4274 (11-25): the trains' tables now send only changed lines, but the renderer finds them by comparing every line's slice of each changed table (9-23 ms of an edit on your Asia save), and the zoomed-out copy in view is copied whole.
+  - Goal: The renderer's part of an edit grows with the lines it changed, not the save.
+  - Other: notes/T-4274.md
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
@@ -366,7 +373,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4244 [P3] {L:airports} Airport rail rides against real counts
   - Context: Players keep asking for more airport demand (tw-feedback, 11-24). You, 11-25: later, P3; recent airport work exists (T-2896, T-3502, T-3485, T-3501, T-4020), so build on it, "make sure we dont reinvent the wheel". A change to the numbers is yours.
   - Goal: Our rides beside published counts for 5-10 airports, and a proposal to you.
-- T-4242 [P2] {L:timetables} Weekend riders follow weekend trains (taking, 2026-11-25, agent weekenddesign)
+- T-4242 [P2] {L:timetables} {waits:Anita} Weekend riders follow weekend trains
+  - Need from Anita: Build a weekend solve (notes/T-4242.md)? It reverses "no second solve" and makes cut weekend trains lose fares; loads about 45-55% longer where weekends differ. Your call.
   - Context: A player, via tw-feedback (11-24): a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it; everyone stays on the full line. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
 - T-4250 [P2] {L:route-choice} {waits:Anita} A short line beside a crowded long one stays empty

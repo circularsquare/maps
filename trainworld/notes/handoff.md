@@ -9,14 +9,12 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    agents. Gemini quota hit 03:43 UTC, resets about 04:57: then batch review (template gemini/batch15/brief.md) over
    T-4149, T-4239, T-4243, T-4249, T-4251, T-4255-T-4259, T-4262-T-4265, T-4266, T-4270, T-4271; rerun gemini_agent
    t3303fix (T-4233, tree kept); T-4242 design draft (gemini/t4242/brief.md). Stay light: briefs in files.
-1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097): a click confirmed from local checks, nothing per
-   edit scaling with the save; no holds, timers or trims. Running: answerfirst (Opus, T-4272, station and track delete
-   confirmed within 100 ms on Asia), editmeasure (Opus, T-4267 phases per edit, notes/T-4267-measure.md), gpuslots
-   (Opus, T-4262 s2, GPU work per edit by what changed). Then rework T-4267 to her 100 ms bar with a fresh agent,
-   allowed to say "not possible for X because Y". The hold is rejected.
-1b. batch16a review done (artifacts/trainworld/gemini/batch16a/review.md, unread by me): its fix agent waits until
-   answerfirst and gpuslots land (same files); then one Opus fix agent as T-4277's brief. batch16b: fixes16b running
-   (T-4277). batch16c review running.
+1. Edit speed, her main focus: ROOT CAUSE ONLY (DECISIONS T-4097). Landed: T-4272 stage (answer from own checks for
+   edits that move no running line's trains). 8800 ff532d4e9 click run on Asia: first 558 ms, later 2.2 s (p90 2.9).
+   Running: followcut (Opus, T-4281: follow-up steps by record so later clicks don't wait), linenames (Opus, T-4280
+   in tree trainslots: renderer told what changed; then land trainslots T-4274+T-4280 together). Her answer pending:
+   buy trains after the confirm (a-2026-11-25-4); on yes, line-track stations confirm locally (T-4272 rest).
+1b. batch16a review (gemini/batch16a/review.md, unread): its Opus fix agent starts once answerfirst and trainslots land.
 2. Landed: roadsblock (Opus, T-4275 P1: roads and water missing behind tracker blockers since 0.4.6; the hotfix
    publish waits for her morning, publish skill).
 3. 8800 = 93412fc20, smoke PASSED 05:43 UTC (has the T-4275 roads fix: tell her it's ready for the hotfix publish when
