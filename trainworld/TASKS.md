@@ -178,10 +178,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-25, agent netcut9)
-  - Context: You, 11-23: "this is the entire issue". Stage 8 (tree netcut8): stations, buildings, facilities, splits, band orders and corridors redo only what an edit changed. Your Asia save, Node, a station on a three-line trunk: network build about 190 to 150 ms (first click 260 to 185). Left: cut lines' bands (about 30 ms), train speeds (20), per-line passes (20).
-  - Goal: A station on a line's track on Asia under 0.2 s of network build: a cut line's bands, strokes and speeds redone only near the cut.
-  - Other: notes/T-4153.md stage 7 "What is left"
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+  - Context: You, 11-23: "this is the entire issue". Stage 9 landed 11-25: a cut line's bands worked out only near the cut. Your Asia save, Node, a station on a three-line trunk: network build about 149 to 117 ms. Left: per-line passes (about 20 ms), train speeds (20), the bands' last whole-line copies (10-15).
+  - Goal: A station on a line's track on Asia under 100 ms of network build (T-4097's aim): per-line passes and speeds redone only for lines that changed.
+  - Other: notes/T-4153.md "Stage 9"
 - T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
@@ -218,6 +218,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 landed 11-25: stations and deletes on running lines' track are answered at the click, their trains bought right after (your yes). Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest waits on the worker's other pieces (T-4281).
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
+- T-4363 [P3] {L:edit-speed} Patched rows differ from the state's in a Boston game
+  - Context: The dev check "T-4214 check: the patched rows differ from the state's" fired in Boston game runs: "edges 0: cost" after building lines (seen since T-4153 stage 5; guessed as ground repricing between patch and state) and, new on 11-25, "nodes 4: line" after stations.
+  - Goal: The cause of each found; a real mismatch fixed, a harmless one no longer flagged.
+  - Other: notes/T-4153.md "Stage 9"; notes/T-4214.md
 - T-4360 [P3] {L:edit-speed} The worker's rows step, what's left
   - Context: T-4149 met its goal (11-25): rows 11-53 ms for any edit on your Asia save in Node. Left: edges compared (3-20 ms), line stamps (1-13), phase tables (2-10), bus rows read 25 times on some station edits (3-5), `take_moved_spans` 5-14 ms on the first edit after a load.
   - Goal: Each by what the edit touched, when edit speed's bigger costs are gone.
