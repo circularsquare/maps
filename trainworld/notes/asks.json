@@ -61,5 +61,12 @@
     "text": "T-4276 (a player asked to see all of a line group's routes in one timetable) is on master: look A, one table listing each station of the group's lines once, branches as blocks, every train under its line's bullet; the group's button now has a line's timetable icon and hover (\"Detailed schedule\", reused). Sheet with Now, A, B (a band per line) and C (a row per line under each station): C:\\Users\\anita\\projects\\maps\\artifacts\\trainworld\\review\\group-timetable.png. Keep A, or swap to B or C? I'd keep A.",
     "since": "2026-11-25",
     "by": "maps-13"
+  },
+  {
+    "id": "a-2026-11-25-6",
+    "title": "Gemini quota for the week",
+    "text": "Gemini's quota ran out at 10:24 UTC (05:24 your time) and resets in about 137 hours, around Nov 30 22:30 your time. Tonight it did two batch reviews and four small code tasks. Until then reviews go to Sonnet and small code to Sonnet too, which uses more Claude. Upgrade the Gemini plan now, or wait? I'd wait unless Claude usage gets tight.",
+    "since": "2026-11-25",
+    "by": "maps-13"
   }
 ]

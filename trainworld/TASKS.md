@@ -202,6 +202,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 (11-25, tree followcut2): questions and timer trips no longer run the previous click's follow-up in one block. Click run on your Asia save: first 212 ms, later 360, 278, 144 (stage 1: 618, 1,538, 2,156). Left: each click's own apply (T-4272's question) and the page holding it until the one before is confirmed.
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
+- T-4297 [P1] {L:checks} Fix the review's findings on the batch18 landings (taking, 2026-11-25, agent fixes18)
+  - Context: Gemini's review (artifacts/trainworld/gemini/batch18/review.md) of five landings: T-4283 weekend held train counts, T-4220 stage 4 the demand worker's side job, T-4285 renderer review fixes, T-4153 stage 7 the drawn network redoing only what a cut touched, T-4281 stage 2 questions waiting for a follow-up's state.
+  - Goal: Every real finding a player could hit fixed at its cause; the rest answered with the reason.
+  - Other: notes/T-4297.md
 - T-4291 [P1] {L:edit-speed} Rows and post sent by what an edit touched
   - Context: From T-4281 stage 2: after any edit the worker reads every edge, node and line again for the rows (about 120 ms in Node on your Asia save) and the post compares every row and network array (about 24 ms), since each state carries whole lists that the network and the post compare.
   - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
@@ -299,7 +303,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4052 (11-24): the line hover's "riders who wanted a bus" is carried plus left behind, so a rider who boards a later bus counts twice (rail too). Fix: count everyone who came to the stops; shifts the issues row's 3% threshold a little.
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
-- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-25, agent keepfix)
+- T-4080 [P2] {L:buses} Name and rename bus stops (taking, 2026-11-25, agent keepfix2)
   - Context: Design approved 11-24 (named stops stay put, labels at street zoom). Stages 1-3 done 11-25: a bus stop's name is set in its panel, saved, and shown in its hover, stop lists and timetables. Left: the review's sim fixes, map labels; connections are T-4083. Your scratch pad, 11-23: "people keep requesting to be able to rename / name bus stops."
   - Goal: Named bus stops labelled on the map at street zoom, with the stages 1-2 review's fixes in.
   - Other: notes/T-4080-design.md (about 6 h in six stages, 4 left; also covers T-4083); notes/T-4080.md
