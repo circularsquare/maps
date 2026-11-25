@@ -13,6 +13,8 @@
 import type { FeatureCollection } from "geojson";
 import type { GeoJSONSource, Map as MlMap } from "maplibre-gl";
 import { complexes } from "../game/complexView";
+import { complexChanges } from "../game/complexBuilder";
+import { ascendingBy, worldDiff } from "../game/worldDiff";
 import { PATCH_MODE } from "../game/patchMode";
 import type { StationId, StationInput, WorldView } from "../game/types";
 import { NameIndex, labelGroups, linesAt, type NameGroup, type NameOp } from "./labelNames";
@@ -149,6 +151,9 @@ export class StationLabels {
     });
   }
 
+  /** T-4150 stage 2: the world whose stations the names hold */
+  private heldW: WorldView | null = null;
+
   set(w: WorldView, painted = false) {
     // the build waiting for the paint takes the latest world
     if (this.deferred) { this.deferred = w; return; }
@@ -159,7 +164,16 @@ export class StationLabels {
     // user of this world) and the player's links count (T-209); so do the draw anchor, since the
     // names' positions are in its local units (T-307).
     const cx = complexes.peek();
-    const plan = this.names.plan(stations, listedLines(w), cx, anchor().version);
+    // T-4150 stage 2: what changed since the world whose stations the names hold, when the complexes say which of theirs
+    const held = this.names.held, base = this.heldW;
+    const roots = base && held.stations === base.save.stations && held.cx && PATCH_MODE !== "0" && ascendingBy(stations, (s) => s.num) ? complexChanges(held.cx, cx) : null;
+    const hint = roots ? { from: held.stations!, fromCx: held.cx!, stations: worldDiff(base, w)!.stations, roots } : null;
+    const plan = this.names.plan(stations, listedLines(w), cx, anchor().version, hint);
+    try { this.take(w, plan, cx, painted); } finally { if (this.names.held.stations === stations) this.heldW = w; }
+  }
+
+  private take(w: WorldView, plan: ReturnType<NameIndex["plan"]>, cx: ReturnType<typeof complexes.peek>, painted: boolean) {
+    const stations = w.save.stations;
     // a station building's name and outline (T-2219)
     const bk = (w.save.buildings ?? []).map((b) => `${b.id}:${b.name}:${b.corners.join(",")}`).join("|");
     if (bk !== this.bldSeen && !plan) {

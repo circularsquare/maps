@@ -24,6 +24,8 @@ export interface WorldDiff {
   links: boolean;
   /** the station buildings are another list */
   buildings: boolean;
+  /** T-4150 stage 2: the lines a per-line reader reads again: those in `lines` and those stopping at a station that changed */
+  reading: ReadonlySet<LineId>;
 }
 
 /** The records of `a` and `b` whose objects differ, or that only one has. Both lists in ascending id order (the model's)
@@ -75,41 +77,175 @@ function byId<K, T extends { id: K }>(x: IteratorResult<T>, ia: Iterator<T>, y: 
   for (const [k, v] of was) out.set(k, [v, undefined]);
 }
 
-const memo = new WeakMap<WorldView, { from: WorldView; d: WorldDiff }>();
+/** T-4150 stage 2: the edges and nodes the page was told may differ from one world it built to the next (the state's
+ * `touched`, workers/clockClient.ts `toWorld`); null for a kind not known (a whole state), which is walked */
+export interface StepIds { edges: ReadonlySet<number> | null; nodes: ReadonlySet<number> | null }
+/** the worlds one diff composes at most before it walks */
+const MAX_STEPS = 32;
+/** Each world built in turn gets the next number, and the ring holds what each of the last `MAX_STEPS` steps named (by
+ * number, so no world keeps an older one alive); a world built from one that is not the last starts a new run. */
+const serial = new WeakMap<WorldView, number>();
+let lastSerial = 0;
+const ring: (StepIds | null)[] = new Array(MAX_STEPS).fill(null);
+/** `to` was built from `from` with only the records `ids` names possibly other objects (null: any) */
+export function noteStep(from: WorldView | null, to: WorldView, ids: StepIds | null) {
+  if (serial.has(to)) return;
+  const chained = !!from && serial.get(from) === lastSerial;
+  serial.set(to, ++lastSerial);
+  ring[lastSerial % MAX_STEPS] = chained ? ids : null;
+}
+/** The ids of kind `k` that may differ from `a` to `b` when `b` was built from `a` through a few steps, else null. */
+function stepIds(a: WorldView, b: WorldView, k: keyof StepIds): Set<number> | null {
+  const sa = serial.get(a), sb = serial.get(b);
+  if (sa === undefined || sb === undefined || sb <= sa || sb - sa > MAX_STEPS - 1 || lastSerial - sa > MAX_STEPS - 1) return null;
+  const out = new Set<number>();
+  for (let n = sa + 1; n <= sb; n++) {
+    const ids = ring[n % MAX_STEPS]?.[k];
+    if (!ids) return null;
+    for (const id of ids) out.add(id);
+  }
+  return out;
+}
+/** whether a list's ids ascend (the model's order), found once per list */
+const ascending = new WeakMap<readonly unknown[], boolean>();
+const indexes = new WeakMap<readonly unknown[], Map<number, unknown>>();
+/** Whether `list`'s `key`s ascend, found once per list. */
+export function ascendingBy<T>(list: readonly T[], key: (x: T) => number): boolean {
+  let up = ascending.get(list);
+  if (up === undefined) {
+    up = true;
+    for (let i = 1; i < list.length; i++) if (!(key(list[i - 1]) < key(list[i]))) { up = false; break; }
+    ascending.set(list, up);
+  }
+  return up;
+}
+/** The record with id `id` (`key` of it) in `list`: a binary search in a list in id order, else by a map made once. */
+function findIn<T>(list: readonly T[], id: number, key: (x: T) => number): T | undefined {
+  if (!ascendingBy(list, key)) {
+    let m = indexes.get(list);
+    if (!m) indexes.set(list, (m = new Map(list.map((x) => [key(x), x]))));
+    return m.get(id) as T | undefined;
+  }
+  let lo = 0, hi = list.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (key(list[mid]) < id) lo = mid + 1; else hi = mid; }
+  return lo < list.length && key(list[lo]) === id ? list[lo] : undefined;
+}
+/** DEV: how the stations, edges and nodes that changed were found: by the steps' ids (and how many ids looked up), or by
+ * walking both lists (and how many records); the lines are always walked (a few hundred pointers) */
+export const diffStats = { ids: 0, looked: 0, walks: 0, walked: 0 };
+if (import.meta.env?.DEV && typeof window !== "undefined") (window as unknown as { twDiffStats: typeof diffStats }).twDiffStats = diffStats;
+const walkCount = (n: number) => { diffStats.walks++; diffStats.walked += n; };
+/** the changes among `ids` from `a` to `b` */
+function diffIds<T>(ids: Iterable<number>, get: (side: 0 | 1, id: number) => T | undefined, out: Map<number, readonly [T | undefined, T | undefined]>) {
+  diffStats.ids++;
+  for (const id of ids) {
+    diffStats.looked++;
+    const x = get(0, id), y = get(1, id);
+    if (x !== y) out.set(id, [x, y]);
+  }
+}
+
+/** T-4150 stage 2: each station's lines (ids), for one world at a time: moved to another by the lines that differ */
+let stopIndex: { w: WorldView; at: Map<string, Set<LineId>> } | null = null;
+function stopsAtOf(w: WorldView, d: (a: WorldView) => WorldDiff | null): Map<string, Set<LineId>> {
+  const k = stopIndex;
+  if (k && k.w === w) return k.at;
+  const was = k ? lineRowsOf(d(k.w)) : null;
+  if (!k || !was || freshNow()) {
+    const at = new Map<string, Set<LineId>>();
+    for (const l of w.save.lines) for (const s of l.stops) (at.get(s) ?? at.set(s, new Set()).get(s)!).add(l.id);
+    if (!freshNow()) stopIndex = { w, at };
+    return at;
+  }
+  for (const [id, [x]] of was) for (const s of x?.stops ?? []) k.at.get(s)?.delete(id);
+  for (const [id, [, y]] of was) for (const s of y?.stops ?? []) (k.at.get(s) ?? k.at.set(s, new Set()).get(s)!).add(id);
+  k.w = w;
+  return k.at;
+}
+/** each diff's line rows that differ (`save.lines`), with their objects before and after */
+const lineRowsGet = new WeakMap<WorldDiff, () => Changes<LineId, LineInput>>();
+const lineRowsOf = (d: WorldDiff | null) => (d ? lineRowsGet.get(d)?.() ?? null : null);
+
+/** by the older world, then the newer: a diff holds both, and keyed so no world keeps an older one alive */
+const memo = new WeakMap<WorldView, WeakMap<WorldView, WorldDiff>>();
 
 /** What changed from world `a` to world `b`; null with no `a` (read everything). Each kind is worked out when first read,
- * and kept for the last `a` asked of each `b`. */
+ * and kept while both worlds are. The edges, nodes and stations of a world built from `a` through a few
+ * steps are looked up by the ids the steps name; of any other two worlds, both lists are walked. */
 export function worldDiff(a: WorldView | null | undefined, b: WorldView): WorldDiff | null {
   if (!a) return null;
-  const kept = memo.get(b);
-  if (kept && kept.from === a) return kept.d;
+  const kept = memo.get(a)?.get(b);
+  if (kept) return kept;
   const once = <T>(f: () => T) => { let v: T | undefined; return () => (v ??= f()); };
-  const stations = once(() => { const m = new Map<string, readonly [StationInput | undefined, StationInput | undefined]>(); if (a.save.stations !== b.save.stations) diffList(a.save.stations, b.save.stations, m); return m; });
+  const ends = [a, b] as const;
+  const stations = once(() => {
+    const m = new Map<string, readonly [StationInput | undefined, StationInput | undefined]>();
+    if (a.save.stations === b.save.stations) return m;
+    const ids = stepIds(a, b, "nodes");
+    if (!ids) { walkCount(a.save.stations.length + b.save.stations.length); diffList(a.save.stations, b.save.stations, m); return m; }
+    const got = new Map<number, readonly [StationInput | undefined, StationInput | undefined]>();
+    diffIds(ids, (k, id) => findIn(ends[k].save.stations, id, (s) => s.num), got);
+    for (const [id, p] of got) m.set(String(id), p);
+    if (checks.on) checkStep("stations", m, () => { const w = new Map(); diffList(a.save.stations, b.save.stations, w); return w; });
+    return m;
+  });
+  const lineRows = once(() => {
+    const ls = new Map<string, readonly [LineInput | undefined, LineInput | undefined]>();
+    if (a.save.lines !== b.save.lines) diffList(a.save.lines, b.save.lines, ls);
+    return ls;
+  });
   const lines = once(() => {
-    const out = new Set<string>();
-    if (a.save.lines !== b.save.lines) {
-      const ls = new Map<string, readonly [LineInput | undefined, LineInput | undefined]>();
-      diffList(a.save.lines, b.save.lines, ls);
-      for (const id of ls.keys()) out.add(id);
-    }
+    const out = new Set<string>(lineRows().keys());
     if (a.lineStats !== b.lineStats) {
       for (const id in b.lineStats) if (a.lineStats[id] !== b.lineStats[id]) out.add(id);
       for (const id in a.lineStats) if (!(id in b.lineStats)) out.add(id);
     }
     return out;
   });
-  const edges = once(() => { const m = new Map<number, readonly [TrackEdge | undefined, TrackEdge | undefined]>(); if (a.edges !== b.edges) diffList(a.edges, b.edges, m); return m; });
-  const nodes = once(() => { const m = new Map<number, readonly [TrackNode | undefined, TrackNode | undefined]>(); if (a.nodes !== b.nodes) diffList(a.nodes.values(), b.nodes.values(), m); return m; });
+  const edges = once(() => {
+    const m = new Map<number, readonly [TrackEdge | undefined, TrackEdge | undefined]>();
+    if (a.edges === b.edges) return m;
+    const ids = stepIds(a, b, "edges");
+    if (!ids) { walkCount(a.edges.length + b.edges.length); diffList(a.edges, b.edges, m); return m; }
+    diffIds(ids, (k, id) => findIn(ends[k].edges, id, (e) => e.id), m);
+    if (checks.on) checkStep("edges", m, () => { const w = new Map(); diffList(a.edges, b.edges, w); return w; });
+    return m;
+  });
+  const nodes = once(() => {
+    const m = new Map<number, readonly [TrackNode | undefined, TrackNode | undefined]>();
+    if (a.nodes === b.nodes) return m;
+    const ids = stepIds(a, b, "nodes");
+    if (!ids) { walkCount(a.nodes.size + b.nodes.size); diffList(a.nodes.values(), b.nodes.values(), m); return m; }
+    diffIds(ids, (k, id) => ends[k].nodes.get(id), m);
+    if (checks.on) checkStep("nodes", m, () => { const w = new Map(); diffList(a.nodes.values(), b.nodes.values(), w); return w; });
+    return m;
+  });
+  const reading = once(() => {
+    const out = new Set(lines());
+    if (stations().size) {
+      const at = stopsAtOf(b, (x) => worldDiff(x, b));
+      for (const id of stations().keys()) for (const l of at.get(id) ?? []) out.add(l);
+    }
+    return out;
+  });
   const d: WorldDiff = {
     get stations() { return stations(); },
     get lines() { return lines(); },
     get edges() { return edges(); },
     get nodes() { return nodes(); },
+    get reading() { return reading(); },
     links: a.save.links !== b.save.links || a.save.apart !== b.save.apart,
     buildings: a.save.buildings !== b.save.buildings,
   };
-  memo.set(b, { from: a, d });
+  lineRowsGet.set(d, lineRows);
+  (memo.get(a) ?? memo.set(a, new WeakMap()).get(a)!).set(b, d);
   return d;
+}
+/** DEV: a diff looked up by ids against the walk of both lists */
+function checkStep(kind: string, got: Map<unknown, unknown>, walk: () => Map<unknown, unknown>) {
+  const was = { ...diffStats }, whole = walk();
+  Object.assign(diffStats, was);
+  if (!sameBuilt(got, whole)) console.error(`T-4150 check: the ${kind} changed, looked up by the state's touched ids, differ from a walk of both worlds`);
 }
 
 const checks = { on: PATCH_MODE === "check" };
@@ -145,6 +281,12 @@ export class PerRecord<K, V> {
     if (!fresh) this.m.set(id, { deps, v, pass: this.pass });
     return v;
   }
+  /** T-4150 stage 2: the value kept for `id`, its inputs not compared (the caller knows they are the same), counted as asked for */
+  keep(id: K): V | undefined {
+    const e = fresh ? undefined : this.m.get(id);
+    if (e) e.pass = this.pass;
+    return e?.v;
+  }
   end() {
     if (fresh) return;
     for (const [k, e] of this.m) if (e.pass !== this.pass) this.m.delete(k);
@@ -153,6 +295,32 @@ export class PerRecord<K, V> {
   trim(live: number) {
     if (!fresh && this.m.size > 2 * live + 64) for (const [k, e] of this.m) if (e.pass !== this.pass) this.m.delete(k);
     this.pass++;
+  }
+}
+
+/** T-4150 stage 2: a value per line kept from the world a pass last read: `begin(w, same)` makes again only the lines the
+ * diff from that world reads again (`reading`), every line when `same` is false (another input changed); a pass keeps only
+ * the lines it asked for. Inside `freshly` every value is made and nothing kept. */
+export class PerLine<V> {
+  private w: WorldView | null = null;
+  private m = new Map<LineId, V>();
+  private next = new Map<LineId, V>();
+  private reading: ReadonlySet<LineId> | null = null;
+  begin(w: WorldView, same = true) {
+    if (fresh) return;
+    this.reading = same && this.w ? worldDiff(this.w, w)?.reading ?? null : null;
+    this.w = w;
+    this.next = new Map();
+  }
+  get(id: LineId, make: () => V): V {
+    if (fresh) return make();
+    let v = this.reading && !this.reading.has(id) ? this.m.get(id) : undefined;
+    if (v === undefined) v = make();
+    this.next.set(id, v);
+    return v;
+  }
+  end() {
+    if (!fresh) this.m = this.next;
   }
 }
 

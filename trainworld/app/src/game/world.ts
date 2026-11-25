@@ -977,7 +977,7 @@ function lookup<T>(w: WorldView, key: string, build: (s: Save) => T): T {
   if (!m.has(key)) m.set(key, build(w.save));
   return m.get(key) as T;
 }
-export const stationsById = (w: WorldView) => lookup(w, "stations", (s) => new Map(s.stations.map((x) => [x.id, x])));
+export const stationsById = (w: WorldView) => lookup(w, "stations", (s) => { const m = new Map<string, StationInput>(); for (const x of s.stations) m.set(x.id, x); return m; });
 const stopMemo = new WeakMap<WorldView, { byId: Map<string, StationInput>; names: Map<string, string>; bus: Map<string, StationInput> }>();
 /** T-1464: the stations and a bus line's other stops (no station, no name of their own) by id: a stop's
  * place for the figures, its words for the panels. A bus stop is named for the station within 1 km
@@ -1030,8 +1030,8 @@ let lastBusNamed: { w: WorldView; lines: Map<string, BusNamed> } | null = null;
 function stopsOf(w: WorldView) {
   let m = stopMemo.get(w);
   if (m) return m;
-  const byId = new Map<string, StationInput>(w.save.stations.map((x) => [x.id, x]));
-  const names = new Map<string, string>(w.save.stations.map((x) => [x.id, x.name]));
+  const byId = new Map<string, StationInput>(), names = new Map<string, string>();
+  for (const x of w.save.stations) { byId.set(x.id, x); names.set(x.id, x.name); }
   const bus = new Map<string, StationInput>();
   const was = freshNow() ? null : lastBusNamed, d = was ? worldDiff(was.w, w) : null;
   // where the stations that changed stand, before and after
@@ -1060,7 +1060,7 @@ export const stopsById = (w: WorldView) => stopsOf(w).byId;
 export const busStopsById = (w: WorldView) => stopsOf(w).bus;
 /** Every stop's name by id, a bus stop's included. */
 export const stationNames = (w: WorldView) => stopsOf(w).names;
-export const stationsByNum = (w: WorldView) => lookup(w, "stationNums", (s) => new Map(s.stations.map((x) => [x.num, x])));
+export const stationsByNum = (w: WorldView) => lookup(w, "stationNums", (s) => { const m = new Map<number, StationInput>(); for (const x of s.stations) m.set(x.num, x); return m; });
 export const linesById = (w: WorldView) => lookup(w, "lines", (s) => new Map(s.lines.map((l) => [l.id, l])));
 export const linesByNum = (w: WorldView) => lookup(w, "lineNums", (s) => new Map(s.lines.map((l) => [l.num, l])));
 /** T-3333: the lines a player sees listed: every line but the hidden twins of lines run on both pairs of

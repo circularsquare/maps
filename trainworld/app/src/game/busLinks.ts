@@ -146,7 +146,11 @@ function placesKept(was: NonNullable<typeof lastPlaces>, w: WorldView): boolean 
     for (const l of [...was.w.save.lines, ...w.save.lines]) if (d.lines.has(l.id)) (lines.get(l.id) ?? lines.set(l.id, []).get(l.id)!).push(l);
     for (const id of d.lines) {
       if (was.w.lineStats[id]?.bus || w.lineStats[id]?.bus) return false;
-      for (const l of lines.get(id) ?? []) if (l.stops.some((s) => was.at.has(s))) return false;
+      // (T-4150 stage 2: a train line reaches the places only through the stations it stops at within the reach)
+      const [x, y] = lines.get(id) ?? [];
+      const reached = (l: LineInput | undefined) => new Set(l?.stops.filter((s) => was.at.has(s)) ?? []);
+      const rx = reached(x), ry = reached(y);
+      if (rx.size !== ry.size || [...rx].some((s) => !ry.has(s))) return false;
     }
   }
   for (const pair of d.stations.values()) for (const s of pair) if (s && inReach(was.reach, [s.lng, s.lat])) return false;
@@ -308,12 +312,17 @@ function buildPlaces(w: WorldView, every = false): { out: BusPlaces; reach: Map<
  * BRT station, the shortest joins linking its stations that have a BRT station at either end and no passage
  * between them. */
 export function brtJoins(w: WorldView, groups: readonly (readonly string[])[]): [StationInput, StationInput][] {
+  // (T-4150 stage 2: only the groups with a BRT station are looked at)
+  const brt = new Set<string>();
+  for (const s of w.save.stations) if (s.brt) brt.add(s.id);
+  if (!brt.size) return [];
   const byId = new Map(w.save.stations.map((s) => [s.id, s]));
   const passage = new Set(w.save.links.map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)));
   // T-4260: a separated pair is no join of the complex's tree
   const apart = new Set((w.save.apart ?? []).map(([a, b]) => (a < b ? `${a}|${b}` : `${b}|${a}`)));
   const out: [StationInput, StationInput][] = [];
   for (const ids of groups) {
+    if (!ids.some((id) => brt.has(id))) continue;
     const m = ids.map((id) => byId.get(id)).filter((s) => s !== undefined);
     if (m.length < 2 || !m.some((s) => s.brt)) continue;
     const joins: [number, number, number][] = [];

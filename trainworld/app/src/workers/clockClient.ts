@@ -31,9 +31,10 @@ import { accountVersion, packArrivals, packRiders } from "../game/boarding";
 import { ask, designSpeed, guideFinished, lineDraft, marketOff, selection, tool } from "../game/ui";
 import { modelStopped } from "../game/modelStopped";
 import { afterStopEdits, flipSites, rightHand, say, setEditSink, stopsQueued, world, worldIsRows } from "../game/world";
+import { ascendingBy, checkPatches, freshNow, noteStep, sameBuilt } from "../game/worldDiff";
 import type { LineInput, LineStats, RowFigs, StationInput, StopOnly, TrackEdge, TrackNode, WorldView } from "../game/types";
 import type { ClockLine, ClockState, EditOp, FromClock, MoneyPatch, MoneyState, NetworkSnapshot, PaidFor, PiInput, RouteAsk, StationAt, ToClock } from "./protocol";
-import { applyPatch } from "./valuePatch";
+import { applyPatch, sameValueDeep } from "./valuePatch";
 import { anchorVersion } from "../map/anchorVersion";
 import { mergeNet, type NetworkBuffers } from "../map/network";
 import { bandTry } from "../perfFlags";
@@ -212,6 +213,7 @@ let lastLines: LineInput[] = [];
 let lastNodeRows: readonly object[] = [];
 let lastNodeMap = new Map<number, TrackNode>();
 function sameObjects<T>(a: readonly T[], b: readonly T[]): boolean {
+  if (a === b) return true;
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
   return true;
@@ -240,29 +242,88 @@ function samePaths(a: readonly ClockState["lines"][number][], b: readonly ClockS
   }
   return true;
 }
-let lastEdgeRows: readonly object[] = [];
+let lastEdgeRows: readonly ClockState["edges"][number][] = [];
 let lastEdgeViews: TrackEdge[] = [];
+/** T-4150 stage 2: the edges whose lines `edgesOf` changed in the last kept world (null: it worked out every edge's) */
+let edgeLinesMoved: Set<number> | null = null;
+/** More lines than this share of all ran elsewhere: every edge's lines are listed again. */
+const LINES_REDONE_SHARE = 4;
+/** T-2576: every edge's lines (ids, in line order) */
+function edgeLinesOf(lines: readonly ClockState["lines"][number][]): Map<number, string[]> {
+  const edgeLines = new Map<number, string[]>();
+  for (const l of lines) {
+    const id = String(l.id);
+    for (const p of lineEdgesOf(l)) {
+      const v = edgeLines.get(p);
+      if (v) v.push(id);
+      else edgeLines.set(p, [id]);
+    }
+  }
+  return edgeLines;
+}
+function lineEdgesOf(l: ClockState["lines"][number]): number[] {
+  let ids = lineEdgeIds.get(l);
+  // T-3101: a way back that takes other track counts too
+  if (!ids) lineEdgeIds.set(l, ids = [...new Set(planPathOf(l).concat(l.back ?? []).map((p) => p >> 1))]);
+  return ids;
+}
+/** T-4150 stage 2: the lines over each edge of `to` from `was`, those of `from`: new arrays for the edges of the lines
+ * that run elsewhere, came or went (null: none left; `was` itself is not changed), or null when many did or the lines
+ * both have are in another order, to be worked out whole. */
+function edgeLinesPatched(was: Map<number, string[]>, from: readonly ClockState["lines"][number][], to: readonly ClockState["lines"][number][]): Map<number, string[] | null> | null {
+  const old = new Map(from.map((l, i) => [l.id, { l, i }]));
+  const pos = new Map<string, number>();
+  // the lines whose edges are listed again, and their rows before and after
+  const redo = new Set<string>(), rows: ClockState["lines"][number][] = [];
+  let prev = -1, reordered = false;
+  to.forEach((l, i) => {
+    const id = String(l.id), o = old.get(l.id);
+    pos.set(id, i);
+    if (!o) { redo.add(id); rows.push(l); return; }
+    old.delete(l.id);
+    if (o.i < prev) reordered = true;
+    prev = o.i;
+    if (o.l !== l && !samePaths([o.l], [l])) { redo.add(id); rows.push(o.l, l); }
+  });
+  for (const { l } of old.values()) { redo.add(String(l.id)); rows.push(l); }
+  if (reordered || redo.size * LINES_REDONE_SHARE > to.length + LINES_REDONE_SHARE) return null;
+  const now = new Map<number, string[]>();
+  for (const l of to) {
+    const id = String(l.id);
+    if (redo.has(id)) for (const p of lineEdgesOf(l)) (now.get(p) ?? now.set(p, []).get(p)!).push(id);
+  }
+  const out = new Map<number, string[] | null>();
+  for (const l of rows) for (const p of lineEdgesOf(l)) {
+    if (out.has(p)) continue;
+    const ids = (was.get(p) ?? []).filter((id) => !redo.has(id)).concat(now.get(p) ?? []);
+    ids.sort((x, y) => pos.get(x)! - pos.get(y)!);
+    out.set(p, ids.length ? ids : null);
+  }
+  return out;
+}
 /** The UI's track edges from the state's rows and lines (T-2576): an edge row that was in the last state gives
  * its old view while the lines over it are the same, and the lists of lines are kept while every line
- * runs the same path (an edit of a line's trains changes its row, not its path). */
+ * runs the same path (an edit of a line's trains changes its row, not its path). T-4150 stage 2: a line that runs
+ * elsewhere changes the lists of its edges only. */
 function edgesOf(s: ClockState, keep: boolean): TrackEdge[] {
   let edgeLines = lastEdgeLines;
   let linesSame = true;
+  // the edges whose lines changed, when not every edge's could have
+  let moved: Set<number> | null = new Set();
   if (!sameObjects(s.lines, lastEdgeLineRows)) {
     if (samePaths(s.lines, lastEdgeLineRows)) { if (keep) lastEdgeLineRows = s.lines; }
     else {
       linesSame = false;
-      edgeLines = new Map<number, string[]>();
-      for (const l of s.lines) {
-        let ids = lineEdgeIds.get(l);
-        // T-3101: a way back that takes other track counts too
-        if (!ids) lineEdgeIds.set(l, ids = [...new Set(planPathOf(l).concat(l.back ?? []).map((p) => p >> 1))]);
-        const id = String(l.id);
-        for (const p of ids) {
-          const v = edgeLines.get(p);
-          if (v) v.push(id);
-          else edgeLines.set(p, [id]);
-        }
+      const patch = freshNow() ? null : edgeLinesPatched(edgeLines, lastEdgeLineRows, s.lines);
+      if (patch) {
+        // (the kept world's map is changed in place: the views hold the arrays, never the map)
+        if (!keep) edgeLines = new Map(edgeLines);
+        for (const [p, ids] of patch) { if (ids) edgeLines.set(p, ids); else edgeLines.delete(p); }
+        moved = new Set(patch.keys());
+        if (import.meta.env.DEV && checkPatches() && !sameBuilt(edgeLines, edgeLinesOf(s.lines))) console.error("T-4150 check: the lines over each edge patched by the lines that moved differ from a whole build");
+      } else {
+        edgeLines = edgeLinesOf(s.lines);
+        moved = null;
       }
       if (keep) {
         lastEdgeLineRows = s.lines;
@@ -270,20 +331,28 @@ function edgesOf(s: ClockState, keep: boolean): TrackEdge[] {
       }
     }
   }
+  if (keep) edgeLinesMoved = moved;
   if (linesSame && s.edges === lastEdgeRows) return lastEdgeViews;
   const none: string[] = [];
-  // where the row at i stood in the last state: usually i, one more or less after an edge was
-  // removed or added; a row not found there gets a new view
-  let shift = 0;
-  const lastRows = lastEdgeRows, lastViews = lastEdgeViews;
+  // where the row stood in the last state: both lists in id order (the model's) are walked side by side, so any number
+  // of edges added or removed leaves the others their views (T-4150 stage 2); else by position, one more or less
+  const lastRows = lastEdgeRows as readonly ClockState["edges"][number][], lastViews = lastEdgeViews;
+  const byId = ascendingBy(s.edges, (e) => e.id) && ascendingBy(lastRows, (e) => e.id);
+  let shift = 0, at = 0;
   const out = s.edges.map((e, i) => {
-    let j = i + shift;
-    if (lastRows[j] !== e) {
-      if (lastRows[j + 1] === e) j = i + ++shift;
-      else if (j > 0 && lastRows[j - 1] === e) j = i + --shift;
-      else j = -1;
+    let j: number;
+    if (byId) {
+      while (at < lastRows.length && lastRows[at].id < e.id) at++;
+      j = lastRows[at] === e ? at : -1;
+    } else {
+      j = i + shift;
+      if (lastRows[j] !== e) {
+        if (lastRows[j + 1] === e) j = i + ++shift;
+        else if (j > 0 && lastRows[j - 1] === e) j = i + --shift;
+        else j = -1;
+      }
     }
-    if (j >= 0 && linesSame) return lastViews[j];
+    if (j >= 0 && (linesSame || (moved && !moved.has(e.id)))) return lastViews[j];
     const ls = edgeLines.get(e.id) ?? none;
     const v = j >= 0 ? lastViews[j] : undefined;
     if (v && sameObjects(v.lines, ls)) return v;
@@ -331,6 +400,34 @@ function patchRows<T extends { id: number; bus?: boolean }>(base: readonly T[], 
     end++;
   }
   return out;
+}
+
+/** T-4150 stage 2: the passages, separated pairs and buildings as last given, so a world whose lists are the same has the
+ * same arrays (readers skip their work on them by identity: the bus layer's, the complexes') */
+const sameLists = { links: { flat: [] as number[], pairs: [] as [string, string][] }, apart: { flat: [] as number[], pairs: [] as [string, string][] }, buildings: undefined as ClockState["buildings"] };
+function pairsKept(flat: number[], k: "links" | "apart", keep: boolean): [string, string][] {
+  const was = sameLists[k];
+  if (flat.length === was.flat.length && flat.every((v, i) => v === was.flat[i])) return was.pairs;
+  const pairs = pairsOf(flat);
+  if (keep) sameLists[k] = { flat, pairs };
+  return pairs;
+}
+function buildingsKept(b: ClockState["buildings"], keep: boolean): ClockState["buildings"] {
+  if (!b?.length) return undefined;
+  if (sameLists.buildings && sameBuilt(sameLists.buildings, b)) return sameLists.buildings;
+  if (keep) sameLists.buildings = b;
+  return b;
+}
+
+/** T-4150 stage 2: each period's track at capacity as last made: the same map while the state's figures are the same */
+const fullTrackLast: { v: Float64Array; m: Map<number, { rho: number; tph: number }> }[] = [];
+function fullTrackKept(v: Float64Array, p: number, keep: boolean): Map<number, { rho: number; tph: number }> {
+  const was = fullTrackLast[p];
+  if (was && was.v.length === v.length && was.v.every((x, i) => x === v[i] || (x !== x && v[i] !== v[i]))) return was.m;
+  const m = new Map<number, { rho: number; tph: number }>();
+  for (let k = 0; k + 2 < v.length; k += 3) m.set(v[k], { rho: v[k + 1], tph: v[k + 2] });
+  if (keep) fullTrackLast[p] = { v, m };
+  return m;
 }
 
 /** `keep` false (T-4214, the tools' patched world): the views made are not kept for the next state's to reuse */
@@ -444,13 +541,9 @@ function toWorld(s: ClockState, keep = true): WorldView {
     periods: s.periods,
     hours: s.hours,
     capacity: s.markers,
-    fullTrack: (s.fullTrack ?? []).map((v) => {
-      const m = new Map<number, { rho: number; tph: number }>();
-      for (let k = 0; k + 2 < v.length; k += 3) m.set(v[k], { rho: v[k + 1], tph: v[k + 2] });
-      return m;
-    }),
+    fullTrack: (s.fullTrack ?? []).map((v, p) => fullTrackKept(v, p, keep)),
     turnLimits: turnLimitsOf(s.turnLimits),
-    save: { cash: s.cash * 1e6, stations, lines, links: pairsOf(s.links ?? []), ...(s.apart?.length ? { apart: pairsOf(s.apart) } : {}), ...(s.buildings?.length ? { buildings: s.buildings } : {}) },
+    save: { cash: s.cash * 1e6, stations, lines, links: pairsKept(s.links ?? [], "links", keep), ...(s.apart?.length ? { apart: pairsKept(s.apart, "apart", keep) } : {}), ...(s.buildings?.length ? { buildings: buildingsKept(s.buildings, keep) } : {}) },
     lineStats,
     twins,
     edges,
@@ -949,7 +1042,8 @@ export class ClockClient {
     sendClock();
     // Fare income from the riders (game/money.ts), whenever riders, fares or lines change.
     // One table per kind of day (T-260): the worker settles each hour by its own day's.
-    let lastIncome = "";
+    // (T-4150 stage 2: compared by value, not as JSON text)
+    let lastIncome: unknown = null;
     // T-2848: bumped after a rebuild, which cleared the worker's figures for a network that gets no new solve
     const resend = signal(0);
     // T-2773: a line whose riders are being worked out again is paid what it last earned settled, not a
@@ -983,8 +1077,8 @@ export class ClockClient {
         rides: days.map((i) => i.lines.get(id)?.rides ?? (per[0] ?? []).map(() => 0)),
       }));
       const rides = days.map((i) => i.rides);
-      const key = JSON.stringify([per, rides, lines]);
-      if (key !== lastIncome) {
+      const key = [per, rides, lines];
+      if (!sameBuilt(key, lastIncome)) {
         lastIncome = key;
         this.post({ kind: "income", perHour: per, rides, lines });
       }
@@ -1012,13 +1106,13 @@ export class ClockClient {
       else setTimeout(postShares, 100);
     });
     // T-684: each line's points by region, whenever riders, lines or zone boundaries change them
-    let lastPoints = "";
+    let lastPoints: unknown = null;
     effect(() => {
       void resend.value;
       const lines = linePoints.value;
-      const key = JSON.stringify(lines);
-      if (key !== lastPoints) {
-        lastPoints = key;
+      // (T-4150 stage 2: an unchanged line's entry is the same object, `linePoints`)
+      if (!sameBuilt(lines, lastPoints)) {
+        lastPoints = lines;
         this.post({ kind: "points", lines });
       }
     });
@@ -1026,7 +1120,7 @@ export class ClockClient {
     let ridersSent: unknown[] = [];
     // T-715: a load clears the worker's income, shares and points; the next round sends them again
     // even when they match the last game's
-    this.forgetSent = () => { lastIncome = lastShares = lastPoints = ""; ridersSent = []; };
+    this.forgetSent = () => { lastIncome = lastPoints = null; lastShares = ""; ridersSent = []; };
     // T-685: a region's star, the first time its rail share on the average day (never the day
     // shown, so switching it earns nothing) reaches the mark in a final result
     effect(() => {
@@ -1187,19 +1281,26 @@ export class ClockClient {
    * false when they cannot be (the worker is then asked for a whole state). */
   private takeRows(st: ClockState): boolean {
     const d = st.delta;
+    // T-4150 stage 2: the ids of the rows each kind posted changed or dropped (null: posted whole)
+    const named: Record<"edges" | "nodes", number[] | null> = { edges: null, nodes: null };
     const put = <K extends "edges" | "nodes" | "lines">(k: K, last: ClockState[K], delta: { ids: number[] | null; rows: ClockState[K] } | undefined): ClockState[K] | null => {
       const by = this.rows[k] as Map<number, ClockState[K][number]>;
       if (!delta) {
+        // T-4150 stage 2: a row posted whole that equals the one held keeps the held object, so its views and every
+        // reader keyed on them stay (a load's later states, a whole state asked for)
+        const out = (st[k] as ClockState[K][number][]).map((r) => { const o = by.get(r.id); return o && sameValueDeep(o, r) ? o : r; });
         by.clear();
-        for (const r of st[k]) by.set(r.id, r);
-        return st[k];
+        for (const r of out) by.set(r.id, r);
+        return out as ClockState[K];
       }
+      if (k !== "lines") named[k as "edges" | "nodes"] = delta.rows.map((r) => r.id);
       if (!delta.ids && !delta.rows.length) return last;
       for (const r of delta.rows) by.set(r.id, r);
       const ids = delta.ids ?? last.map((r) => r.id);
       const out = ids.map((id) => by.get(id));
       if (out.some((r) => !r)) return null;
       if (delta.ids) {
+        if (k !== "lines") { const now = new Set(delta.ids); for (const r of last) if (!now.has(r.id)) named[k as "edges" | "nodes"]!.push(r.id); }
         by.clear();
         for (const r of out) by.set(r!.id, r!);
       }
@@ -1215,9 +1316,17 @@ export class ClockClient {
       if (bad.length) console.error(`T-1029 check: the ${bad.join(", ")} rebuilt from changes differ from the whole state's`);
       delete st.checkRows;
     }
+    // T-4150 stage 2: what it changed, for the world built from it: its delta's rows (the state's `touched` names the same
+    // ids, and with `all` none, since every drawn position moves; the rows' delta stays exact); posted whole: anything
+    if (this.since && named.edges && named.nodes) {
+      for (const id of named.edges) this.since.edges.add(id);
+      for (const id of named.nodes) this.since.nodes.add(id);
+    } else this.since = null;
     delete st.delta;
     return true;
   }
+  /** T-4150 stage 2: the edges and nodes the states taken since the last world name as touched; null: any may differ */
+  private since: { edges: Set<number>; nodes: Set<number> } | null = null;
 
   /** T-4214: an edit's patch (workers/clockPatch.ts) laid on the map the tools click on: its edges on the drawn network
    * (`onPatch`), its rows on the last state's for the tools' world (`clickWorld`), whose other parts (lines, money,
@@ -1385,7 +1494,12 @@ export class ClockClient {
     if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
     const order = this.orderOf(msg);
     if (import.meta.env.DEV) this.checkPatched(msg.state, order);
-    world.value = toWorld(msg.state);
+    // T-4150 stage 2: the world says which of its records may differ from the last, for the readers' diffs
+    const ids = this.since, next = toWorld(msg.state);
+    this.since = { edges: new Set(), nodes: new Set() };
+    if (ids && edgeLinesMoved) for (const p of edgeLinesMoved) ids.edges.add(p);
+    noteStep(this.worldBefore, next, ids && { edges: edgeLinesMoved ? ids.edges : null, nodes: ids.nodes });
+    world.value = next;
     this.taken = msg.state;
     this.patched = null;
     setClickWorld(null);
@@ -1472,6 +1586,7 @@ export class ClockClient {
         if (!this.takeMoney(st) || !this.takeRows(st) || !this.takeNet(st)) {
           console.error("T-1029: a state could not be taken as changes to the last; asking for it whole");
           this.lastNet = null;
+          this.since = null;
           this.post({ kind: "wholeState" });
           break;
         }

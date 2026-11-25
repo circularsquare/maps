@@ -10,6 +10,7 @@ import { demandBehindFrom, demandHeld, demandUpdating, finalWorld, networkWorld 
 import { demandStopped, loadProgress, tripsOff } from "./loading";
 import { openedZones } from "./openedZones";
 import { world } from "./world";
+import type { LineInput, LineStats } from "./types";
 import { t } from "../i18n";
 
 /** T-2392: "build" for a line that has just started running (its blueprint constructed, or new);
@@ -82,18 +83,19 @@ export function startLineFigures() {
   });
 
   /** each line's last signature and status, null before the first world */
-  let prev: Map<string, { sig: string; running: boolean }> | null = null;
+  let prev: Map<string, { sig: string; running: boolean; l: LineInput; st: LineStats | undefined }> | null = null;
   world.subscribe((w) => {
     if (!w) { prev = null; return; }
-    const next = new Map<string, { sig: string; running: boolean }>();
+    const next = new Map<string, { sig: string; running: boolean; l: LineInput; st: LineStats | undefined }>();
     const changed: [string, PendingKind][] = [];
     for (const l of w.save.lines) {
       const st = w.lineStats[l.id];
       const running = st?.status === "running";
-      // (T-2622: its times too, so track moved under it counts as a change)
-      const sig = JSON.stringify([l.stops, l.tph, st?.status, st?.cars, st?.fast, st?.roundTripByLevel.map(Math.round)]);
-      next.set(l.id, { sig, running });
+      // (T-2622: its times too, so track moved under it counts as a change; T-4150 stage 2: worked out again only for a line
+      // whose row or figures are other objects)
       const was = prev?.get(l.id);
+      const sig = was && was.l === l && was.st === st ? was.sig : JSON.stringify([l.stops, l.tph, st?.status, st?.cars, st?.fast, st?.roundTripByLevel.map(Math.round)]);
+      next.set(l.id, { sig, running, l, st });
       if (prev && was?.sig !== sig && running) changed.push([l.id, was?.running ? "change" : "build"]);
     }
     const loading = clock.held.peek();

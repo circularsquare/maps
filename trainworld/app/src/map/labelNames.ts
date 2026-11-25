@@ -100,6 +100,16 @@ export interface NamePlan {
   lineChanges: [LineInput | undefined, LineInput | undefined][];
 }
 
+/** T-4150 stage 2: what changed since the stations and complexes the index holds (`from`, `fromCx`): the stations that
+ * differ, each before and after, and those whose complex may (game/complexBuilder.ts `complexChanges`). The stations
+ * keep their order (the model's, by id). */
+export interface NameHint {
+  from: readonly StationInput[];
+  fromCx: Complexes;
+  stations: ReadonlyMap<StationId, readonly [StationInput | undefined, StationInput | undefined]>;
+  roots: ReadonlySet<StationId>;
+}
+
 /** More stations changed than this share of all: the list is made anew. */
 const REBUILD_SHARE = 8;
 
@@ -123,8 +133,12 @@ export class NameIndex {
   private lastLines: readonly LineInput[] | null = null;
   private lastRoots: Complexes | null = null;
 
-  /** What differs from what the index holds, or null for nothing. Leaves the index as it is. */
-  plan(stations: readonly StationInput[], lines: readonly LineInput[], cx: Complexes, av: number): NamePlan | null {
+  /** the stations and complexes the index holds (`NameHint.from`) */
+  get held(): { stations: readonly StationInput[] | null; cx: Complexes | null } { return { stations: this.lastStations, cx: this.lastRoots }; }
+
+  /** What differs from what the index holds, or null for nothing. Leaves the index as it is. With `hint` (made from what
+   * the index holds) only the stations it names are looked at. */
+  plan(stations: readonly StationInput[], lines: readonly LineInput[], cx: Complexes, av: number, hint?: NameHint | null): NamePlan | null {
     const p: NamePlan = { full: false, stations, lines, av, dirty: [], removed: [], lineChanges: [] };
     if (!this.ready || av !== this.av) {
       p.full = true;
@@ -165,6 +179,36 @@ export class NameIndex {
       }
       if (!p.dirty.length && !p.lineChanges.length) {
         this.lastLines = lines;
+        return null;
+      }
+      return p;
+    }
+
+    if (hint && hint.from === this.lastStations && hint.fromCx === this.lastRoots) {
+      const ids = new Set<StationId>(lineDirty);
+      for (const id of hint.stations.keys()) ids.add(id);
+      for (const id of hint.roots) ids.add(id);
+      const same: [Mem, StationInput][] = [];
+      for (const id of ids) {
+        const ch = hint.stations.get(id), m = this.mems.get(id);
+        const s = ch ? ch[1] : m?.s;
+        if (!s) { if (m) p.removed.push(m); continue; }
+        const root = rootOf(cx, id);
+        if (!m) { p.dirty.push({ m: null, s, root }); continue; }
+        const o = m.s;
+        if ((o !== s && (o.name !== s.name || o.built !== s.built || o.lng !== s.lng || o.lat !== s.lat || o.heading !== s.heading || (o.upgrades ?? 0) !== (s.upgrades ?? 0))) || m.root !== root || lineDirty.has(id)) p.dirty.push({ m, s, root });
+        else if (o !== s) same.push([m, s]);
+      }
+      if ((p.dirty.length + p.removed.length) * REBUILD_SHARE > stations.length + REBUILD_SHARE) {
+        p.full = true;
+        return p;
+      }
+      // (a station whose object alone changed holds the new one: what it reads is the same)
+      for (const [m, s] of same) m.s = s;
+      if (!p.dirty.length && !p.removed.length && !p.lineChanges.length) {
+        this.lastStations = stations;
+        this.lastLines = lines;
+        this.lastRoots = cx;
         return null;
       }
       return p;

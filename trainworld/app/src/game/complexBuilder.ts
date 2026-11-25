@@ -43,6 +43,17 @@ interface Rec {
   gone: boolean;
 }
 
+/** T-4150 stage 2: per complexes given, the complexes before them and the stations whose complex was worked out again or
+ * that left (no other station's complex, nor its first member, can differ) */
+const changes = new WeakMap<Complexes, { from: Complexes; ids: ReadonlySet<StationId> }>();
+const NONE: ReadonlySet<StationId> = new Set();
+/** The stations whose complex may differ from `from` to `to`, when one update made `to` from `from` (else null). */
+export function complexChanges(from: Complexes | null, to: Complexes): ReadonlySet<StationId> | null {
+  if (from === to) return NONE;
+  const c = changes.get(to);
+  return c && c.from === from ? c.ids : null;
+}
+
 /** More stations changed than this share of all: built anew, as `buildComplexes` does. */
 const REBUILD_SHARE = 8;
 const CELL_OFFSET = 2 ** 21;
@@ -197,7 +208,10 @@ export class ComplexBuilder {
       c.members.push(r);
       r.comp = c;
     }
-    return this.renumber(list);
+    const from = this.out;
+    const out = this.renumber(list);
+    if (from) changes.set(out, { from, ids: new Set([...work.map((r) => r.id), ...removed.map((r) => r.id)]) });
+    return out;
   }
 
   /** `buildComplexes`'s own numbering: complexes by their first station in the list, stations in it

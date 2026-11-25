@@ -30,7 +30,7 @@ import { addAllPassedSelected, constructBlueprints, newLineKey, toggleEditStopsS
 import { hideUiKey } from "./ui/hideUi";
 import { helpKey } from "./ui/HelpPanel";
 import { followCapsLock, keyIsTheirs, releaseSelectsAfterMousePick } from "./ui/keys";
-import { stopsById, world } from "./game/world";
+import { stationsById, stopsById, world } from "./game/world";
 import "./map/aheadShow"; // T-4145: draws the edits waiting to show (game/pending.ts)
 import { pendingNetIn, pendingTaken } from "./game/pending";
 import { drawnEdgesOf } from "./map/lineAhead";
@@ -521,8 +521,8 @@ const hiddenNums = computed(() => {
 });
 effect(() => {
   const w = world.value;
-  const stations = new Map((w?.save.stations ?? []).map((s) => [s.id, s.level]));
-  const changed = setHidden(hiddenNums.value, levelBits(hiddenLevels.value), (id) => stations.get(id), (id) => w?.nodes.get(id)?.level);
+  // (T-4150 stage 2: the stations by id only once a hidden level asks)
+  const changed = setHidden(hiddenNums.value, levelBits(hiddenLevels.value), (id) => (w ? stationsById(w).get(id)?.level : undefined), (id) => w?.nodes.get(id)?.level);
   if (changed) overlay.invalidate();
 });
 // Settings' Show blueprints: every blueprint piece is not drawn or picked (map/visibility.ts)

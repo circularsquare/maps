@@ -32,7 +32,7 @@ import { render } from "preact";
 import { Icon } from "../ui/widgets";
 import { speedColour, profitColour, rgb, rgbf, LEVEL_COLOURS } from "../game/palette";
 import type { ShadeColours } from "../game/shadeTable";
-import type { WorldView } from "../game/types";
+import type { LineInput, LineStats, WorldView } from "../game/types";
 import { anchor, kAtY, pxPerUnitAt, toLocal, type Anchor } from "./geo";
 import { compile, PROJECT_GLSL, PROJECT_UNIFORMS, setCamera, uniforms, type LocalCamera } from "./gl";
 import type { Overlay } from "./overlay";
@@ -509,6 +509,23 @@ function stopLinksOf(lines: Parameters<typeof busStopLinks>[0]): number[] {
   return out;
 }
 
+/** T-4150 stage 2: each bus line's source as last made, by its figures (its row with it) */
+const sourceOf = new WeakMap<LineStats, { l: LineInput; src: BusSource }>();
+function busSource(l: LineInput, st: LineStats, b: NonNullable<LineStats["bus"]>): BusSource {
+  const stops: number[] = [], spurs: number[] = [], stopIds: number[] = [], transfers: number[] = [];
+  // a ferry's stops are its ports, drawn as the stations they are
+  if (!b.ferry) for (const s of b.stops) {
+    stops.push(s.lng, s.lat, s.kind);
+    stopIds.push(s.id);
+    if (s.at && (s.at[0] !== s.lng || s.at[1] !== s.lat)) transfers.push(s.lng, s.lat, s.at[0], s.at[1]);
+  }
+  for (const p of b.ferry?.ports ?? []) spurs.push(...p.landing, ...p.berth);
+  const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
+  const n = marks.length / 2;
+  const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
+  return { id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, brt: !!b.brt, lanes: b.lanes ?? [], spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} };
+}
+
 export class BusLayer {
   private gl: WebGL2RenderingContext | null = null;
   private segProg: WebGLProgram | null = null;
@@ -604,11 +621,12 @@ export class BusLayer {
     if (!d || d.links) return true;
     for (const id of d.lines) if (a.lineStats[id]?.bus || b.lineStats[id]?.bus) return true;
     // (a BRT station's dashed joins read every station of its group: where they are and whether they are built)
-    const groups = dotGroups.peek(), byId = stationsById(b);
+    const groups = dotGroups.peek();
     for (const [x, y] of d.stations.values()) {
       if (x?.brt || y?.brt) return true;
-      const g = groups?.of.get((y ?? x)!.id);
-      if (g !== undefined && groups!.members[g].some((id) => byId.get(id)?.brt)) return true;
+      const g = groups?.of.get((y ?? x)!.id), members = g !== undefined ? groups!.members[g] : undefined;
+      // (T-4150 stage 2: the world's stations by id only for a group of more than the station itself)
+      if (members && members.length > 1 && members.some((id) => stationsById(b).get(id)?.brt)) return true;
     }
     return false;
   }
@@ -618,21 +636,14 @@ export class BusLayer {
     const next: BusSource[] = [], nextLinks: LinkSource[] = [];
     if (w) {
       for (const l of w.save.lines) {
-        const b = w.lineStats[l.id]?.bus;
+        const st = w.lineStats[l.id], b = st?.bus;
         // T-3420: a line the player hid is not drawn
         if (!b || b.routeLL.length < 4 || hide.has(l.num)) continue;
-        const stops: number[] = [], spurs: number[] = [], stopIds: number[] = [], transfers: number[] = [];
-        // a ferry's stops are its ports, drawn as the stations they are
-        if (!b.ferry) for (const s of b.stops) {
-          stops.push(s.lng, s.lat, s.kind);
-          stopIds.push(s.id);
-          if (s.at && (s.at[0] !== s.lng || s.at[1] !== s.lat)) transfers.push(s.lng, s.lat, s.at[0], s.at[1]);
-        }
-        for (const p of b.ferry?.ports ?? []) spurs.push(...p.landing, ...p.berth);
-        const marks = b.ferry ? b.ferry.ports.flatMap((p) => p.berth) : b.stops.flatMap((s) => [s.lng, s.lat]);
-        const st = w.lineStats[l.id], n = marks.length / 2;
-        const runs = st.status === "running" && Math.max(l.tph.high, l.tph.medium, l.tph.low) > 0 && st.stopS.length === 2 && st.stopS.every((s) => s.length === n);
-        next.push({ id: l.num, colour: l.colour, built: b.built, route: b.routeLL, street: b.streetLL, stops, stopIds, transfers, ferry: !!b.ferry, brt: !!b.brt, lanes: b.lanes ?? [], spurs, marks, stopS: runs ? st.stopS : null, oneWay: !!st.loop && st.oneWay, ways: st.oneWayAt ?? {} });
+        // T-4150 stage 2: a line's source is made again only when its row or figures are other objects (`transfers` gets
+        // the stop links' dashes below, so each draw has its own copy)
+        let k = sourceOf.get(st);
+        if (!k || k.l !== l || checkPatches()) sourceOf.set(st, (k = { l, src: busSource(l, st, b) }));
+        next.push({ ...k.src, transfers: k.src.transfers.slice() });
       }
       // T-4147: a route drawn ahead replaces the line's, with no stops (the sim places them) until the world holds it
       for (const [num, o] of this.over ?? []) {
@@ -659,7 +670,7 @@ export class BusLayer {
     const sameLinks = this.linkSrc.length === nextLinks.length && this.linkSrc.every((x, i) => sameNums(x.at, nextLinks[i].at) && sameNums(x.stops, nextLinks[i].stops) && x.bp === nextLinks[i].bp);
     if (sameLinks && was.length === next.length && was.every((x, i) => {
       const y = next[i];
-      return x.id === y.id && x.colour === y.colour && x.built === y.built && x.brt === y.brt && x.oneWay === y.oneWay && sameNums(x.lanes, y.lanes) && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
+      return x.id === y.id && x.route === y.route && x.stopS === y.stopS && x.lanes === y.lanes && x.street === y.street && x.stops === y.stops && x.marks === y.marks && x.spurs === y.spurs && x.colour === y.colour && x.built === y.built && x.brt === y.brt && x.oneWay === y.oneWay && sameNums(x.transfers, y.transfers) || x.id === y.id && x.colour === y.colour && x.built === y.built && x.brt === y.brt && x.oneWay === y.oneWay && sameNums(x.lanes, y.lanes) && sameNums(x.route, y.route) && sameNums(x.street, y.street) && sameNums(x.stops, y.stops) && sameNums(x.transfers, y.transfers) && sameNums(x.spurs, y.spurs) && sameNums(x.marks, y.marks) && sameS(x.stopS, y.stopS);
     })) return false;
     this.lines = next;
     this.linkSrc = nextLinks;

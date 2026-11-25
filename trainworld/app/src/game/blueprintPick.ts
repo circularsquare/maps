@@ -239,9 +239,11 @@ export function reversePicked(pieces: readonly TrackEdge[]) {
 
 /** What the picked pieces are now: how many are switched off, their track's length, and the one
  * elevation all of it is on (null when mixed or ramped). */
+const NOTHING_PICKED = { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null, hsr: 0, regular: 0, tram: 0, ones: 0, twos: 0 };
 export const pickedState = computed(() => {
   const w = world.value, p = bpPicked.value;
-  if (!w) return { edges: 0, stations: 0, off: 0, on: 0, built: false, lengthM: 0, level: null as Level | null, hsr: 0, regular: 0, tram: 0, ones: 0, twos: 0 };
+  // (T-4150 stage 2: with nothing picked, nothing of the world is read)
+  if (!w || (!p.edges.length && !p.stations.length)) return { ...NOTHING_PICKED, built: !!w && !!p.built };
   const edges = new Map(w.edges.map((e) => [e.id, e]));
   const stations = stationsByNum(w);
   let off = 0, on = 0, lengthM = 0, hsr = 0, regular = 0, tram = 0, ones = 0, twos = 0;

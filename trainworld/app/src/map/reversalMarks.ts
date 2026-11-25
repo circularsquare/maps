@@ -11,7 +11,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import type { WorldView } from "../game/types";
 import { selection, stopEditing, tool } from "../game/ui";
 import { partwayReversals } from "../game/turnedLine";
-import { world } from "../game/world";
+import { stationsById, world } from "../game/world";
 import { anchorVersion } from "./anchorVersion";
 import { anchor, toLocal } from "./geo";
 import { tipBeside } from "./labelLayout";
@@ -38,7 +38,8 @@ type Reversal = { station: string; name: string; lng: number; lat: number; lines
  * `end:<node>`), its name, place and the lines it limits (id, name, the most trains an hour it lets
  * the line run), from the world. */
 export function reversalsOf(w: WorldView): Reversal[] {
-  const stations = new Map(w.save.stations.map((s) => [s.id, s]));
+  // (T-4150 stage 2: the world's own lookup, made once for every reader)
+  const stations = stationsById(w);
   const out = new Map<string, Reversal>();
   const add = (key: string, name: string, lng: number, lat: number, l: { id: string; name: string }, tph: number) => {
     const at = out.get(key) ?? { station: key, name, lng, lat, lines: [] };

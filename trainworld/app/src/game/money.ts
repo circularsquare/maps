@@ -31,7 +31,7 @@ import { PERIODS } from "./periods";
 import { pairRows, pairStats, setCarBuyCheck, setTrainBuyCheck, stopsById, world } from "./world";
 import { zonesLoaded } from "./zones";
 import type { LineId, LineInput, LineStats, StationInput, WorldView } from "./types";
-import { checkPatches, freshly, freshNow, PerRecord, sameBuilt } from "./worldDiff";
+import { checkPatches, freshly, freshNow, PerRecord, sameBuilt, worldDiff } from "./worldDiff";
 import type { MoneyState, RegionNow } from "../workers/protocol";
 import type { DayLedger, HourLedger } from "../workers/saveFile";
 
@@ -353,19 +353,33 @@ export interface LineGeo {
   zones: string[];
   scales?: { of: unknown; sc: number[]; from: number[] };
 }
-/** each world's geos as read (several worlds are read at once: `moneyWorld`, the stretches' shapes) */
-const geoOf = new WeakMap<WorldView, { zl: number; lines: Map<string, LineGeo> }>();
+/** each world's geos as read (several worlds are read at once: `moneyWorld`, the stretches' shapes), and the world's
+ * before it whose geos a line reads as they were (T-4150 stage 2: every line the diff does not name) */
+type Geos = { zl: number; lines: Map<string, LineGeo>; from: { lines: Map<string, LineGeo>; reading: ReadonlySet<string> } | null };
+const geoOf = new WeakMap<WorldView, Geos>();
+/** the world whose geos were last made */
+let geoLast: WorldView | null = null;
 /** T-4150: each line's, from world to world while its row, its stop positions and its stops' stations are the same */
 const geoKept = new PerRecord<string, LineGeo>();
 export function lineGeo(w: WorldView, l: LineInput, byId: Map<string, StationInput>): LineGeo {
   const zl = zonesLoaded.peek();
   let mine = geoOf.get(w);
   if (!mine || mine.zl !== zl) {
-    geoOf.set(w, (mine = { zl, lines: new Map() }));
+    const last = geoLast && geoLast !== w ? geoOf.get(geoLast) : undefined;
+    const d = last && last.zl === zl ? worldDiff(geoLast, w) : null;
+    geoOf.set(w, (mine = { zl, lines: new Map(), from: d ? { lines: last!.lines, reading: d.reading } : null }));
+    geoLast = w;
     geoKept.trim(w.save.lines.length);
   }
   let g = freshNow() ? undefined : mine.lines.get(l.id);
   if (g) return g;
+  // T-4150 stage 2: a line the edit did not touch, nor any of its stops, has the geo it had
+  const was = freshNow() || !mine.from || mine.from.reading.has(l.id) ? undefined : mine.from.lines.get(l.id);
+  if (was) {
+    geoKept.keep(l.id);
+    mine.lines.set(l.id, was);
+    return was;
+  }
   const stopS = w.lineStats[l.id]?.stopS;
   g = geoKept.get(l.id, [l, stopS, zl, ...l.stops.map((id) => byId.get(id))], () => {
     const n = l.stops.length, km: number[] = [], kmAbs: number[] = [];

@@ -259,11 +259,15 @@ Web first, so it can be shared as a link.
   stops by station and visit and resolving them against the list the one before left [T-3732]. A state carries only the edges,
   nodes and lines that differ from the last one posted, with the ids in order when they changed
   (`delta`, T-1029); the client rebuilds the full lists from its last ones before anything reads it.
-  `toWorld` keeps each record's view (station, line, line figures, edge, node) the same object while its row is, so the
-  page reads what an edit changed off identity: `game/worldDiff.ts` `worldDiff` gives the records that differ between any
-  two worlds, and `PerRecord` keeps a reader's value per record while its inputs are the same objects. A reader of
-  `world` that works per record or patches a total goes through these and checks against a whole build under
-  `?patch=check` [T-4150].
+  `toWorld` keeps each record's view (station, line, line figures, edge, node) the same object while its row is (a row
+  posted again whole that equals the one held keeps the held object), so the page reads what an edit changed off identity:
+  `game/worldDiff.ts` `worldDiff` gives the records that differ between any two worlds. Each world the page builds notes
+  the edges and nodes its states' deltas named (and the edges whose lines changed); between a world and one built from it
+  within 32 states, the diff looks up only those ids, and between any other two it walks both lists. A per-line reader
+  redoes only the lines the diff `reading` names (lines whose row or figures changed, and lines stopping at a station that
+  changed: `PerLine`, or `lineGeo`'s kept geos); `PerRecord` keeps a value per record while its inputs are the same
+  objects. A reader of `world` that works per record or patches a total goes through these and checks against a whole
+  build under `?patch=check` [T-4150].
   The money record goes with each state and "money" message the same way, as its changes from the last one posted
   (`moneyPatch`, `workers/valuePatch.ts`: key by key, entry by entry; a patch made against a record the page does not
   hold asks for a whole state), since whole it was about 2 MB on the biggest saves, nearly all of it the regions'
