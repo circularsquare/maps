@@ -8,8 +8,8 @@ import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
-import { keepPlace, nextLeft, STAGE_TEXT, type BarPlace } from "../game/loadBar";
-import { editLeft, editPrior } from "../game/editLeft";
+import { barPlace, nextLeft, STAGE_TEXT, type BarPlace } from "../game/loadBar";
+import { editLeftOf, editPrior } from "../game/editLeft";
 import { loadFailText } from "../game/loadText";
 import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, memoryResolve, oldestDownload, solveLeft, tripsOff, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
 import { selection } from "../game/ui";
@@ -90,46 +90,64 @@ function afterChangeLeft(part: "all" | "view" = "all"): string {
 }
 /** the time left as the hover shows it, ms (`afterChangeLeft`), or null while it can't be told */
 function shownLeft(part: "all" | "view" = "all"): number | null {
+  return leftNow(part)?.ms ?? null;
+}
+/** that, and whether the workers' units bound it (T-4264: `editLeftOf`; a held edit's part is a guess) */
+function leftNow(part: "all" | "view" = "all"): { ms: number; bounded: boolean } | null {
   const now = performance.now();
   const w = demandWork.value;
+  const units = w ? editLeftOf(w, now, editPrior, part) : null;
   // (a load's solve, or one after memory was freed, has the load's estimate)
-  let est = w ? editLeft(w, now, editPrior, part) : part === "all" && solveLeft.value ? Math.max(0, solveLeft.value.leftMs - (now - solveLeft.value.at)) : null;
+  let est = w ? units?.ms ?? null : part === "all" && solveLeft.value ? Math.max(0, solveLeft.value.leftMs - (now - solveLeft.value.at)) : null;
+  let bounded = w ? !!units?.bounded : part === "all" && !!solveLeft.value?.bounded;
   // a newer edit waits for this solve to end, then is solved as long again, roughly
   const held = editHeld.value;
-  if (w && est !== null && held) est += now - held.sentAt + est;
+  if (w && est !== null && held) { est += now - held.sentAt + est; bounded = false; }
   const was = editShown[part];
   if (est !== null) editShown[part] = { leftMs: nextLeft(was ? was.leftMs : null, est, was ? now - was.at : 0), at: now };
   const s = editShown[part];
-  return s ? Math.max(0, s.leftMs - (now - s.at)) : null;
+  return s ? { ms: Math.max(0, s.leftMs - (now - s.at)), bounded: est !== null && bounded } : null;
 }
 
+/** T-4264: the tag's bar's place (`barPlace`) in the wait on show. Another kind of wait, or the tag gone over a second,
+ * starts it from empty (a held edit's solve follows the one before it within that). */
+let tagPlace: BarPlace = { best: 0 };
+let placeKind: string | null = null, goneAt = 0;
+function placeFor(kind: string): BarPlace {
+  if (kind !== placeKind || (goneAt && performance.now() - goneAt > 1000)) tagPlace = { best: 0 };
+  placeKind = kind;
+  goneAt = 0;
+  return tagPlace;
+}
+const tagGone = () => { goneAt ||= performance.now(); };
 /** T-3868: since when trips have been calculated without a break (one edit's solve after another, a held edit
- * included), and the bar's place in that wait. Units done measured the bar before: their times differ by ten
- * times within a solve (a whole solve's last 42 of 60 units took 5 s of 210), and each edit started it at 0. */
+ * included). Units done measured the bar before: their times differ by ten times within a solve (a whole solve's
+ * last 42 of 60 units took 5 s of 210), and each edit started it at 0. */
 let solvingSince: number | null = null;
-let solvePlace: BarPlace = { best: 0 };
 let solveEnd = 0;
 effect(() => {
   clearTimeout(solveEnd);
   if (demandUpdating.value) solvingSince ??= performance.now();
   // (a held edit's solve is sent just after the final before it: the same wait goes on)
-  else solveEnd = window.setTimeout(() => { if (!demandUpdating.peek()) { solvingSince = null; solvePlace = { best: 0 }; } }, 1000);
+  else solveEnd = window.setTimeout(() => { if (!demandUpdating.peek()) solvingSince = null; }, 1000);
 });
 // T-3925: a newer edit stopped the solve and started a new one: its wait starts from 0
 effect(() => {
   if (!solveRestarted.value) return;
   solvingSince = performance.now();
-  solvePlace = { best: 0 };
+  tagPlace = { best: 0 };
   editShown.all = editShown.view = null;
 });
+/** a share of a wait, and whether it is bounded: past half on the bar only then (`barPlace`) */
+type Work = { share: number; bounded: boolean };
 /** the share of that wait passed, by the time left the hover shows: what has passed over that and what is left;
  * null while no time left is known */
-function timedShare(): number | null {
-  const left = solvingSince === null ? null : shownLeft();
+function timedShare(): Work | null {
+  const left = solvingSince === null ? null : leftNow();
   if (left === null || solvingSince === null) return null;
   const el = performance.now() - solvingSince;
   tickWork();
-  return Math.min(0.97, keepPlace(solvePlace, el / Math.max(1, el + left)));
+  return { share: el / Math.max(1, el + left.ms), bounded: left.bounded };
 }
 /** T-2613: terrain has been downloading for TERRAIN_SLOW_MS (grids and masks for the clock worker, or
  * the hillshade's tiles), so a quick download on a pan never flashes the tag */
@@ -160,7 +178,7 @@ function terrainText(): string | null {
 }
 
 /** T-2693: how long each kind of wait took last time, ms, for a bar where nothing measures the work; the
- * first time, DEFAULT_WAIT_MS. A bar from this stops at 95% until the wait ends. */
+ * first time, DEFAULT_WAIT_MS. A guess: a bar from this stops at half until the wait ends (T-4264). */
 const lastWait = new Map<string, number>();
 const DEFAULT_WAIT_MS = 3000;
 let waitKind: string | null = null, waitSince = 0;
@@ -177,7 +195,7 @@ function trackWait(kind: string | null) {
 function timeShare(kind: string): number {
   waitTick.value;
   if (!waitTimer) waitTimer = window.setInterval(() => waitTick.value++, 250);
-  return Math.min(0.95, (performance.now() - waitSince) / (lastWait.get(kind) ?? DEFAULT_WAIT_MS));
+  return (performance.now() - waitSince) / (lastWait.get(kind) ?? DEFAULT_WAIT_MS);
 }
 function stopWaitTimer() {
   if (waitTimer) { clearInterval(waitTimer); waitTimer = 0; }
@@ -192,8 +210,10 @@ function tickWork() {
     else { clearInterval(workTimer); workTimer = 0; }
   }, 250);
 }
-/** results published so far of the running solve's, when one runs */
-function roundShare(): number | null {
+/** the running solve's share, when one runs: bounded only by a time left from its workers' units (T-4264: the units
+ * done and the rounds published are guesses, since units differ by ten times and on one worker every round lands in the
+ * last seconds) */
+function solveShare(): Work | null {
   // T-3868: by the time left, where it is known
   const timed = demandUpdating.value ? timedShare() : null;
   if (timed !== null) return timed;
@@ -203,9 +223,9 @@ function roundShare(): number | null {
   const w = demandWork.value;
   if (demandUpdating.value && w) {
     const share = workShare(w, of === 2 && done === 0 ? 0 : 1, performance.now());
-    if (share !== null) { tickWork(); return Math.min(0.97, share); }
+    if (share !== null) { tickWork(); return { share, bounded: false }; }
   }
-  return demandUpdating.value && of > 0 ? Math.min(0.95, done / of) : null;
+  return demandUpdating.value && of > 0 ? { share: done / of, bounded: false } : null;
 }
 
 /** T-2756: a city-data download open this long means a slow connection (from a fast one each takes about a
@@ -279,10 +299,10 @@ export function StatusTag() {
     // T-3601: or an edit's whole solve still running after its local result showed (lines there hold the
     // longer trips of before the edit until its final)
     : clock.capped.value || editUnsettled.value ? t("statusTag.calculatingAfterChange") : null;
-  if (!busy) { trackWait(null); stopWaitTimer(); tickSlow(false); return null; }
+  if (!busy) { trackWait(null); stopWaitTimer(); tickSlow(false); tagGone(); return null; }
   // T-3427: edits held while paused: nothing is working, so a hover and no bar
   if (demandHeld.value && busy === t("statusTag.heldPaused")) {
-    trackWait(null); stopWaitTimer(); tickSlow(false);
+    trackWait(null); stopWaitTimer(); tickSlow(false); tagGone();
     return <div class="status-tag" role="status" data-tip={t("statusTag.heldPausedTip")}><span class="demand-busy">{busy}</span></div>;
   }
   const onTerrain = busy === terrain, terrainFailed = onTerrain && !terrainSlow.value;
@@ -290,8 +310,9 @@ export function StatusTag() {
   const base = onMap ? "" : onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")
     : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? t("statusTag.loadingTip", { cities: cityNames(load.cities), pct: Math.floor(load.fraction * 100), step: load.step })
     : wholeSolveUnseen.value ? (demandWork.value && shownLeft() !== null ? afterChangeLeft() : "")
-    : !demandView.value ? busy
-    : bubblesWaiting.value ? ""
+    // T-4264: a wait behind a running solve has that solve's time left
+    : !demandView.value ? (demandUpdating.value && shownLeft() !== null ? afterChangeLeft() : busy)
+    : bubblesWaiting.value ? (demandUpdating.value && shownLeft() !== null ? afterChangeLeft() : "")
     : clickWait.value ? waitTip(clickWait.value)
     : busy === t("statusTag.calculatingAfterChange") ? afterChangeLeft()
     // (a wait past a game day at the cap, 6 min, says how far behind instead: the same time left)
@@ -303,22 +324,30 @@ export function StatusTag() {
     : "");
   const tip = [base, !onTerrain && clock.capped.value ? t("statusTag.capped", { cap: DEMAND_CAP }) : ""].filter(Boolean).join("\n") || undefined;
   const failed = onTerrain ? terrainFailed : !!loadFailure.value || !!zoneFailure;
-  // T-2693: a bar in every case: the load's own share, a zone's, the solve's rounds, the downloads finished,
-  // else the share of the last such wait that has passed
-  let kind = "solve", share: number | null = null;
+  // T-2693: a bar in every case: the load's own bar or a zone's (placed already), else the running solve's share, the
+  // downloads finished, or the share of the last such wait that has passed; T-4264: past half only where bounded
+  let kind = "solve", placedShare: number | null = null, work: Work | null = null;
   if (!failed) {
+    const zone = (id: CityId) => zoneLoads.value.get(id) ?? null;
     if (onMap) kind = "map";
-    else if (onTerrain) { kind = "terrain"; const left = groundNet.value.pending + shadeDownloads.value; share = terrainPeak > 1 ? 1 - left / terrainPeak : null; }
-    else if (load) { kind = "load"; share = load.fraction; }
-    else if (wholeSolveUnseen.value) share = roundShare();
-    else if (!demandView.value) kind = "data";
-    else if (bubblesWaiting.value) { kind = "bubbles"; share = zoneLoads.value.get(activeCity.value) ?? null; }
-    else if (clickWait.value) { kind = "click"; share = zoneLoads.value.get(clickWait.value) ?? roundShare(); }
-    else { share = roundShare() ?? zoneLoads.value.get(activeCity.value) ?? null; }
+    else if (onTerrain) { kind = "terrain"; const left = groundNet.value.pending + shadeDownloads.value; work = terrainPeak > 1 ? { share: 1 - left / terrainPeak, bounded: true } : null; }
+    else if (load) { kind = "load"; placedShare = load.fraction; }
+    else if (wholeSolveUnseen.value) work = solveShare();
+    else if (!demandView.value) { kind = "data"; placedShare = zone(activeCity.value); if (placedShare === null) work = solveShare(); }
+    else if (bubblesWaiting.value) { kind = "bubbles"; placedShare = zone(activeCity.value); if (placedShare === null) work = solveShare(); }
+    else if (clickWait.value) { kind = "click"; placedShare = zone(clickWait.value); if (placedShare === null) work = solveShare(); }
+    else { work = solveShare(); if (!work) placedShare = zone(activeCity.value); }
   }
   trackWait(failed ? null : kind);
-  const measured = share !== null;
-  if (!failed && !measured) share = timeShare(kind); else stopWaitTimer();
+  let share = 0;
+  if (failed) tagGone();
+  else if (placedShare !== null) { share = placedShare; tagGone(); }
+  else {
+    const guess = work ? work.share : timeShare(kind);
+    if (work) stopWaitTimer();
+    share = barPlace(placeFor(kind), guess, work?.bounded ? work.share : null);
+  }
+  if (failed || placedShare !== null) stopWaitTimer();
   // T-2756: a slow wait says why, where the page can tell
   tickSlow(!failed);
   slowTick.value;
@@ -330,6 +359,6 @@ export function StatusTag() {
   </button>;
   return <div class="status-tag" role="status" data-tip={tipAll}>
     <span class="demand-busy">{busy}</span>
-    {!failed && <LoadBar fraction={share!} step={busy} thin quiet={kind !== "load"} />}
+    {!failed && <LoadBar fraction={share} step={busy} thin quiet={kind !== "load"} />}
   </div>;
 }

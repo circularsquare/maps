@@ -28,13 +28,23 @@ export interface EditLeftIn {
 
 /** the time left, ms, at `now`, or null when it can't be told yet: to the solve's final, or (`view`) to the
  * zone in view's figures (where no worker has units before those, the final's) */
-export function editLeft(parts: readonly WorkPart[], now: number, { pace, tailMs, gapMs }: EditLeftIn, part: "all" | "view" = "all"): number | null {
+export function editLeft(parts: readonly WorkPart[], now: number, prior: EditLeftIn, part: "all" | "view" = "all"): number | null {
+  return editLeftOf(parts, now, prior, part)?.ms ?? null;
+}
+
+/** T-4264 (Anita, 11-25: a bar past about half only on a time left we can bound): `editLeft`'s time left, and whether
+ * this solve's own units bound it. They do when every unit still to run is timed at this solve's pace (a unit of its
+ * stage has ended here) and none in hand has run past its time at that pace; not before (the passes' prior, a time of
+ * minutes that turned into 8: T-4209), nor past an overrun (its time is then a floor, a fifth of its time so far), nor
+ * once only the stretch after the last unit is left. */
+export function editLeftOf(parts: readonly WorkPart[], now: number, { pace, tailMs, gapMs }: EditLeftIn, part: "all" | "view" = "all"): { ms: number; bounded: boolean } | null {
   const sum = (v: [number, number]) => v[0] + v[1];
   if (part === "view" && !parts.some((p) => sum(p.viewLeft) > 0 || sum(p.viewBlind) > 0 || p.curView)) {
     // (the view's units all ended: its figures are on their way)
-    if (parts.some((p) => p.done[0] + p.done[1] > 0)) return tailMs;
+    if (parts.some((p) => p.done[0] + p.done[1] > 0)) return { ms: tailMs, bounded: false };
     part = "all";
   }
+  let bounded = true, any = false;
   const view = part === "view";
   let worst = 0;
   // (a pace from `ran` over `exp` ms of `n` units, leaning on `prior` as if it had run PACE_WEIGHT_UNITS)
@@ -57,6 +67,12 @@ export function editLeft(parts: readonly WorkPart[], now: number, { pace, tailMs
       if (p.cur === null && !rate) return null;
       const exp = p.cur === null ? p.curSize * rate : (p.stage === 1 && p.curQ >= 0 ? kq(p.curQ) : k[p.stage]) * p.cur;
       hand = exp > 0 ? Math.max(exp - el, 0.2 * el) : 0;
+      any = true;
+      // (bounded while the unit is within its time at this solve's own pace, no prior: a pace half prior after one
+      // unit ran the bar into a hold 10 s early on the real save)
+      const ownK = (n: number, ran: number, exp: number) => (n > 0 && exp > 0 ? ran / exp : 0);
+      const own = p.cur === null ? exp : (p.stage === 1 && p.curQ >= 0 && (p.nQ?.[p.curQ] ?? 0) > 0 ? ownK(p.nQ[p.curQ], p.ranQ[p.curQ] ?? 0, p.expQ[p.curQ] ?? 0) : ownK(p.ranN?.[p.stage] ?? 0, p.ran[p.stage], p.ranExp[p.stage])) * p.cur;
+      if (!(own > 0 && el <= own)) bounded = false;
     }
     // the whole solve's units left by period, less the one in hand; and the pace of what is left, by its weight
     let byQ = 0, msQ = 0;
@@ -70,20 +86,23 @@ export function editLeft(parts: readonly WorkPart[], now: number, { pace, tailMs
     let rest = 0, blindMs = 0;
     for (const s of [0, 1] as const) {
       const mine = inHand && p.stage === s;
-      rest += (s === 1 ? k1 : k[0]) * Math.max(0, left[s] - (mine && p.cur !== null ? p.cur : 0));
+      const ahead = Math.max(0, left[s] - (mine && p.cur !== null ? p.cur : 0));
+      rest += (s === 1 ? k1 : k[0]) * ahead;
+      if (ahead > 0) { any = true; if (!(p.ranN?.[s] ?? 0)) bounded = false; }
       // (`blind` is the size of the units with no expected time, timed as the one in hand is)
       const b = blind[s] - (mine && p.cur === null ? p.curSize : 0);
       if (b > 0) {
         const rate = p.sizeMs?.[s] ?? 0;
         if (!rate) return null;
         blindMs += b * rate;
+        any = true;
       }
     }
     // the whole solve waits a moment after the local results show, for the next edit
     const gap = !view && p.left[1] + p.blind[1] > 0 && (p.left[0] + p.blind[0] > 0 || (p.busy && p.stage === 0)) ? gapMs : 0;
     worst = Math.max(worst, hand + rest + blindMs + gap);
   }
-  return worst + tailMs;
+  return { ms: worst + tailMs, bounded: bounded && any };
 }
 
 /** each stage's pace in this solve over every worker, or null for a stage too little ran in to tell */

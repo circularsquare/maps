@@ -44,8 +44,8 @@ export function endCardFull(p: LoadProgress | null) {
   cardEnding.value = p && { ...p, fraction: 1, leftMs: null };
   if (p) endingTimer = setTimeout(() => (cardEnding.value = null), END_BEAT_MS);
 }
-/** the card's last progress, so any load that ends with the card up shows its bar full first (the bar is drawn well
- * short of full near the end, `shownShare`) */
+/** the card's last progress, so any load that ends with the card up shows its bar full first (a guess leaves the bar
+ * at half at most, `barPlace`) */
 let lastCardLoad: LoadProgress | null = null;
 loadProgress.subscribe((p) => { if (p) lastCardLoad = p; });
 /** T-343: each zone being loaded whose figures have not arrived yet, with its share done (0-1).
@@ -432,8 +432,9 @@ export const STALL_MS = Number(typeof location === "undefined" ? 0 : new URLSear
 export interface ZoneStep { step: string; leftMs: number | null; at: number }
 export const zoneSteps = signal<ReadonlyMap<CityId, ZoneStep>>(new Map());
 /** T-2524: the running whole solve's time still expected (a load's, or the same network solved again after
- * a cached result), as of `at`; null when no such solve runs or there is no estimate */
-export const solveLeft = signal<{ version: number; leftMs: number; at: number } | null>(null);
+ * a cached result), as of `at`; null when no such solve runs or there is no estimate. T-4264: `bounded` when its
+ * workers' units bound it (game/editLeft.ts `editLeftOf`), not the model's guess. */
+export const solveLeft = signal<{ version: number; leftMs: number; at: number; bounded?: boolean } | null>(null);
 /** The quiet since the last step, ms, once it is STALL_MS or more; else 0. */
 export const stalledMs = (now = performance.now()) => (now - stepAt >= STALL_MS ? now - stepAt : 0);
 /** T-2524: a load's hover lines after its name: the stage, then the time left counted down from `at`, or once

@@ -287,7 +287,9 @@ riders counters keep their own smoothing (Live feel).
   filling as it loads (the top bar's load for the zones in it, a
   loaded game's zone still solving its solve's rounds and time against its expected final, else
   the zone's own download and opening, then for a zone a solve covers that solve's rounds, to its final with the
-  barrier and to its first round without [T-2552]; a bar keeps its place as the card's does, and starts from its own
+  barrier and to its first round without [T-2552]; those are guesses, to half the bar at most, and past half only
+  the solve's share by its workers' units once they bound it, the zone open (T-4264, ui-panels.md "Every bar passes
+  half only on a time left it can bound"); a bar keeps its place as the card's does, and starts from its own
   share when the card goes). Its hover [T-2524] is "Loading Toronto, 40%", then the
   stage it waits on ("Loading city data", or "Calculating demand" once its pack is open and the solve
   covering it runs), then the time left as the loading card words it ("About 2 min left", counted

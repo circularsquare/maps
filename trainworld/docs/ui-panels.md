@@ -235,15 +235,15 @@ wide so a longer date moves nothing [T-1868].
   does not touch, or whose cluster is already done, keeps its split unfaded. The split's hover ends
   "(trips being recomputed…)" in the same cases. A city loading later shows "Loading data" with a thin bar
   after it (Loading, below). Every status text has a thin bar after it and nothing before it
-  (no bar on a failure) [T-2693, T-2728]: the load's own share for "Loading data"; a zone's share
-  (`zoneLoads`) for a wait on a zone's load, and for bubbles on their way; the running solve's
-  rounds published of all (`demandStep`) for a recomputing, behind or capped status and a click
-  waiting on a solve, except an edit's solve, which publishes only at each stage's end: there the
-  solving workers' units done of all planned (a period of the local solve while its result is
-  awaited, then a round of a period of the whole solve), the unit in hand by its time against the
-  stage's mean unit, to 90% of it (`demandWork`, to 97% at most) [T-2729]; terrain downloads finished of the most waiting at once; and where nothing
-  measures the work (or a solve has not begun), the share of the time the last such wait took that
-  has passed, to 95% at most, 3 s for the first. Only the load's bar has a hover; the others pass
+  (no bar on a failure) [T-2693, T-2728], past half only where bounded (Loading, "Every bar passes half only on a
+  time left it can bound"): the load's own bar for "Loading data"; a zone's bar (`zoneLoads`) for a wait on a
+  zone's load, for data or bubbles on their way and a click waiting on a zone; else, while a solve runs (a
+  recomputing, behind or capped status, and data, bubbles or a click waiting behind it), the share of the wait by
+  the time left its hover gives, bounded once the workers' units bound it, else, guesses, the solving workers'
+  units done of all planned (an edit's solve, the unit in hand by its time against the stage's mean unit, to 90%
+  of it, `demandWork`) [T-2729] or the rounds published of all (`demandStep`); terrain downloads finished of the
+  most waiting at once (bounded); and where nothing measures the work, the share of the time the last such wait
+  took that has passed, 3 s for the first (a guess) [T-4264]. Only the load's bar has a hover; the others pass
   the pointer to the tag. The figures change in one step when a detailed solve lands
   [T-1223, docs/demand-runtime.md "Levels of detail"]. No grey and no bar: those stay for a zone with no figures. A rough zone's city view,
   opened from elsewhere, and the Cities list mark nothing: rough figures are close enough (Anita,
@@ -1690,14 +1690,21 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   rate; times how this browser's last load compared with the model), the solve 34 s plus 148 ms a
   zone it covers plus 7.88 ms times the square of its line stops, times how this browser's last game solve of 10 s or
   more compared with that [T-1479, T-2552]. A file or backup being opened has none of its own (never the last game's)
-  and is remembered under the slot it goes into [T-2552]. Every load bar (the card's, "Loading data"'s and a
-  zone's) shows the model's fraction to the power 1.7 (`shownShare`), since the model ran ahead of the clock
-  early and crawled at the end on measured loads: a model's 30% shows as 13% [T-2638, notes/T-2638.md]. The solve's first round and its later ones are timed apart: before the first lands the
+  and is remembered under the slot it goes into [T-2552]. The solve's first round and its later ones are timed apart: before the first lands the
   later ones are expected at this browser's last ratio of the two (0.5 with none), after it at that
   ratio times the first, from the second on at their own mean; a round running late stretches the
-  rounds after it too. The bar never goes back: when the model's share falls (the network arrives and the
-  guess gives way to the model, or an estimate grows) it keeps its place and the rest is spread over the rest
-  of it, moving again with the next work done [T-2552]. It is never full before the card goes, except after a
+  rounds after it too. This model is a guess, so it fills half the bar at most (below).
+- **Every bar passes half only on a time left it can bound** [T-4264, Anita 11-25; `barPlace` in
+  `game/loadBarCore.ts`]: the card's, the status tag's and the zones' on the map. A guess (the model above, a
+  remembered load, the last such wait) shows its fraction to the power 1.7 (the model ran ahead of the clock early:
+  T-2638, notes/T-2638.md), its 90% at half the bar (her 11-22 call), and goes no further until the work is done or
+  bounded. Bounded is a solve's share of its wait by its workers' time left (`editLeftOf`): every unit still to run
+  timed at this solve's own pace (a unit of its stage has ended on that worker) and none in hand past its time at
+  that pace, the card's other stages done; and counted downloads (terrain). A bounded share runs the bar from where
+  it stands to the top in step with it; where the bound lapses (a unit over its time, the stretch after the last
+  unit until the figures show) the bar holds. The bar never goes back: when a bounded share falls (an estimate
+  grows) it keeps its place and the rest is spread over the rest of it, moving again with the next work done
+  [T-2552]. It is never full before the card goes, except after a
   cached result [T-2574]: once the load's network is found in the cache (its zones, build, workers and flags match,
   its packs' digests still to come), the stages are the game, the packs' download and the result's showing (1.5 s
   once the network and packs are in), with nothing opened or solved; the bar keeps its place and runs from there, the
@@ -1744,7 +1751,8 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   ground under the blueprint and is refused while it could not load (track-and-service.md 6.4).
 - **Bubbles on their way** [T-1493]: with Homes, Destinations or Total on, a zone in view that has its
   figures but whose own bubbles are not drawn yet (being asked for, waiting behind a solve, built)
-  has the status "Loading data…", with no hover. An ask that ends with
+  has the status "Loading data…", with no hover, or behind a running solve that solve's time left as the
+  edit's hover words it ("About 4 min left") [T-4264]. An ask that ends with
   no bubbles is made again after 1 s, doubling to 8 s, until they come, so the bubbles of a zone in
   view always arrive. A zone come back to (the last 6 left) takes its cells and final legs from its last
   visit: at once for the same result, else shown until the result shown's come [T-2756].

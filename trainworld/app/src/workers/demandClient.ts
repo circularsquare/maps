@@ -87,9 +87,9 @@ import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad,
 import { outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
-import { editLeft, editPrior, noteEditSolve } from "../game/editLeft";
+import { editLeftOf, editPrior, noteEditSolve } from "../game/editLeft";
 import { choosing, demandIdle, endCardFull, noteLoad, noteLoadWorkers, gameLoadArmed, gameLoadSeq, viewFiguresIn, gameWait, loadComplete, loadFailed, loadProgress, lastStep, markAlive, markStep, memoryResolve, onLoadStop, onLoadStuck, setDownloadProbe, solveLeft, startup, takeGameLoadHold, zoneFailures, zoneLoads, zoneSteps, type ZoneStep } from "../game/loading";
-import { type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, keepPlace, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, shownShare, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
+import { barPlace, type BarPlace, CACHE_SHOW_MS, GAME_MS, GUESS_SHARES, LATER_GUESS, lastWait, loadPace, nextLeft, rememberPace, rememberWait, sameSize, type Pace, sharesOf, solveStage, STAGE_TEXT, stagedFraction, stageInHand, STEP_CAP, timeShare, type StageMs, zoneShare } from "../game/loadBar";
 import { linesSettled } from "../game/lineFigures";
 import { clock } from "../game/clock";
 import { PERIODS, TIMES_PER_STOP, periodsMatch } from "../game/periods";
@@ -579,15 +579,15 @@ const setupOf = (s: Solve) => s.setupMs.reduce((m, x) => Math.max(m, x ?? 0), 0)
 /** T-3876: a solve's time left by its workers' units (`editLeft`, as the status tag's hover has it), or null while
  * a worker has not said, or can't tell yet; the load model's estimate stands in then */
 function unitsLeft(s: Solve, n: number, now: number, part: "all" | "view" = "all"): number | null {
+  return unitsBound(s, n, now, part)?.ms ?? null;
+}
+/** T-4264: the same, and whether the units bound it (`editLeftOf`): only then may a bar pass half on it */
+function unitsBound(s: Solve, n: number, now: number, part: "all" | "view" = "all"): { ms: number; bounded: boolean } | null {
   const w = s.work;
   if (!w || n < 1) return null;
   for (let k = 0; k < n; k++) if (!w[k]) return null;
-  return editLeft(w.slice(0, n), now, editPrior, part);
+  return editLeftOf(w.slice(0, n), now, editPrior, part);
 }
-/** T-4051: how far a zone's solve moves its bar by the model alone, while the workers can't time their units yet (a
- * zone just opened has no passes to go by): on a big save the model expected 30 s of a 7-minute solve, ran the bar to
- * 90% in a minute and held it there (`keepPlace`) for the rest */
-const BLIND_SOLVE = 0.25;
 /** T-1195: and each city pack 450 ms besides its size (China's 169 packs took three times what their
  * MB alone gave, New York's 5 and the world save's 21 matched it) */
 const OPEN_CITY_MS = 450;
@@ -2478,30 +2478,35 @@ class DemandClient {
       ? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, ROUNDS, solveEstimate(stopCount(s.svc), "all"), loadPace().later, now, PERIODS.length, solveWaves, setupOf(s))
       : null;
     const was = solveLeft.peek();
-    const byUnits = st && s ? unitsLeft(s, this.computeN, now) : null;
-    const left = st && s?.barrier && !s.rough ? { version: s.version, leftMs: nextLeft(was?.version === s.version ? was.leftMs : null, byUnits ?? st.left, was ? now - was.at : 0), at: now } : null;
+    const units = s && !this.failed ? unitsBound(s, this.computeN, now) : null;
+    const byUnits = st ? units?.ms ?? null : null;
+    // T-4264: the running solve's share by its units, where they bound its time left (null otherwise): a zone's bar
+    // waiting on it passes half only on this
+    const unitsShare = s && units?.bounded ? Math.max(1, now - s.sentAt) / (Math.max(1, now - s.sentAt) + units.ms) : null;
+    const left = st && s?.barrier && !s.rough ? { version: s.version, leftMs: nextLeft(was?.version === s.version ? was.leftMs : null, byUnits ?? st.left, was ? now - was.at : 0), at: now, bounded: byUnits !== null && !!units?.bounded } : null;
     // (an estimate that only counts down is not worth a render: the bars and the note count down between)
     const ends = (a: { leftMs: number | null; at: number }, b: { leftMs: number | null; at: number }) => (a.leftMs === null) === (b.leftMs === null) && Math.abs((a.at + (a.leftMs ?? 0)) - (b.at + (b.leftMs ?? 0))) < 1000;
-    if (!left || !was || left.version !== was.version || !ends(left, was)) solveLeft.value = left;
+    if (!left || !was || left.version !== was.version || !ends(left, was) || left.bounded !== was.bounded) solveLeft.value = left;
     const sl = solveLeft.peek();
     const solving: ZoneStep = { step: STAGE_TEXT.demand, leftMs: sl?.leftMs ?? null, at: sl?.at ?? now };
     let moving = false;
-    // T-2552: each bar keeps its place as the card's does (`keepPlace`); none is kept while the card is up, which
+    // T-2552: each bar keeps its place as the card's does (`barPlace`); none is kept while the card is up, which
     // hides the bars, so a zone's bar starts from its own share when it shows
     const cardUp = !!clock?.held.peek();
     const places = new Map<CityId, BarPlace>();
-    const placed = (id: CityId, f: number) => {
-      if (cardUp) return shownShare(Math.min(0.99, f));
+    const placed = (id: CityId, f: number, bounded: number | null) => {
+      if (cardUp) return barPlace({ best: 0 }, f, bounded);
       const p = this.zonePlaces.get(id) ?? { best: 0 };
       places.set(id, p);
-      return shownShare(keepPlace(p, Math.min(0.99, f))); // (T-2638)
+      return barPlace(p, f, bounded);
     };
     const sn = this.solveNeed(this.latest());
     for (const id of [...this.fetching, ...this.fetchingBare, ...this.fetchingUndecided]) {
       if (isMarket(id) || shown.has(id) || next.has(id) || this.unsettled?.has(id) || this.failed) continue;
-      let f: number;
-      if (this.job?.cities.includes(id)) {
-        f = this.job.best;
+      let f: number, bounded: number | null = null;
+      const ofJob = !!this.job?.cities.includes(id);
+      if (ofJob) {
+        f = this.job!.best;
         steps.set(id, { step: load?.step ?? STAGE_TEXT.data, leftMs: load?.leftMs ?? null, at: now });
       } else {
         // (open and in the running solve: waiting for that, whatever its share says; else for the packs)
@@ -2528,6 +2533,7 @@ class DemandClient {
             const zs = st ?? solveStage(s.sentAt, s.roundAt, s.published, s.byRound[s.published + 1]?.filter(Boolean).length ?? 0, s.roundFirstAt, READY_ROUND, solveEstimate(stopCount(s.svc)), loadPace().later, now, PERIODS.length, solveWaves, setupOf(s));
             solveMs = zs.ms;
             solve = zs.share;
+            if (open >= 1) bounded = unitsShare;
           } else {
             const svc = this.latest();
             solveMs = solveEstimate(svc ? stopCount(svc) : null);
@@ -2537,14 +2543,15 @@ class DemandClient {
         f = zoneShare({ dlMs, dl, openMs, open, solveMs, solve });
         if (!this.isOpen(id)) moving = true;
       }
-      next.set(id, placed(id, f));
+      // (a zone of the load in hand has the card's bar, placed already)
+      next.set(id, ofJob ? f : placed(id, f, bounded));
     }
     // T-421: a game load's zones still solving after its card went at the view's final, until theirs
     // lands (through any newer solve: they have no final figures yet)
     if (s && st && this.unsettled?.size) {
       for (const id of this.unsettled) {
         if (next.has(id)) continue;
-        next.set(id, placed(id, st.share));
+        next.set(id, placed(id, st.share, unitsShare));
         steps.set(id, solving);
         moving = true;
       }
@@ -2699,6 +2706,9 @@ class DemandClient {
     // told by the workers' units); before that `prior` is a guess, and a guess of seconds that turned into minutes
     // (asianita: 3 min, 2 min, then 8 min at 135 s) is worse than no figure
     let solveTold = !needsSolve || !!was;
+    // T-4264: the solve's share by its units, once they bound its time left and the stages before it are done (null
+    // otherwise): the bar passes half only on this
+    let bounded: number | null = null;
     if (needsSolve && s && job.version !== undefined && s.version === job.version) {
       // T-793: a game load's zone in view is final with its cluster solved ahead (T-402): that cluster's rounds
       const a = this.hold && s.ahead && [...this.viewedSet()].every((id) => s.ahead!.cities.includes(id)) ? s.clusterRes?.get(s.ahead.key) : undefined;
@@ -2713,14 +2723,15 @@ class DemandClient {
       // T-3876: by the workers' units where they can tell, as an edit's solve is (the round model creeps toward
       // 83% and all four rounds land in the last seconds on one worker); the zone in view's cluster solved ahead
       // ends at its own units
-      const byUnits = unitsLeft(s, this.computeN, now, a ? "view" : "all");
-      if (byUnits !== null) {
+      const units = unitsBound(s, this.computeN, now, a ? "view" : "all");
+      if (units !== null) {
         const el = Math.max(1, now - s.sentAt);
-        solveLeft = byUnits;
+        solveLeft = units.ms;
         solveTold = true;
-        solve = el / (el + byUnits);
-        solveMs = el + byUnits;
-      } else if (!this.hold) solve = Math.min(solve, BLIND_SOLVE);
+        solve = el / (el + units.ms);
+        solveMs = el + units.ms;
+        if (units.bounded && job.dataAt !== undefined) bounded = solve;
+      }
       job.solveRounds = { first: st.first, rest: st.rest, measured: published >= 1 };
     }
     // T-1195: each stage's share of the bar is its expected time: the slot's last load's, else, before
@@ -2752,7 +2763,7 @@ class DemandClient {
     };
     const shares = job.shares!;
     const fraction = Math.min(0.99, stagedFraction(shares, parts));
-    keepPlace(job, fraction);
+    barPlace(job, fraction, viaCache ? null : bounded);
     // T-1479: the time left, each stage's expected time less its time so far; a stage running late is
     // guessed to go on a share of its time so far. Unknown on a first load until its network is in.
     // T-1654: always a figure; a late round is estimated from the periods landed (`solveStage`).
@@ -2770,10 +2781,10 @@ class DemandClient {
     }
     if (target !== null && (solveTold || viaCache)) job.left = { ms: nextLeft(job.left?.ms ?? null, target, job.left ? now - job.left.at : 0), at: now };
     const cityMb =job.items.filter((i) => !isMarket(i)).reduce((n, i) => n + (this.bytes.get(i) ?? 0), 0) / 1e6;
-    this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, viaCache: viaCache ? 1 : 0, fraction, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
+    this.barParts = { dlMs, dl, openMs, open, openReal, dataPart, solveMs, solve, prior, stops: stops ?? -1, lines: svc?.lines.length ?? -1, zones: sn?.size ?? -1, items: job.items.length, cityMb, workers: this.computeN, netIn: netIn ? 1 : 0, sinceNet: job.netAt !== undefined ? now - job.netAt : -1, sinceData: job.dataAt !== undefined ? now - job.dataAt : -1, elapsed: now - job.since, published: s && job.version === s.version ? s.published : -2, sent: s && job.version === s.version ? now - s.sentAt : -1,...Object.fromEntries(Object.entries(shares).map(([k, v]) => [`share_${k}`, v])), ...Object.fromEntries(Object.entries(parts).map(([k, v]) => [`part_${k}`, v])), was: was ? 1 : 0, viaCache: viaCache ? 1 : 0, fraction, bounded: bounded ?? -1, shown: job.best, leftTarget: target ?? -1, left: job.left?.ms ?? -1, modelSolve: job.modelSolve ?? -1, solveLeft }; // ?debug=1
     const cities = job.cities.filter((id) => !isMarket(id));
     noteLoad("demand " + stageInHand(parts), { zones: cities, workers: this.computeN }); // T-3927, T-3933
-    loadProgress.value = { cities, fraction: shownShare(job.best), step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null };
+    loadProgress.value = { cities, fraction: job.best, step: STAGE_TEXT[stageInHand(parts)], startup: job.startup, leftMs: job.left?.ms ?? null };
   }
 
   // --- T-328: the demand cache (workers/demandCache.ts) -----------------------------------------

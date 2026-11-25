@@ -2,8 +2,9 @@
 // T-1195: a load's bar in stages. Each stage has the share of the bar its expected time gives it
 // (what this browser measured on the slot's last load, else a model fitted to measured loads,
 // notes/T-1195.md), and moves inside its share by what has landed (bytes, packs, solve rounds) or
-// its time against that expectation, never past the share until the stage is done. Written by
-// workers/demandClient.ts `jobProgress`; read through game/loading.ts `loadProgress`.
+// its time against that expectation, never past the share until the stage is done. That model is a
+// guess: the bar shows it to half at most, and past half only a time left the work bounds (T-4264,
+// `barPlace`). Written by workers/demandClient.ts `jobProgress`; read through game/loading.ts `loadProgress`.
 
 export type Stage = "game" | "data" | "demand";
 export const STAGES: readonly Stage[] = ["game", "data", "demand"];
@@ -165,30 +166,44 @@ export function solveStage(sentAt: number, roundAt: readonly number[] | undefine
   return { ms, share: (doneMs + exp * cur) / Math.max(1, doneMs + exp + after * rest), left: curLeft + after * rest, first, rest };
 }
 
-/** The bar shown for the model's `fraction`, never going back: when the fraction falls (the shares change as the
- * network arrives, an estimate grows) the bar keeps its place and the rest of the work is spread over the rest of it.
- * `bar` holds the best shown so far and that place's anchor, and is updated. */
+/** a bar is full only once its work is done */
+export const BAR_TOP = 0.99;
+/** A bar's place: the best shown so far and that place's anchor, updated by `keepPlace` and `barPlace`. */
 export interface BarPlace { best: number; anchor?: { shown: number; frac: number } }
+/** The bar for a bounded `fraction`, never going back: when the fraction falls (an estimate grows) the bar keeps its
+ * place and the rest of the work is spread over the rest of it. */
 export function keepPlace(bar: BarPlace, fraction: number): number {
   const a = bar.anchor;
   let shown = a ? a.shown + (1 - a.shown) * Math.max(0, fraction - a.frac) / Math.max(1e-6, 1 - a.frac) : fraction;
   // (T-2552: a fall below the place's own fraction moves the place down to it, so the bar moves again with the
   // next work done rather than when the fraction is back where it was)
   if (shown < bar.best - 1e-6 || (a && fraction < a.frac)) { bar.anchor = { shown: bar.best, frac: fraction }; shown = bar.best; }
-  bar.best = Math.max(bar.best, Math.min(0.99, shown));
+  bar.best = Math.max(bar.best, Math.min(BAR_TOP, shown));
   return bar.best;
 }
 
-/** T-2638: the bar's model runs ahead of the clock early and crawls at the end (measured loads, notes/T-2638.md:
- * at 20% of the time the bar stood at 29-42%, at 50% at 66-68%, and its last 5% took 10% of the time). The bar
- * shows the model's fraction to this power, so early work fills less of it and the end moves faster. */
+/** T-2638: a load's model runs ahead of the clock early and crawls at the end (measured loads, notes/T-2638.md: at
+ * 20% of the time the bar stood at 29-42%, at 50% at 66-68%). A guessed bar shows the model's fraction to this power. */
 export const BAR_POWER = 1.7;
-/** Anita, 11-22: what that power showed as 90% is shown as half the bar, so a long last stretch doesn't sit
- * "tantalizingly close"; the rest of the bar is the last stretch */
-export const SHOWN_AT_90 = 0.5;
-export function shownShare(f: number): number {
-  const p = f <= 0 ? 0 : f >= 1 ? 1 : Math.pow(f, BAR_POWER);
-  return p < 0.9 ? p * SHOWN_AT_90 / 0.9 : SHOWN_AT_90 + (p - 0.9) * (1 - SHOWN_AT_90) / 0.1;
+/** T-4264 (Anita, 11-25: "if we aren't able to bound the remaining time, i feel like the most we should show is like
+ * 50%ish"): the most of the bar a guess fills. Where the model's fraction to BAR_POWER is 90% (her 11-22 call); it
+ * stays there until the work is done or its time left is bounded. */
+export const GUESS_TOP = 0.5;
+export function guessShown(f: number): number {
+  return f <= 0 ? 0 : Math.min(GUESS_TOP, Math.pow(Math.min(1, f), BAR_POWER) * GUESS_TOP / 0.9);
+}
+/** T-4264: every bar's place (the loading card, the status tag, the zones' bars): `guess`, the work's share by a
+ * model, an expected time or a remembered wait, fills at most GUESS_TOP (`guessShown`); `bounded`, its share by
+ * counted work or a time left from the work's own pace (null when nothing bounds it), runs from the bar's place to the
+ * top in step with it. Never back, never full before the work is done. */
+export function barPlace(bar: BarPlace, guess: number, bounded: number | null): number {
+  if (bounded === null) {
+    // (a bound that comes back later spreads what is left of it over the rest of the bar, from where the bar is)
+    bar.anchor = undefined;
+    bar.best = Math.max(bar.best, guessShown(guess));
+    return bar.best;
+  }
+  return keepPlace(bar, bounded);
 }
 
 /** T-343, T-2552: the bar of a zone loading outside the load in hand: its download, its opening and the solve that
