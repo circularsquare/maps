@@ -323,14 +323,15 @@
     {
       "id": "c009",
       "text": "trips after an edit in one city are calculated in seconds on big worlds",
-      "edited": null,
+      "edited": "trips after an edit in one city are calculated in seconds, even while the whole map calculates",
       "hidden": false,
       "task": "T-2188",
       "by": "quickend",
       "at": "2026-11-24T22:47:51Z",
-      "rev": 1,
+      "rev": 2,
       "area": "performance",
-      "fix": false
+      "fix": false,
+      "changed": "2026-11-25T11:52:13Z"
     },
     {
       "id": "c008",

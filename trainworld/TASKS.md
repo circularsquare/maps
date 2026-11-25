@@ -927,8 +927,8 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-25, agent aside7)
-  - Context: Design approved 11-24: 9 stages, 12-14 h. Stages 1-5 done: the snapshot, stand-ins, the side calculation's plan and solve (a dev call starts it), and a check that it matches a normal solve exactly. Next: stage 6, starting and batching it in play. You, 11-24: "edits made during remaining full passes should ideally get fast numbers".
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+  - Context: Design approved 11-24: 9 stages. Stages 1-7 done 11-25: an edit during a whole re-solve gets a quick side calculation for its cities, shown until the whole result replaces it (NYC: an edited line's figures in 17 s instead of 53). Left: stage 8, "Use more cores" on; stage 9, measuring on your Asia save.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: notes/T-4220.md ("For Anita" first)
 - T-2198 [P3] {L:passing-tracks} {after:T-3456} Mark where faster trains lose time

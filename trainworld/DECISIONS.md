@@ -252,6 +252,8 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-25 (T-4220): A side job's figures show only if its network is still the newest, over the main pool's (kept apart), until a final of that network or newer; bubbles and questions stay the main pool's. New York lines within 0.1% of the main pool's. notes/T-4220.md
+- 2026-11-25 (T-4220): An edit made during a whole solve is solved aside in a pool of its own, kept while that solve runs; T-2605's zone refine yields to it and no longer starts for an edit. Cost: a refused plan still starts a worker (0.5 s on New York). notes/T-4220.md
 - 2026-11-25 (T-4281): A question (a panel's figures, a quote) or a timer's trips that come while an edit's follow-up waits go after its state, never ahead of it nor by running it whole: the page reads answers against its world. Panels catch up once the clicks pause. notes/T-4281.md
 - 2026-11-25 (T-4272): A station or track delete that can move no running line's trains is answered from its own checks, its services worked out in the next piece; one on a running line's track still waits for the settle, since the trains it needs are paid at the click. notes/T-4272.md
 - 2026-11-25 (T-4265): During a whole solve a zone's bubbles come from the on-screen final's bubble sums, kept on the page. Lie: figures from before the edit until it ends; a zone not drawn since the load lacks its trips with other places (5.5% of Nanjing's legs). notes/T-4265.md

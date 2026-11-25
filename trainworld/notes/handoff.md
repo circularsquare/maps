@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 74ece160-7d1e-4a7f-a351-88b3554e0a77, name maps-13 [f879aa], since 2026-11-25 07:18 UTC
-Updated: 2026-11-25 11:31 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-25 11:52 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -14,10 +14,9 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    post, about 144 ms on Asia; running) covering T-4149's rest; trackrun (Opus, T-4214 D-E: track runs, split halves); T-4294 (Edit stops clicks
    sending a question and no edit, P2). On her yes to a-2026-11-25-4: T-4272 rest (train work before each answer).
    Not edit speed: T-4080 bus stop names done and archived (081dcb203); connections are T-4083.
-2. aside7 (Opus, T-4220 stage 7, show and retire) works in tree aside6, where stage 6 sits unlanded: stage 6 removed
-   T-2605's early figures, so 6 and 7 land together (never publish 6 alone). It has fixes18's three side-job findings;
-   aside6's DECISIONS entry sits uncommitted in the main tree until then.
-   rowsdelta (Opus, T-4291). review19 done (no save or rebuild issue); keepfix3 fixed its 2-4. Briefs: my scratch <agent>/brief.md.
+2. T-4220 stages 6-7 landed together 4ffd70e86 (NYC edited line's figures 17 s instead of 53); review20 (Sonnet) on it:
+   artifacts/trainworld/gemini/batch20/review.md, findings to a fix agent. Left: stage 8 (Use more cores on), 9.
+   rowsdelta (Opus, T-4291). Briefs: my scratch <agent>/brief.md.
 3. Landed tonight (mine): T-4282, T-4276 (ask a-2026-11-25-5), T-4150 s2, T-4281 s1-2, T-4283, T-4220 s4-5, T-4285,
    T-4153 s7, T-4080 s3 + review fixes, T-4293, T-4284 s3, T-4297. 8800 = 6c1cfb8ac, smoke passed 11:3x.
 4. Waiting on her: asks.py list. T-4275 roads hotfix on 8800, ready when she says publish. T-3742 after she asks.
