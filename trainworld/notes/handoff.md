@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 554327b9-cb26-4c02-abcf-41d74d42cf79, name maps-d6 [79008c], since 2026-11-25 18:52 UTC
-Updated: 2026-11-25 19:19 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-26 14:16 UTC (maps-d6 cycling at 500k to standby maps-3a). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -40,6 +40,8 @@ Standby: maps-3a (notes/standby.txt). Gemini out until about 11-30: Claude revie
 - 11-19: player complaints before new features. 11-25: player region requests are leads, not orders ("we gotta judge").
 
 ## Only a person knows
+- redraws3 runs inside maps-d6's tab; its interim report (the two new sheets, artifacts/trainworld/review/
+  redraws-1126-*.png) may reach only that tab: watch for those files and notes/T-4364.md "The job"; send her the sheets.
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
   docs/interface.md, checks/old moves, checks/INDEX.md, tools/checks_index.py. Landings touching them: patch dance
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
