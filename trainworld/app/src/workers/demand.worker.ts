@@ -2954,9 +2954,10 @@ async function run() {
       // last solved (the cities on the same inputs, `sameView`) first solves only the cities the edit
       // touched against those frozen loads; that result is sent, then the cluster is solved whole
       // as usual. `market`: the part's route nodes on this network; `sig`: the cluster it last solved
-      // (T-1735 `ed`, `reach`, `window`: the stations changed since the market part's last whole solve, the window's
-      // reach, and whether the local solve opens one; T-2188 `intercity`: `RUN_SHIFT_MIN`; `whole`: T-3512's share)
-      const editOf = new Map<JobCluster, { fresh: Population[]; market: Uint32Array | null; sig: string | undefined; ed: ReturnType<typeof editedStations> | null; reach: number; window: boolean; intercity: boolean; fares: boolean; whole: boolean }>();
+      // (T-1735 `ed`: the stations changed since what stays frozen last solved; `window`: the market part the local solve
+      // opens a window beside, its route nodes here and the window's reach, or none; T-2188 `intercity`: `RUN_SHIFT_MIN`;
+      // `whole`: T-3512's share)
+      const editOf = new Map<JobCluster, { fresh: Population[]; market: Uint32Array | null; sig: string | undefined; ed: ReturnType<typeof editedStations> | null; window: { part: IntercityApi; market: Uint32Array; ed: ReturnType<typeof editedStations>; reach: number } | null; intercity: boolean; fares: boolean; whole: boolean }>();
       // (T-2188: this network's fare settings, made once)
       let fareNow: FareOf | undefined;
       const holdNet = (p: Population) => { const net = lastNet as NetIds | null; if (net) { marketNet.set(p, net); marketFare.set(p, fareNow ??= fareOf(n, net)); } };
@@ -2987,7 +2988,10 @@ async function run() {
           // (T-2188: a city edit's local result is its final, so it keeps its local solve however much of the cluster
           // it touches; an intercity edit's whole solve follows, so it goes there at once as T-3512 has it, below)
           if (import.meta.env.DEV) console.info(`T3512 v${job.version} periods ${mine.join(",")} kept ${keptOf(c).toString(2)}: ${fresh.length} of ${c.pops.length} populations touched, ${Math.round(100 * share)}% of the cluster's passes${share >= shareMax ? ", solved whole at once unless a city edit" : ""}`); // i18n-ignore
-          editOf.set(c, { fresh, market, sig: held.get(kept), ed, reach, window: !!ed && (reach > 0 || ed.switched), intercity, fares, whole: share >= shareMax });
+          // (a window holds the market's pairs, so a cluster with no market part opens none, though its edit is read
+          // against a kept city: as with intercity trips off, T-4367)
+          const win = c.part && market && ed && (reach > 0 || ed.switched) ? { part: c.part, market, ed, reach } : null;
+          editOf.set(c, { fresh, market, sig: held.get(kept), ed, window: win, intercity, fares, whole: share >= shareMax });
         }
       }
       // T-2188: a city edit (no edited cluster here an intercity one) may end at its local result, the market left
@@ -3354,20 +3358,20 @@ async function run() {
         // T-1735: the market's pairs with an end in a zone a station changed since the market's last
         // whole solve serves, solved with the touched cities on the window's stations alone; the
         // frozen market less those pairs' old loads (`less`)
-        const part = c.part, { ed, reach } = e;
-        const sub = e.window && !ends ? part!.beside() : null;
+        // (`whole` is the window's part's view: `w.part` is `c.part`)
+        const part = c.part, w = ends ? null : e.window, sub = w ? w.part.beside() : null;
         const lessOf = new Map<number, Float32Array[]>();
-        if (sub) {
+        if (w && sub) {
           c.views.set(sub, whole!);
-          sub.set_window(ed!.now, part!.zones_at(ed!.was), reach, WINDOW_SHARE, WINDOW_FLOOR);
+          sub.set_window(w.ed.now, w.part.zones_at(w.ed.was), w.reach, WINDOW_SHARE, WINDOW_FLOOR);
         }
-        const win = sub ? {
+        const win = w && sub ? {
           sub,
           less: (q: number) => {
-            if (!(part!.solved_mask() & (1 << q))) return null;
+            if (!(w.part.solved_mask() & (1 << q))) return null;
             const zones = sub.window_zones();
             if (!zones.length) return null;
-            const blocks = toWhole(part!.window_loads(q, zones), e.market!);
+            const blocks = toWhole(w.part.window_loads(q, zones), w.market);
             if (!blocks.length) return null;
             lessOf.set(q, blocks);
             return blocks[0];
