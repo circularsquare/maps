@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-26-5",
+    "title": "Hotfix for the 0.4.7 demand crash",
+    "text": "The 0.4.7 demand crash (T-4367) is fixed on master: every 0.4.7 player with intercity trips off (the iPad default) can hit 'Demand stopped' after making a new line, until they reload. Put it out now as a hotfix (0.4.7 plus that one fix, app only, no data change; I'd have one reviewer read the diff first), or wait for the next release? I'd do the hotfix.",
+    "since": "2026-11-26",
+    "by": "maps-3a"
+  }
+]

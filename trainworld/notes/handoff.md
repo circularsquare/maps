@@ -1,28 +1,23 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 72757b8d-c220-47a4-ac30-041ad0a7ac39, name maps-3a [8d9b93], since 2026-11-26 14:17 UTC
-Updated: 2026-11-26 15:14 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-26 15:45 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. 0.4.7 published 11-25 18:42 UTC (R2 2026-11-25, website 0497af6). Player reports triaged 11-26 14:40 UTC: filed
-   T-4367 (P1, demand crash 'o.beside' after a new line), T-4368, T-4369, T-4370; brown-map lead added to T-4328.
-   Running: besidefix (Opus, T-4367, tree besidefix, port 6147, her "can investigate 4367" 11-26 ~10:10). Her
-   no-new-agents wind-down (11-25) otherwise still unanswered: start nothing else without asking.
-2. Landed 11-25 (all on 8800 98aedf0d0, smoke passed): T-4348, T-4351, T-4354, T-4357, T-4337, T-4349, T-4272 s2
-   (open for 100 ms), T-4339, T-4149, T-4359, T-4153 s9 (open for 100 ms), T-4281 s3. Edit bench baseline on master
-   65f0134b@20261125203108-11820; batch check after: no regression (NYC click run later 122 -> 34 ms).
-   Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8.
-3. Running: the redraws3 job (T-4364, T-4365; agent done, report r-b2d0784b): her 11-26 yes to the redraws except
-   Poland, plus both new (Mansoura, Chiayi/Tainan: her yes 11-26, written to notes/T-4364/answer-1126.txt), so the
-   job runs through EG/TW and the after steps without stopping (19-20 h from 14:47 UTC). Owns data/packs: snap8800 with the freeze, hold
-   main-tree app/ writes during its gates. All of Macau's land goes
-   in Macau's zone; it reports the Macau-Zhuhai border factor after the join.
+1. 0.4.7 live (published 11-25 18:42 UTC). Player reports triaged 11-26: T-4368 to T-4371 filed. T-4367 (demand crash
+   'o.beside' after a new line, every cluster with intercity trips off) landed 6a0cab532, c007; 0.4.7 has the bug.
+   Asked her: hotfix now (0.4.7 + that commit, app only) or the next release. Not on 8800 yet (below). Her 11-25
+   no-new-agents wind-down otherwise unanswered: start nothing else without asking.
+2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
+   review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
+3. Running: the redraws3 job (T-4364, T-4365, report r-b2d0784b): her yes to all but Poland, Mansoura and Chiayi/Tainan
+   included (notes/T-4364/answer-1126.txt), so it runs to the end without stopping (19-20 h from 14:47 UTC). It owns
+   data/packs and the main tree's app/src/game json: 8800 rebuild and smoke wait for it (the newest freeze is 11-22).
+   seams.py failed under `-I` for Israel (fixed 4a02b06d4, later countries get it): after the job, rerun IL's join
+   so its seams count. Macau-Zhuhai take the default 0.05 (told her).
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
-6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
-   projected; Class B, repo size known to her. Cloudflare stats: her Configuration Rule leaves /trainsworld out (checked).
-
-Standby: none listed. Gemini out until about 11-30: Claude reviewers meanwhile.
+5. Resources 11-26: nothing to act on (R2 storage 14.9 GB, ~$0.07/month; Class A 73%). Standby: none listed.
 
 ## Her words
 - 11-26 ~09:10: Skierniewice: "ok i guess we can leave out poland. everything else fine to do." Asked whether Macau
@@ -54,7 +49,6 @@ Standby: none listed. Gemini out until about 11-30: Claude reviewers meanwhile.
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
   docs/interface.md, checks/old moves, checks/INDEX.md, tools/checks_index.py. Landings touching them: patch dance
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
-- DECISIONS.md holds buytrains' two T-4272 entries uncommitted: commit them with its landing.
 - Uncommitted on purpose: TODO.md (hers), notes/asks-log.jsonl, notes/board-live.json, changelog/roadmap.json,
   maps .claude/settings.json, notes/T-3397.md, tools/ops/archive_bad_saves.py.
 - Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed). hotfix461 removed 11-25 (branch on
