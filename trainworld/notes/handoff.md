@@ -1,25 +1,30 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 554327b9-cb26-4c02-abcf-41d74d42cf79, name maps-d6 [79008c], since 2026-11-25 18:52 UTC
-Updated: 2026-11-26 14:16 UTC (maps-d6 cycling at 500k to standby maps-3a). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 72757b8d-c220-47a4-ac30-041ad0a7ac39, name maps-3a [8d9b93], since 2026-11-26 14:17 UTC
+Updated: 2026-11-26 14:45 UTC (maps-d6 done; redraws3 still runs in its tab, reports forwarded). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. 0.4.7 published 11-25 18:42 UTC (R2 2026-11-25, website 0497af6); no new player reports on it (19:15 UTC).
+1. 0.4.7 published 11-25 18:42 UTC (R2 2026-11-25, website 0497af6). Player reports triaged 11-26 14:40 UTC: filed
+   T-4367 (P1, demand crash 'o.beside' after a new line), T-4368, T-4369, T-4370; brown-map lead added to T-4328. The
+   T-4367 brief is ready (scratchpad besidefix/brief.md, tree besidefix, port 6147), waiting on ask a-2026-11-26-2.
 2. Landed 11-25 (all on 8800 98aedf0d0, smoke passed): T-4348, T-4351, T-4354, T-4357, T-4337, T-4349, T-4272 s2
    (open for 100 ms), T-4339, T-4149, T-4359, T-4153 s9 (open for 100 ms), T-4281 s3. Edit bench baseline on master
    65f0134b@20261125203108-11820; batch check after: no regression (NYC click run later 122 -> 34 ms).
    Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8.
-3. Running: redraws3 (Opus, T-4364, T-4365): her 11-26 yes to all 17 redraws (Skierniewice split included) plus two
-   new (El Mansura, Chiayi/Tainan) whose sheets it makes first (send them with SendUserFile: she's on remote
-   control); one unattended job (~16-17 h), Egypt and Taiwan gated on her yes to the two.
+3. Running: redraws3 (Opus, T-4364, T-4365): her 11-26 yes to the redraws except Poland (Skierniewice left out) plus
+   two new (El Mansura, Chiayi/Tainan): sheets sent to her 14:50 UTC, asks a-2026-11-26-3 and -4; pass her answers
+   to redraws3 via maps-d6's tab. One unattended job (~16-17 h), Egypt and Taiwan gated on those two. All of Macau's land goes
+   in Macau's zone; it reports the Macau-Zhuhai border factor after the join.
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
    projected; Class B, repo size known to her. Cloudflare stats: her Configuration Rule leaves /trainsworld out (checked).
 
-Standby: maps-3a (notes/standby.txt). Gemini out until about 11-30: Claude reviewers meanwhile.
+Standby: none listed. Gemini out until about 11-30: Claude reviewers meanwhile.
 
 ## Her words
+- 11-26 ~09:10: Skierniewice: "ok i guess we can leave out poland. everything else fine to do." Asked whether Macau
+  is part of Zhuhai ("shouldnt it be separate so that there can be a border factor?"): answered as item 3.
 - 11-25 ~17:20: usage at 88%: finish the running tasks and wind down; no new agents. Batch review waits for later.
 - 11-25 ~15:00: quiet-machine work (baseline, edit-speed stages) "would make sense to start after" her League game.
 - 11-25 ~12:50: "ok, ship." 0.4.7 (via standby maps-d6, after Belgrade setup +23% over her one-time 20% threshold).

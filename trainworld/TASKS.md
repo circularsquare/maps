@@ -352,6 +352,12 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
+- T-4367 [P1] {L:edit-speed} Demand crash after making a line in 0.4.7
+  - Context: A player (Safari, 161 lines, tw-feedback 1795696901, 11-26) gets "worker 0: TypeError: null is not an object (evaluating 'o.beside')" many times since 0.4.7, mostly after making a new line; demand stops until they reload. One report so far; anyone editing could meet it.
+  - Goal: The cause fixed on master and checked against 0.4.7's code; a new line on a big save solves with no failure.
+- T-4370 [P2] {L:memory} iPad games crash on big saves
+  - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines. Related: T-3160 (phones on real-network starts).
+  - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
 - T-3708 [P3] {L:memory} Place rows lost in a worker restart wait
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
@@ -500,8 +506,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4368 [P3] {L:map-look} A high-speed line made normal still shows as high-speed
+  - Context: A player on 0.4.7 (tw-feedback 1795690226, 11-26): after changing a high-speed line to a normal one, the line is still drawn as high-speed. One report.
+  - Goal: Changing a line's kind redraws it in the new kind's style at once.
 - T-4328 [P3] {L:map-look} {after:players still blocked after 0.4.6.1} OpenFreeMap through our own address as a last route
-  - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail.
+  - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail. A possible case: on 11-25 afternoon one player (0.4.6, software graphics) saw a plain brown Map mode with satellite fine (tw-feedback 1795642752).
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
   - Other: notes/T-4328.md
 - T-4355 [P3] {L:translations} English written into the code without t()
@@ -1092,6 +1101,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
+- T-4369 [P3] {L:passing-tracks} Up trains skip a passing loop down trains use
+  - Context: A player on 0.4.7 (tw-feedback 1795654684, 11-25): on a line with passing loops, down trains wait in the loop as they should, but up trains don't and get stuck behind. One report.
+  - Goal: Both directions wait in a loop the timetable plans for, shown on a small case built like the player's.
 - T-4356 [P3] {L:track-speed} Ramp speed labels while dragging and in the blueprint box
   - Context: From T-4349: node drags, the blueprint box and an idle selected stretch show curve labels but no ramp labels. Missing, not wrong; the drawing tool shows both.
   - Goal: Every place that labels a curve's limit also labels a ramp that is the lowest limit.
