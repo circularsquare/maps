@@ -6,10 +6,11 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 
 ## Next
 1. 0.4.7 live (published 11-25 18:42 UTC). T-4367 (demand crash 'o.beside' after a new line, intercity trips off)
-   landed 6a0cab532, c007. Her yes to a hotfix (11-26 ~11:30): hotfix471 (Sonnet) builds 0.4.7.1 in tree hotfix471
-   (playbook notes/T-4275.md "Hotfix 0.4.6.1"), review471 (Sonnet) reads the diff. Then I deploy (`--skip-data
-   --version 2026-11-25 --dist <tree dist>`), website push, apply its master patch, hide or drop c007 from next.json.
-   Waits on her text OK (ask a-2026-11-26-7). Filed T-4372 (smoke with phone settings, her "should have caught").
+   landed 6a0cab532, c007. Her yes to a hotfix (11-26 ~11:30). review471 passed; hotfix471 built 0.4.7.1 (stamp
+   mwxs0pfz on 058b348af, smoke and game run fine; notes/T-4367.md "Hotfix 0.4.7.1"). Waits only on her text OK
+   (ask a-2026-11-26-7), then `deploy.py --version 2026-11-25 --skip-data --dist .tw-trees\hotfix471\trainworld\app\dist
+   --allow-dirty`, website push, `--verify --page`, apply notes/archive/trees/hotfix471-for-master.patch, drop c007
+   from next.json, remove the tree. Filed T-4372 (smoke with phone settings, her "should have caught").
 2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
    review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
 3. Running: the redraws3 job (T-4364, T-4365, report r-b2d0784b): her yes to all but Poland, Mansoura and Chiayi/Tainan
