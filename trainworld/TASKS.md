@@ -766,6 +766,9 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3011 [P3] {L:region-redraws} Cairo border misses the Nile
   - Context: You said (2026-11-10) the border is too far east of the river and islands, and the river should just be part of Cairo. Since 2026-11-18 (T-3671) downtown is in the zone, so the border runs along both banks; the Nile's channels themselves (about 160 m and 440 m wide at Tahrir) stay outside, since no admin unit covers the water.
   - Goal: Cairo's zone lines up with the Nile and keeps Gezira and Zamalek.
+- T-4364 [P2] {L:region-redraws} Region redraw proposals with before and after maps (taking, 2026-11-25, agent redraws2)
+  - Context: You, 11-25: regions to "preserve compactness / not have so many cross region trips"; a player finds Israel's 9 regions too many; players called some Chinese regions weird; "merida in yucatan... does not look good lol". Proposals first, nothing rebuilt until you pick.
+  - Goal: A worldwide ranking of the least compact, most crossed regions, and a before/after sheet for Israel, Yucatán, the Chinese ones, Stavanger and Taitung.
 - T-3033 [P2] {L:region-redraws} Rebuild the 36 split rows left
   - Context: Stage 3 of T-3012, after the tram release: unit-list edits for those rows and their neighbours, never a full replan. Mansoura, the 37th, is done (2026-11-18, T-3671: it took the Sinbillawin zone); each of the 36 needs its mend worked out.
   - Goal: The 36 rows are rebuilt (about 4 core-hours) and checks/split_zones.py passes.
