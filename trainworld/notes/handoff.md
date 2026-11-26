@@ -11,8 +11,9 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    Open asks: crash counts (a-2026-11-26-6); T-4372's start and the 11-25 wind-down unanswered.
 2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
    review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
-3. Running: the redraws3 job (T-4364, T-4365, report r-b2d0784b): her yes to all but Poland, Mansoura and Chiayi/Tainan
-   included (notes/T-4364/answer-1126.txt), so it runs to the end without stopping (19-20 h from 14:47 UTC). It owns
+3. The redraws3 job (T-4364, T-4365, report r-b2d0784b): her yes to all but Poland, Mansoura and Chiayi/Tainan
+   included (notes/T-4364/answer-1126.txt). IL, DE, IN, MX, NO joined; stopped 21:44 UTC at cn.w1 (sih parked: gate
+   timeout at city-browser.mjs:291, active city never sih). redraws4 (Opus) diagnoses, fixes and restarts it. It owns
    data/packs and the main tree's app/src/game json: 8800 rebuild and smoke wait for it (the newest freeze is 11-22).
    seams.py failed under `-I` for Israel (fixed 4a02b06d4, later countries get it): after the job, rerun IL's join
    so its seams count. Macau-Zhuhai take the default 0.05 (told her).
