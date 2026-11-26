@@ -1,0 +1,11 @@
+retire smd: Samannud (437,427) -> elr
+elr: bbox [31.024, 30.872, 31.241, 31.163] -> [31.024, 30.841, 31.317, 31.163]
+elr El Mahalla El Kubra: people 1,537,173 -> 1,974,600; units 3 -> 4; pieces 1 -> 1; hull 0.85 -> 0.81
+   neighbours before {'smd': 0.28, 'qut': 0.2, 'elm': 0.2, 'ahu': 0.18, 'kay': 0.16, 'tta': 0.07}
+   neighbours after  {'elm': 0.38, 'aad': 0.21, 'qut': 0.16, 'ahu': 0.14, 'kay': 0.13, 'tta': 0.06}
+
+checks (T-4364 dry.py):
+elr El Mahalla El Kubra: plan people 1,974,600, game about 1,813,718, 610 km2, hull 0.81 (before 0.85, main piece 0.81) pass; floor 500,000 pass; cap 1,500,000 OVER by 474,600 (a hand edit may; a zones rerun would not make it); ring none
+smd Samannud: retired into elr; zone_successors smd -> elr
+waves: elr
+build: 1 rows, recorded steps 2 core-min (elr 1.6); retired ['smd']; then the EGY join (see notes/T-4364/joins.txt)

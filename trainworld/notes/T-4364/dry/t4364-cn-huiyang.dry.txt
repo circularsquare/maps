@@ -1,0 +1,11 @@
+retire hya: Huiyang District (989,632) -> shz
+shz: bbox [113.752, 22.446, 114.623, 22.864] -> [113.752, 22.431, 114.735, 23.14]
+shz Shenzhen: people 12,646,384 -> 13,636,016; units 8 -> 9; pieces 1 -> 1; hull 0.60 -> 0.56
+   neighbours before {'dog': 0.28, 'hya': 0.13, '(no row)': 0.03}
+   neighbours after  {'dog': 0.23, 'hdo': 0.11, 'hui': 0.11, '(no row)': 0.02}
+
+checks (T-4364 dry.py):
+shz Shenzhen: plan people 13,636,016, game about 18,976,536, 3,186 km2, hull 0.56 (before 0.60, main piece 0.58) pass (no worse than before less 0.05); pop_vs_fua about 0.90 (18,976,536 over 21,079,228 in Guangzhou, Guangzhou, Guangzhou) pass; ring none
+hya Huiyang: retired into shz; zone_successors hya -> shz
+waves: shz
+build: 1 rows, recorded steps 7 core-min (shz 7.0); retired ['hya']; then the CHN join (see notes/T-4364/joins.txt)

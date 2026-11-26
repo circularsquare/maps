@@ -1,0 +1,73 @@
+{
+ "task": "T-4364",
+ "iso": "TWN",
+ "label": "Taiwan: Taitung zone to the east coast",
+ "view": [
+  119.9,
+  21.85,
+  122.1,
+  24.5
+ ],
+ "assign": {
+  "kao": [
+   "Jiasian",
+   "Liouguei",
+   "Maolin",
+   "Meinong",
+   "Namasia",
+   "Neimen",
+   "Qishan",
+   "Shanlin",
+   "Taoyuan",
+   "Tianliao",
+   "Gaoshu",
+   "Ligang",
+   "Yanpu",
+   "Sandimen",
+   "Wutai",
+   "Majia",
+   "Neipu",
+   "Taiwu",
+   "Laiyi",
+   "Wanluan",
+   "Zhutian",
+   "Chaozhou",
+   "Kanding",
+   "Nanzhou",
+   "Xinpi",
+   "Linbian",
+   "Jiadong",
+   "Fangliao",
+   "Chunri",
+   "Fangshan",
+   "Shizi",
+   "Mudan",
+   "Checheng",
+   "Manzhou",
+   "Hengchun"
+  ],
+  "tac": [
+   "Chushang",
+   "Guoxing Township",
+   "Jiji Town",
+   "Lugu Town",
+   "Mingjian Town",
+   "Puli Town",
+   "Ren'ai Township",
+   "Shueli Town",
+   "Xinyi Township",
+   "Yuchi Town",
+   "Zhongliao Township",
+   "二水鄉"
+  ],
+  "huw": [
+   "Citong",
+   "Douliu",
+   "Dounan",
+   "Gukeng",
+   "Linnei",
+   "大埤鄉 (Dapi)"
+  ]
+ },
+ "why": "Taitung's zone (tig, 1.29M) was the Central Range with both foothills, joined by shape across counties because the mountain townships fill the hull (T-2300). It keeps the east coast, Hualien and Taitung counties (0.45M). The west foothills go to the zone each mostly travels with (the merge rule's gravity) and its own county: Kaohsiung's hill districts and Pingtung's plain to Kaohsiung (which holds Pingtung City), Nantou's eleven townships (Puli, Zhushan) to Taichung (which holds Nantou City and Caotun), and Changhua's Ershui with them; Yunlin's east (Douliu, Dounan, Gukeng) to Huwei, making Yunlin one zone."
+}

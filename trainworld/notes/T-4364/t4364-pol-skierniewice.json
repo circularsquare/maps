@@ -1,0 +1,32 @@
+{
+ "task": "T-4364",
+ "iso": "POL",
+ "label": "Skierniewice: split on the Łódź/Masovian line",
+ "view": [
+  18.6,
+  51.2,
+  22.0,
+  52.75
+ ],
+ "retire": {
+  "skw": "lod"
+ },
+ "names": {
+  "drop": [
+   "skw"
+  ]
+ },
+ "show_names": {
+  "lod": "Łódź",
+  "war": "Warsaw"
+ },
+ "why": "Skierniewice's zone (skw) is two NUTS-3 subregions in two voivodeships: Skierniewicki (Łódź voivodeship, 0.36M) and Żyrardowski (Masovian, 0.27M), the only Polish zone across a voivodeship line. Żyrardowski (Żyrardów, Grodzisk Mazowiecki, Sochaczew) joins Warsaw's metro, whose western ring it continues; Skierniewicki, at 72% of the floor too small to stand alone, joins Łódź's metro on its own side of the line.",
+ "moves": [
+  [
+   "PL926",
+   "Żyrardowski",
+   "skw",
+   "war"
+  ]
+ ]
+}

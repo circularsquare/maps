@@ -1,0 +1,20 @@
+move Luzhai County (316,789) lbe -> liu
+move Liucheng County (345,188) lbe -> liu
+retire lbe: Lingui District (502,606) -> lgx
+retire lbe: Yongfu County (223,830) -> lgx
+set lgx: {'name': 'Guilin'}
+liu: bbox [108.913, 23.911, 109.745, 24.583] -> [108.833, 23.911, 110.162, 24.859]
+lgx: bbox [110.089, 24.997, 110.931, 25.917] -> [109.612, 24.632, 110.931, 25.917]
+lgx Guilin: people 1,554,627 -> 2,281,062; units 7 -> 9; pieces 1 -> 1; hull 0.84 -> 0.83
+   neighbours before {'quh': 0.43, 'lbe': 0.32, 'pnl': 0.19, 'roh': 0.09}
+   neighbours after  {'roh': 0.34, 'quh': 0.29, 'pnl': 0.24, 'liu': 0.14}
+liu Liuzhou: people 1,956,848 -> 2,618,825; units 5 -> 7; pieces 1 -> 1; hull 0.76 -> 0.84
+   neighbours before {'lbe': 0.59, 'xnb': 0.34, 'yzo': 0.09}
+   neighbours after  {'xnb': 0.41, 'yzo': 0.25, 'lgx': 0.18, 'roh': 0.13, 'pnl': 0.04}
+
+checks (T-4364 dry.py):
+lgx Guilin: plan people 2,281,062, game about 2,654,359, 10,272 km2, hull 0.83 (before 0.84, main piece 0.83) pass; floor 1,000,000 pass; cap 2,500,000 within; ring none
+liu Liuzhou: plan people 2,618,825, game about 3,215,948, 8,663 km2, hull 0.84 (before 0.76, main piece 0.84) pass; pop_vs_fua about 1.85 (3,215,948 over 1,737,108 in Liuzhou) FAIL; ring none
+lbe Lingui: retired into lgx; zone_successors lbe -> lgx
+waves: lgx,liu
+build: 2 rows, recorded steps 1 core-min (lgx 0.9, liu 0.5); retired ['lbe']; then the CHN join (see notes/T-4364/joins.txt)

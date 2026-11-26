@@ -1,0 +1,73 @@
+{
+ "task": "T-4364",
+ "iso": "CHN",
+ "label": "Liaoyang: Liaoyang whole in the Anshan-Liaoyang metro",
+ "view": [
+  122.4,
+  40.4,
+  124.3,
+  41.7
+ ],
+ "retire": {
+  "lbk": "ans"
+ },
+ "names": {
+  "drop": [
+   "lbk"
+  ]
+ },
+ "why": "Liaoyang County (lbk, 0.47M plan, under China's 1M floor) is a zone of its own wrapped round Liaoyang city, 4th worst worldwide (hull 0.52, 56% of its commutes cross its line). Liaoyang's centre (Baita, Hongwei) is already in Anshan's metro (ans), where most of lbk's commutes go (86,000 a day), while three more Liaoyang city districts (Wensheng, Taizihe, Gongchangling) and Dengta sit in Benxi's zone (pns), a finger between them. lbk is retired into ans and the four join it, so all of Liaoyang prefecture is one zone with Anshan; ans's FUAs for pop_vs_fua add Liaoyang's, Gongchangling's and Dengta's (GHS-FUA 8769, 8865, 8767), though the check is relaxed for Chinese metros (T-897). Benxi's zone (pns, shown as Benxi) keeps Benxi's four districts and takes Benxi County from Shuncheng's zone (scn, Fushun): with Dengta left in it its hull falls to 0.63, and without Benxi County scn would wrap it.",
+ "set": {
+  "ans": {
+   "source": {
+    "ucdb": [
+     9881
+    ],
+    "fua": [
+     8753,
+     8769,
+     8865,
+     8767
+    ],
+    "satellites": [
+     9899
+    ]
+   }
+  },
+  "pns": {
+   "name": "Benxi"
+  }
+ },
+ "moves": [
+  [
+   "62558664B16054683086633",
+   "Wensheng District",
+   "pns",
+   "ans"
+  ],
+  [
+   "62558664B11747577047138",
+   "Taizihe District",
+   "pns",
+   "ans"
+  ],
+  [
+   "62558664B48815006376650",
+   "Gongchangling District",
+   "pns",
+   "ans"
+  ],
+  [
+   "62558664B84832165921515",
+   "Dengta City",
+   "pns",
+   "ans"
+  ],
+  [
+   "62558664B22486100363189",
+   "Benxi Manchu Autonomous County",
+   "scn",
+   "pns"
+  ]
+ ]
+}

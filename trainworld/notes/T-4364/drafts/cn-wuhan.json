@@ -1,0 +1,26 @@
+{
+ "task": "T-4364",
+ "iso": "CHN",
+ "label": "Wuhan: Huangpi (Tianhe airport) into Wuhan",
+ "view": [
+  113.3,
+  29.6,
+  115.4,
+  31.6
+ ],
+ "assign": {
+  "wuh": [
+   "Huangpi District"
+  ]
+ },
+ "retire": {
+  "hnp": "axx"
+ },
+ "set": {},
+ "names": {
+  "drop": [
+   "hnp"
+  ]
+ },
+ "why": "Wuhan's metro (wuh) holds ten of Wuhan's thirteen districts; Huangpi, with Tianhe airport, is in a zone with Hong'an (hnp), and 41% of that zone's commutes cross its line (235,000 a day to and from Wuhan). Huangpi joins wuh; hnp is retired and Hong'an joins Anlu's zone (axx: Anlu, Dawu, Xiaochang), which it borders at Dawu; Xinzhou's zone (xnz, Huanggang prefecture like Hong'an) would go 0.45M over the 2.5M cap. Xinzhou and Hannan stay where they are: with them Wuhan's hull falls to 0.69 and pop_vs_fua reaches 1.45, beside the 1.5 fail."
+}

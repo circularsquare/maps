@@ -1,0 +1,45 @@
+{
+ "task": "T-4364",
+ "iso": "NOR",
+ "label": "Norway: Stavanger apart from Bergen",
+ "view": [
+  4.4,
+  58.0,
+  9.3,
+  62.3
+ ],
+ "new": {
+  "svg": {
+   "name": "Rogaland",
+   "like": "vea",
+   "origin": [
+    5.7331,
+    58.97
+   ]
+  }
+ },
+ "assign": {
+  "svg": [
+   "Rogaland"
+  ]
+ },
+ "set": {
+  "svg": {
+   "gate_relax": {
+    "drive_factor_median": "fjord county: roads round the fjords and ferries make drives about twice the straight line, as Vestland's (vea) relaxation; T-4364 split Rogaland from it"
+   }
+  }
+ },
+ "names": {
+  "set": {
+   "svg": {
+    "name": "Stavanger"
+   }
+  }
+ },
+ "why": "Bergen's zone (vea, shown Bergen) is Vestland and Rogaland, two fylker with their own cities 160 km apart across fjords; Rogaland (Stavanger, Sandnes, Haugesund; 0.44M) becomes its own zone svg, shown Stavanger, and vea keeps Vestland (0.56M). Rogaland is under the 0.5M floor but holds 88% of it, more than six of Norway's ten other zones.",
+ "show_names": {
+  "svg": "Stavanger",
+  "vea": "Bergen"
+ }
+}

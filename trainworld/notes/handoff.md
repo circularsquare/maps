@@ -16,8 +16,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    (b6aa1b90f: bands 27 to 15 ms in Node; T-4153 open for 100 ms; T-4363 filed). netcut9's page bench was worse (NYC
    station built 147 -> 249 not noisy, n 1; Asia noisy): after today3 lands, on master quietly: edit_bench NYC --runs
    3 --compare 65f0134b@20261125203108-11820 done 11-25: no regression (station 76 -> 80 within its range; click
-   run later 122 -> 34, undo 143 -> 95, delete a line 254 -> 152). 8800 at 98aedf0d0, smoke passed. Her 11-25 yes: redraws2 (Opus) on T-4364, redraw proposals only; sheets and
-   artifacts/trainworld/review/redraws-1125.md; she picks, then a night build. She checks Discord for China. T-4281
+   run later 122 -> 34, undo 143 -> 95, delete a line 254 -> 152). 8800 at 98aedf0d0, smoke passed. T-4364 proposals done 11-26 (redraws2): 17 sheets, index
+   artifacts/trainworld/review/redraws-1125.md; waits for her yes/no per line, then a night build (~16-17 h for all). T-4281
    s3 landed (67426dfa8: `today` ~107 to 3-6 ms on Asia with the clock running; page click hold left as is, see
    notes). Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8. Then
    T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.

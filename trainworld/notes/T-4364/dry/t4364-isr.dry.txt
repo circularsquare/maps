@@ -1,0 +1,27 @@
+retire has: HaSharon (631,686) -> tel
+retire rml: Ramla (471,715) -> tel
+retire asq: Ashqelon (595,710) -> tel
+retire akk: Akko (696,395) -> hif
+retire akk: Zefat (137,429) -> hif
+retire yiz: Yizre'el (559,647) -> hif
+retire yiz: Kinneret (120,967) -> hif
+set tel: {'source': {'ucdb': [457], 'fua': [419, 705, 262, 84], 'line_cut': {'task': 'T-2964', 'by': 'COD-AB PSE admin 0 (the Green Line)', 'km2': 1.58}}}
+tel: bbox [34.664, 31.759, 35.024, 32.252] -> [34.471, 31.413, 35.052, 32.413]
+hif: bbox [34.867, 32.373, 35.207, 32.888] -> [34.867, 32.373, 35.685, 33.29]
+hif Haifa: people 988,990 -> 2,503,429; units 2 -> 6; pieces 1 -> 1; hull 0.70 -> 0.76
+   neighbours before {'yiz': 0.34, 'has': 0.1, 'akk': 0.09}
+   neighbours after  {'(no row)': 0.2, 'tel': 0.05}
+tel Tel Aviv: people 3,280,710 -> 4,979,821; units 3 -> 6; pieces 1 -> 1; hull 0.68 -> 0.73
+   neighbours before {'rml': 0.25, 'asq': 0.24, 'has': 0.15, 'jer': 0.03}
+   neighbours after  {'bse': 0.19, 'jer': 0.15, 'hif': 0.06}
+
+checks (T-4364 dry.py):
+hif Haifa: plan people 2,503,429, game about 2,689,873, 4,361 km2, hull 0.76 (before 0.70, main piece 0.76) pass; floor 500,000 pass; cap 1,500,000 OVER by 1,003,429 (a hand edit may; a zones rerun would not make it); ring none
+tel Tel Aviv: plan people 4,984,493, game about 4,430,146, 2,750 km2, hull 0.73 (before 0.68, main piece 0.73) pass (no worse than before less 0.05); pop_vs_fua about 1.21 (4,430,146 over 3,655,016 in Ashkelon, Ashdod, Tel Aviv) pass; ring none
+has HaSharon: retired into tel; zone_successors has -> tel
+rml Ramla: retired into tel; zone_successors rml -> tel
+asq Ashqelon: retired into tel; zone_successors asq -> tel
+akk Akko: retired into hif; zone_successors akk -> hif
+yiz Yizre'el: retired into hif; zone_successors yiz -> hif
+waves: hif,tel
+build: 2 rows, recorded steps 8 core-min (hif 3.7, tel 3.9); retired ['has', 'rml', 'asq', 'akk', 'yiz']; then the ISR join (see notes/T-4364/joins.txt)

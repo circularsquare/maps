@@ -1,0 +1,21 @@
+{
+ "task": "T-4364",
+ "iso": "CHN",
+ "label": "Huiyang into Shenzhen",
+ "view": [
+  113.7,
+  22.4,
+  115.0,
+  23.4
+ ],
+ "retire": {
+  "hya": "shz"
+ },
+ "names": {
+  "drop": [
+   "hya"
+  ]
+ },
+ "why": "Huiyang (hya, one district of Huizhou, 0.96M plan) is 24th worst worldwide: 47% of its commutes cross its line, 250,000 a day of them to Shenzhen against 91,000 to Huizhou, its built-up area running on from Shenzhen's Longgang. hya is retired into Shenzhen's metro (shz). Huizhou's metro (hui), its own prefecture's, would fail pop_vs_fua (1.68) and its hull (0.60).",
+ "moves": []
+}

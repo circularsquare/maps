@@ -1,0 +1,48 @@
+{
+ "task": "T-4364",
+ "iso": "ISR",
+ "label": "Israel: 9 regions to 4",
+ "view": [
+  34.15,
+  29.45,
+  35.95,
+  33.4
+ ],
+ "retire": {
+  "has": "tel",
+  "rml": "tel",
+  "asq": "tel",
+  "akk": "hif",
+  "yiz": "hif"
+ },
+ "names": {
+  "drop": [
+   "has",
+   "rml",
+   "akk",
+   "yiz",
+   "asq"
+  ]
+ },
+ "why": "A player (feedback 1795622961-6b650222) finds 9 regions too many for Israel. The default floor (0.5M) on CBS subdistricts left nearly every subdistrict its own zone. Four, along where commutes go (the joint solve's flows): Tel Aviv takes HaSharon (Netanya, Kfar Sava), Ramla (Lod, Modi'in) and Ashqelon (Ashdod, Ashkelon, Kiryat Gat), CBS's Tel Aviv metropolitan area and its southern outer ring; Haifa takes Akko, Zefat, Yizre'el and Kinneret (the north); Be'er Sheva and Jerusalem as they are. Tel Aviv's FUAs for pop_vs_fua add Netanya, Ashdod and Ashkelon (GHS-FUA 705, 262, 84).",
+ "set": {
+  "tel": {
+   "source": {
+    "ucdb": [
+     457
+    ],
+    "fua": [
+     419,
+     705,
+     262,
+     84
+    ],
+    "line_cut": {
+     "task": "T-2964",
+     "by": "COD-AB PSE admin 0 (the Green Line)",
+     "km2": 1.58
+    }
+   }
+  }
+ }
+}

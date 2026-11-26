@@ -1,0 +1,38 @@
+{
+ "task": "T-4364",
+ "iso": "DEU",
+ "label": "Mettmann into Düsseldorf",
+ "view": [
+  6.35,
+  50.95,
+  7.55,
+  51.55
+ ],
+ "retire": {
+  "met": "dus"
+ },
+ "names": {
+  "drop": [
+   "met"
+  ]
+ },
+ "show_names": {
+  "dus": "Düsseldorf",
+  "dor": "Ruhr",
+  "col": "Cologne"
+ },
+ "why": "Kreis Mettmann (0.47M: Ratingen, Velbert, Hilden, Langenfeld, Monheim) is the ring of towns between Düsseldorf and Wuppertal, both in Düsseldorf's metro, which wraps most of it; 60% of its commutes cross its line (20th worst of 4,830). It is one NUTS-3 unit, so it cannot be split between neighbours; it joins Düsseldorf's metro whole. Wuppertal's FUA (1178), whose city the metro already holds, joins Düsseldorf's in source.fua, so pop_vs_fua reads about 1.12 instead of 2.07 (today 1.59 under a relaxation, which can then go).",
+ "set": {
+  "dus": {
+   "source": {
+    "fua": [
+     815,
+     1178
+    ],
+    "satellites": [
+     1293
+    ]
+   }
+  }
+ }
+}

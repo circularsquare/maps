@@ -1,0 +1,17 @@
+move Huangpi District (832,298) hnp -> wuh
+retire hnp: Hong'an County (493,565) -> axx
+wuh: bbox [113.692, 29.972, 114.648, 30.789] -> [113.692, 29.972, 114.648, 31.362]
+axx: bbox [113.313, 31.066, 114.582, 31.854] -> [113.313, 30.93, 114.828, 31.854]
+axx Anlu: people 1,704,966 -> 2,198,531; units 3 -> 4; pieces 1 -> 1; hull 0.64 -> 0.61
+   neighbours before {'guu': 0.26, 'hnp': 0.22, 'xon': 0.21, 'lhn': 0.11, 'tne': 0.08, 'sid': 0.08, 'huc': 0.06}
+   neighbours after  {'wuh': 0.21, 'guu': 0.2, 'xon': 0.16, 'xnz': 0.14, 'huc': 0.1, 'lhn': 0.08, 'tne': 0.06, 'sid': 0.06}
+wuh Wuhan: people 9,453,009 -> 10,285,307; units 10 -> 11; pieces 1 -> 1; hull 0.77 -> 0.74
+   neighbours before {'hgh': 0.25, 'hah': 0.23, 'xsh': 0.18, 'hnp': 0.11, 'xab': 0.08, 'xon': 0.07, 'dyx': 0.06, 'xnz': 0.05}
+   neighbours after  {'axx': 0.21, 'hgh': 0.18, 'hah': 0.16, 'xon': 0.13, 'xsh': 0.13, 'xnz': 0.11, 'xab': 0.06, 'dyx': 0.04}
+
+checks (T-4364 dry.py):
+axx Anlu: plan people 2,198,531, game about 2,086,735, 6,247 km2, hull 0.61 (before 0.64, main piece 0.61) pass (no worse than before less 0.05); floor 1,000,000 pass; cap 2,500,000 within; ring none
+wuh Wuhan: plan people 10,285,307, game about 11,350,083, 6,876 km2, hull 0.74 (before 0.77, main piece 0.74) pass (no worse than before less 0.05); pop_vs_fua about 1.33 (11,350,083 over 8,534,061 in Wuhan) warn; ring none
+hnp Huangpi: retired into axx; zone_successors hnp -> axx
+waves: axx,wuh
+build: 2 rows, recorded steps 2 core-min (axx 0.9, wuh 1.2); retired ['hnp']; then the CHN join (see notes/T-4364/joins.txt)

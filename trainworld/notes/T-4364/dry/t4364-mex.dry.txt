@@ -1,0 +1,69 @@
+move Ticul (45,408) kax -> fel
+move Oxkutzcab (35,763) kax -> fel
+move Akil (12,602) kax -> fel
+move Santa Elena (4,598) kax -> fel
+move Maní (6,398) kax -> fel
+move Dzán (6,061) kax -> fel
+move Chapab (3,618) kax -> fel
+move Muna (14,748) mia -> fel
+move Sacalum (5,668) mia -> fel
+move Opichén (7,857) mia -> fel
+move Kopomá (3,045) mia -> fel
+move Maxcanú (25,850) mia -> fel
+move Halachó (22,925) mia -> fel
+move Cantamayec (3,095) mia -> fel
+move Panabá (8,616) mia -> vdd
+move San Felipe (1,121) mia -> vdd
+move Río Lagartos (4,099) mia -> vdd
+move Buctzotz (10,027) mia -> vdd
+move Cenotillo (4,429) mia -> vdd
+move Dzitás (4,188) mia -> vdd
+move Tinum (14,534) mia -> vdd
+move Quintana Roo (1,077) mia -> vdd
+move Izamal (31,398) mia -> vdd
+move Sudzal (2,111) mia -> vdd
+move Tunkás (4,048) mia -> vdd
+move Dzilam González (6,918) mia -> vdd
+move Dzilam de Bravo (2,081) mia -> vdd
+move Temax (8,072) mia -> vdd
+move Dzoncauich (3,206) mia -> vdd
+move Tekal de Venegas (3,145) mia -> vdd
+move Chikindzonot (5,059) mia -> vdd
+move Yaxcabá (17,902) mia -> vdd
+move Sotuta (10,079) mia -> vdd
+move Valladolid (90,996) fel -> vdd
+move Tizimín (87,651) fel -> vdd
+move Chemax (41,898) fel -> vdd
+move Temozón (17,824) fel -> vdd
+move Espita (18,996) fel -> vdd
+move Calotmul (4,957) fel -> vdd
+move Sucilá (4,776) fel -> vdd
+move Uayma (4,617) fel -> vdd
+move Kaua (3,549) fel -> vdd
+move Cuncunul (1,809) fel -> vdd
+move Chankom (5,122) fel -> vdd
+move Chichimilá (9,885) fel -> vdd
+move Tixcacalcupul (8,136) fel -> vdd
+move Tekom (3,725) fel -> vdd
+retire kax: Kanasín (107,323) -> mia
+retire kax: Tecoh (18,986) -> mia
+retire kax: Timucuy (8,665) -> mia
+vdd: bbox [-89.587, 19.052, -87.41, 21.572] -> [-89.199, 20.09, -87.533, 21.625]
+fel: bbox [-89.587, 19.052, -87.41, 21.572] -> [-90.387, 19.052, -87.41, 20.841]
+mia: bbox [-92.326, 20.09, -87.862, 22.614] -> [-92.326, 20.55, -88.861, 22.614]
+fel Felipe Carrillo Puerto: people 627,105 -> 520,797; units 29 -> 29; pieces 1 -> 1; hull 0.72 -> 0.73
+   neighbours before {'mia': 0.4, 'bej': 0.14, 'kax': 0.1, 'oth': 0.1, 'cme': 0.05}
+   neighbours after  {'vdd': 0.19, 'cme': 0.18, 'mia': 0.18, 'oth': 0.12, 'bej': 0.08}
+mia Mérida: people 1,513,498 -> 1,423,176; units 69 -> 46; pieces 1 -> 1; hull 0.24 -> 0.16
+   neighbours before {'fel': 0.44, 'kax': 0.16, 'cme': 0.07}
+   neighbours after  {'fel': 0.27, 'vdd': 0.27, 'cme': 0.02}
+vdd Valladolid: people 0 -> 446,051; units 0 -> 33; pieces 0 -> 1; hull - -> 0.91
+   neighbours after  {'fel': 0.34, 'mia': 0.32, 'bej': 0.18}
+
+checks (T-4364 dry.py):
+fel Felipe Carrillo Puerto: plan people 520,796, game about 495,643, 29,342 km2, hull 0.73 (before 0.72, main piece 0.73) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+mia Mérida: plan people 1,423,176, game about 1,531,450, 9,239 km2, hull 0.16 (before 0.24, main piece 0.80) BELOW 0.75; floor 500,000 pass; cap 1,500,000 within; ring none
+vdd Valladolid: plan people 446,051, game about 416,967, 19,384 km2, hull 0.91 (new row, main piece 0.91) pass; floor 500,000 UNDER; cap 1,500,000 within; new id vdd free; ring none
+kax Kanasín: retired into mia; zone_successors kax -> mia
+waves: mia | fel | vdd
+build: 3 rows, recorded steps 7 core-min (fel 2.4, mia 1.9, vdd 2.4); retired ['kax']; then the MEX join (see notes/T-4364/joins.txt)

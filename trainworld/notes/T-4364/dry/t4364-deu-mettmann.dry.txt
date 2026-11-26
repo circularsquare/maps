@@ -1,0 +1,12 @@
+retire met: Mettmann (472,403) -> dus
+set dus: {'source': {'fua': [815, 1178], 'satellites': [1293]}}
+dus: bbox [6.444, 51.016, 7.312, 51.351] -> [6.444, 51.016, 7.312, 51.38]
+dus Dusseldorf: people 1,662,329 -> 2,134,732; units 4 -> 5; pieces 2 -> 1; hull 0.66 -> 0.84
+   neighbours before {'met': 0.34, 'col': 0.33, 'dor': 0.17, 'vix': 0.16, 'stc': 0.04, 'obr': 0.02}
+   neighbours after  {'col': 0.46, 'dor': 0.36, 'vix': 0.18, 'stc': 0.05, 'obr': 0.02}
+
+checks (T-4364 dry.py):
+dus Dusseldorf: plan people 2,134,732, game about 2,078,053, 1,458 km2, hull 0.84 (before 0.66, main piece 0.84) pass; pop_vs_fua about 1.13 (2,078,053 over 1,846,522 in Dusseldorf, Wuppertal) pass; ring none
+met Mettmann: retired into dus; zone_successors met -> dus
+waves: dus
+build: 1 rows, recorded steps 1 core-min (dus 0.5); retired ['met']; then the DEU join (see notes/T-4364/joins.txt)

@@ -1,0 +1,28 @@
+move Sonepur (106,580) bbm -> hjp
+retire mkm: Mokama (302,203) -> bes
+retire mkm: Bhagwanpur (169,178) -> bes
+retire mkm: Cheria Bariarpur (164,165) -> bes
+retire mkm: Ghoswari (121,877) -> bes
+retire bbm: Bihta (295,523) -> pat
+retire bbm: Maner (244,921) -> pat
+hjp: bbox [85.07, 25.533, 85.638, 26.015] -> [85.049, 25.533, 85.638, 26.015]
+bes: bbox [85.873, 25.169, 86.37, 25.6] -> [85.804, 25.169, 86.37, 25.674]
+pat: bbox [84.96, 25.324, 85.514, 25.729] -> [84.756, 25.324, 85.514, 25.729]
+bes Begusarai: people 2,237,781 -> 2,995,204; units 9 -> 13; pieces 1 -> 1; hull 0.72 -> 0.77
+   neighbours before {'mkm': 0.44, 'suj': 0.29, 'kga': 0.19, 'bib': 0.06, 'gog': 0.04, 'sxp': 0.03}
+   neighbours after  {'suj': 0.35, 'bib': 0.24, 'kga': 0.17, 'sxp': 0.11, 'bkh': 0.1, 'bii': 0.05, 'gog': 0.04}
+hjp Hajipur: people 4,423,209 -> 4,529,789; units 15 -> 16; pieces 1 -> 1; hull 0.82 -> 0.80
+   neighbours before {'haj': 0.35, 'sxp': 0.29, 'pat': 0.2, 'mrh': 0.1, 'bbm': 0.08, 'mke': 0.03, 'bkh': 0.01}
+   neighbours after  {'haj': 0.3, 'pat': 0.28, 'sxp': 0.25, 'mrh': 0.19, 'mke': 0.03, 'bkh': 0.01}
+pat Patna: people 4,224,352 -> 4,764,796; units 8 -> 10; pieces 1 -> 1; hull 0.67 -> 0.63
+   neighbours before {'plg': 0.28, 'bbm': 0.23, 'hjp': 0.22, 'bkh': 0.22, 'isa': 0.07, 'mrh': 0.07}
+   neighbours after  {'plg': 0.36, 'hjp': 0.27, 'bkh': 0.18, 'mrh': 0.11, 'arx': 0.1, 'isa': 0.06, 'krk': 0.0}
+
+checks (T-4364 dry.py):
+bes Begusarai: plan people 2,995,204, game about 2,837,800, 1,642 km2, hull 0.77 (before 0.72, main piece 0.77) pass; pop_vs_fua about 2.47 (2,837,800 over 1,150,857 in Begusarai) FAIL; ring none
+hjp Hajipur: plan people 4,529,789, game about 4,301,724, 1,966 km2, hull 0.80 (before 0.82, main piece 0.80) pass; floor 1,000,000 pass; cap 2,500,000 OVER by 2,029,789 (a hand edit may; a zones rerun would not make it); ring none
+pat Patna: plan people 4,764,796, game about 4,443,491, 1,334 km2, hull 0.63 (before 0.67, main piece 0.63) pass (no worse than before less 0.05); pop_vs_fua about 1.45 (4,443,491 over 3,062,410 in Patna) warn; ring none
+mkm Mokama: retired into bes; zone_successors mkm -> bes
+bbm Bihta: retired into pat; zone_successors bbm -> pat
+waves: bes,hjp,pat
+build: 3 rows, recorded steps 2 core-min (bes 0.5, hjp 0.9, pat 0.9); retired ['mkm', 'bbm']; then the IND join (see notes/T-4364/joins.txt)

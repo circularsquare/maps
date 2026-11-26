@@ -1,0 +1,100 @@
+{
+ "task": "T-4364",
+ "iso": "MEX",
+ "label": "Yucatán: Mérida whole, the south and the east",
+ "view": [
+  -91.0,
+  19.2,
+  -86.6,
+  21.75
+ ],
+ "assign": {
+  "fel": [
+   "Ticul",
+   "Oxkutzcab",
+   "Akil",
+   "Santa Elena",
+   "Maní",
+   "Dzán",
+   "Chapab",
+   "Muna",
+   "Sacalum",
+   "Opichén",
+   "Kopomá",
+   "Maxcanú",
+   "Halachó",
+   "Tekax",
+   "Tzucacab",
+   "Peto",
+   "Tixmehuac",
+   "Chacsinkín",
+   "Tahdziú",
+   "Teabo",
+   "Mama",
+   "Chumayel",
+   "Mayapán",
+   "Tekit",
+   "Cantamayec",
+   "Homún",
+   "Huhí",
+   "Felipe Carrillo Puerto",
+   "José María Morelos"
+  ],
+  "vdd": [
+   "Panabá",
+   "San Felipe",
+   "Río Lagartos",
+   "Buctzotz",
+   "Cenotillo",
+   "Dzitás",
+   "Tinum",
+   "Quintana Roo",
+   "Izamal",
+   "Sudzal",
+   "Tunkás",
+   "Dzilam González",
+   "Dzilam de Bravo",
+   "Temax",
+   "Dzoncauich",
+   "Tekal de Venegas",
+   "Chikindzonot",
+   "Yaxcabá",
+   "Sotuta",
+   "Valladolid",
+   "Tizimín",
+   "Chemax",
+   "Temozón",
+   "Espita",
+   "Calotmul",
+   "Sucilá",
+   "Uayma",
+   "Kaua",
+   "Cuncunul",
+   "Chankom",
+   "Chichimilá",
+   "Tixcacalcupul",
+   "Tekom"
+  ]
+ },
+ "set": {},
+ "why": "Mérida's zone (mia) wrapped the Kanasín zone (kax), a strip from Kanasín, part of Mérida's built-up area (48% of its commutes cross its line), down to the Puuc towns; Felipe Carrillo Puerto's zone (fel) ran from Quintana Roo up Yucatán's east and into a pocket 40 km from Mérida. kax is retired into Mérida (Kanasín, Timucuy, Tecoh); fel becomes the south: the Puuc and cone towns (Ticul, Oxkutzcab, Tekax, Peto, Maxcanú) with Felipe Carrillo Puerto and José María Morelos; a new zone vdd takes the east round Valladolid and Tizimín with Mérida's far east (Izamal, Río Lagartos). Mérida keeps the north-west and its ring.",
+ "new": {
+  "vdd": {
+   "name": "Valladolid",
+   "like": "fel",
+   "origin": [
+    -88.2022,
+    20.6896
+   ]
+  }
+ },
+ "retire": {
+  "kax": "mia"
+ },
+ "names": {
+  "drop": [
+   "kax"
+  ]
+ },
+ "note": ""
+}

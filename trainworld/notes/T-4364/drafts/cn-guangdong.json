@@ -1,0 +1,13 @@
+{
+ "task": "T-4364",
+ "iso": "CHN",
+ "label": "Guangdong: Doumen to Zhuhai, Qingxin to Qingyuan",
+ "view": [112.2, 21.5, 114.0, 24.3],
+ "assign": {
+  "zhu": ["Doumen District"],
+  "qnc": ["Qingxin District"]
+ },
+ "set": {"qnc": {"name": "Qingyuan"}},
+ "names": {"set": {"qnc": {"name": "Qingyuan", "aliases": ["Qingcheng", "Qingxin"]}}},
+ "why": "Two players (feedback 1795180502-98e64801 and the board's 1795455528-5b8a2b8e) point at Doumen, a district of Zhuhai, in Taishan's zone (tis, Jiangmen), and Qingxin, a district of Qingyuan, in Sihui's zone (sih, Zhaoqing) instead of with Qingcheng, Qingyuan's centre (qnc). Doumen joins Zhuhai's metro (zhu) and Qingxin joins qnc, named Qingyuan; Taishan keeps Taishan City, Sihui keeps Sihui and Guangning."
+}

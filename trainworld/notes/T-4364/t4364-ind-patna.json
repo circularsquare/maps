@@ -1,0 +1,30 @@
+{
+ "task": "T-4364",
+ "iso": "IND",
+ "label": "Bihar: Mokama and Bihta into the cities they ring",
+ "view": [
+  84.6,
+  25.0,
+  86.6,
+  25.95
+ ],
+ "retire": {
+  "mkm": "bes",
+  "bbm": "pat"
+ },
+ "names": {
+  "drop": [
+   "mkm",
+   "bbm"
+  ]
+ },
+ "why": "Two remnants beside Patna and Begusarai, second and sixth worst of 4,830 zones on shape and commutes crossing their lines (hull 0.52 and 0.57, 57% and 58% of commutes crossing). Mokama's zone (mkm) is two pieces of two banks of the Ganges, Mokama and Ghoswari south of it and Bhagwanpur and Cheria Bariarpur north, wrapped round Begusarai's Teghra; Begusarai is every unit's biggest or near-biggest partner (the merge rule's gravity) and two are its own district: retired into Begusarai (bes). Bihta's zone (bbm) is Bihta and Maner west of Patna with Sonepur across the Ganges: Bihta and Maner, whose biggest partner is Patna, go to Patna (bbm retired into pat); Sonepur goes to Hajipur (hjp) on its own bank, a partner by the merge rule (0.23 against Patna's 0.39, over half) and the one that keeps Patna's hull within the rule (0.63 against 0.62 with it).",
+ "moves": [
+  [
+   "45978901B50101781158389",
+   "Sonepur",
+   "bbm",
+   "hjp"
+  ]
+ ]
+}

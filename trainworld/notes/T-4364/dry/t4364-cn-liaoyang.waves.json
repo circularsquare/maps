@@ -1,0 +1,21 @@
+{
+ "waves": [
+  [
+   "scn"
+  ],
+  [
+   "pns"
+  ],
+  [
+   "ans"
+  ]
+ ],
+ "retire": [
+  "lbk"
+ ],
+ "rows": [
+  "ans",
+  "pns",
+  "scn"
+ ]
+}

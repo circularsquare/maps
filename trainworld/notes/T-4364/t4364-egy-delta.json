@@ -1,0 +1,9 @@
+{
+ "task": "T-4364",
+ "iso": "EGY",
+ "label": "Nile delta: Samannud into El Mahalla",
+ "view": [30.9, 30.6, 32.0, 31.45],
+ "retire": {"smd": "elr"},
+ "names": {"drop": ["smd"]},
+ "why": "Samannud (smd, one markaz of Gharbia, 0.44M, under the 0.5M floor) is a remnant between El Mahalla and Mansoura, 12th worst of 4,830 zones (70% of its commutes cross its line). It commutes nearly as much with El Mahalla (35,000 a day) as with Mansoura (42,000), so both pass the merge rule's partner test; El Mahalla is its own governorate, and Mansoura's metro already reads pop_vs_fua 1.50 on a relaxation (it would go to 1.57-1.63). Retired into El Mahalla (elr), which goes over the zone cap (1.97M plan people), as a hand edit may."
+}

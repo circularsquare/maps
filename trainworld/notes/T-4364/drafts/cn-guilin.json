@@ -1,0 +1,41 @@
+{
+ "task": "T-4364",
+ "iso": "CHN",
+ "label": "Guilin: the centre named Guilin, Lingui with it",
+ "view": [
+  109.0,
+  23.9,
+  111.2,
+  26.2
+ ],
+ "assign": {
+  "liu": [
+   "Luzhai County",
+   "Liucheng County"
+  ]
+ },
+ "set": {
+  "lgx": {
+   "name": "Guilin"
+  }
+ },
+ "names": {
+  "drop": [
+   "lbe"
+  ],
+  "set": {
+   "lgx": {
+    "name": "Guilin",
+    "aliases": [
+     "Lingchuan",
+     "Lingui"
+    ]
+   }
+  }
+ },
+ "why": "The zone shown as Guilin (lbe, by a hand name) holds Lingui, Yongfu, Luzhai and Liucheng but none of Guilin's centre; the centre (Xiufeng, Diecai, Qixing, Xiangshan, Yanshan) is in lgx, shown as Lingchuan. 29% of lbe's commutes cross its line, split evenly between Guilin's centre (90,000 a day) and Liuzhou (84,000). lbe is retired: Lingui, the new Guilin city district, and Yongfu (Guilin prefecture) join lgx, named Guilin; Luzhai and Liucheng (Liuzhou prefecture) join Liuzhou's metro (liu). Liuzhou's pop_vs_fua is relaxed for every Chinese metro (T-897).",
+ "note": "Now: Lingui (lbe) is the zone the game shows as Guilin, and Lingchuan (lgx) holds Guilin's centre.",
+ "retire": {
+  "lbe": "lgx"
+ }
+}

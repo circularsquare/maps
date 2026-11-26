@@ -1,0 +1,7 @@
+set eae: {'name': 'Brighton', 'origin': [-0.1372, 50.8225]}
+eae Brighton: people 843,476 -> 843,476; units 2 -> 2; pieces 1 -> 1; hull 0.82 -> 0.82
+
+checks (T-4364 dry.py):
+eae Brighton: plan people 843,476, game about 850,282, 1,794 km2, hull 0.82 (before 0.82, main piece 0.82) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+waves: eae
+build: 1 rows, recorded steps 1 core-min (eae 0.9); retired none; then the GBR join (see notes/T-4364/joins.txt)

@@ -1,0 +1,27 @@
+move Doumen District (507,614) tis -> zhu
+move Qingxin District (841,069) sih -> qnc
+set qnc: {'name': 'Qingyuan'}
+zhu: bbox [113.105, 21.836, 114.319, 22.445] -> [113.082, 21.836, 114.319, 22.445]
+tis: bbox [112.299, 21.567, 113.422, 22.444] -> [112.299, 21.567, 113.045, 22.444]
+qnc: bbox [112.883, 23.462, 113.363, 23.89] -> [112.558, 23.462, 113.363, 24.315]
+sih: bbox [112.054, 23.203, 113.107, 24.315] -> [112.054, 23.203, 112.88, 23.982]
+qnc Qingyuan: people 949,751 -> 1,790,820; units 1 -> 2; pieces 1 -> 1; hull 0.85 -> 0.77
+   neighbours before {'sih': 0.31, 'cgh': 0.23, 'gua': 0.22, 'yid': 0.16, 'fos': 0.11}
+   neighbours after  {'yid': 0.32, 'sih': 0.23, 'hji': 0.17, 'cgh': 0.11, 'gua': 0.11, 'fos': 0.09}
+sih Sihui: people 2,270,147 -> 1,429,078; units 3 -> 2; pieces 1 -> 1; hull 0.79 -> 0.84
+   neighbours before {'hji': 0.32, 'yid': 0.19, 'fos': 0.17, 'gay': 0.16, 'qnc': 0.12, 'ldi': 0.06}
+   neighbours after  {'hji': 0.27, 'qnc': 0.24, 'gay': 0.22, 'fos': 0.2, 'ldi': 0.08}
+tis Taishan: people 1,548,442 -> 1,040,828; units 2 -> 1; pieces 2 -> 1; hull 0.49 -> 0.58
+   neighbours before {'kag': 0.18, 'jia': 0.12, 'zhu': 0.08, 'zho': 0.04, 'jne': 0.04}
+   neighbours after  {'kag': 0.22, 'jia': 0.08, 'jne': 0.04}
+zhu Zhuhai: people 1,585,502 -> 2,093,116; units 3 -> 4; pieces 2 -> 1; hull 0.18 -> 0.27
+   neighbours before {'tis': 0.1, 'zho': 0.06, '(no row)': 0.06}
+   neighbours after  {'zho': 0.1, 'jia': 0.07, '(no row)': 0.06}
+
+checks (T-4364 dry.py):
+qnc Qingyuan: plan people 1,790,861, game about 1,739,626, 3,674 km2, hull 0.77 (before 0.85, main piece 0.77) pass; floor 1,000,000 pass; cap 2,500,000 within; ring none
+sih Sihui: plan people 1,430,250, game about 1,052,152, 3,704 km2, hull 0.84 (before 0.79, main piece 0.84) pass; floor 1,000,000 pass; cap 2,500,000 within; ring none
+tis Taishan: plan people 1,037,177, game about 1,017,635, 3,155 km2, hull 0.58 (before 0.49, main piece 0.74) pass (no worse than before less 0.05); floor 1,000,000 pass; cap 2,500,000 within; ring none
+zhu Zhuhai: plan people 1,945,482, game about 2,498,408, 1,689 km2, hull 0.27 (before 0.18, main piece 0.63) pass (no worse than before less 0.05); pop_vs_fua about 1.17 (2,498,408 over 2,144,405 in Zhuhai, Zhuhai) pass; ring none
+waves: sih,tis | qnc,zhu
+build: 4 rows, recorded steps 4 core-min (qnc 1.0, sih 1.0, tis 1.0, zhu 1.5); retired none; then the CHN join (see notes/T-4364/joins.txt)

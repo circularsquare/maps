@@ -1,0 +1,10 @@
+{
+ "task": "T-4364",
+ "iso": "GBR",
+ "label": "Brighton: the Hastings zone named for its biggest city",
+ "view": [-1.0, 50.65, 1.0, 51.25],
+ "set": {"eae": {"name": "Brighton", "origin": [-0.1372, 50.8225]}},
+ "replan": ["eae"],
+ "names": {"set": {"eae": {"name": "Brighton", "aliases": ["Hastings", "Eastbourne", "East Sussex"]}}},
+ "why": "The zone eae is Brighton and Hove (0.30M) with East Sussex CC (0.55M: Eastbourne, Hastings, Lewes). Brighton is its biggest city by far but the game shows it as Hastings, with its origin at Hastings, 50 km east. Show it as Brighton (zone-names.json: no rebuild); the plan name and origin move to Brighton only when the row is next rebuilt."
+}

@@ -1,0 +1,11 @@
+retire ygi: Yongning District (194,620) -> nag
+nag: bbox [107.76, 22.204, 108.84, 23.109] -> [107.76, 22.204, 108.857, 23.109]
+nag Nanning: people 4,868,841 -> 5,063,461; units 5 -> 6; pieces 1 -> 1; hull 0.67 -> 0.78
+   neighbours before {'wmi': 0.29, 'fsu': 0.26, 'ygi': 0.25, 'hbc': 0.12, 'qie': 0.09}
+   neighbours after  {'wmi': 0.33, 'fsu': 0.29, 'hbc': 0.2, 'qie': 0.13, 'lgn': 0.07}
+
+checks (T-4364 dry.py):
+nag Nanning: plan people 5,063,461, game about 5,321,274, 6,472 km2, hull 0.78 (before 0.67, main piece 0.79) pass; pop_vs_fua about 1.89 (5,321,274 over 2,818,095 in Nanning) FAIL; ring none
+ygi Yongning: retired into nag; zone_successors ygi -> nag
+waves: nag
+build: 1 rows, recorded steps 1 core-min (nag 0.7); retired ['ygi']; then the CHN join (see notes/T-4364/joins.txt)

@@ -1,0 +1,17 @@
+move Żyrardowski (268,569) skw -> war
+retire skw: Skierniewicki (362,093) -> lod
+war: bbox [20.332, 51.877, 21.965, 52.645] -> [19.936, 51.559, 21.965, 52.645]
+lod: bbox [19.006, 51.509, 20.016, 52.035] -> [18.828, 51.509, 20.653, 52.393]
+lod Lodz: people 1,069,965 -> 1,432,058; units 2 -> 3; pieces 1 -> 1; hull 0.83 -> 0.78
+   neighbours before {'skw': 0.36, 'pio': 0.35, 'sed': 0.3}
+   neighbours after  {'war': 0.28, 'pio': 0.25, 'sed': 0.21, 'osr': 0.12, 'kox': 0.1, 'ink': 0.04}
+war Warsaw: people 3,282,876 -> 3,551,445; units 3 -> 4; pieces 1 -> 1; hull 0.85 -> 0.77
+   neighbours before {'skw': 0.35, 'sdl': 0.34, 'osr': 0.32}
+   neighbours after  {'osr': 0.32, 'sdl': 0.25, 'lod': 0.24, 'rad': 0.19, 'pio': 0.01}
+
+checks (T-4364 dry.py):
+lod Lodz: plan people 1,432,058, game about 1,413,774, 6,572 km2, hull 0.78 (before 0.83, main piece 0.78) pass; pop_vs_fua about 1.33 (1,413,774 over 1,064,394 in Lodz) warn; ring none
+war Warsaw: plan people 3,551,445, game about 3,349,423, 8,619 km2, hull 0.77 (before 0.85, main piece 0.77) pass; pop_vs_fua about 1.17 (3,349,423 over 2,865,997 in Warsaw) pass; ring none
+skw Skierniewicki: retired into lod; zone_successors skw -> lod
+waves: lod,war
+build: 2 rows, recorded steps 4 core-min (lod 1.1, war 3.0); retired ['skw']; then the POL join (see notes/T-4364/joins.txt)

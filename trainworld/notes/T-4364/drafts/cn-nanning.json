@@ -1,0 +1,10 @@
+{
+ "task": "T-4364",
+ "iso": "CHN",
+ "label": "Nanning: Yongning into Nanning",
+ "view": [107.9, 22.3, 109.1, 23.3],
+ "assign": {},
+ "retire": {"ygi": "nag"},
+ "names": {"drop": ["ygi"]},
+ "why": "Yongning (ygi), a district of Nanning south of the centre, is a zone of its own at 0.33M (0.19M plan, a fifth of China's 1M floor); 53% of its commutes cross its line, 103,000 a day with Nanning. A player on the board (1795455528-5b8a2b8e) also found the split odd. ygi is retired into Nanning's metro (nag)."
+}

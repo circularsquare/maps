@@ -1,0 +1,28 @@
+move Wensheng District (134,347) pns -> ans
+move Taizihe District (184,473) pns -> ans
+move Gongchangling District (93,773) pns -> ans
+move Dengta City (419,118) pns -> ans
+move Benxi Manchu Autonomous County (287,129) scn -> pns
+retire lbk: Liaoyang County (468,037) -> ans
+set ans: {'source': {'ucdb': [9881], 'fua': [8753, 8769, 8865, 8767], 'satellites': [9899]}}
+set pns: {'name': 'Benxi'}
+ans: bbox [122.755, 40.906, 123.341, 41.292] -> [122.588, 40.711, 123.673, 41.602]
+pns: bbox [122.893, 40.948, 124.009, 41.602] -> [123.577, 40.817, 124.762, 41.566]
+scn: bbox [123.577, 40.817, 125.479, 42.479] -> [123.658, 41.237, 125.479, 42.479]
+ans Anshan: people 2,225,859 -> 3,525,607; units 6 -> 11; pieces 1 -> 1; hull 0.76 -> 0.88
+   neighbours before {'lbk': 0.47, 'hic': 0.29, 'pns': 0.27}
+   neighbours after  {'hic': 0.33, 'pns': 0.25, 'xni': 0.17, 'shy': 0.15, 'fea': 0.1, 'dwa': 0.01}
+pns Benxi: people 2,076,059 -> 1,531,477; units 8 -> 5; pieces 1 -> 1; hull 0.74 -> 0.78
+   neighbours before {'lbk': 0.4, 'scn': 0.27, 'shy': 0.16, 'ans': 0.14, 'xni': 0.06}
+   neighbours after  {'fea': 0.41, 'scn': 0.34, 'ans': 0.23, 'shy': 0.03}
+scn Shuncheng: people 2,351,388 -> 2,064,259; units 8 -> 7; pieces 1 -> 1; hull 0.74 -> 0.78
+   neighbours before {'fea': 0.31, 'kiu': 0.2, 'pns': 0.15, 'mhe': 0.14, 'shy': 0.12, 'hnx': 0.08, 'lbk': 0.02}
+   neighbours after  {'kiu': 0.25, 'pns': 0.21, 'mhe': 0.17, 'shy': 0.16, 'fea': 0.13, 'hnx': 0.09}
+
+checks (T-4364 dry.py):
+ans Anshan: plan people 3,525,607, game about 3,085,512, 5,485 km2, hull 0.88 (before 0.76, main piece 0.88) pass; pop_vs_fua about 1.10 (3,085,512 over 2,801,576 in Gongchangling, Anshan, Liaoyang) pass; ring none
+pns Benxi: plan people 1,532,816, game about 1,222,328, 4,882 km2, hull 0.78 (before 0.74, main piece 0.78) pass; floor 1,000,000 pass; cap 2,500,000 within; ring none
+scn Shuncheng: plan people 2,064,259, game about 1,842,909, 11,245 km2, hull 0.78 (before 0.74, main piece 0.78) pass; floor 1,000,000 pass; cap 2,500,000 within; ring none
+lbk Liaoyang: retired into ans; zone_successors lbk -> ans
+waves: scn | pns | ans
+build: 3 rows, recorded steps 2 core-min (ans 0.3, pns 0.7, scn 1.2); retired ['lbk']; then the CHN join (see notes/T-4364/joins.txt)

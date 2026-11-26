@@ -1,0 +1,15 @@
+move Rogaland (439,791) vea -> svg
+set svg: {'gate_relax': {'drive_factor_median': "fjord county: roads round the fjords and ferries make drives about twice the straight line, as Vestland's (vea) relaxation; T-4364 split Rogaland from it"}}
+svg: bbox [4.572, 58.286, 8.314, 62.202] -> [4.856, 58.286, 7.215, 59.844]
+vea: bbox [4.572, 58.286, 8.314, 62.202] -> [4.572, 59.479, 8.314, 62.202]
+svg Rogaland: people 0 -> 439,791; units 0 -> 1; pieces 0 -> 1; hull - -> 0.64
+   neighbours after  {'age': 0.14, 'vea': 0.09, 'tlk': 0.01}
+vea Vestland: people 1,003,787 -> 563,996; units 2 -> 1; pieces 1 -> 1; hull 0.69 -> 0.73
+   neighbours before {'age': 0.04, 'inn': 0.03, 'osl': 0.03, 'meo': 0.02, 'tlk': 0.01}
+   neighbours after  {'inn': 0.04, 'osl': 0.03, 'meo': 0.03, 'svg': 0.03, 'tlk': 0.01}
+
+checks (T-4364 dry.py):
+svg Rogaland: plan people 439,791, game about 475,499, 9,220 km2, hull 0.64 (new row, main piece 0.66) BELOW 0.75; floor 500,000 UNDER; cap 1,500,000 within; new id svg free; ring none
+vea Vestland: plan people 563,998, game about 609,792, 33,460 km2, hull 0.73 (before 0.69, main piece 0.78) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+waves: vea | svg
+build: 2 rows, recorded steps 60 core-min (svg 29.9, vea 29.9); retired none; then the NOR join (see notes/T-4364/joins.txt)
