@@ -12,9 +12,11 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    (open for 100 ms), T-4339, T-4149, T-4359, T-4153 s9 (open for 100 ms), T-4281 s3. Edit bench baseline on master
    65f0134b@20261125203108-11820; batch check after: no regression (NYC click run later 122 -> 34 ms).
    Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8.
-3. Running: redraws3 (Opus, T-4364, T-4365): her 11-26 yes to the redraws except Poland (Skierniewice left out) plus
-   two new (El Mansura, Chiayi/Tainan): sheets sent to her 14:50 UTC, asks a-2026-11-26-3 and -4; pass her answers
-   to redraws3 via maps-d6's tab. One unattended job (~16-17 h), Egypt and Taiwan gated on those two. All of Macau's land goes
+3. Running: the redraws3 job (T-4364, T-4365; agent done, report r-b2d0784b): her 11-26 yes to the redraws except
+   Poland, plus two new (Mansoura, Chiayi/Tainan): sheets sent 14:50 UTC, asks a-2026-11-26-3 and -4. Her answers
+   go in notes/T-4364/answer-1126.txt (`mansoura=yes|no`, `chiayi=yes|no`); the job waits there after US (~16 h from
+   14:47 UTC), then EG/TW and the after steps (19-20 h in all). Owns data/packs: snap8800 with the freeze, hold
+   main-tree app/ writes during its gates. All of Macau's land goes
    in Macau's zone; it reports the Macau-Zhuhai border factor after the join.
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
@@ -45,8 +47,10 @@ Standby: none listed. Gemini out until about 11-30: Claude reviewers meanwhile.
 - 11-19: player complaints before new features. 11-25: player region requests are leads, not orders ("we gotta judge").
 
 ## Only a person knows
-- redraws3 runs inside maps-d6's tab; its interim report (the two new sheets, artifacts/trainworld/review/
-  redraws-1126-*.png) may reach only that tab: watch for those files and notes/T-4364.md "The job"; send her the sheets.
+- The redraws3 job: cmd 13292, script PID 20708, 8 cores claimed as `redraws3`; log artifacts/trainworld/redraws3-run.log
+  and notes/T-4364/kit/redraws3.state (check every couple of hours); stops at the first `FAILED:` line, which names
+  the undo. Restart, undo and the after steps (changelog item, place names, smoke, snap8800, commit pipeline/
+  world_plan.py, osm_units.py, build_city.py, docs zones.md, data-register.md): notes/T-4364.md "The job".
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
   docs/interface.md, checks/old moves, checks/INDEX.md, tools/checks_index.py. Landings touching them: patch dance
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
