@@ -5,12 +5,5 @@
     "text": "Bugs like T-4367 would show within hours of a publish if the game sent the server a count of 'Demand stopped' and similar failures (version, the error's first line, phone or computer; nothing about the player), shown on twstats. Today we only hear when a player writes in. Worth building? It's a game and server change, so yours to say.",
     "since": "2026-11-26",
     "by": "maps-3a"
-  },
-  {
-    "id": "a-2026-11-26-7",
-    "title": "Text for 0.4.7.1",
-    "text": "The hotfix's two new lines (start menu, then changelog), with Demand stopped in double quotes as the alert reads: [update v0.4.7.1: fixed 'Demand stopped' after making a new line] and [fixed 'Demand stopped' pausing the game after a new line with intercity trips off]. OK, or reworded?",
-    "since": "2026-11-26",
-    "by": "maps-3a"
   }
 ]

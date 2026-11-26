@@ -3,18 +3,6 @@
   "line": "",
   "items": [
     {
-      "id": "c007",
-      "text": "fixed \"Demand stopped\" pausing the game after a new line with intercity trips off",
-      "edited": null,
-      "hidden": false,
-      "task": "T-4367",
-      "by": "besidefix",
-      "at": "2026-11-26T15:37:17Z",
-      "rev": 1,
-      "area": "demand",
-      "fix": true
-    },
-    {
       "id": "c006",
       "text": "fixed \"Loading data\" showing a full bar for minutes while trips were calculated",
       "edited": null,
