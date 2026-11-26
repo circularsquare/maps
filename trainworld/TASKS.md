@@ -1234,6 +1234,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
+- T-4372 [P2] {L:checks} Smoke plays with phone settings too
+  - Context: T-4367's crash shipped in 0.4.7 because it only happens with intercity trips off (the phone and tablet default) on a network big enough; smoke and agents' game runs use computer defaults. You, 11-26: "ideally we should have caught bugs like this."
+  - Goal: Smoke builds long lines on a mid-size network once more with intercity trips off and one worker, and fails on "Demand stopped"; it would have caught T-4367.
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
