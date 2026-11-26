@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "line group collapsing is remembered across sessions, added collapse all / expand all",
   "updates.v047Change22": "added speedometer for trains",
   "updates.v047Change23": "fixed new lines showing a letter instead of their number, in other languages and past 99",
+  "updates.v0471Line": "update v0.4.7.1: fixed \"Demand stopped\" after making a new line",
+  "updates.v0471Change1": "fixed \"Demand stopped\" pausing the game after a new line with intercity trips off",
   "updates.v047Change3": "added smaller parking lots at tram stops, built and removed like a station’s",
   "updates.v047Change4": "added a menu to the select tool for picking built track only or demand bubbles",
   "updates.v047Change5": "added ability to remove station connections/passages",

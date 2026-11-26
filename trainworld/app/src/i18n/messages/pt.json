@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "grupos de linhas recolhidos são lembrados entre sessões, adicionado recolher tudo / expandir tudo",
   "updates.v047Change22": "adicionado velocímetro para trens",
   "updates.v047Change23": "corrigido: linhas novas mostravam uma letra no lugar do número, em outros idiomas e depois do 99",
+  "updates.v0471Line": "atualização v0.4.7.1: corrigido «A demanda parou» depois de fazer uma linha nova",
+  "updates.v0471Change1": "corrigido: «A demanda parou» pausava o jogo depois de uma linha nova com os deslocamentos interurbanos desligados",
   "updates.v047Change3": "adicionados estacionamentos menores nas paradas de bonde, construídos e removidos como os de uma estação",
   "updates.v047Change4": "adicionado um menu na ferramenta de seleção para escolher só a via construída ou as bolhas de demanda",
   "updates.v047Change5": "adicionada a opção de remover conexões e corredores entre estações",

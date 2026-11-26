@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "los grupos de líneas plegados se recuerdan entre sesiones, añadido plegar todo / desplegar todo",
   "updates.v047Change22": "añadido velocímetro para trenes",
   "updates.v047Change23": "arreglado: las líneas nuevas mostraban una letra en lugar de su número, en otros idiomas y pasado el 99",
+  "updates.v0471Line": "actualización v0.4.7.1: corregido «La demanda se detuvo» al hacer una línea nueva",
+  "updates.v0471Change1": "arreglado: «La demanda se detuvo» ponía la partida en pausa tras una línea nueva con los desplazamientos interurbanos desactivados",
   "updates.v047Change3": "añadidos aparcamientos más pequeños en las paradas de tranvía, que se construyen y se quitan como los de una estación",
   "updates.v047Change4": "añadido un menú en la herramienta de selección para elegir solo la vía construida o las burbujas de demanda",
   "updates.v047Change5": "añadida la opción de quitar conexiones y pasillos de estaciones",

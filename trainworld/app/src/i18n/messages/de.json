@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "eingeklappte Liniengruppen bleiben über Sitzungen hinweg eingeklappt, „Alle einklappen“ und „Alle ausklappen“ hinzugefügt",
   "updates.v047Change22": "Tachometer für Züge hinzugefügt",
   "updates.v047Change23": "behoben: neue Linien zeigten einen Buchstaben statt ihrer Nummer, in anderen Sprachen und ab 99",
+  "updates.v0471Line": "Update v0.4.7.1: „Die Nachfragerechnung wurde gestoppt“ nach dem Bau einer neuen Linie behoben",
+  "updates.v0471Change1": "behoben: „Die Nachfragerechnung wurde gestoppt“ pausierte das Spiel nach einer neuen Linie, wenn Fernreisen aus waren",
   "updates.v047Change3": "kleinere Parkplätze an Tramhaltestellen hinzugefügt, gebaut und entfernt wie bei einer Station",
   "updates.v047Change4": "Auswahlwerkzeug hat ein Menü, um nur gebautes Gleis oder Nachfragekreise zu wählen",
   "updates.v047Change5": "Stationsverbindungen und Übergänge lassen sich jetzt entfernen",

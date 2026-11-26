@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "les groupes de lignes repliés sont retenus d’une session à l’autre, ajout de tout replier / tout déplier",
   "updates.v047Change22": "ajout d’un compteur de vitesse pour les trains",
   "updates.v047Change23": "corrigé : les nouvelles lignes affichaient une lettre au lieu de leur numéro, dans d’autres langues et après 99",
+  "updates.v0471Line": "mise à jour v0.4.7.1 : correction de « La demande s’est arrêtée » après la création d’une ligne",
+  "updates.v0471Change1": "corrigé : « La demande s’est arrêtée » mettait le jeu en pause après une nouvelle ligne, avec les déplacements interurbains désactivés",
   "updates.v047Change3": "ajout de parkings plus petits aux arrêts de tram, construits et retirés comme ceux d’une station",
   "updates.v047Change4": "ajout d’un menu à l’outil de sélection pour choisir seulement la voie construite ou les bulles de demande",
   "updates.v047Change5": "ajout de la possibilité de retirer les liaisons et passages entre stations",

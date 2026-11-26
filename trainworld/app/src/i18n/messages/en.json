@@ -2854,6 +2854,8 @@
   "updates.v047Change21": "line group collapsing is remembered across sessions, added collapse all / expand all",
   "updates.v047Change22": "added speedometer for trains",
   "updates.v047Change23": "fixed new lines showing a letter instead of their number, in other languages and past 99",
+  "updates.v0471Line": "update v0.4.7.1: fixed \"Demand stopped\" after making a new line",
+  "updates.v0471Change1": "fixed \"Demand stopped\" pausing the game after a new line with intercity trips off",
   "updates.v0461Line": "update v0.4.6.1: fixed base map not loading with some adblocker settings",
   "updates.v0461Change1": "fixed base map not loading with some adblocker settings",
   "updates.v046Line": "update v0.4.6: smarter pathfinding, faster edit speed, added caucasus",

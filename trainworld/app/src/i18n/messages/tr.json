@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "katlanan hat grupları oturumlar arasında hatırlanıyor, tümünü katla / tümünü aç eklendi",
   "updates.v047Change22": "trenler için hız göstergesi eklendi",
   "updates.v047Change23": "düzeltildi: yeni hatlar numara yerine harf gösteriyordu, başka dillerde ve 99’dan sonra",
+  "updates.v0471Line": "güncelleme v0.4.7.1: yeni hat yaptıktan sonra çıkan \"Talep modeli durdu\" düzeltildi",
+  "updates.v0471Change1": "düzeltildi: şehirler arası yolculuklar kapalıyken yeni hat yapınca \"Talep modeli durdu\" oyunu duraklatıyordu",
   "updates.v047Change3": "tramvay duraklarına daha küçük otoparklar eklendi, istasyonunki gibi yapılıp kaldırılıyor",
   "updates.v047Change4": "seçme aracına yalnızca yapılmış rayı ya da talep balonlarını seçmek için bir menü eklendi",
   "updates.v047Change5": "istasyon bağlantılarını ve geçitlerini kaldırma eklendi",

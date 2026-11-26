@@ -1,0 +1,19 @@
+{
+  "release": "v0.4.7.1",
+  "line": "update v0.4.7.1: fixed \"Demand stopped\" after making a new line",
+  "items": [
+    {
+      "id": "hotfix471-1",
+      "text": "fixed \"Demand stopped\" pausing the game after a new line with intercity trips off",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4367",
+      "by": "hotfix471",
+      "at": "2026-11-26T16:23:04Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
+    }
+  ],
+  "published": "2026-11-26T16:23:08Z"
+}

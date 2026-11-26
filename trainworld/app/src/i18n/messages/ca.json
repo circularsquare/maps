@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "els grups de línies plegats es recorden entre sessions, afegit plegar-ho tot / desplegar-ho tot",
   "updates.v047Change22": "afegit velocímetre per als trens",
   "updates.v047Change23": "arreglat: les línies noves mostraven una lletra en lloc del seu número, en altres idiomes i passat el 99",
+  "updates.v0471Line": "actualització v0.4.7.1: corregit «La demanda s’ha aturat» en fer una línia nova",
+  "updates.v0471Change1": "arreglat: «La demanda s’ha aturat» posava la partida en pausa després d’una línia nova amb els desplaçaments entre ciutats desactivats",
   "updates.v047Change3": "afegits aparcaments més petits a les parades de tramvia, que es construeixen i es treuen com els d’una estació",
   "updates.v047Change4": "afegit un menú a l’eina de selecció per triar només la via construïda o les bombolles de demanda",
   "updates.v047Change5": "afegida l’opció de treure connexions i passadissos entre estacions",

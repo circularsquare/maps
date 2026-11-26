@@ -3160,6 +3160,8 @@
   "updates.v047Change21": "grup lini yang diciutkan diingat antarsesi, ditambahkan ciutkan semua / lebarkan semua",
   "updates.v047Change22": "ditambahkan spidometer untuk kereta",
   "updates.v047Change23": "diperbaiki: lini baru menampilkan huruf, bukan nomornya, di bahasa lain dan setelah 99",
+  "updates.v0471Line": "update v0.4.7.1: \"Permintaan berhenti\" setelah membuat lini baru sudah diperbaiki",
+  "updates.v0471Change1": "diperbaiki: \"Permintaan berhenti\" menjeda game setelah lini baru saat perjalanan antarkota dimatikan",
   "updates.v047Change3": "ditambahkan lahan parkir yang lebih kecil di perhentian trem, dibangun dan dibongkar seperti milik stasiun",
   "updates.v047Change4": "ditambahkan menu di alat pilih untuk memilih rel yang sudah dibangun saja atau gelembung permintaan",
   "updates.v047Change5": "ditambahkan kemampuan menghapus koneksi dan lorong antarstasiun",
