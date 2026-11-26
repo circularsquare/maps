@@ -219,7 +219,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
 - T-4363 [P3] {L:edit-speed} Patched rows differ from the state's in a Boston game
-  - Context: The dev check "T-4214 check: the patched rows differ from the state's" fired in Boston game runs: "edges 0: cost" after building lines (seen since T-4153 stage 5; guessed as ground repricing between patch and state) and, new on 11-25, "nodes 4: line" after stations.
+  - Context: The dev check "T-4214 check: the patched rows differ from the state's" fired in Boston game runs: "edges 0: cost" after building lines (seen since T-4153 stage 5; guessed as ground repricing between patch and state) and, new on 11-25, "nodes 4: line" after stations; 11-26 "edges 6: cost" in a New York line build (T-4367).
   - Goal: The cause of each found; a real mismatch fixed, a harmless one no longer flagged.
   - Other: notes/T-4153.md "Stage 9"; notes/T-4214.md
 - T-4360 [P3] {L:edit-speed} The worker's rows step, what's left
@@ -352,11 +352,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4367 [P1] {L:edit-speed} Demand crash after making a line in 0.4.7
-  - Context: A player (Safari, 161 lines, tw-feedback 1795696901, 11-26) gets "worker 0: TypeError: null is not an object (evaluating 'o.beside')" many times since 0.4.7, mostly after making a new line; demand stops until they reload. One report so far; anyone editing could meet it.
-  - Goal: The cause fixed on master and checked against 0.4.7's code; a new line on a big save solves with no failure.
 - T-4370 [P2] {L:memory} iPad games crash on big saves
-  - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines. Related: T-3160 (phones on real-network starts).
+  - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines (maybe T-4367's "Demand stopped", fixed 11-26, if not a tab reload). Related: T-3160.
   - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
 - T-3708 [P3] {L:memory} Place rows lost in a worker restart wait
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
@@ -889,6 +886,9 @@ Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs 
   - Other: notes/T-2424.md
 Anita's notes 2026-11-04 midday (verbatim in notes/todo-2026-11-04c.md; briefs quote it word for word):
 Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in notes/todo-2026-11-03h.md; briefs quote it word for word):
+- T-4371 [P3] {L:help-tutorial} Say what blueprints are
+  - Context: A Japanese player on 0.4.7 (tw-feedback 1795696901, 11-26) doesn't know what "blueprints" in Settings refers to and asked for an explanation in Japanese; the tab reads 計画 there.
+  - Goal: A player meeting the word in Settings or the toolbar can find out what a blueprint is in one line, in every language.
 - T-2280 [P3] {L:help-tutorial} {after:tutorial playtest} More tutorial hovers
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
   - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.

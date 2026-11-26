@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4367 [P1] {L:edit-speed} Demand crash after making a line in 0.4.7 (2026-11-26): fixed: the edit's window is built only with a market part; figures unchanged where the old code ran. notes/T-4367.md.
 - T-4359 [P1] {L:loading} A load stuck on loading data with the bar full (2026-11-25): her stuck load was a mid-game load (Haeju) waiting 4.7 min on an edit's whole re-solve with the bar full; loads during play end at their packs, bars restart after a final, late units hold the bar; not R2. notes/T-4359.md.
 - T-4149 [P1] {L:edit-speed} The checked version sooner, worker side, stage 2 (2026-11-25): rows under 100 ms for any edit on Asia (Node 11-53 ms); stage 3 spliced the way back run too (sampling 12.5 to 2.6 ms on those lines); leftovers filed as T-4360. notes/T-4149.md.
 - T-4339 [P3] {L:edit-speed} Stop clicks' rows hold the services a station click owes (2026-11-25): done by T-4272 stage 2: stop clicks' rows settle what a station click owes first. notes/T-4272.md.

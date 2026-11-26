@@ -19,6 +19,8 @@ import os
 import sys
 
 os.environ.setdefault("OMP_NUM_THREADS", "1")
+# `python -I` (how runs call it) leaves the script's own folder off the path, where world_plan lives
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np  # noqa: E402
 import shapely  # noqa: E402
