@@ -308,6 +308,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-051): Simulate flows, not agents: trains are functions of time, no signals for now, tangles discouraged by capacity; 10k trains is a simulation target, not a rendering one (Anita). Rust to WebAssembly at opt-level 3, since CPU outranks download size. notes/T-051.md
 
 ## World data and zones
+- 2026-11-25 (Anita, T-4364): Zones lean slightly towards respecting first-level boundaries (provinces, voivodeships, prefectures) where there is a choice; not strictly, above all where a city itself crosses one.
 
 - 2026-11-24 (Anita, T-4203): Hokkaido's four zones are named after their main city (Sapporo, Asahikawa, Obihiro, Hakodate), as every other zone is, not their region; Obihiro over Kushiro by 1,459 people. notes/T-4203.md
 - 2026-11-22 (Anita, T-3688): Kept over the zoning rule: Hokkaido's four standard regions (Anita's map of 11-21), Sukabumi-Cianjur as one 5.56M zone Anita asked for, Sao Paulo's 39 RMSP municipios matching its survey, and cut-off zones of 10,000 or more. notes/T-3688.md
