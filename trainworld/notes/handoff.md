@@ -1,21 +1,21 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 72757b8d-c220-47a4-ac30-041ad0a7ac39, name maps-3a [8d9b93], since 2026-11-26 14:17 UTC
-Updated: 2026-11-26 14:45 UTC (maps-d6 done; redraws3 still runs in its tab, reports forwarded). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-26 15:14 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 1. 0.4.7 published 11-25 18:42 UTC (R2 2026-11-25, website 0497af6). Player reports triaged 11-26 14:40 UTC: filed
-   T-4367 (P1, demand crash 'o.beside' after a new line), T-4368, T-4369, T-4370; brown-map lead added to T-4328. The
-   T-4367 brief is ready (scratchpad besidefix/brief.md, tree besidefix, port 6147), waiting on ask a-2026-11-26-2.
+   T-4367 (P1, demand crash 'o.beside' after a new line), T-4368, T-4369, T-4370; brown-map lead added to T-4328.
+   Running: besidefix (Opus, T-4367, tree besidefix, port 6147, her "can investigate 4367" 11-26 ~10:10). Her
+   no-new-agents wind-down (11-25) otherwise still unanswered: start nothing else without asking.
 2. Landed 11-25 (all on 8800 98aedf0d0, smoke passed): T-4348, T-4351, T-4354, T-4357, T-4337, T-4349, T-4272 s2
    (open for 100 ms), T-4339, T-4149, T-4359, T-4153 s9 (open for 100 ms), T-4281 s3. Edit bench baseline on master
    65f0134b@20261125203108-11820; batch check after: no regression (NYC click run later 122 -> 34 ms).
    Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8.
 3. Running: the redraws3 job (T-4364, T-4365; agent done, report r-b2d0784b): her 11-26 yes to the redraws except
-   Poland, plus two new (Mansoura, Chiayi/Tainan): sheets sent 14:50 UTC, asks a-2026-11-26-3 and -4. Her answers
-   go in notes/T-4364/answer-1126.txt (`mansoura=yes|no`, `chiayi=yes|no`); the job waits there after US (~16 h from
-   14:47 UTC), then EG/TW and the after steps (19-20 h in all). Owns data/packs: snap8800 with the freeze, hold
+   Poland, plus both new (Mansoura, Chiayi/Tainan: her yes 11-26, written to notes/T-4364/answer-1126.txt), so the
+   job runs through EG/TW and the after steps without stopping (19-20 h from 14:47 UTC). Owns data/packs: snap8800 with the freeze, hold
    main-tree app/ writes during its gates. All of Macau's land goes
    in Macau's zone; it reports the Macau-Zhuhai border factor after the join.
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
