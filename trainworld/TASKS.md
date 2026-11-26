@@ -766,12 +766,11 @@ Localization (Anita 2026-11-06: Simplified and Traditional Chinese and Japanese 
 - T-3011 [P3] {L:region-redraws} Cairo border misses the Nile
   - Context: You said (2026-11-10) the border is too far east of the river and islands, and the river should just be part of Cairo. Since 2026-11-18 (T-3671) downtown is in the zone, so the border runs along both banks; the Nile's channels themselves (about 160 m and 440 m wide at Tahrir) stay outside, since no admin unit covers the water.
   - Goal: Cairo's zone lines up with the Nile and keeps Gezira and Zamalek.
-- T-4364 [P2] {L:region-redraws} {waits:Anita} Build the region redraws you pick
-  - Need from Anita: A yes or no per line of artifacts/trainworld/review/redraws-1125.md; I'd say yes to every line marked "I'd do it".
-  - Context: Proposals done 11-26: 17 sheets (Israel 9 to 4, Yucatán, Guilin, Wuhan, Taitung, Stavanger, Mettmann and others) from your list, players' and a worldwide ranking (artifacts/trainworld/zone-ranking.csv). Nothing applied. All of it is about 16-17 hours of runs.
+- T-4364 [P2] {L:region-redraws} Build the region redraws you picked (taking, 2026-11-26, agent redraws3)
+  - Context: You, 11-26: "id like to do all of them" (the 17 sheets of artifacts/trainworld/review/redraws-1125.md), plus El Mansura ("quite large and banana like") and Minxiong, East District and Tainan as one Chiayi and one Tainan region. About 16-17 hours of runs.
   - Goal: The picked redraws built and joined, shipped with the next data version.
   - Other: notes/T-4364.md
-- T-4365 [P2] {L:region-redraws} plan_edit fails on Guangdong's spec
+- T-4365 [P2] {L:region-redraws} plan_edit fails on Guangdong's spec (taking, 2026-11-26, agent redraws3)
   - Context: From T-4364: `plan_edit.py` raises KeyError on zhu because the Macau SAR unit is missing from the plan state, which blocks applying the Doumen and Qingxin proposals.
   - Goal: The Guangdong spec applies in a dry run.
   - Other: notes/T-4364.md

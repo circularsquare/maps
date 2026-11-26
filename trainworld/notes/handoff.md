@@ -6,24 +6,18 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 
 ## Next
 1. 0.4.7 published 11-25 18:42 UTC (R2 2026-11-25, website 0497af6); no new player reports on it (19:15 UTC).
-2. Landed 11-25: T-4348, T-4351, T-4337, T-4349 (labels only; T-4356 filed), T-4354 (all 12 languages at 3303/3303;
-   one pass plus own back-translation, my call; publish skill step 4 now translates missing and stale keys), T-4357
-   (her "slowest limit"), T-4272 stage 2 and T-4339 (566aa52a5; review31 passed; T-4358 filed; T-4272 stays open
-   for its 100 ms goal). 8800 at 566aa52a; smoke passed there (30 checks). No agents running.
-3. Edit bench baseline on master 65f0134b (11-25 20:31 UTC, quiet): Asia station built 341 ms, click run later 100;
-   NYC station 76. Landed: T-4149 closed (d441fb19f; rows 11-53 ms on Asia; T-4360), T-4359 (914f564e6: her "stuck"
-   load was a mid-game load of Haeju waiting 4.7 min on an edit's re-solve, bar full; T-4361, T-4362), T-4153 s9
-   (b6aa1b90f: bands 27 to 15 ms in Node; T-4153 open for 100 ms; T-4363 filed). netcut9's page bench was worse (NYC
-   station built 147 -> 249 not noisy, n 1; Asia noisy): after today3 lands, on master quietly: edit_bench NYC --runs
-   3 --compare 65f0134b@20261125203108-11820 done 11-25: no regression (station 76 -> 80 within its range; click
-   run later 122 -> 34, undo 143 -> 95, delete a line 254 -> 152). 8800 at 98aedf0d0, smoke passed. T-4364 proposals done 11-26 (redraws2): 17 sheets, index
-   artifacts/trainworld/review/redraws-1125.md; waits for her yes/no per line, then a night build (~16-17 h for all). T-4281
-   s3 landed (67426dfa8: `today` ~107 to 3-6 ms on Asia with the clock running; page click hold left as is, see
-   notes). Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8. Then
-   T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
-5. Standby: maps-3a (notes/standby.txt). Gemini out until about 11-30: Claude reviewers meanwhile.
+2. Landed 11-25 (all on 8800 98aedf0d0, smoke passed): T-4348, T-4351, T-4354, T-4357, T-4337, T-4349, T-4272 s2
+   (open for 100 ms), T-4339, T-4149, T-4359, T-4153 s9 (open for 100 ms), T-4281 s3. Edit bench baseline on master
+   65f0134b@20261125203108-11820; batch check after: no regression (NYC click run later 122 -> 34 ms).
+   Before the next publish: a Claude batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8.
+3. Running: redraws3 (Opus, T-4364, T-4365): her 11-26 yes to all 17 redraws (Skierniewice split included) plus two
+   new (El Mansura, Chiayi/Tainan) whose sheets it makes first (send them with SendUserFile: she's on remote
+   control); one unattended job (~16-17 h), Egypt and Taiwan gated on her yes to the two.
+4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 6. Resources 11-25: Resend over (her: nothing); R2 11-18b, 11-19 purged (her yes); Class A 91% of the free million
    projected; Class B, repo size known to her. Cloudflare stats: her Configuration Rule leaves /trainsworld out (checked).
+
+Standby: maps-3a (notes/standby.txt). Gemini out until about 11-30: Claude reviewers meanwhile.
 
 ## Her words
 - 11-25 ~17:20: usage at 88%: finish the running tasks and wind down; no new agents. Batch review waits for later.
