@@ -19,7 +19,6 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    seams.py failed under `-I` for Israel (fixed 4a02b06d4, later countries get it): after the job, rerun IL's join
    so its seams count. Macau-Zhuhai take the default 0.05 (told her).
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
-5. Resources 11-26: nothing to act on (R2 storage 14.9 GB, ~$0.07/month; Class A 73%). Standby: none listed.
 
 ## Her words
 - 11-26 ~09:10: Skierniewice: "ok i guess we can leave out poland. everything else fine to do." Asked whether Macau
