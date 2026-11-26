@@ -43,7 +43,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 - 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
   kinda just flavor." (DECISIONS T-4097.) Asia: station adds 1-3 s, removal about 4 s.
 - 11-25: Airports later, P3. 180th meridian: "if people want to build it, they should ideally be able to".
-- 11-19: player complaints before new features.
+- 11-19: player complaints before new features. 11-25: player region requests are leads, not orders ("we gotta judge").
 
 ## Only a person knows
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
