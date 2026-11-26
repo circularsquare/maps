@@ -232,3 +232,5 @@ she thinks it's ready; then run the skill. Keep the checks it needs (smoke, perf
   by id.
 - Recount what a change touches before landing; an agent's own estimate can miss it.
 - A trial that changes Rust constants with nothing visible goes into a notes/ patch, not the tree (T-3029).
+- Don't `tail -F` a log a PowerShell job appends to: the open handle makes its Add-Content fail and the log goes silent
+  (11-26). Watch its state file with a short read every minute (FileShare ReadWrite), or Get-Content -Tail now and then.

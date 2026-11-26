@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 72757b8d-c220-47a4-ac30-041ad0a7ac39, name maps-3a [8d9b93], since 2026-11-26 14:17 UTC
-Updated: 2026-11-26 17:07 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-26 23:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -12,12 +12,11 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
    review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
 3. The redraws3 job (T-4364, T-4365, report r-b2d0784b): her yes to all but Poland, Mansoura and Chiayi/Tainan
-   included (notes/T-4364/answer-1126.txt). IL, DE, IN, MX, NO joined. Stopped 21:44 UTC at cn.w1 (sih's origin left
-   in Qingxin after the Guangdong spec); redraws4 fixed plan_edit (moved_origin), gated sih, restarted 22:00 UTC from
-   cn.w2 (kit/redraws3-cnw2.cmd). Commit after the job: both kits' plan_edit.py, t4364-cn-sih-origin.json, that .cmd. It owns
-   data/packs and the main tree's app/src/game json: 8800 rebuild and smoke wait for it (the newest freeze is 11-22).
-   seams.py failed under `-I` for Israel (fixed 4a02b06d4, later countries get it): after the job, rerun IL's join
-   so its seams count. Macau-Zhuhai take the default 0.05 (told her).
+   included (notes/T-4364/answer-1126.txt). IL, DE, IN, MX, NO joined. China stopped twice on gates (sih, zhu: origins
+   off their land); redraws4 fixed plan_edit's moved_origin, restarted 23:00 UTC from cn.w3 (PID 7904); run log silent
+   since (my tail -F blocked it; watch redraws3.state). Commit after: both kits' plan_edit.py, t4364-cn-{sih,zhu}-
+   origin.json, redraws3-cnw*.cmd. It owns data/packs and app/src/game json: 8800 and smoke wait (freeze 11-22 too
+   old). After the job, rerun IL's join (its seams step failed under -I; fixed 4a02b06d4). Macau-Zhuhai: 0.05.
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 
 ## Her words
@@ -43,7 +42,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 - 11-19: player complaints before new features. 11-25: player region requests are leads, not orders ("we gotta judge").
 
 ## Only a person knows
-- The redraws3 job (restarted): cmd 12348, script PID 14760, 8 cores claimed as `redraws3`; log artifacts/trainworld/redraws3-run.log
+- The redraws3 job (restarted): cmd 26808, script PID 7904, 8 cores claimed as `redraws3`; log artifacts/trainworld/redraws3-run.log
   and notes/T-4364/kit/redraws3.state (check every couple of hours); stops at the first `FAILED:` line, which names
   the undo. Restart, undo and the after steps (changelog item, place names, smoke, snap8800, commit pipeline/
   world_plan.py, osm_units.py, build_city.py, docs zones.md, data-register.md): notes/T-4364.md "The job".
