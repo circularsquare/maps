@@ -11,13 +11,13 @@
 // (no menu) loads; in another ?new=1 game a line over dead space and one in Tokyo reach a final (T-845); the real save (T-007-real-nyc.save) imported into it has 109 lines,
 // 1,756 stations and about 4,498.6 km of track; demand reaches a final result; Homes draws local
 // bubbles in the bare new game and on the real save (T-994); a click on a station
-// and on a train picks them; no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor), and the others in the list
+// and on a train picks them; with phone settings (intercity trips off, one worker) two long lines in a sandbox game leave demand running (T-4372); no console or page error, no GL error. Node: t133, t144, t145, t146, t1053 (every zone removed since HEAD has a successor), and the others in the list
 // below; t2022-loan-schedule runs with --experimental-strip-types (it imports app .ts).
 import { spawn, spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { HERE, MAPS, REAL_SAVE, NOISE, SMOKE_FIGURES, staleTempProfiles, launchChrome, collectErrors, importSave, demandFinal, acrossLine, startVite } from './lib.mjs';
+import { HERE, MAPS, REAL_SAVE, NOISE, SMOKE_FIGURES, staleTempProfiles, launchChrome, collectErrors, importSave, demandFinal, acrossLine, buildLine, startVite } from './lib.mjs';
 import { PROFILES_PER_LINE } from './lib/profiles.mjs';
 
 const EXPECT = { lines: 109, stations: 1756, trackKm: 4498.6, kmTolerance: 1 };
@@ -77,10 +77,45 @@ async function homesDrawn(page, at) {
   }
 }
 
+/** T-4372: phone settings (intercity trips off, one solving worker), long lines in a sandbox New York game. With no market
+ * part every edit that reaches a window (a run of 20+ minutes beside a kept city) once threw in the demand worker (T-4367,
+ * 'o.beside'), which the computer defaults never reach. Two lines far apart, the second 33 minutes long, fail it the way the
+ * game does: the worker's error, then 'Demand stopped' and no figures. About 25 s. */
+async function phoneLongLines(ctx, BASE, sep, errors) {
+    const phone = await ctx.newPage();
+    collectErrors(phone, errors, NOISE, GLYPH_404);
+    try {
+      const t = Date.now();
+      await phone.addInitScript(() => { try { localStorage.setItem('trainworld-ui', JSON.stringify({ shade: 'light', display: { dayShown: 'weekday', intercityTrips: false, cores: 1 }, v: 2 })); } catch {} });
+      await phone.goto(`${BASE}${sep}debug=1&new=1&city=nyc&mode=sandbox&paused=1&v=${Date.now()}`);
+      await phone.waitForFunction(() => window.tw?.world?.value && window.twDemand?.client, undefined, { timeout: 180000 });
+      const set = await phone.evaluate(() => ({ off: !window.tw.display.value.intercityTrips, cores: window.tw.display.value.cores }));
+      if (!set.off || set.cores !== 1) throw new Error(`phone settings not applied (${JSON.stringify(set)})`);
+      const failedOrFinal = (want) => phone.waitForFunction((want) => {
+        const d = window.twDemand, v = d.view();
+        return String(d.client.status).startsWith('failed') || !!document.querySelector('.demand-stopped-note') || (v && v.final && v.lines.size === want && !d.client.waiting);
+      }, want, { timeout: 120000, polling: 250 });
+      const wait = { route: 300, station: 150, settle: 300 };
+      for (const [k, pts] of [[[-73.90, 40.93], [-73.95, 41.30], [-73.93, 41.70], [-73.80, 42.10], [-73.76, 42.65]], [[-73.69, 42.64], [-73.72, 42.85], [-73.77, 43.08], [-73.78, 43.35]]].entries()) {
+        const r = await buildLine(phone, pts, { name: 'Phone ' + (k + 1), trains: [6, 4, 3], wait });
+        if (!r?.ok) throw new Error(`line ${k + 1} not built (${(r?.issues ?? []).join(', ')})`);
+        await failedOrFinal(k + 1);
+        const s = await phone.evaluate(() => ({ status: String(window.twDemand.client.status), stopped: !!document.querySelector('.demand-stopped-note'), lines: window.twDemand.view()?.lines.size ?? 0 }));
+        if (s.status.startsWith('failed') || s.stopped) throw new Error(`Demand stopped after line ${k + 1}: ${s.status}`);
+      }
+      report('phone settings, long lines', true, `(intercity trips off, 1 worker, 2 lines, ${((Date.now() - t) / 1000).toFixed(0)} s)`);
+    } catch (e) {
+      report('phone settings, long lines', false, e.message.split('\n')[0]);
+    } finally {
+      await phone.close();
+    }
+}
+
 async function browserChecks(BASE) {
   const { ctx, close } = await launchChrome({ prefix: 'tw-smoke-' });
   const errors = [];
   try {
+    if (process.env.SMOKE_ONLY === 'phone') { await phoneLongLines(ctx, BASE, BASE.includes('?') ? '&' : '?', errors); report('no console errors', errors.length === 0, errors.length ? `(${errors.length}: ${errors.slice(0, 3).join(' | ').slice(0, 400)})` : ''); return; }
     const page = await ctx.newPage();
     // dayShown weekday: the demand final is a weekday's, so figures compare across runs (the default view is the average day)
     // SMOKE_SHADE=dark runs it all in the dark theme (T-039)
@@ -198,6 +233,8 @@ async function browserChecks(BASE) {
     const built = await homesDrawn(page, NYC);
     report('homes bubbles, real save', built > 0, `(${built.toLocaleString('en-US')} discs)`);
 
+    await phoneLongLines(ctx, BASE, sep, errors);
+
     // 4. a click on a station picks it: stations with no other station within 400 m, at zoom 16
     try {
       const cands = await page.evaluate(() => {
@@ -277,8 +314,9 @@ try {
   const stale = await staleTempProfiles();
   if (stale > 20) console.log(`WARN  ${stale} tw-* folders over a day old in ${tmpdir()}: old check profiles, safe to delete`);
   // T-2831: the Node checks read the working tree, not the build under test, so on 8800 they only repeat the dev pass
-  const served = /:8800\b/.test(given ?? '');
-  if (served) console.log('      Node checks skipped: they read the working tree, not the build on 8800');
+  const only = process.env.SMOKE_ONLY === 'phone';
+  const served = only || /:8800\b/.test(given ?? '');
+  if (served && !only) console.log('      Node checks skipped: they read the working tree, not the build on 8800');
   for (const f of served ? [] : ['t133-picking-check.mjs', 't144-check.mjs', 't145-check.mjs', 't146-check.mjs', 't1053-zone-ids.mjs', ['t1380-complexes.mjs', 'args:5'], 't1380-labels.mjs', 't1381-strokes.mjs', 't1382-rows.mjs', 't2005-recent-builds.mjs', 't2021-fare-multiple.mjs', ['t2022-loan-schedule.mjs', '--experimental-strip-types'], ['t2552-load-bar.mjs', '--experimental-strip-types'], ['t2624-local-steps.mjs', '--experimental-strip-types'], ['i18n.mjs', '--experimental-strip-types'], 't3192-varyings.mjs']) {
     // 'args:x' entries go after the file (t1380-complexes gets 5 seeds here; its default is 30)
     const [file, ...rest] = [f].flat();
@@ -295,7 +333,7 @@ try {
   console.log(`      browser checks on ${base}`);
   // T-2399: the world run's browser check (city-browser.mjs, through pack_gate) on one small shipped zone, so an app
   // change that breaks it shows here and not as a gate that waits 300 s a zone and parks them
-  if (!served && !process.env.SMOKE_NO_ZONE) {
+  if (!served && !only && !process.env.SMOKE_NO_ZONE) {
     const zone = process.env.SMOKE_ZONE ?? 'mcu';
     const z = spawnSync(join(MAPS, 'venv', 'Scripts', 'python.exe'), ['-I', join(HERE, 'pack_gate.py'), zone, '--browser-only', '--out', join(tmpdir(), 'tw-smoke-zone')],
       { cwd: MAPS, encoding: 'utf8', windowsHide: true, env: { ...process.env, BASE: base.replace(/\/$/, ''), WORKERS: '1' } });
