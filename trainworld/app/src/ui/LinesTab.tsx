@@ -51,6 +51,9 @@ function TypeCell({ rank }: { rank: number }) {
   const I = TYPE_ICONS[rank];
   return <span class="val w-kind muted" data-tip={typeName(rank)}><I /></span>;
 }
+/** touch: press-and-hold this long, without moving more than the slop, to start a drag; a swipe scrolls instead (T-4377) */
+const TOUCH_HOLD_MS = 350;
+const TOUCH_SLOP_PX = 10;
 /** how far a row is dragged before it counts as a drag, not a click (px) */
 const DRAG_PX = 6;
 
@@ -406,26 +409,48 @@ export function LinesTab() {
     else if (p.join !== undefined) void edit({ op: "groupMembers", lines, groups, group: p.join, parent: 0 });
   };
   const pointerDown = (e: PointerEvent, id: string) => {
-    if (e.button !== 0 || e.pointerType === "touch") return;
+    if (e.button !== 0) return;
+    const touch = e.pointerType === "touch";
     if ((e.target as Element | null)?.closest?.("button, input")) return;
     const d: Drag = { id, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, on: false, over: null, part: "on" };
-    const move = (m: PointerEvent) => {
-      if (!d.on && Math.hypot(m.clientX - d.x0, m.clientY - d.y0) < DRAG_PX) return;
-      d.on = true;
-      d.x = m.clientX; d.y = m.clientY;
-      const row = document.elementFromPoint(m.clientX, m.clientY)?.closest("[data-drop]") as HTMLElement | null;
+    // touch: a swipe scrolls the list, so a drag starts only after a press-and-hold that has not moved
+    let armed = !touch, hold = 0;
+    const last = { x: e.clientX, y: e.clientY };
+    const follow = (x: number, y: number) => {
+      d.x = x; d.y = y;
+      const row = document.elementFromPoint(x, y)?.closest("[data-drop]") as HTMLElement | null;
       d.over = row?.dataset.drop ?? null;
       if (row) {
-        // the middle third groups, the rest is the gap above or below
-        const b = row.getBoundingClientRect(), f = (m.clientY - b.top) / Math.max(1, b.height);
+        const b = row.getBoundingClientRect(), f = (y - b.top) / Math.max(1, b.height);
         d.part = f < 1 / 3 ? "before" : f > 2 / 3 ? "after" : "on";
       }
+    };
+    const stop = () => {
+      clearTimeout(hold);
+      removeEventListener("pointermove", move);
+      removeEventListener("pointerup", end);
+      removeEventListener("pointercancel", abort);
+      removeEventListener("keydown", key);
+      removeEventListener("touchmove", noScroll);
+      removeEventListener("contextmenu", noMenu);
+    };
+    const abort = () => { stop(); setDrag(null); };
+    const noScroll = (t: TouchEvent) => { if (d.on && t.cancelable) t.preventDefault(); };
+    const noMenu = (c: Event) => c.preventDefault();
+    const move = (m: PointerEvent) => {
+      last.x = m.clientX; last.y = m.clientY;
+      if (!armed) {
+        if (Math.hypot(m.clientX - d.x0, m.clientY - d.y0) > TOUCH_SLOP_PX) abort();
+        return;
+      }
+      if (!d.on && Math.hypot(m.clientX - d.x0, m.clientY - d.y0) < DRAG_PX) return;
+      d.on = true;
+      // the middle third of a row groups, the rest is the gap above or below
+      follow(m.clientX, m.clientY);
       setDrag({ ...d });
     };
     const end = (u: PointerEvent | KeyboardEvent) => {
-      removeEventListener("pointermove", move);
-      removeEventListener("pointerup", end);
-      removeEventListener("keydown", key);
+      stop();
       if (d.on) {
         dragged.current = true;
         setTimeout(() => { dragged.current = false; }, 0);
@@ -442,6 +467,17 @@ export function LinesTab() {
     addEventListener("pointermove", move);
     addEventListener("pointerup", end);
     addEventListener("keydown", key);
+    if (touch) {
+      addEventListener("pointercancel", abort);
+      addEventListener("touchmove", noScroll, { passive: false });
+      addEventListener("contextmenu", noMenu);
+      hold = window.setTimeout(() => {
+        armed = true; d.on = true;
+        follow(last.x, last.y);
+        setDrag({ ...d });
+        navigator.vibrate?.(15);
+      }, TOUCH_HOLD_MS);
+    }
   };
   /** the rows marked while dragging: the one dropped onto, or the gap's line above or below a row */
   const marks = new Map<string, string>();
