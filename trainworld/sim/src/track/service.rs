@@ -1105,8 +1105,30 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let rev_dw: Vec<f64> = fwd_dw.iter().rev().copied().collect();
     let rev_cut: Vec<f64> = fwd_cut.iter().rev().copied().collect();
     let rev_street: Vec<f64> = plan.street.iter().rev().map(|s| len - s).collect();
-    let make = |s: Vec<f64>, dw: &[f64], cut: &[f64], street: &[f64], pace: &super::bus::Pace| {
-        let p = super::bus::profile_cut(&s, dw, cut, street, pace, r.rule() != super::bus::StopRule::Auto);
+    // T-4380: a by-hand line whose start is no stop still runs from it: the trip is worked out from the route's end (a point
+    // that is no stop, `lead`), and the stops' own times are kept
+    let lead = matches!(r.rule(), super::bus::StopRule::Hand(_, _, true)) && !super::bus::is_closed(&r.points) && plan.stops[0].s > 0.0;
+    let make = |s: Vec<f64>, dw: &[f64], cut: &[f64], street: &[f64], pace: &super::bus::Pace, pre: bool, post: bool| {
+        let (mut ps, mut pd, mut pc) = (s.clone(), dw.to_vec(), cut.to_vec());
+        if pre {
+            ps.insert(0, 0.0);
+            pd.insert(0, 0.0);
+            pc.insert(0, 0.0);
+        }
+        if post {
+            ps.push(len);
+            pd.push(0.0);
+            pc.push(0.0);
+        }
+        let mut p = super::bus::profile_cut(&ps, &pd, &pc, street, pace, r.rule() != super::bus::StopRule::Auto);
+        if pre {
+            p.arr.remove(0);
+            p.dep.remove(0);
+        }
+        if post {
+            p.arr.pop();
+            p.dep.pop();
+        }
         let top = p.phases.iter().map(|x| x.v).fold(0.0, f64::max);
         Run {
             len,
@@ -1127,7 +1149,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
         ls.kind = LoopKind::Circle;
         ls.one_way = net.line_one_way[l as usize];
     }
-    ls.runs = [make(fwd_s, &fwd_dw, &fwd_cut, &plan.street, &pace), make(rev_s, &rev_dw, &rev_cut, &rev_street, &pace.reversed())];
+    ls.runs = [make(fwd_s, &fwd_dw, &fwd_cut, &plan.street, &pace, lead, false), make(rev_s, &rev_dw, &rev_cut, &rev_street, &pace.reversed(), false, lead)];
     ls.cars = 1;
     ls.train_len = super::bus::BUS_LEN_M;
     ls.ok = true;

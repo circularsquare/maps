@@ -28,7 +28,7 @@ export const SAVE_MAGIC = "TWG1";
 export const SAVE_FORMAT = 1;
 /** T-4014: this build's save level, sim/src/track/save.rs `LEVEL` (a Rust test there pins this line to it), here so
  * both threads can refuse a newer save without the track model. */
-export const SAVE_LEVEL = 41;
+export const SAVE_LEVEL = 42;
 /** SPEC 8: a new game starts on day 1 at 07:00 (game seconds). */
 export const START_CLOCK = 86400 + 7 * 3600;
 /** SPEC 6.4: US$10B to start (T-2271), in US$M; a sandbox's money since the start is the cash minus this (T-728). */

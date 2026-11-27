@@ -556,7 +556,11 @@ lighter; at most 16 of each.
   The marker always sits where the stop will land, with or without Ctrl; where it is snapped the tag has a
   last row, "Ctrl+click to place without snapping", and holding or letting go of Ctrl moves the marker at once.
   A click on the route adds a stop, a click on a stop takes it out, each one edit and one undo; the
-  two ends stay. On a loop (T-3123) the closing stop is the end, and the last stop between offers no removal
+  last stop stays and a line keeps two stops (T-4380). The route's start is a stop to begin with and comes out like another
+  (the line still runs from it, its first stop is then the next one, `BusRoute::first_off`, saved in `LAF1`); a click on
+  the route's start puts it back. A BRT station within reach of another station is a stop of its own (T-4382): a stop
+  at one station holds off no other station's, and two BRT stations, or a BRT and a train station, are two stops
+  however close (train stations within 100 m of each other along the road are still one). On a loop (T-3123) the closing stop is the end, and the last stop between offers no removal
   (it has no tag and takes no click); on a route that loops back a stop on the way out is drawn on both passes,
   and a click on it takes out both. Choosing Auto (or any spacing) leaves Manual but the sim keeps the placed stops for the
   session (`BusRoute::hand_kept`, not saved): choosing Manual again gives them back, and a redraw in between

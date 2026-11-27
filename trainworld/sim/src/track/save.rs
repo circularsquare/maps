@@ -109,6 +109,8 @@ use super::bus::keep::{KeepLink, KeptStop};
 /// A load then drops those no bus stop took (`Network::drop_keeps_except`).
 /// A trailing `LAP1` block (T-4048, level 41, after `LBK1`) gives the station pairs the player separated
 /// (`Network::apart`): count, then node pairs in the dense ids, as `LNK1`; without it none are.
+/// A trailing `LAF1` block (T-4380, level 42, after `LAP1`) gives the by-hand bus lines whose route start is no stop
+/// (`BusRoute::first_off`): count, then line indexes; without it every start is one.
 /// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
 /// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
 /// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
@@ -124,13 +126,13 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 44] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1", b"LBK1", b"LAP1"];
+pub const BLOCKS: [&[u8; 4]; 45] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1", b"LBK1", b"LAP1", b"LAF1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over, and refuses to open it (T-4014). Saves from before it have none, read
 /// as 0. The app keeps a copy (`SAVE_LEVEL`, app/src/workers/saveFile.ts; `the_app_knows_this_level`).
-pub const LEVEL: u32 = 41;
+pub const LEVEL: u32 = 42;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -907,6 +909,13 @@ pub fn encode(net: &Network) -> Vec<u8> {
             w.u(node_id[b as usize] as u64);
         }
     }
+    // T-4380: after LAP1, only where a by-hand bus line's start is no stop: count, then line indexes
+    let off: Vec<usize> = lines.iter().enumerate().filter(|(_, &l)| net.line_bus[l as usize].as_ref().is_some_and(|r| r.hand.is_some() && r.first_off)).map(|(i, _)| i).collect();
+    if !off.is_empty() {
+        w.0.extend_from_slice(b"LAF1");
+        w.u(off.len() as u64);
+        for i in off { w.u(i as u64); }
+    }
     w.0
 }
 
@@ -1658,6 +1667,15 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LAF1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let i = r.u()? as usize;
+            if let Some(Some(route)) = net.line_bus.get_mut(i).filter(|_| i < n_lines) {
+                route.first_off = true;
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1916,7 +1934,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (41, 44), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (42, 45), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-4048 (level 41): the separated pairs' block follows the kept stops' (T-4080, level 40). A level 40 save

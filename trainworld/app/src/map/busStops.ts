@@ -166,8 +166,10 @@ export class BusStopMarkers {
     const closed = r.length >= 8 && r[0] === r[r.length - 2] && r[1] === r[r.length - 1];
     const place = (s: ClockBus["stops"][number]) => (s.station >= 0 ? `n${s.station}` : `${Math.round(s.x)},${Math.round(s.y)}`);
     const lastOne = closed && new Set(between.map(place)).size === 1;
+    // T-4380: the route's start is a stop to take out like another, on a line that is no loop and keeps two stops after
+    const startGoes = !closed && bus.stops.length >= 3;
     bus.stops.forEach((s, i) => {
-      const end = i === 0 || i === bus.stops.length - 1 || lastOne;
+      const end = (i === 0 && !startGoes) || i === bus.stops.length - 1 || lastOne;
       const heading = oneWay[String(s.id)];
       add(s.lng, s.lat, true, end ? { kind: "end" } : { kind: "stop", x: s.x, y: s.y, name: names.get(String(s.station)), oneWay: heading !== undefined }, heading === undefined ? undefined : { x: s.x, y: s.y, heading });
     });
@@ -237,8 +239,14 @@ export class BusStopMarkers {
     const at = this.routeAt(px, py);
     if (!at) return null;
     const here = routePoint(bus, ...at);
-    // on top of a stop a click adds nothing, and near a station's stop it is that stop (exact: only the gap)
-    if (bus.stops.some((s) => metres(s, here) < (s.station >= 0 && !exact ? STATION_REACH_M : HAND_GAP_M))) return null;
+    // on top of a stop a click adds nothing, and near a station's stop it is that stop (exact: only the gap); T-4382: a
+    // station's stop does not hold off another station's, however close
+    let nearNode: number | null = null, nearM = STATION_REACH_M;
+    for (const s of this.reachOn) {
+      const d = metres(s.p, here);
+      if (d <= nearM) (nearM = d), (nearNode = s.node);
+    }
+    if (bus.stops.some((s) => (s.station >= 0 && !exact && nearNode !== null ? s.station === nearNode : metres(s, here) < (s.station >= 0 && !exact ? STATION_REACH_M : HAND_GAP_M)))) return null;
     if (exact) {
       // demand still joins a stop within `BUS_XFER_M` of another line's, so the tag says so
       const join = this.meetOn.filter((s) => metres(s.p, here) <= BUS_XFER_M).sort((a, b) => metres(a.p, here) - metres(b.p, here))[0];

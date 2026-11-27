@@ -30,7 +30,7 @@ fn a_route_that_loops_back_stops_both_ways_on_its_way_out() {
     assert_eq!(at.len(), 2, "the station both ways: {at:?}");
     assert!((at[0] - 500.0 * ROAD_FACTOR).abs() < 1.0 && (p.len - at[1] - 500.0 * ROAD_FACTOR).abs() < 1.0);
     let hand = [[1500.0, 0.0], [3000.0, 500.0]];
-    let p = plan_by(&net, 0, &pts, &[], false, StopRule::Hand(&hand, &[]));
+    let p = plan_by(&net, 0, &pts, &[], false, StopRule::Hand(&hand, &[], false));
     let middles = p.stops.iter().filter(|s| s.kind == KIND_MIDDLE).count();
     assert_eq!(middles, 3, "{:?}", p.stops.iter().map(|s| s.s).collect::<Vec<_>>());
 }

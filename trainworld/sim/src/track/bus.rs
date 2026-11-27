@@ -57,7 +57,7 @@ const SPACED_MAX_STOPS: f64 = 1000.0;
 /// The most stops a player may place on a line (T-2891): stop ids hold 1,024 a line.
 pub const HAND_MAX_STOPS: usize = 1000;
 /// No two stops placed by hand come closer than this along the road, m.
-const HAND_GAP_M: f64 = 50.0;
+pub const HAND_GAP_M: f64 = 50.0;
 /// A bus's length, m.
 pub const BUS_LEN_M: f64 = 12.0;
 /// The shortest route, ground m.
@@ -91,6 +91,9 @@ pub struct BusRoute {
     /// T-4069: the points of `hand` placed exactly where the player clicked (Ctrl+click): they never become a
     /// station's stop. Saved, in its own block.
     pub exact: Vec<[f64; 2]>,
+    /// T-4380: on a by-hand line the route's start is no stop (the player took it out); the line still runs from it and
+    /// its first stop is the first of `hand`. Saved, in its own block; never for a loop.
+    pub first_off: bool,
     /// T-3907: bus lanes along the whole route (BRT): its buses never run under `streets::lane_kmh(true)`, and
     /// the route costs `BRT_COST_PER_KM` more a road-km and its upkeep is `UPKEEP_BRT_KM` a road-km.
     pub brt: bool,
@@ -103,7 +106,7 @@ impl BusRoute {
     /// A route with `kinds` cut or padded (with plain corners) to its points.
     pub fn new(points: Vec<[f64; 2]>, mut kinds: Vec<u8>, built: bool) -> BusRoute {
         kinds.resize(points.len(), K_CORNER);
-        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![], exact: vec![], brt: false, brt_bp: false }
+        BusRoute { points, kinds, built, spacing: 0, hand: None, hand_kept: vec![], exact: vec![], first_off: false, brt: false, brt_bp: false }
     }
     /// T-3944: BRT asked for, built or in the blueprint: the lanes `Network::brt_order(false)` counts.
     pub fn brt_any(&self) -> bool {
@@ -115,7 +118,7 @@ impl BusRoute {
     }
     pub fn rule(&self) -> StopRule<'_> {
         match &self.hand {
-            Some(h) => StopRule::Hand(h, &self.exact),
+            Some(h) => StopRule::Hand(h, &self.exact, self.first_off),
             None if self.spacing > 0 => StopRule::Spaced(self.spacing),
             None => StopRule::Auto,
         }
@@ -129,8 +132,8 @@ pub enum StopRule<'a> {
     /// About this many metres apart (T-2885).
     Spaced(u32),
     /// At these points between the route's ends (T-2891); the second list is those of them kept off the
-    /// stations (T-4069).
-    Hand(&'a [[f64; 2]], &'a [[f64; 2]]),
+    /// stations (T-4069); the third: the route's start is no stop (T-4380).
+    Hand(&'a [[f64; 2]], &'a [[f64; 2]], bool),
 }
 
 /// `m` as a line's stop spacing: the least spacing, `SPACING_MIN_M`, is the automatic rule and stored
@@ -389,7 +392,7 @@ pub fn lines_touched(net: &Network, t: &super::net::Touch) -> Vec<u32> {
 }
 
 /// The stations within `STATION_REACH_M` of a route, as (road m along it, node, ground m off it), in
-/// road order; of two within `STATION_GAP_M` along the road, the one nearer the route. `built_only`:
+/// road order; of two train stations within `STATION_GAP_M` along the road, the one nearer the route. `built_only`:
 /// constructed stations only. `brt`: the line is on BRT; only such a line stops at a BRT station (T-3378).
 fn reach(net: &Network, poly: &Poly, built_only: bool, brt: bool) -> Vec<(f64, u32, f64)> {
     let bb = poly.bbox();
@@ -414,7 +417,8 @@ fn reach(net: &Network, poly: &Poly, built_only: bool, brt: bool) -> Vec<(f64, u
     let mut kept: Vec<(f64, u32, f64)> = vec![];
     for c in st {
         match kept.last_mut() {
-            Some(k) if c.0 - k.0 < STATION_GAP_M => {
+            // T-4382: a BRT station beside another station is its own stop; only train stations (and a station's own two passes) merge
+            Some(k) if c.0 - k.0 < STATION_GAP_M && (c.1 == k.1 || !(net.is_brt_station(c.1) || net.is_brt_station(k.1))) => {
                 if c.2 < k.2 {
                     *k = c;
                 }
@@ -535,7 +539,7 @@ fn spaced_stops(fixed: &[(f64, u8, Option<u32>)], sp: f64) -> Vec<(f64, u8, Opti
 /// The route's ends (`first`, `last`) and the stops at `points` between them (T-2891), in road order:
 /// a point within `STATION_REACH_M` along the road of a station the route reaches (`kept`) is that
 /// station's stop (unless `exact` has the point, T-4069), and a stop on top of an end or the stop before it is dropped.
-fn hand_stops(poly: &Poly, net: &Network, kept: &[(f64, u32, f64)], first: (f64, u8, Option<u32>), last: (f64, u8, Option<u32>), points: &[[f64; 2]], exact: &[[f64; 2]]) -> Vec<(f64, u8, Option<u32>)> {
+fn hand_stops(poly: &Poly, net: &Network, kept: &[(f64, u32, f64)], first: (f64, u8, Option<u32>), last: (f64, u8, Option<u32>), points: &[[f64; 2]], exact: &[[f64; 2]], first_off: bool) -> Vec<(f64, u8, Option<u32>)> {
     // a point on the way out and back of a route that loops back is a stop on both passes (T-3109)
     let mut inner: Vec<(f64, u8, Option<u32>)> = points
         .iter()
@@ -549,13 +553,20 @@ fn hand_stops(poly: &Poly, net: &Network, kept: &[(f64, u32, f64)], first: (f64,
         })
         .collect();
     inner.sort_by(|a, b| a.0.total_cmp(&b.0));
-    let mut out = vec![first];
+    // T-4380: with `first_off` the start is no stop, so nothing keeps a point off it
+    let mut out = if first_off { vec![] } else { vec![first] };
     for c in inner {
-        let prev = out[out.len() - 1];
-        let same_station = c.2.is_some() && (c.2 == first.2 || c.2 == last.2 || c.2 == prev.2);
-        if !same_station && c.0 - prev.0 >= HAND_GAP_M && last.0 - c.0 >= HAND_GAP_M {
+        let prev = out.last().copied();
+        let same_station = c.2.is_some() && (c.2 == last.2 || (!first_off && c.2 == first.2) || prev.is_some_and(|p| c.2 == p.2));
+        // T-4382: two stations of their own are stops however close
+        let own = |o: &(f64, u8, Option<u32>)| c.2.is_some() && o.2.is_some() && c.2 != o.2;
+        if !same_station && prev.map_or(true, |p| c.0 - p.0 >= HAND_GAP_M || own(&p)) && (last.0 - c.0 >= HAND_GAP_M || own(&last)) {
             out.push(c);
         }
+    }
+    // a line keeps two stops: with no stop placed the start stays one, whatever took the rest away (a redraw, Auto and back)
+    if out.is_empty() {
+        out.push(first);
     }
     out.push(last);
     out
@@ -691,7 +702,7 @@ pub fn plan_by(net: &Network, l: u32, pts: &[[f64; 2]], kinds: &[u8], built_only
     let spaced = rule != StopRule::Auto;
     match rule {
         StopRule::Spaced(sp) => fixed = spaced_stops(&fixed, (sp as f64).max(len / SPACED_MAX_STOPS)),
-        StopRule::Hand(points, exact) => fixed = hand_stops(&poly, net, &kept, fixed[0], fixed[fixed.len() - 1], points, exact),
+        StopRule::Hand(points, exact, first_off) => fixed = hand_stops(&poly, net, &kept, fixed[0], fixed[fixed.len() - 1], points, exact, first_off && !closed),
         StopRule::Auto => {}
     }
     // T-3924: on Auto every stop of the street grid is one demand sees, as stops placed that far apart are; a long

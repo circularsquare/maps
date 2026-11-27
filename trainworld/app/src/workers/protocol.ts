@@ -805,6 +805,8 @@ export interface ClockBus {
   spacing: number;
   /** T-2891: the player places the stops */
   hand: boolean;
+  /** T-4380: on a by-hand line the route's start is no stop */
+  firstOff: boolean;
   /** T-3907: bus lanes along the whole route (BRT), constructed on a constructed line */
   brt: boolean;
   /** T-3944: a constructed line's BRT lanes in the blueprint (`brt` false till Construct) */

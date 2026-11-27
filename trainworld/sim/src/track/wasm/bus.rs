@@ -49,7 +49,10 @@ impl TrackApi {
             return self.refuse(Issue::LinePath { line: id });
         }
         let (built, spacing, brt, brt_bp, hand, kept, exact) = (r.built, r.spacing, r.brt, r.brt_bp, r.hand.take(), std::mem::take(&mut r.hand_kept), std::mem::take(&mut r.exact));
+        // T-4380: a start taken out stays out while the route still starts where it did
+        let first_off = r.first_off && r.points.first() == pts.first();
         *r = BusRoute::new(pts, kinds, built);
+        r.first_off = first_off;
         r.spacing = spacing;
         (r.brt, r.brt_bp) = (brt, brt_bp);
         // T-2891: stops the new route still passes go onto it; the rest are gone with the old road
@@ -138,6 +141,10 @@ impl TrackApi {
         r.hand = Some(std::mem::take(&mut r.hand_kept));
         self.run(Op::Line { id, data: Some(d) })
     }
+    /// T-4380: whether the player took out a by-hand bus line's first stop.
+    pub fn bus_first_off(&self, line: u32) -> bool {
+        self.w.net.line_bus.get(line as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.hand.is_some() && r.first_off)
+    }
     /// Whether the player places a bus line's stops (T-2891).
     pub fn bus_hand(&self, line: u32) -> bool {
         self.w.net.line_bus.get(line as usize).and_then(|b| b.as_ref()).is_some_and(|r| r.hand.is_some())
@@ -170,7 +177,22 @@ impl TrackApi {
                 let (mx, my) = poly.at_road(0.5 * poly.road_len());
                 hand.push([quant(mx), quant(my)]);
             }
-            let (px, py) = poly.at_road(poly.project(net, x, y).0);
+            let s_at = poly.project(net, x, y).0;
+            // T-4380: a click on the route's start puts its stop back (or on its station, where the start's was one), unless
+            // the click is on another station's place
+            if r.first_off && !exact && !closed {
+                let back = BusRoute { first_off: false, ..r.clone() };
+                let first = bus::plan_route(net, id, &back, back.built).stops.first().cloned();
+                let at_station = plan.reach.iter().copied().find(|&n| {
+                    let (nx, ny) = (net.node_x[n as usize], net.node_y[n as usize]);
+                    (poly.project(net, nx, ny).0 - s_at).abs() < 1.0
+                });
+                if first.is_some_and(|f| (f.s - s_at).abs() <= bus::HAND_GAP_M && (at_station.is_none() || at_station == f.station)) {
+                    r.first_off = false;
+                    return self.run(Op::Line { id, data: Some(d) });
+                }
+            }
+            let (px, py) = poly.at_road(s_at);
             hand.push([quant(px), quant(py)]);
             // T-4069: Ctrl+click puts the stop where it is, not on a station near it
             if exact { r.exact.push([quant(px), quant(py)]) }
@@ -178,14 +200,21 @@ impl TrackApi {
             let n = plan.stops.len();
             let far = |k: usize| (plan.stops[k].x - x).hypot(plan.stops[k].y - y);
             let Some(k) = (0..n).min_by(|&a, &b| far(a).total_cmp(&far(b))) else { return 0 };
-            if k == 0 || k + 1 == n {
+            // T-4380: the start is a stop like another unless it is the route's (a loop's closing stop stays); two stops stay
+            if k + 1 == n || (k == 0 && !r.first_off && closed) || n < 3 {
                 return 0;
             }
+            let take_start = k == 0 && !r.first_off;
+            let keeps_two = r.first_off || take_start;
             // every point that made this stop goes, or a stop two points landed on would stay
             let nearest = |s: f64| (0..n).min_by(|&a, &b| (plan.stops[a].s - s).abs().total_cmp(&(plan.stops[b].s - s).abs()));
             hand.retain(|p| bus::on_route_at(&poly, net, p[0], p[1]).into_iter().all(|s| nearest(s) != Some(k)));
-            if closed && hand.is_empty() {
+            // a line with its start out keeps a stop of its own placing (`hand_stops` would put the start back)
+            if (closed || keeps_two) && hand.is_empty() {
                 return 0;
+            }
+            if take_start {
+                r.first_off = true;
             }
         }
         r.exact.retain(|p| hand.contains(p));

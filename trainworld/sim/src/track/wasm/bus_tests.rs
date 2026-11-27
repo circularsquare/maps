@@ -281,6 +281,58 @@ fn stop_spacing_is_one_undoable_edit_kept_through_a_redraw_and_a_save() {
     assert_eq!(a.bus_spacing(b), bus::SPACING_MAX_M as f64);
 }
 
+/// T-4380: a by-hand line's start is a stop that comes out like another, goes back with a click on it, and is kept in
+/// a save; a loop's closing stop and the last two stops stay.
+#[test]
+fn a_by_hand_lines_first_stop_comes_out_and_goes_back() {
+    let kinds = |a: &TrackApi, b: u32| stops(a, b).iter().map(|c| c[4] as u8).collect::<Vec<_>>();
+    let mut a = api();
+    let b = a.new_line_id();
+    let route = [-500.0, 100.0, 1.0, 20_500.0, 100.0, 3.0];
+    assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0, "First".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0);
+    assert!(!a.bus_first_off(b));
+    // two stops: the start stays
+    assert_eq!(a.set_bus_stop(b, -500.0, 100.0, false), 0);
+    assert!(!a.bus_first_off(b) && kinds(&a, b) == vec![KIND_END, KIND_END]);
+    assert_eq!(a.set_bus_stop(b, 9000.0, 50.0, true), 0);
+    assert_eq!(kinds(&a, b), vec![KIND_END, KIND_MIDDLE, KIND_END]);
+    // the start comes out: the line keeps its route, the first stop is the next one, which covers the stretch before it
+    assert_eq!(a.set_bus_stop(b, -500.0, 100.0, false), 0, "{}", a.issues());
+    assert!(a.bus_first_off(b));
+    assert_eq!(kinds(&a, b), vec![KIND_MIDDLE, KIND_END]);
+    let s = stops(&a, b);
+    assert!((s[0][1] - 9000.0).abs() < 1e-6 && (s[0][6] - 9100.0).abs() < 1e-6, "{s:?}");
+    assert_eq!(a.bus_route(b)[1..], route, "the route is kept");
+    // the bus still runs the whole route from its first point: it reaches the first stop only after the lead-in, and
+    // the way back goes on to the route's start
+    let (arr, dep) = (a.stop_times(b, 0, 0), a.stop_departures(b, 0, 0));
+    assert!(arr[0] > 60.0 && arr[0] < arr[1] && dep[0] >= arr[0], "{arr:?} {dep:?}");
+    let back = a.stop_times(b, 1, 0);
+    assert!(back.len() == 2, "{back:?}");
+    // two stops left: the first stays now
+    assert_eq!(a.set_bus_stop(b, 9000.0, 100.0, false), 0);
+    assert_eq!(kinds(&a, b), vec![KIND_MIDDLE, KIND_END]);
+    // a save and a load keep it
+    let saved = a.save();
+    assert!(saved.windows(4).any(|w| w == b"LAF1"));
+    let mut c = api();
+    assert!(c.load(&saved), "{}", c.issues());
+    assert!(c.bus_first_off(b) && kinds(&c, b) == vec![KIND_MIDDLE, KIND_END]);
+    // a click on the start puts its stop back
+    assert_eq!(a.set_bus_stop(b, -480.0, 100.0, true), 0, "{}", a.issues());
+    assert!(!a.bus_first_off(b));
+    assert_eq!(kinds(&a, b), vec![KIND_END, KIND_MIDDLE, KIND_END]);
+    assert_eq!(a.undo(), 0);
+    assert!(a.bus_first_off(b));
+    // a redraw that leaves no placed stop on the route keeps two stops: the start is one again
+    assert_eq!(a.set_bus_route(b, &[-500.0, 100.0, 1.0, 5000.0, 100.0, 3.0]), 0, "{}", a.issues());
+    assert!(stops(&a, b).len() >= 2 && kinds(&a, b).first() == Some(&KIND_END), "{:?}", stops(&a, b));
+    // by spacing and back: a line with no placed stops has no start taken out
+    assert_eq!(a.set_bus_spacing(b, 1000.0), 0);
+    assert!(!a.bus_first_off(b) && kinds(&a, b).first() == Some(&KIND_END));
+}
+
 #[test]
 fn stops_by_hand_clear_the_automatic_ones_and_keep_through_undo_a_redraw_and_a_save() {
     let bits = |a: &TrackApi, b: u32| stops(a, b).iter().flatten().map(|v| v.to_bits()).collect::<Vec<_>>();
@@ -318,7 +370,7 @@ fn stops_by_hand_clear_the_automatic_ones_and_keep_through_undo_a_redraw_and_a_s
     // on top of a stop or an end, nothing changes and no undo step is made
     assert_eq!(a.set_bus_stop(b, 9020.0, 100.0, true), 0);
     assert_eq!(a.set_bus_stop(b, -480.0, 100.0, true), 0);
-    assert_eq!(a.set_bus_stop(b, -500.0, 100.0, false), 0);
+    assert_eq!(a.set_bus_stop(b, 20_500.0, 100.0, false), 0);
     assert_eq!(bits(&a, b), two);
     assert_eq!(a.undo(), 0);
     assert_eq!(stops(&a, b).len(), 3, "the last real edit went");
@@ -866,6 +918,31 @@ fn brt_lane_has_no_bus_cap() {
 /// T-3378 stage 3: a BRT station beside the road, constructed for its flat price: only a BRT line stops there,
 /// standing no dwell, its stop costing `BRT_STATION_STOP_S`; a plain line passes it until it goes on BRT. It takes
 /// no upgrade (its waiting room is built in), pays a tram stop's upkeep, saves in `LBT1` and is removed with its node.
+/// T-4382: a BRT line stops at every BRT station it passes, however close two are, on automatic stops and by hand.
+#[test]
+fn a_brt_line_stops_at_each_of_two_close_brt_stations() {
+    let mut a = api();
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[0.0, 0.0, 1.0, 6000.0, 0.0, 1.0], 480, 600, 1200, 30.0, 120.0, 0, "B".into()), 0, "{}", a.issues());
+    assert_eq!(a.construct_line(b), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_brt(b, true), 0, "{}", a.issues());
+    let mut ids = vec![];
+    for x in [3000.0, 3040.0, 3190.0] {
+        assert_eq!(a.add_brt_station(x, 20.0, 0.0, "S".into()), 0, "{}", a.issues());
+        ids.push(a.last_brt_station());
+    }
+    assert_eq!(a.construct_all(), 0, "{}", a.issues());
+    let at = |a: &TrackApi| stops(a, b).iter().filter(|c| c[5] >= 0.0).map(|c| c[5] as u32).collect::<Vec<_>>();
+    assert_eq!(at(&a), ids, "automatic: {:?}", stops(&a, b));
+    // by hand: a click at each station's place puts its stop on
+    assert_eq!(a.set_bus_hand(b), 0);
+    assert!(at(&a).is_empty());
+    for x in [3000.0, 3040.0, 3190.0] {
+        assert_eq!(a.set_bus_stop(b, x * 1.0, 0.0, true), 0, "{}", a.issues());
+    }
+    assert_eq!(at(&a), ids, "by hand: {:?}", stops(&a, b));
+}
+
 #[test]
 fn a_brt_station_serves_brt_lines_only() {
     let mut a = api();
