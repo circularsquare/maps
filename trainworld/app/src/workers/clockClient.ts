@@ -903,15 +903,37 @@ export function switchGame(params: Record<string, string>, pending?: PendingLoad
 function switchNow(params: Record<string, string>, pending?: PendingLoad) {
   current?.leave(pending, () => location.replace(pageWith(params)));
 }
-/** T-2867, T-3932: the page back in the same game after `save` (the autosave by default): a page with no game switch in
- * its address would come back to the start menu, so it gets `?continue=1` */
-export function reloadIntoGame(save: () => Promise<void> = () => current?.saveBeforeReload() ?? Promise.resolve()) {
-  void save().finally(() => {
-    const u = new URL(location.href);
-    if (!CHOICE_PARAMS.some((k) => u.searchParams.has(k))) u.searchParams.set("continue", "1");
-    if (u.href === location.href) location.reload();
-    else location.replace(u.href);
-  });
+/** T-3932: whether `reloadIntoGame` can reload back into this exact game (false while the slot state is still
+ * arriving so a shared network's `viewing` flag is known, while viewing a shared network, or on an empty unwritten new
+ * game that has nothing saved yet). */
+export function canReloadIntoGame(): boolean {
+  const st = saveSlotsState.value;
+  if (gameStamp.value === 0 || st.game !== gameStamp.value || st.viewing) return false;
+  if (st.active) {
+    if (st.at > 0 || st.slots.some((s) => s.key === st.active)) return true;
+    const w = world.value;
+    return !!w && (w.nodes.size > 0 || w.save.lines.length > 0);
+  }
+  const q = new URLSearchParams(location.search);
+  return CHOICE_PARAMS.some((k) => q.has(k));
+}
+/** T-2867, T-3932: save and reload back into the same game through `leave()` (waits for the real write, refuses with
+ * the save-failure notice if blocked or failed, and reloads with this game's own `?slot=` rather than `?continue=1`).
+ * `before` runs only once the save has succeeded, right before navigating. */
+export function reloadIntoGame(before?: () => void) {
+  const st = saveSlotsState.peek();
+  const q = new URLSearchParams(location.search);
+  const test = q.get("new") === "1" || q.get("synth") === "1" || q.get("demandTest") === "1";
+  const w = world.peek();
+  const hasSlot = !!st.active && !st.viewing && !test && (st.at > 0 || st.slots.some((s) => s.key === st.active) || !!w && (w.nodes.size > 0 || w.save.lines.length > 0));
+  const to = hasSlot ? pageWith({ slot: st.active }) : location.href;
+  const go = () => {
+    before?.();
+    if (to === location.href) location.reload();
+    else location.replace(to);
+  };
+  if (current?.running) current.leave(undefined, go);
+  else go();
 }
 /** The page reloads to the start menu; a page already at that address (it came without a game switch) is reloaded, since replacing it with itself would not be (T-1852). */
 function toStartMenu() {

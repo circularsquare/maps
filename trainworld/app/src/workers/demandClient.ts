@@ -292,10 +292,31 @@ export function coresMax(): number {
   if (addressLimited()) return 1;
   return Math.max(1, Math.min(PERIODS.length, Math.floor((navigator.hardwareConcurrency || 4) / 2)));
 }
-/** T-3932: the count picked on the Cores slider (`display.cores`), within `coresMax`; null for Auto */
-function coresPicked(): number | null {
-  const c = display.peek().cores;
-  return typeof c === "number" && Number.isInteger(c) && c >= 1 ? Math.min(c, coresMax()) : null;
+/** T-3932: the count picked on the Cores slider (`display.cores`), within `coresMax`; null for Auto. Shared with
+ * `CoresRow` so corrupted/out-of-range stored values always match what the pool runs. */
+export function coresPicked(raw: unknown = display.peek().cores): number | null {
+  return typeof raw === "number" && Number.isInteger(raw) && raw >= 1 ? Math.min(raw, coresMax()) : null;
+}
+
+/** T-3932: a game's last full WASM memory reading (largest solving worker + aux worker, with stop count), kept per
+ * slot like `lastWait` so after a reload the Cores slider's memory line does not start low and creep up as zones open. */
+const LAST_CORES_MEM = "anitabuilder-cores-mem";
+interface CoresMemRecord { worker: number; aux: number; stops: number }
+function lastCoresMem(key: string): CoresMemRecord | null {
+  if (!key || key === "pending" || key === "new") return null;
+  try {
+    const r = JSON.parse(localStorage.getItem(LAST_CORES_MEM) || "null")?.[key];
+    return r && r.worker > 0 && r.aux >= 0 && r.stops >= 0 ? r : null;
+  } catch { return null; }
+}
+function rememberCoresMem(key: string, rec: CoresMemRecord) {
+  if (!key || key === "pending" || key === "new") return;
+  try {
+    const all: Record<string, CoresMemRecord> = JSON.parse(localStorage.getItem(LAST_CORES_MEM) || "null") ?? {};
+    delete all[key];
+    const keep = Object.entries(all).slice(-11);
+    localStorage.setItem(LAST_CORES_MEM, JSON.stringify(Object.fromEntries([...keep, [key, rec]])));
+  } catch { /* storage unavailable */ }
 }
 
 /** T-3072: the solving workers a worker's running out of memory left this tab with. Kept for the tab's
@@ -3339,6 +3360,7 @@ class DemandClient {
     console.warn(`demand: worker ${i} ran out of memory, ${aux} solving workers to ${n}: ${why}`); // i18n-ignore
     this.endFocus();
     this.endAside();
+    this.poolN = Math.min(this.poolN, n);
     rememberPoolCap(n);
     const again = new Set([...this.respawn.keys(), i]);
     this.respawn.clear();
@@ -3499,6 +3521,7 @@ class DemandClient {
     this.endQueries();
     if (this.computeN > 1 && !this.respawn.size) {
       const n = Math.floor(this.computeN / 2);
+      this.poolN = Math.min(this.poolN, n);
       rememberPoolCap(n);
       this.shrink(n, "a save found no memory"); // i18n-ignore
     }
@@ -4265,7 +4288,7 @@ class DemandClient {
   private growTo(restarting: Set<number>): number {
     const n0 = this.computeN, max = Math.min(this.poolN, poolSize(this.picked));
     // (T-3373 B: under `?split=1` a grown worker would hold nothing; dealing to it is stage 7's)
-    if (n0 >= max || this.respawn.size || perfOff("cap") || perfOff("grow") || workersAsked() !== null || this.holding) return n0;
+    if (n0 >= max || this.respawn.size || perfOff("cap") || perfOff("grow") || !shareCapped(this.picked) || this.holding) return n0;
     const held = (i: number) => { const need = this.needOf(i); return need === null ? null : restarting.has(i) ? need : Math.max(need, this.mem[i]?.wasm ?? 0); };
     let per = 0;
     for (let i = 0; i < n0; i++) { const h = held(i); if (h === null) return n0; per = Math.max(per, h); }
@@ -4308,7 +4331,7 @@ class DemandClient {
    * holds every open zone and the market, so a worker less saves its whole need, at a slower solve; no
    * figure changes. T-1366: `memCheck` grows it back (`growTo`). */
   private capPool() {
-    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null) return;
+    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || !shareCapped(this.picked)) return;
     let per = 0, sum = 0;
     for (let i = 0; i < this.computeN; i++) { per = Math.max(per, this.needOf(i) ?? 0); sum += this.needOf(i) ?? 0; }
     if (!per) return;
@@ -4331,7 +4354,7 @@ class DemandClient {
    * test, the aux worker (`auxWasm` bytes of WASM) counted as it counts it: a pool it would cut after the load's
    * first final is solved again whole on the rest, every question waiting for that (minutes on a big save). */
   private capAhead(perWorker: number, auxWasm: number) {
-    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null || this.solving()) return;
+    if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || !shareCapped(this.picked) || this.solving()) return;
     const aux = auxWasm * MEM_NEED[0] + MEM_BASE + MEM_WORKER;
     const byBudget = poolIn(perWorker, this.computeN, memBudget() - Math.max(MEM_OTHER, outsideWasmBytes(perWorker - MEM_WORKER, auxWasm)) - aux);
     const n = Math.min(this.computeN, byBudget, shareCapped(this.picked) ? workersFor(perWorker, this.picked) : Infinity);
@@ -4399,6 +4422,9 @@ class DemandClient {
 
   /** the solving workers now */
   running = () => this.computeN;
+  /** T-3932: the solving workers running when memory (Auto's limit or a real out-of-memory) holds the pool below
+   * what Auto or the player's pick asked for; null otherwise */
+  capped = (): number | null => (workersAsked() === null && this.computeN < (this.picked ?? coresByRule()) ? this.computeN : null);
   /** the last edit's wait to its final, ms, and the solving workers it ran on */
   private editTimed: { ms: number; workers: number } | null = null;
 
@@ -4412,24 +4438,40 @@ class DemandClient {
   }
 
   /** The game's memory and waits on `n` solving workers, from its own on the workers it runs (null before they have
-   * said their memory; T-3373 B's split, `?split=1`, has none). Memory: the Memory row's reading (`liveBytes`) with `n`
-   * solving workers, the largest standing in for any added. A wait: this game's last cold load (`lastWait`, the network
-   * no more than a fifth bigger or smaller since) and this page's last edit, each times r(n) / r(the workers it ran
-   * on), r(k) = f + (1 - f) x the busiest of k workers' share of the work (f: LOAD_SERIAL, EDIT_SERIAL); a wait under
-   * PACE_SOLVE_MS as it was, being mostly what workers do not share. */
+   * said their memory and nothing is remembered; T-3373 B's split, `?split=1`, has none). Memory: the Memory row's
+   * reading (`liveBytes`) with `n` solving workers, the largest standing in for any added, floored at this game's last
+   * full reading (`lastCoresMem`) until the live reading passes it so numbers never start low and creep up after a
+   * reload. A wait: this game's last cold load (`lastWait`, the network no more than a fifth bigger or smaller since)
+   * and this page's last edit, each times r(n) / r(the workers it ran on), r(k) = f + (1 - f) x the busiest of k
+   * workers' share of the work (f: LOAD_SERIAL, EDIT_SERIAL); a wait under PACE_SOLVE_MS as it was, being mostly what
+   * workers do not share. */
   coresEstimate(n: number): CoresEstimate | null {
     if (this.holding) return null;
     const n0 = this.computeN;
     const solving = this.mem.slice(0, n0).map((m) => m?.wasm ?? 0).sort((a, b) => b - a);
-    if (solving.length < n0 || !solving[n0 - 1]) return null;
-    const at = Array.from({ length: n }, (_, k) => solving[k < n0 ? k : 0]);
-    const bytes = this.auxShared
-      ? liveBytes(at, 0) + (n > 1 ? SHARED_AUX_BYTES : 0)
-      : liveBytes(at, this.mem[n0]?.wasm ?? 0);
+    const hasLive = solving.length >= n0 && solving[n0 - 1] > 0;
+    const key = gameWait().key, svc = this.latest(), stops = svc ? stopCount(svc) : null;
+    const saved = lastCoresMem(key);
+    const savedValid = saved && (stops === null || Math.abs(stops - saved.stops) <= 0.2 * Math.max(stops, saved.stops) + 50) ? saved : null;
+    if (!hasLive && !savedValid) return null;
+    const memFor = (workers: readonly number[], aux: number) => this.auxShared
+      ? liveBytes(workers, 0) + (n > 1 ? SHARED_AUX_BYTES : 0)
+      : liveBytes(workers, aux);
+    const liveAux = this.auxShared ? 0 : (this.mem[n0]?.wasm ?? 0);
+    const live = hasLive ? memFor(Array.from({ length: n }, (_, k) => solving[k < n0 ? k : 0]), liveAux) : 0;
+    const kept = savedValid ? memFor(Array.from({ length: n }, () => savedValid.worker), savedValid.aux) : 0;
+    if (hasLive && stops !== null) {
+      const liveOne = liveBytes([solving[0]], liveAux);
+      const savedOne = savedValid ? liveBytes([savedValid.worker], savedValid.aux) : 0;
+      if (liveOne >= savedOne && (!saved || savedValid || demandView.peek()?.final)) {
+        rememberCoresMem(key, { worker: solving[0], aux: liveAux, stops });
+      }
+    }
+    const bytes = Math.max(live, kept);
     const r = (k: number, f: number, barrier: boolean) => f + (1 - f) * busiestShare(k, barrier);
     const scale = (ms: number, k: number, f: number, barrier: boolean) => (ms < PACE_SOLVE_MS ? ms : (ms * r(n, f, barrier)) / r(k, f, barrier));
-    const svc = this.latest(), rec = lastWait(gameWait().key);
-    const load = rec && svc && sameSize(rec, stopCount(svc)) ? rec : null;
+    const rec = lastWait(key);
+    const load = rec && svc && sameSize(rec, stops) ? rec : null;
     return {
       bytes,
       loadMs: load ? scale(load.ms, load.workers ?? n0, LOAD_SERIAL, true) : null,
@@ -6993,6 +7035,8 @@ export interface CoresEstimate { bytes: number; loadMs: number | null; editMs: n
 export const coresEstimate = (n: number): CoresEstimate | null => client?.coresEstimate(n) ?? null;
 /** the solving workers running now, null before the pool starts */
 export const coresRunning = (): number | null => client?.running() ?? null;
+/** the solving workers running when memory holds the pool below what Auto or the player's pick asked for, else null */
+export const coresCapped = (): number | null => client?.capped() ?? null;
 /** the solving workers Auto gives: the game in hand's (`autoCores`), before one the device's */
 export const coresAuto = (): number => client?.autoCores() ?? poolSize(null);
 /** the slider's pick differs from the one the pool started with: it applies from the next load */

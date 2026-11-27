@@ -5,7 +5,7 @@
 // hand-drawn network of long straight lines, not a reference).
 // memoryCheck.ts judges a save before it loads from its zones and must stay cautious; this is the plain figure.
 
-import { workersFor, demandWorkersWasmMB } from "../workers/demandClient";
+import { coresPicked, poolSize, workersFor, demandWorkersWasmMB } from "../workers/demandClient";
 import { addressLimited, budgetKnown, deviceGB, memBudget, tabLimited } from "../workers/deviceMemory";
 import { liveBytes } from "../workers/liveMemory";
 import { t } from "../i18n";
@@ -24,7 +24,8 @@ export function estimateGB(stations: number): number {
   const worker = PER_EXTRA_WORKER_GB + (PER_EXTRA_WORKER_1000_GB * stations) / 1000;
   const one = BASE_GB + (PER_1000_STATIONS_GB * stations) / 1000;
   const fit = Math.max(0, Math.floor((budgetGB() - one) / worker));
-  return one + worker * Math.min(workersFor(worker * GB) - 1, fit);
+  const extra = coresPicked() !== null ? poolSize() - 1 : Math.min(workersFor(worker * GB) - 1, fit);
+  return one + worker * Math.max(0, extra);
 }
 
 /** GB the running game takes now, from what its demand workers report; null before they have. */

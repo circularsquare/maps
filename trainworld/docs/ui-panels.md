@@ -714,20 +714,24 @@ prices per mile. All go through the distance functions in `game/format.ts`; the 
 metric. The Currency row follows.
 
 **Performance** [T-381, T-3329]: first **Cores** [T-3932, `CoresRow`], a slider of the solving workers a game loads
-with, 1 to one a core (half the browser's threads, at most 5; hidden where that is 1), the count beside it and a small
-Auto button, lit by default (hover "Picked for your device and how big the game is"): the device's rule, fewer on a big
-game ([architecture.md](architecture.md) 7). Moving the slider picks that count, which drops the solving workers' share
-of the memory limit but not the limit itself, and clears the tab's out of memory cap ([Loading](#loading)); a click on
-the lit Auto picks the count shown, on the unlit one goes back. The old "Use more cores" ticked became its count (half
-the threads less one), unticked Auto. Under it, in a game, refreshed every 2 s, muted lines for the count shown: "Uses
-about 2.3 GB" (the Memory row's reading at that count, the largest solving worker standing in for any added; red past
-85% of the limit, as the Memory row, hover "The game runs on fewer cores when it would pass 8 GB"), "Loads in about 1m10s"
-(this game's last load that calculated its trips, kept in the browser) and "Trips are calculated in about 15s after an
-edit" (the page's last edit), each wait scaled from the count it ran on as DECISIONS.md says (left as it was under
-10 s) and left out until there is one. Then, once the pick differs from the one the game loaded with, "Applies after a
-reload" with Reload (saves, then the page opens the same game again; no button while viewing a shared network), else,
-where memory holds the pool under the pick, "Running on 2 cores to fit in memory". The pick is read when the demand
-pool starts: a change mid-game changes nothing until the next load. "Calculate intercity trips" [T-2838,
+with, 1 to one a core (half the browser's threads, at most 5; hidden where that is 1; hover "How many CPU cores to use
+for calculating trips"), the count beside it and a small Auto button, lit by default: the device's rule, fewer on a big
+game ([architecture.md](architecture.md) 7). Moving the slider picks that count as an override, dropping both stage A's
+share and the 8 GB memory budget (a real out-of-memory still retries with fewer); a click on the lit Auto picks the
+count shown, on the unlit one goes back. The old "Use more cores" ticked became its count (half the threads less one),
+unticked Auto. Under it, in a game, refreshed every 2 s, muted lines for the count shown: "Uses about 2.3 GB" (the
+Memory row's reading at that count, the largest solving worker standing in for any added, floored at this game's last
+full reading in `localStorage` until the live reading passes it; red past 85% of the limit, as the Memory row, with
+hover "The game runs on fewer cores when it would pass 8 GB" on Auto only), "Loads in about 1m10s" (this game's last
+load that calculated its trips, kept in the browser) and "Trips are calculated in about 15s after an edit" (the page's
+last edit), each wait scaled from the count it ran on as DECISIONS.md says (left as it was under 10 s) and left out
+until there is one; while the slider differs from what is running, those lines read in future tense ("Will use about
+...", "Will load in about ...", "Trips will be calculated in about ... after an edit"). Then, once the pick differs from
+the one the game loaded with, "Applies after a reload" with Reload (waits for the real save through `leave()`, refuses
+with the save-failure notice if blocked or failed, clears the tab's out-of-memory cap on success, and reloads with the
+game's own `?slot=`; hidden while viewing a shared network, before slot state arrives, or on an empty unwritten new
+game), else, where Auto's limit or a real out-of-memory holds the pool under what was asked, "Running on 2 cores to fit
+in memory". The pick is read when the demand pool starts: a change mid-game changes nothing until the next load. "Calculate intercity trips" [T-2838,
 T-3630], on every device, remembered in the browser, on by default on a computer and off on a phone or tablet: off,
 no market pack opens, so there are no trips between zones and no demand cache (a solving worker about 174 MB lighter on
 New York's real save). Ticked mid-game it applies from the next solve; unticked mid-game, the market packs already

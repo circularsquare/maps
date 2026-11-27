@@ -12,8 +12,8 @@ import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES,
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
-import { makeSandbox, reloadIntoGame, saveGuide, saveSlotsState } from "../workers/clockClient";
-import { coresAuto, coresChanged, coresEstimate, coresMax, coresRunning, forgetPoolCap } from "../workers/demandClient";
+import { canReloadIntoGame, clockRunning, makeSandbox, reloadIntoGame, saveGuide, saveSlotsState } from "../workers/clockClient";
+import { coresAuto, coresCapped, coresChanged, coresEstimate, coresMax, coresPicked, forgetPoolCap } from "../workers/demandClient";
 import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, LevelToggles, Segmented, ShapePicker, Stepper } from "./widgets";
 import { hiddenLevels, hideBlueprints, hideBlueprintsView, hideBuses, showAllLevels, toggleLevel } from "../game/lineVisibility";
@@ -418,29 +418,29 @@ export function CoresRow() {
   useEffect(() => { const id = setInterval(() => tick((k) => k + 1), 2000); return () => clearInterval(id); }, []);
   const max = coresMax();
   if (max < 2) return null;
-  const picked = display.value.cores, auto = picked === null;
-  const n = Math.max(1, Math.min(max, picked ?? coresAuto()));
-  const pick = (v: number | null) => { setDisplay("cores", v); forgetPoolCap(); };
-  const est = coresEstimate(n), running = coresRunning(), changed = coresChanged();
+  const picked = coresPicked(display.value.cores), auto = picked === null;
+  const n = picked ?? coresAuto();
+  const pick = (v: number | null) => { setDisplay("cores", v); if (!clockRunning()) forgetPoolCap(); };
+  const est = coresEstimate(n), capped = coresCapped(), changed = coresChanged();
   const gb = est ? est.bytes / 2 ** 30 : null, budget = budgetGB();
   const bad = gb !== null && budgetKind() !== "unknown" && gb > 0.85 * budget;
   return (
     <div class="cores">
       <div class="slider">
-        <span>{t("settingsTab.cores")}</span>
+        <span data-tip={t("settingsTab.coresTip")}>{t("settingsTab.cores")}</span>
         <input type="range" min={1} max={max} step={1} value={n} aria-label={t("settingsTab.cores")} onInput={(e) => pick(Number((e.target as HTMLInputElement).value))} />
         <span class="slider-pct">{tNumber(n)}</span>
-        <button class={"btn text mini" + (auto ? " on" : "")} aria-pressed={auto} data-tip={t("settingsTab.coresAutoTip")} onClick={() => pick(auto ? n : null)}>{t("settingsTab.coresAuto")}</button>
+        <button class={"btn text mini" + (auto ? " on" : "")} aria-pressed={auto} onClick={() => pick(auto ? n : null)}>{t("settingsTab.coresAuto")}</button>
       </div>
-      {gb !== null && <div class={bad ? "memory-bad" : "muted"} data-tip={bad ? t("settingsTab.coresMemoryTip", { gb: gbText(budget) }) : undefined}>{t("settingsTab.coresMemory", { gb: gbText(gb) })}</div>}
-      {est?.loadMs != null && <div class="muted">{t("settingsTab.coresLoad", { time: waitText(est.loadMs) })}</div>}
-      {est?.editMs != null && <div class="muted">{t("settingsTab.coresEdit", { time: waitText(est.editMs) })}</div>}
+      {gb !== null && <div class={bad ? "memory-bad" : "muted"} data-tip={bad && auto ? t("settingsTab.coresMemoryTip", { gb: gbText(budget) }) : undefined}>{t(changed ? "settingsTab.coresMemoryWill" : "settingsTab.coresMemory", { gb: gbText(gb) })}</div>}
+      {est?.loadMs != null && <div class="muted">{t(changed ? "settingsTab.coresLoadWill" : "settingsTab.coresLoad", { time: waitText(est.loadMs) })}</div>}
+      {est?.editMs != null && <div class="muted">{t(changed ? "settingsTab.coresEditWill" : "settingsTab.coresEdit", { time: waitText(est.editMs) })}</div>}
       {changed
         ? <div class="cores-reload">
             <span class="muted">{t("settingsTab.coresReload")}</span>
-            {!saveSlotsState.value.viewing && <button class="btn text mini" onClick={() => reloadIntoGame()}>{t("settingsTab.coresReloadButton")}</button>}
+            {canReloadIntoGame() && <button class="btn text mini" onClick={() => reloadIntoGame(forgetPoolCap)}>{t("settingsTab.coresReloadButton")}</button>}
           </div>
-        : running !== null && running < n && <div class="muted">{t("settingsTab.coresRunning", { count: running })}</div>}
+        : capped !== null && <div class="muted">{t("settingsTab.coresRunning", { count: capped })}</div>}
     </div>
   );
 }

@@ -639,7 +639,8 @@ Web first, so it can be shared as a link.
   memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported; or while the solving workers
   together (need plus 0.15 GB each) would pass 17.5% of that budget (`SOLVING_SHARE`, T-3373: 1.4 GB on a
   reported 8, so New York's real save runs 2 and all of China 1; memory over speed, Anita 2026-11-16; not with a
-  count picked on Settings' Cores slider, whose player chose speed). The
+  count picked on Settings' Cores slider, which overrides both stage A's share and `memBudget` so `capAhead`, `capPool`
+  and `growTo` skip a pick; a real out-of-memory still halves the pool and retries with fewer). The
   same test runs whenever a zone opens in a solving worker while no solve is out and once the pool is quiet after a
   final (T-3757), and a loading save's pool is cut before its packs open by the same test on `memoryCheck`'s
   estimates of a solving worker and of the aux worker for the zones its stations reach (`capAhead`; with the aux
