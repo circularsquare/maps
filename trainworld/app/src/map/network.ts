@@ -251,6 +251,10 @@ export interface NetPatch {
    * their passing stations elsewhere along them */
   stretches: number[];
   lanes: number[];
+  /** T-4314: how this build's station platforms (`stationShape`, `stationAxis`, `stationLine`) come from `base`'s:
+   * `runs` is null when the stations list is the same, else (to, from, count) triples of unchanged stations copied from
+   * `base`; `changed` is the station indices whose platform was worked out again (absent when every station was rebuilt). */
+  stations?: { runs: Int32Array | null; changed: number[] };
 }
 
 /** a run with no passing places (`linePassing`) */
@@ -3324,12 +3328,13 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
   const stIndex = ka && ka.st === st ? ka.index : new Map(st.map((n, i) => [n.id, i]));
   const stationsSeen: NetCache["stations"] = stDirty ? new Map(cache.stations) : new Map();
   const outsideSeen: NetCache["outside"] = stDirty ? new Map(cache.outside) : new Map();
-  const oneStation = (n: NodeRow, i: number) => {
+  const oneStation = (n: NodeRow, i: number): boolean => {
     const p = nodeLocal.get(n.id) ?? toLocal(n.lng, n.lat);
     const ids = waysAt.get(n.id) ?? [];
     // (the platform's edge is the first of its ways)
     const first = 0;
-    let c = cache.stations.get(n.id);
+    const prevC = cache.stations.get(n.id);
+    let c = prevC;
     if (!c || n.brtStation || c.platform !== n.platform || c.lat !== n.lat || c.first !== first || (c.ways !== ids && !sameArray(c.ways, ids)) || !ids.every(keptEdge)) {
       netWork.stations++;
       // the platform along its track, curved as it is (T-189); local units are metres / cos(lat)
@@ -3374,20 +3379,26 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
     stationShape.set(c.shape, i * 4);
     stationLine.set(c.line, i * 2 * PLATFORM_POINTS);
     stations.set([p[0], p[1], ((served.get(n.id) ?? 0) > 1 ? 1 : 0) | (n.stationBuilt ? 0 : 2) | (lined.has(n.id) ? 4 : 0) | (n.stationOff ? 8 : 0) | ((pe?.tracks === 2 && !oneSide) || split ? 16 : 0) | (sideOf ? ST_ONE | (sideOf < 0 ? ST_ONE_NEG : 0) : 0) | (single ? ST_SINGLE | ST_ONE_MID : 0) | (n.kind || n.brtStation ? ST_TRAM : 0) | (hasUpgrade(n.upgrades, UPGRADE.waitingRoom) ? ST_ROOM : 0) | (hasUpgrade(n.upgrades, UPGRADE.parkRide) ? ST_PARK : 0) | (hasUpgrade(n.upgrades, UPGRADE.terminal) ? ST_TERMINAL | (ids.length === 1 ? ST_BUFFER : 0) : 0) | (passingAt.has(n.id) ? ST_PASSING : 0)], i * 3);
+    return c !== prevC;
   };
+  let stPatch: NetPatch["stations"];
   if (!stDirty) st.forEach(oneStation);
   else {
     const was = ka!, PP = 2 * PLATFORM_POINTS;
+    const stChanged: number[] = [];
     if (was.st === st) {
       stations.set(was.stations);
       stationAxis.set(was.axis);
       stationShape.set(was.shape);
       stationLine.set(was.line);
-      for (const id of stDirty) { const i = stIndex.get(id); if (i !== undefined) oneStation(st[i], i); }
+      for (const id of stDirty) { const i = stIndex.get(id); if (i !== undefined && oneStation(st[i], i)) stChanged.push(i); }
+      stPatch = { runs: null, changed: stChanged };
     } else {
       // (a station came or went: the others copied from where they were, a run of them at a time)
+      const runs: number[] = [];
       const copyRun = (i0: number, j0: number, n: number) => {
         if (!n) return;
+        runs.push(i0, j0, n);
         stations.set(was.stations.subarray(j0 * 3, (j0 + n) * 3), i0 * 3);
         stationAxis.set(was.axis.subarray(j0 * 2, (j0 + n) * 2), i0 * 2);
         stationShape.set(was.shape.subarray(j0 * 4, (j0 + n) * 4), i0 * 4);
@@ -3396,13 +3407,14 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
       let ri = 0, rj = 0, rn = 0;
       for (let i = 0; i < st.length; i++) {
         const n = st[i], j = was.index.get(n.id);
-        if (j === undefined || stDirty.has(n.id)) { copyRun(ri, rj, rn); rn = 0; oneStation(n, i); continue; }
+        if (j === undefined || stDirty.has(n.id)) { copyRun(ri, rj, rn); rn = 0; oneStation(n, i); stChanged.push(i); continue; }
         if (rn && i === ri + rn && j === rj + rn) { rn++; continue; }
         copyRun(ri, rj, rn);
         (ri = i), (rj = j), (rn = 1);
       }
       copyRun(ri, rj, rn);
       for (const id of stDirty) if (!stIndex.has(id)) { stationsSeen.delete(id); outsideSeen.delete(id); }
+      stPatch = { runs: new Int32Array(runs), changed: stChanged };
     }
   }
   // (as the loop left them, before the buildings and facilities mark them; copies, as the post can hand the arrays on)
@@ -3607,6 +3619,7 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
     oldTrack: last.trackCount, oldLines: last.lineCount, same: [], edgeIds: Uint32Array.from(trackOrder), modes: { track: "whole", lines: "whole" }, ranges: { track: new Int32Array(0), lines: new Int32Array(0) },
     stretches: [...stretchesNew],
     lanes: [...lanesNew],
+    ...(stPatch ? { stations: stPatch } : {}),
   } : undefined;
   cache.last = { serial, track: trackParts, lines: lineParts, trackCount, lineCount, pts: edgePts };
   return {

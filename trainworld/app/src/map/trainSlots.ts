@@ -200,6 +200,8 @@ export interface SlotTex {
   rows: number;
   layout: SlotLayout;
   srcs: readonly (ArrayLike<number> | undefined)[];
+  /** T-4314: per-row source map last written from (`SlotSrc.rowMap`), when the table is keyed per row rather than packed */
+  rowMap?: ReadonlyMap<number, Float32Array> | null;
   /** per key, the shift its values were written with (`SlotSrc.shift`) */
   shift: Map<number, number> | null;
   /** keys whose slot holds something other than their values in `srcs` (`blankSlots`) */
@@ -215,6 +217,8 @@ export interface SlotTex {
 export interface SlotNames {
   keys: ReadonlySet<number>;
   from: readonly (ArrayLike<number> | undefined)[];
+  /** T-4314: when the table is keyed per row (`SlotSrc.rowMap`), the map `keys` changed from */
+  fromRowMap?: ReadonlyMap<number, Float32Array>;
 }
 
 /** `?trainNames=drop` (checks): each list drops its first key, which `?patch=check` must find drawn wrong */
@@ -224,6 +228,10 @@ export const trainNamesTest = { drop: typeof location !== "undefined" && new URL
 export interface SlotSrc {
   srcs: readonly (Float32Array | Int32Array | undefined)[];
   per: readonly number[];
+  /** T-4314: values keyed per row (`rowKey`), avoiding a flat packed copy across every row on edits */
+  rowMap?: ReadonlyMap<number, Float32Array>;
+  /** fill value for a key absent from `rowMap` (default 0) */
+  fillVal?: number;
   /** a key's `count` texels from packed texel `first` into `out` from 0; absent: the one source as it is */
   pack?: (out: Float32Array, first: number, count: number) => void;
   /** `bendAt`: per key, how many bend points its codes move by (its points' slot less their packed first) */
@@ -243,6 +251,12 @@ let scratch = new Float32Array(0);
  * a scratch array (used until the next call). */
 function stage(src: SlotSrc, L: SlotLayout, key: number, comps: number, shift: number): Float32Array {
   const f = L.first.get(key)!, c = L.count.get(key)!, s0 = src.srcs[0];
+  if (src.rowMap) {
+    const row = src.rowMap.get(key);
+    if (row && row.length >= c * comps) return row.subarray(0, c * comps);
+    if (scratch.length < c * comps) scratch = new Float32Array(Math.max(c * comps, scratch.length * 2));
+    return scratch.subarray(0, c * comps).fill(src.fillVal ?? 0);
+  }
   if (!src.pack && !src.shift && s0 instanceof Float32Array && src.per[0] === comps && (f + c) * comps <= s0.length) return s0.subarray(f * comps, (f + c) * comps);
   if (scratch.length < c * comps) scratch = new Float32Array(Math.max(c * comps, scratch.length * 2));
   const out = scratch.subarray(0, c * comps);
@@ -253,8 +267,24 @@ function stage(src: SlotSrc, L: SlotLayout, key: number, comps: number, shift: n
 }
 
 /** whether key `key`'s values differ between `k`'s last write and `src` under `L` (`xs`, `ys`: the sources' words) */
-function differs(k: SlotTex, src: SlotSrc, L: SlotLayout, key: number, shift: number, xs: (Uint32Array | null)[], ys: (Uint32Array | null)[]): boolean {
+function differs(k: SlotTex, src: SlotSrc, L: SlotLayout, key: number, shift: number, xs: (Uint32Array | null)[], ys: (Uint32Array | null)[], comps: number): boolean {
   const c = L.count.get(key)!, fo = k.layout.first.get(key)!, fn = L.first.get(key)!;
+  if (src.rowMap) {
+    if (!k.rowMap) return true;
+    const a = k.rowMap.get(key), b = src.rowMap.get(key);
+    if (a === b) return false;
+    const n = c * comps;
+    if (!a || !b) {
+      const v = src.fillVal ?? 0, x = a ?? b!;
+      if (x.length < n) return true;
+      for (let i = 0; i < n; i++) if (x[i] !== v) return true;
+      return false;
+    }
+    if (a.length < n || b.length < n) return true;
+    const xa = words(a), xb = words(b);
+    for (let i = 0; i < n; i++) if (xa[i] !== xb[i]) return true;
+    return false;
+  }
   const so = src.shift ? k.shift?.get(key) ?? 0 : 0;
   if (src.shift && so !== shift) {
     const a = k.srcs[0], b = src.srcs[0];
@@ -300,7 +330,8 @@ function upload(gl: WebGL2RenderingContext, kind: TexKind, width: number, a: num
  */
 export function putSlots(rnd: NetworkRenderer, k: SlotTex | null, kind: TexKind, width: number, L: SlotLayout, src: SlotSrc, named?: SlotNames | null): SlotTex {
   const gl = rnd.gl, comps = compsOf(kind);
-  if (k && rnd.keepGl && k.kind === kind && k.layout === L && !k.dirty && k.srcs.length === src.srcs.length && k.srcs.every((s, i) => s === src.srcs[i])) {
+  const sameSrc = src.rowMap ? k?.rowMap === src.rowMap : !k?.rowMap && k?.srcs.length === src.srcs.length && k.srcs.every((s, i) => s === src.srcs[i]);
+  if (k && rnd.keepGl && k.kind === kind && k.layout === L && !k.dirty && sameSrc) {
     k.wrote = new Set();
     k.compared = false;
     return k;
@@ -318,7 +349,7 @@ export function putSlots(rnd: NetworkRenderer, k: SlotTex | null, kind: TexKind,
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, FORMATS[kind][0], width, rows, 0, FORMATS[kind][1], gl.FLOAT, null);
     rnd.gpuBytes.alloc += width * rows * comps * 4;
-    k = { tex, kind, rows, layout: L, srcs: [], shift: null, dirty: null, wrote: "all" };
+    k = { tex, kind, rows, layout: L, srcs: [], rowMap: null, shift: null, dirty: null, wrote: "all" };
   }
   const t = k!;
   gl.bindTexture(gl.TEXTURE_2D, t.tex);
@@ -328,7 +359,7 @@ export function putSlots(rnd: NetworkRenderer, k: SlotTex | null, kind: TexKind,
     // (one upload of every slot: the source itself where it is the table as laid out)
     const s0 = src.srcs[0];
     let all: Float32Array;
-    if (L.packed && !src.pack && !src.shift && s0 instanceof Float32Array && src.per[0] === comps && s0.length >= L.end * comps) all = s0;
+    if (L.packed && !src.pack && !src.shift && !src.rowMap && s0 instanceof Float32Array && src.per[0] === comps && s0.length >= L.end * comps) all = s0;
     else {
       all = new Float32Array(L.end * comps);
       for (const [key, a] of L.at) {
@@ -342,13 +373,13 @@ export function putSlots(rnd: NetworkRenderer, k: SlotTex | null, kind: TexKind,
     t.compared = false;
   } else {
     const wrote = new Set<number>();
-    const listed = named && named.from.length === t.srcs.length && named.from.every((v, i) => v === t.srcs[i]) ? named.keys : null;
+    const listed = named && (named.fromRowMap ? named.fromRowMap === t.rowMap : !t.rowMap && named.from.length === t.srcs.length && named.from.every((v, i) => v === t.srcs[i])) ? named.keys : null;
     t.compared = !listed;
-    const xs = listed ? [] : t.srcs.map((v) => (v ? words(v) : null)), ys = listed ? [] : src.srcs.map((v) => (v ? words(v) : null));
+    const xs = listed || src.rowMap ? [] : t.srcs.map((v) => (v ? words(v) : null)), ys = listed || src.rowMap ? [] : src.srcs.map((v) => (v ? words(v) : null));
     for (const [key, a] of L.at) {
       const s = src.shift ? src.shift(key) : 0;
       shifts?.set(key, s);
-      if (t.layout.at.get(key) === a && t.layout.count.get(key) === L.count.get(key) && !t.dirty?.has(key) && (listed ? !listed.has(key) : !differs(t, src, L, key, s, xs, ys))) continue;
+      if (t.layout.at.get(key) === a && t.layout.count.get(key) === L.count.get(key) && !t.dirty?.has(key) && (listed ? !listed.has(key) : !differs(t, src, L, key, s, xs, ys, comps))) continue;
       upload(gl, kind, width, a, L.count.get(key)!, stage(src, L, key, comps, s), 0);
       wrote.add(key);
     }
@@ -356,6 +387,7 @@ export function putSlots(rnd: NetworkRenderer, k: SlotTex | null, kind: TexKind,
   }
   t.layout = L;
   t.srcs = src.srcs;
+  t.rowMap = src.rowMap ?? null;
   t.shift = shifts;
   t.dirty = null;
   return t;

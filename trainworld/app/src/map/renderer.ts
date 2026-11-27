@@ -270,57 +270,13 @@ export class NetworkRenderer {
     }
     return -1;
   }
-  reachOf: { net: NetworkBuffers; r: Float32Array; halfWidth: number } | null = null;
+  reachOf: StationReach | null = null;
   /** Per station, local units from its node to the farthest point of its platform's centre line,
    * and the widest true half width of any (stationAt's skip, T-724); worked out when first asked
    * for, a few ms where scanning every station's shape cost Japan's network 100 ms a move (T-1020). */
   stationReachNow(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
     if (this.reachOf?.net === n) return this.reachOf;
-    return timed("station.reach", () => this.reachNow(n));
-  }
-  private reachNow(n: NetworkBuffers): { r: Float32Array; halfWidth: number } {
-    const r = new Float32Array(n.stationCount), s = n.stationShape;
-    let halfWidth = 0;
-    // T-4284: a station whose platform is as it was in the network last asked keeps its reach there
-    const p = this.reachOf, P2 = 2 * PLATFORM_POINTS, was = p?.net;
-    const bits = (a?: Float32Array) => (a ? new Int32Array(a.buffer, a.byteOffset, a.length) : null);
-    const ws = bits(was?.stationShape), ns = bits(s), wa = bits(was?.stationAxis), na = bits(n.stationAxis), wl = bits(was?.stationLine), nl = bits(n.stationLine);
-    const sameRun = (x: Int32Array | null, y: Int32Array | null, j: number, i: number, k: number) => {
-      if (!x || !y) return x === y;
-      if ((j + 1) * k > x.length || (i + 1) * k > y.length) return false;
-      for (let c = 0; c < k; c++) if (x[j * k + c] !== y[i * k + c]) return false;
-      return true;
-    };
-    const sameAt = (j: number, i: number) => sameRun(ws, ns, j, i, 4) && sameRun(wa, na, j, i, 2) && sameRun(wl, nl, j, i, P2);
-    // (a station's place there: its own, one up or down from where the last one was, else by id)
-    let shift = 0;
-    const wIds = was?.stationIds;
-    const placeOf = (i: number) => {
-      const id = n.stationIds[i];
-      if (wIds![i + shift] === id) return i + shift;
-      if (wIds![i + shift + 1] === id) return i + ++shift;
-      if (wIds![i + shift - 1] === id) return i + --shift;
-      const j = stationIndexOf(was!, id);
-      if (j >= 0) shift = j - i;
-      return j;
-    };
-    for (let i = 0; i < n.stationCount; i++) {
-      halfWidth = Math.max(halfWidth, s?.[i * 4 + 3] ?? 0);
-      const j = was ? placeOf(i) : -1;
-      if (j >= 0 && sameAt(j, i)) { r[i] = p!.r[j]; continue; }
-      const sh = platformShapeAt(n, i);
-      const q = platformPoints(sh);
-      let m = Math.hypot(sh.mx, sh.my) + Math.hypot(sh.ax, sh.ay);
-      for (let j = 0; j + 1 < q.length; j += 2) m = Math.max(m, Math.hypot(q[j], q[j + 1]));
-      r[i] = m;
-    }
-    if (was && (this.checkPatch || checkPatches())) timed("dev.check.reach", () => {
-      this.reachOf = null;
-      const whole = this.reachNow(n).r;
-      if (!sameWords(whole, r)) console.error("T-4284 check: the stations' reach kept from the last network differs from a whole build");
-    });
-    this.reachOf = { net: n, r, halfWidth };
-    return this.reachOf;
+    return timed("station.reach", () => (this.reachOf = stationReachStep(n, this.reachOf, this.checkPatch || checkPatches())));
   }
   /** The selected stations drawn, by index: the selected one, or its complex in complex view. */
   selectedDrawn(): number[] {
@@ -654,8 +610,8 @@ export class NetworkRenderer {
     }
     ts = stepSince("layers.set.lane", ts);
     if (wmulChanged || !this.keepGl) this.perSegV++;
-    // T-4284: only the rows whose fill changed are written, when the last fill put is the one they changed from
-    const fc = l?.fillChanged, named = fc && this.fillSrc === fc.from ? { keys: fc.keys, from: [fc.from] } : null;
+    // T-4284, T-4314: only the rows whose fill changed are written, when the last fill put is the one they changed from
+    const fc = l?.fillChanged, named = fc && this.fillSrc === fc.from ? { keys: fc.keys, from: [], fromRowMap: fc.from } : null;
     this.fillSrc = l ? l.fill : null;
     this.putTrain("fill", n, named);
     stepSince("layers.set.fill", ts);
@@ -879,6 +835,11 @@ export class NetworkRenderer {
         line.set(platformPoints(platformShapeAt(n, i, false)), i * P2);
       n.stationLine = line;
     }
+    // T-4314: keep `reachOf` chained across edits once asked for, so it stays patched even between hovers
+    if (this.reachOf) {
+      if (n.patch?.stations && this.reachOf.net.serial === n.patch.base) timed("station.reach", () => (this.reachOf = stationReachStep(n, this.reachOf, this.checkPatch || checkPatches())));
+      else this.reachOf = null;
+    }
     put("stationLine", "stationLine", () => [n.stationLine!.length ? n.stationLine! : new Float32Array(2), "rg32f", TEX_W]);
     attrib(this, this.stationProg, "a_shape", this.stationShapeBuf, 4, gl.FLOAT, 1);
     this.stationSelBuf = buffer(this, new Float32Array(Math.max(1, n.stationCount)));
@@ -1056,7 +1017,7 @@ export class NetworkRenderer {
   trainMs = 0;
   layersMs = 0;
   /** the demand views' fill last given (`setLayers`), null: blank */
-  private fillSrc: Float32Array | null = null;
+  private fillSrc: ReadonlyMap<number, Float32Array> | null = null;
   private stretchFor: { n: NetworkBuffers; v: Float32Array } | null = null;
 
   private planPhases(meta: Float32Array): SlotLayout {
@@ -1076,7 +1037,7 @@ export class NetworkRenderer {
         const lane = n.sampleLane?.length ? n.sampleLane : undefined, band = this.trafficBands?.sample ?? n.sampleBand, pass = n.samplePass;
         return ["rgba32f", S, { srcs: [lane, band, pass], per: [1, 2, 1], pack: (out, f, c) => packLane(out, f, c, lane, band, pass) }];
       }
-      case "fill": return ["rg32f", S, { srcs: [this.fillSrc ?? this.blankFill(Math.max(1, n.samples.length / 2))], per: [2] }];
+      case "fill": return ["rg32f", S, { srcs: [], per: [2], rowMap: this.fillSrc ?? EMPTY_FILL_ROWS, fillVal: -1 }];
       case "slevel": return ["r32f", S, { srcs: [this.sampleLv ?? undefined], per: [1] }];
     }
   }
@@ -1670,4 +1631,98 @@ function writeWmul(rnd: NetworkRenderer, v: StrokeVao, wm: Float32Array | null):
   for (let i = 0; i + 1 < rows.length; i += 2) writeSegRange(rnd, v, wm, 3, rows[i] * WMUL_ROW, Math.min(v.count, (rows[i] + rows[i + 1]) * WMUL_ROW) - rows[i] * WMUL_ROW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
   return true;
+}
+
+const EMPTY_FILL_ROWS: ReadonlyMap<number, Float32Array> = new Map();
+
+export interface StationReach { net: NetworkBuffers; r: Float32Array; halfWidth: number; maxHwAt: number }
+
+/** T-4314: work counters for the stations' reach pass (last call and totals) */
+export const reachWork = { calls: 0, patched: 0, whole: 0, lastStations: 0, stations: 0 };
+
+/** `?reachTest=drop` (checks): skips the first named station in `patch.stations.changed`, which `?patch=check` must catch */
+export const reachTest = { drop: typeof location !== "undefined" && new URLSearchParams(location.search).get("reachTest") === "drop" };
+
+function stationReachAt(n: NetworkBuffers, i: number): number {
+  const sh = platformShapeAt(n, i);
+  const q = platformPoints(sh);
+  let m = Math.hypot(sh.mx, sh.my) + Math.hypot(sh.ax, sh.ay);
+  for (let j = 0; j + 1 < q.length; j += 2) m = Math.max(m, Math.hypot(q[j], q[j + 1]));
+  return m;
+}
+
+function stationReachWhole(n: NetworkBuffers): StationReach {
+  const r = new Float32Array(n.stationCount), s = n.stationShape;
+  let halfWidth = 0, maxHwAt = -1;
+  for (let i = 0; i < n.stationCount; i++) {
+    const hw = s?.[i * 4 + 3] ?? 0;
+    if (hw > halfWidth) { halfWidth = hw; maxHwAt = i; }
+    r[i] = stationReachAt(n, i);
+  }
+  return { net: n, r, halfWidth, maxHwAt };
+}
+
+/** T-4314: stations' reach for `n`, patched from `prev` using `n.patch.stations` (touching only the named stations)
+ * when `prev` is `n.patch.base`, else built whole; under `check`, compared against a fresh whole build. */
+export function stationReachStep(n: NetworkBuffers, prev: StationReach | null, check: boolean): StationReach {
+  const sp = prev && n.patch?.stations && prev.net.serial === n.patch.base ? n.patch.stations : null;
+  let out: StationReach;
+  let touched = 0;
+  if (sp) {
+    const s = n.stationShape;
+    const changed = reachTest.drop && sp.changed.length ? sp.changed.slice(1) : sp.changed;
+    let r: Float32Array;
+    let halfWidth = 0, maxHwAt = -1;
+    if (sp.runs === null && changed.length === 0) {
+      r = prev!.r;
+      halfWidth = prev!.halfWidth;
+      maxHwAt = prev!.maxHwAt;
+    } else {
+      if (sp.runs === null) {
+        r = prev!.r.slice();
+        if (prev!.maxHwAt >= 0 && !changed.includes(prev!.maxHwAt)) {
+          halfWidth = prev!.halfWidth;
+          maxHwAt = prev!.maxHwAt;
+        }
+      } else {
+        r = new Float32Array(n.stationCount);
+        for (let k = 0; k + 2 < sp.runs.length; k += 3) {
+          const i0 = sp.runs[k], j0 = sp.runs[k + 1], count = sp.runs[k + 2];
+          r.set(prev!.r.subarray(j0, j0 + count), i0);
+          if (maxHwAt < 0 && prev!.maxHwAt >= j0 && prev!.maxHwAt < j0 + count) {
+            halfWidth = prev!.halfWidth;
+            maxHwAt = i0 + (prev!.maxHwAt - j0);
+          }
+        }
+      }
+      for (const i of changed) {
+        r[i] = stationReachAt(n, i);
+        touched++;
+        if (maxHwAt >= 0) {
+          const hw = s?.[i * 4 + 3] ?? 0;
+          if (hw > halfWidth) { halfWidth = hw; maxHwAt = i; }
+        }
+      }
+      if (maxHwAt < 0 && n.stationCount > 0) {
+        for (let i = 0; i < n.stationCount; i++) {
+          const hw = s?.[i * 4 + 3] ?? 0;
+          if (hw > halfWidth) { halfWidth = hw; maxHwAt = i; }
+        }
+      }
+    }
+    out = { net: n, r, halfWidth, maxHwAt };
+    reachWork.patched++;
+    if (check) timed("dev.check.reach", () => {
+      const whole = stationReachWhole(n);
+      if (!sameWords(whole.r, r) || whole.halfWidth !== halfWidth) console.error("T-4314 check: the stations' reach patched from the last network differs from a whole build");
+    });
+  } else {
+    out = stationReachWhole(n);
+    touched = n.stationCount;
+    reachWork.whole++;
+  }
+  reachWork.calls++;
+  reachWork.lastStations = touched;
+  reachWork.stations += touched;
+  return out;
 }

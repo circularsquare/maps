@@ -266,14 +266,14 @@ export interface NetworkLayers {
   /** per line stroke segment: width multiple */
   lineWidth: Float32Array;
   /** per train sample: how full run 0's and run 1's trains are (2 each: 0-1 of the gauge, 2 over
-   * full, -1 not known) */
-  fill: Float32Array;
+   * full, -1 not known), keyed by line table row (`trainSlots.ts` `rowKey`, T-4314) */
+  fill: ReadonlyMap<number, Float32Array>;
   /** the widths are the riders' (the traffic view) */
   traffic?: boolean;
   /** the traffic view's bands side by side (T-1799 stage 2), null where no track is shared */
   bands?: TrafficBands | null;
   /** T-4284: every width 1 and no bands (the plain drawing's widths) */
   plain?: boolean;
-  /** T-4284: `fill` differs from `from` (the last layers' fill) only in the line table's rows `keys` (trainSlots.ts `rowKey`) */
-  fillChanged?: { from: Float32Array; keys: ReadonlySet<number> };
+  /** T-4284, T-4314: `fill` differs from `from` (the last layers' fill) only in the line table's rows `keys` (`rowKey`) */
+  fillChanged?: { from: ReadonlyMap<number, Float32Array>; keys: ReadonlySet<number> };
 }

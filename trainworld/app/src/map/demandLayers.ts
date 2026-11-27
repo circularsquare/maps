@@ -79,9 +79,9 @@ function stretchDay(dv: DemandView | null, lineId: string, stops: readonly strin
  * filter's purpose only) and the two runs' gauges in the period in force (everyone aboard); absent
  * when demand has no answer for it that fits its stops. */
 type LineNums = { perDay: Float32Array; g0: Float32Array | null; g1: Float32Array | null };
-/** T-4284: each line's numbers and busiest stretch-day, kept per demand view while what they are made from is the same (its
- * row, its figures, the period, the purpose shown): an edit makes again only the lines it changed */
-const numsKept = new WeakMap<DemandView, PerRecord<string, LineNums | null>>();
+/** T-4284, T-4314: each line's numbers kept while what they are made from is the same (its row, its demand figures, the
+ * period, the purpose shown): an edit or a trips landing makes again only the lines that changed */
+const numsKept = new PerRecord<string, LineNums | null>();
 const busiestKept = new WeakMap<DemandView, PerRecord<string, number>>();
 const keptOf = <V>(by: WeakMap<DemandView, PerRecord<string, V>>, dv: DemandView): PerRecord<string, V> => by.get(dv) ?? by.set(dv, new PerRecord()).get(dv)!;
 
@@ -92,19 +92,20 @@ function lineNumbers(w: WorldView, dv: DemandView | null, period: number, purpos
   if (!dv) return out;
   const P = PERIODS[period];
   const hours = P.to - P.from;
-  const kept = keptOf(numsKept, dv);
-  kept.trim(w.save.lines.length);
+  numsKept.trim(w.save.lines.length);
+  const factor = dv.peakHourFactor[period] ?? 1;
+  const pLines = purpose === "all" ? undefined : dv.purposes?.get(purpose)?.lines;
   for (const l of w.save.lines) {
     const st = w.lineStats[l.id];
-    const v = kept.get(l.id, [l, st, period, purpose, key], (): LineNums | null => {
-      const dm = dv.lines.get(l.id);
+    const dm = dv.lines.get(l.id);
+    const pm = pLines?.get(l.id);
+    const v = numsKept.get(l.id, [l, st, dm, pm, factor, period, purpose, key], (): LineNums | null => {
       const n = l.stops.length;
       const loads = dm?.loads[period];
       const perDay = stretchDay(dv, l.id, l.stops, purpose, key);
       if (!st || st.status !== "running" || !perDay || n < 2) return null;
       if (!loads || loads.length !== 2 * (n - 1)) return { perDay, g0: null, g1: null };
       const trains = l.tphP[period] * hours;
-      const factor = dv.peakHourFactor[period] ?? 1;
       const g0 = new Float32Array(n - 1), g1 = new Float32Array(n - 1);
       for (let k = 0; k < n - 1; k++) {
         const a = loads[k], b = loads[n - 1 + (n - 2 - k)];
@@ -154,8 +155,19 @@ export function busWidths(w: WorldView, dv: DemandView | null, on: LayerSwitches
   return out;
 }
 
-/** the last layers built: their network, line numbers, fill and pending lines, and the period (T-4284) */
-let lastLayers: { net: NetworkBuffers; nums: Map<number, LineNums>; fill: Float32Array; period: number; pending: Set<number> } | null = null;
+/** T-4314: two lines' train gauges bit for bit (so a trips landing keeps rows whose gauges did not move) */
+function sameGauges(a: LineNums | undefined, b: LineNums | undefined): boolean {
+  if (a === b) return true;
+  if (!a?.g0 && !b?.g0) return true;
+  if (!a?.g0 || !b?.g0 || !a.g1 || !b.g1) return false;
+  return sameWords(a.g0, b.g0) && sameWords(a.g1, b.g1);
+}
+
+/** T-4314: work counters for the trains' fill pass (last call and totals) */
+export const fillWork = { calls: 0, patched: 0, whole: 0, lastRows: 0, lastSamples: 0, rows: 0, samples: 0 };
+
+/** the last layers built: their network, line numbers, per-row fill and pending lines, and the period (T-4284, T-4314) */
+let lastLayers: { net: NetworkBuffers; nums: Map<number, LineNums>; fill: Map<number, Float32Array>; period: number; pending: Set<number> } | null = null;
 let plainArr: Float32Array | null = null;
 const plainWidths = (n: number) => (plainArr?.length === n ? plainArr : (plainArr = new Float32Array(n).fill(1)));
 
@@ -163,7 +175,6 @@ const plainWidths = (n: number) => (plainArr?.length === n ? plainArr : (plainAr
 export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | null, period: number, on: LayerSwitches): NetworkLayers {
   const L = net.lines;
   const nSeg = L.count;
-  const nSamples = net.samples.length / 2;
   const fresh = freshNow();
   let t = import.meta.env.DEV ? performance.now() : 0;
   const nums = lineNumbers(w, dv, period, on.purpose, on.stopKey);
@@ -199,60 +210,81 @@ export function buildLayers(net: NetworkBuffers, w: WorldView, dv: DemandView | 
   const bands = on.lineLoad ? trafficBands(L, lineWidth, net.samples, net.sampleStroke, net.corridor) : null;
   t = stepSince("layers.bands", t);
 
-  // the trains: gauges per sample; PENDING for a running line demand has no figures for yet
-  // (T-324: drawn striped, never like a full train)
-  const fill = new Float32Array(nSamples * 2).fill(-1);
+  // the trains: gauges per sample, kept per line table row (`rowKey`, T-4314); PENDING for a running line demand has no
+  // figures for yet (T-324: drawn striped, never like a full train)
   const strokeOf = net.sampleStroke;
   const pending = new Set<number>();
   if (!loadFailure.peek() && !tripsOff.peek()) for (const l of w.save.lines) if (w.lineStats[l.id]?.status === "running" && l.stops.length >= 2 && !nums.get(l.num)?.g0) pending.add(l.num);
-  const fillSamples = (k0: number, k1: number, fill: Float32Array) => {
+  const fillRow = (first: number, c: number): Float32Array => {
+    const out = new Float32Array(c * 2).fill(-1);
+    if (!strokeOf || !stretchOf) return out;
     let lastLine = -1;
     let v: ReturnType<typeof nums.get>;
-    if (strokeOf && stretchOf)
-      for (let k = k0; k < k1; k++) {
-        const i = strokeOf[k];
-        if (i < 0) continue;
-        if (L.colour[i] !== lastLine) {
-          lastLine = L.colour[i];
-          v = nums.get(lastLine);
-        }
-        if (!v?.g0 || !v.g1) {
-          if (pending.has(lastLine)) fill[k * 2] = fill[k * 2 + 1] = PENDING;
-          continue;
-        }
-        const s = stretchOf[i];
-        fill[k * 2] = v.g0[s] ?? -1;
-        fill[k * 2 + 1] = v.g1[s] ?? -1;
+    for (let j = 0; j < c; j++) {
+      const i = strokeOf[first + j];
+      if (i < 0) continue;
+      if (L.colour[i] !== lastLine) {
+        lastLine = L.colour[i];
+        v = nums.get(lastLine);
       }
+      if (!v?.g0 || !v.g1) {
+        if (pending.has(lastLine)) out[j * 2] = out[j * 2 + 1] = PENDING;
+        continue;
+      }
+      const s = stretchOf[i];
+      out[j * 2] = v.g0[s] ?? -1;
+      out[j * 2 + 1] = v.g1[s] ?? -1;
+    }
+    return out;
   };
-  // T-4284: a line table row whose line has the numbers, pending mark and samples' stretches it had in the last layers keeps
-  // their fill there; the others are filled again (an edit: its lines; new trips: every line)
+  // T-4284, T-4314: each line table row keeps its own `Float32Array` while its stretches (`patch.stretches`), gauges and
+  // pending mark stay; unchanged rows are neither allocated nor copied (edits: their lines; trips landing: lines whose gauges moved)
+  const T = net.lineTable, base = backBaseOf(T, net.meta);
   const was = !fresh && lastLayers && lastLayers.period === period && (lastLayers.net === net || (!!net.patch && lastLayers.net.serial === net.patch.base)) ? lastLayers : null;
+  let fill = new Map<number, Float32Array>();
   let fillChanged: NetworkLayers["fillChanged"];
+  let rowsTouched = 0, samplesTouched = 0;
   if (was && strokeOf && stretchOf) {
-    const keys = new Set<number>(), T = net.lineTable, base = backBaseOf(T, net.meta);
+    const keys = new Set<number>();
     const P = was.net.lineTable, pBase = backBaseOf(P, was.net.meta);
     const moved = was.net === net ? null : new Set(net.patch!.stretches);
-    let covered = 0;
     for (let r = 0; r * 4 + 1 < T.length; r++) {
       const first = T[r * 4], c = T[r * 4 + 1];
       if (!(c > 0)) continue;
-      covered += c;
       const key = rowKey(r, base), line = key >> 1;
-      // (the row of that key in the last network's table)
       const pr = key & 1 ? (pBase > 0 ? pBase + line : -1) : line;
-      const same = pr >= 0 && pr * 4 + 1 < P.length && P[pr * 4 + 1] === c && !moved?.has(line) && was.nums.get(line) === nums.get(line) && was.pending.has(line) === pending.has(line);
-      if (same) fill.set(was.fill.subarray(P[pr * 4] * 2, (P[pr * 4] + c) * 2), first * 2);
-      else { fillSamples(first, first + c, fill); keys.add(key); }
+      const prev = was.fill.get(key);
+      const same = !!prev && pr >= 0 && pr * 4 + 1 < P.length && P[pr * 4 + 1] === c && !moved?.has(line) && sameGauges(was.nums.get(line), nums.get(line)) && was.pending.has(line) === pending.has(line);
+      if (same) fill.set(key, prev);
+      else { fill.set(key, fillRow(first, c)); keys.add(key); rowsTouched++; samplesTouched += c; }
     }
-    // (samples in no row: as a whole fill would have them)
-    if (covered !== nSamples) { fill.fill(-1); fillSamples(0, nSamples, fill); }
-    else fillChanged = { from: was.fill, keys };
-  } else fillSamples(0, nSamples, fill);
-  if (import.meta.env.DEV && was && checkPatches()) timed("dev.check.fill", () => {
-    const whole = new Float32Array(nSamples * 2).fill(-1);
-    fillSamples(0, nSamples, whole);
-    if (!sameWords(whole, fill)) console.error("T-4284 check: the trains' fill kept per line row differs from a whole build");
+    if (keys.size === 0 && fill.size === was.fill.size) fill = was.fill;
+    fillChanged = { from: was.fill, keys };
+    fillWork.patched++;
+  } else {
+    for (let r = 0; r * 4 + 1 < T.length; r++) {
+      const first = T[r * 4], c = T[r * 4 + 1];
+      if (!(c > 0)) continue;
+      fill.set(rowKey(r, base), fillRow(first, c));
+      rowsTouched++;
+      samplesTouched += c;
+    }
+    fillWork.whole++;
+  }
+  fillWork.calls++;
+  fillWork.lastRows = rowsTouched;
+  fillWork.lastSamples = samplesTouched;
+  fillWork.rows += rowsTouched;
+  fillWork.samples += samplesTouched;
+  if (was && checkPatches()) timed("dev.check.fill", () => {
+    const whole = new Map<number, Float32Array>();
+    for (let r = 0; r * 4 + 1 < T.length; r++) {
+      const first = T[r * 4], c = T[r * 4 + 1];
+      if (c > 0) whole.set(rowKey(r, base), fillRow(first, c));
+    }
+    let bad = whole.size !== fill.size;
+    if (!bad) for (const [k, a] of whole) { const b = fill.get(k); if (!b || !sameWords(a, b)) { bad = true; break; } }
+    if (bad) console.error("T-4314 check: the trains' fill kept per line row differs from a whole build");
   });
   if (!fresh) lastLayers = { net, nums, fill, period, pending };
   stepSince("layers.fill", t);
