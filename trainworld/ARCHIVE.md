@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (2026-11-27): Edits during a whole re-solve get a quick result from a side worker; on Asia (Auto cores) a Yamanote edit showed in 25 s against the main pool's 299 s estimate, 89 lines within 0.1% of the final; review24's four findings fixed.
 - T-4427 [P3] {L:cleanup} No other games named in research and notes (2026-11-27): Game names taken out of research/, notes/ (archive and T-3444-design too) and ARCHIVE-to-2026-10-19.md: 72 .md files, three research files renamed (rail-game-study, track-drawing-study, performance-big-sims) with links fixed repo-wide; names became plain descriptions, quoted text [another game], game-site links dropped. notes/T-4427.md.
 - T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save (2026-11-27): Design redone on today's code: 23 steps from click to trip figures with Asia costs, 31 one-hour stages (7 in filed tasks), two lies and two things not edit-sized without one; Gemini checked claim by claim; her three calls in the summary. notes/T-4267.md.
 - T-4428 [P2] {L:checks} A guard that keeps the orchestrator from doing agents' work (2026-11-27): Hook refuses an orchestrator's edits to app/sim/pipeline/checks code and reminds it past 40k characters of tool output; fails open; notes/T-4428.md.

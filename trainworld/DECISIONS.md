@@ -55,7 +55,7 @@ artifacts/trainworld/T-4120/.
 
 ## Lines and scheduling
 - 2026-11-27 (T-4374): Deleting a station a line stops at takes the stop out as a stop edit does (a loop closes again on its new first stop). Where the line cannot run without it, the delete is refused as the station in use. notes/T-4374.md
-- 2026-11-24 (Anita, T-4220): Edits made during a whole re-solve get quick figures from a second worker that re-solves only the touched cities against the figures on screen (lie: up to about 4.5 min on Asia); off on phones and short memory. notes/T-4220.md
+- 2026-11-27 (Anita, T-4220): An edit made during a whole re-solve shows its touched cities' quick result from a second worker, solved against the figures on screen, until the whole result replaces it. Asia's lines within 0.1% (worst -0.06%); off on phones and short memory. notes/T-4220.md
 - 2026-11-24 (Anita, T-4239): The train-count settle need not be exact. A line circling across a jump in its round trip (passing-track waits, following loss) is held: counts where its fleet falls short (lie: up to 3% more trains an hour than it runs), headways under one train spare. notes/T-4239.md
 - 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
 - 2026-11-24 (, T-4223): A loop's closing hop carries on round however long when the quickest way in turns back on the way (back over the line's own track, no loop); `CARRY_SLACK_S` (300 s) still keeps a balloon from running a long way round to avoid its turn. notes/T-4223.md

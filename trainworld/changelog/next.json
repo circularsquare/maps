@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c020",
+      "text": "edits made while trips are calculated show up sooner on big saves",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4220",
+      "by": "solve9",
+      "at": "2026-11-27T23:48:25Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c019",
       "text": "fixed edits made while the game loads being lost when the load fails and you try again",
       "edited": "fixed edits made during a load being lost when the load failed",
