@@ -13,8 +13,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
 3. The redraws3 job (T-4364, T-4365, report r-b2d0784b): her yes to all but Poland, Mansoura and Chiayi/Tainan
    included (notes/T-4364/answer-1126.txt). IL, DE, IN, MX, NO joined. China stopped twice on gates (sih, zhu: origins
-   off their land); redraws4 fixed plan_edit's moved_origin, restarted 23:00 UTC from cn.w3 (PID 7904); run log silent
-   since (my tail -F blocked it; watch redraws3.state). Commit after: both kits' plan_edit.py, t4364-cn-{sih,zhu}-
+   off their land); redraws4 fixed plan_edit's moved_origin; CN+MO joined. Stopped 00:58 UTC at us.w1 (bos stations:
+   no station cache for Massachusetts): redraws4 on it. Run log silent since 23:00 (watch redraws3.state, not tail -F). Commit after: both kits' plan_edit.py, t4364-cn-{sih,zhu}-
    origin.json, redraws3-cnw*.cmd. It owns data/packs and app/src/game json: 8800 and smoke wait (freeze 11-22 too
    old). After the job, rerun IL's join (its seams step failed under -I; fixed 4a02b06d4). Macau-Zhuhai: 0.05.
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
