@@ -135,6 +135,13 @@ footer { margin-top: 36px; color: var(--faint); font-size: 12px; }
   <div id="langs"></div>
   <div class="sub" id="langnote" style="margin-top:8px"></div>
 
+  <h2>Failures</h2>
+  <div class="toggles">
+    <div class="seg" data-k="crashspan"><button data-v="1">Today</button><button data-v="7" class="on">7 days</button><button data-v="all">All</button></div>
+  </div>
+  <table id="crashes"></table>
+  <div class="sub" id="crashnote" style="margin-top:8px"></div>
+
   <footer>Data from <span id="src"></span>, refreshed every 30 s. <span id="upd"></span> <a href="#" id="forget">Forget key</a></footer>
   </div>
 </main>
@@ -185,7 +192,7 @@ function renderNow(data) {
 let CITY = {};
 const regionNames = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) { return null; } })();
 const countryName = (code) => { try { return regionNames.of(code); } catch (e) { return code; } };
-const view = { weight: "minutes", group: "city", pgroup: "city" };
+const view = { weight: "minutes", group: "city", pgroup: "city", crashspan: "7" };
 const expanded = { Today: false, All: false, PToday: false, PAll: false };
 const SHORT = 10, LONG = 40;
 
@@ -250,8 +257,32 @@ for (const seg of document.querySelectorAll(".seg[data-k]")) {
     const b = ev.target.closest("button"); if (!b || !lastData) return;
     view[seg.dataset.k] = b.dataset.v;
     for (const x of document.querySelectorAll(`.seg[data-k="${seg.dataset.k}"] button`)) x.classList.toggle("on", x.dataset.v === b.dataset.v);
-    renderCities(lastData); renderLangs(lastData); renderPlayed(lastData);
+    renderCities(lastData); renderLangs(lastData); renderPlayed(lastData); renderCrashes(lastData);
   });
+}
+
+// ---- failures: the game's failure screens, counted by build, device and the error's first line (T-4409).
+// The line comes from players' pages, so it is only ever set as text.
+const CRASH_ROWS = 30;
+function renderCrashes(data) {
+  const rows = data.crashes;
+  const t = $("crashes"); t.textContent = "";
+  if (!rows) { $("crashnote").textContent = "Not deployed yet. The server counts failures from the next deploy, and the game sends them from its next build."; return; }
+  const span = view.crashspan, cut = span === "all" ? "" : new Date(Date.now() - (Number(span) - 1) * 864e5).toISOString().slice(0, 10);
+  const by = new Map();
+  for (const r of rows) {
+    if (r.day < cut) continue;
+    const k = [r.v, r.device, r.line].join("\x00");
+    by.set(k, (by.get(k) || 0) + r.count);
+  }
+  const list = [...by].map(([k, n]) => ({ n, parts: k.split("\x00") })).sort((a, b) => b.n - a.n || (a.parts[2] < b.parts[2] ? -1 : 1));
+  if (!list.length) { t.innerHTML = "<tr><td>none</td><td></td></tr>"; $("crashnote").textContent = ""; return; }
+  for (const { n, parts } of list.slice(0, CRASH_ROWS)) {
+    const tr = t.insertRow();
+    for (const v of [fmt(n), parts[0], parts[1], parts[2]]) tr.insertCell().textContent = v;
+  }
+  const total = list.reduce((s, x) => s + x.n, 0);
+  $("crashnote").textContent = `${fmt(total)} failures: count, build, device, the error's first line with numbers and paths removed.` + (list.length > CRASH_ROWS ? ` The top ${CRASH_ROWS} of ${list.length}.` : "");
 }
 
 // ---- browser language: the primary subtag groups pt-BR and pt-PT; the full tags are in the hover
@@ -579,7 +610,7 @@ async function load() {
     if (!r.ok) throw new Error("HTTP " + r.status);
     const data = await r.json();
     $("err").textContent = "";
-    lastData = data; renderNow(data); renderCities(data); renderPlayed(data); renderLangs(data); renderPlaytime(data); renderDayHours(data); renderQuarters(data);
+    lastData = data; renderNow(data); renderCities(data); renderPlayed(data); renderLangs(data); renderCrashes(data); renderPlaytime(data); renderDayHours(data); renderQuarters(data);
     if (JSON.stringify(data.days) !== JSON.stringify(days)) { days = data.days; renderChart(days); }
     $("upd").textContent = "Updated " + new Date().toISOString().slice(11, 19) + " UTC.";
   } catch (e) {

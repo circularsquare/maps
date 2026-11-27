@@ -19,7 +19,7 @@ import { gameStartZone } from "./realms";
 import { activeCity } from "./cities";
 
 declare const __TW_BUILD__: string | undefined;
-const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "dev";
+export const BUILD = typeof __TW_BUILD__ === "string" ? __TW_BUILD__ : "dev";
 
 const PING_MS = 60_000;
 

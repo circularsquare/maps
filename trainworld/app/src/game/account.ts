@@ -22,6 +22,7 @@ import { incomeByDay, moneyState, moneyWorld } from "./money";
 import { dayProfit, dayProfitByRegion } from "./profitEstimate";
 import { pointsBeforeCover, pointsPerDay, scoreSettled } from "./points";
 import { startPlaytime } from "./playtime";
+import { startCrashCount } from "./crashCount";
 import { startGameTime } from "./gameTime";
 import { startAchievementCounts } from "./achievementCounts";
 import { onAccountGone, postAccount, saveSlotsState } from "../workers/clockClient";
@@ -39,7 +40,7 @@ export interface AccountView {
   pendingEmail: string;
 }
 interface Session { token: string; account: AccountView }
-export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; /** T-3326: how many screenshots a new feedback takes; absent or 0 on a server that drops them */ trainworldFeedbackImages?: number; trainworldPing?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean; trainworldCommunityPages?: boolean; /** T-3652: the list takes view=newest */ trainworldCommunityNewest?: boolean; trainworldFlags?: boolean; /** T-3807: PUT /trainworld/name */ trainworldRename?: boolean; /** T-3879: the `profit` board */ trainworldProfit?: boolean; /** T-3279: the flag list version the server accepts (game/flags.json `set`) */ trainworldFlagSet?: number }
+export interface AccountConfig { googleClientId: string; dev: boolean; password: boolean; signIn: boolean; trainworld?: boolean; trainworldGames?: boolean; trainworldFeedback?: boolean; trainworldFeedbackThreads?: boolean; /** T-3326: how many screenshots a new feedback takes; absent or 0 on a server that drops them */ trainworldFeedbackImages?: number; trainworldPing?: boolean; /** T-4409: POST /trainworld/crash */ trainworldCrash?: boolean; trainworldAchievements?: boolean; trainworldCommunity?: boolean; trainworldCommunityPreview?: boolean; trainworldCommunitySearch?: boolean; trainworldCommunityPages?: boolean; /** T-3652: the list takes view=newest */ trainworldCommunityNewest?: boolean; trainworldFlags?: boolean; /** T-3807: PUT /trainworld/name */ trainworldRename?: boolean; /** T-3879: the `profit` board */ trainworldProfit?: boolean; /** T-3279: the flag list version the server accepts (game/flags.json `set`) */ trainworldFlagSet?: number }
 export interface BoardSetting { on: boolean; name: string; /** set when a moderator hid the display name; absent on a server that does not say */ nameHidden?: boolean; /** T-3269: the flag beside the name, game/flags.ts */ flag?: string }
 export interface BoardRow { rank: number; name: string; value: number; flag?: string }
 export interface Board { board: string; count: number; rows: BoardRow[]; me?: BoardRow }
@@ -662,6 +663,8 @@ export function startAccount() {
     });
     // T-1771: plays and playtime, only against a server that says it takes them
     if (accountConfig.peek()?.trainworldPing) startPlaytime((p) => api("POST", "trainworld/ping", p));
+    // T-4409: failure counts, without the session
+    if (accountConfig.peek()?.trainworldCrash) startCrashCount((r) => api("POST", "trainworld/crash", r, { auth: false }));
     // T-3038: how many players have each achievement; sent without the session
     if (accountConfig.peek()?.trainworldAchievements) startAchievementCounts((method, path, body) => api(method, path, body, { auth: false }));
     if (accountState.peek() !== "on") { startFeedbackWatch(); return; }
