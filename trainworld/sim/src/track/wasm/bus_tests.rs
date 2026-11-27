@@ -333,6 +333,54 @@ fn a_by_hand_lines_first_stop_comes_out_and_goes_back() {
     assert!(!a.bus_first_off(b) && kinds(&a, b).first() == Some(&KIND_END));
 }
 
+/// T-4380: `first_off` clears on any edit that makes the start a stop again or leaves Manual (a redraw dropping
+/// all placed stops, a redraw into a loop, or switching to Auto/Spaced and back), so a later stop keeps the start.
+#[test]
+fn first_off_clears_when_start_is_a_stop_again_or_leaving_manual() {
+    let kinds = |a: &TrackApi, b: u32| stops(a, b).iter().map(|c| c[4] as u8).collect::<Vec<_>>();
+    let setup = || {
+        let mut a = api();
+        let b = a.new_line_id();
+        let route = [-500.0, 100.0, 1.0, 20_500.0, 100.0, 3.0];
+        assert_eq!(a.set_bus_line(b, &route, 480, 600, 1200, 30.0, 120.0, 0, "First".into()), 0, "{}", a.issues());
+        assert_eq!(a.set_bus_hand(b), 0);
+        assert_eq!(a.set_bus_stop(b, 9000.0, 100.0, true), 0);
+        assert_eq!(a.set_bus_stop(b, -500.0, 100.0, false), 0);
+        assert!(a.bus_first_off(b) && kinds(&a, b) == vec![KIND_MIDDLE, KIND_END]);
+        (a, b, route)
+    };
+    // 1. Redraw from the same start so all placed stops fall off: `first_off` clears, not saved, and a new stop keeps the start
+    let (mut a, b, _) = setup();
+    assert_eq!(a.set_bus_route(b, &[-500.0, 100.0, 1.0, 5000.0, 100.0, 3.0]), 0, "{}", a.issues());
+    assert!(!a.bus_first_off(b) && kinds(&a, b) == vec![KIND_END, KIND_END]);
+    assert!(!a.save().windows(4).any(|w| w == b"LAF1"));
+    assert_eq!(a.set_bus_stop(b, 2500.0, 100.0, true), 0, "{}", a.issues());
+    assert!(!a.bus_first_off(b) && kinds(&a, b) == vec![KIND_END, KIND_MIDDLE, KIND_END]);
+    // undoing both restores `first_off`
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.undo(), 0);
+    assert!(a.bus_first_off(b) && kinds(&a, b) == vec![KIND_MIDDLE, KIND_END]);
+
+    // 2. Redraw into a closed loop from the same start: `first_off` clears, not saved, and re-opening keeps the start
+    let (mut a, b, route) = setup();
+    let loop_route = [-500.0, 100.0, 1.0, 5000.0, 100.0, 1.0, 5000.0, 2000.0, 1.0, -500.0, 100.0, 1.0];
+    assert_eq!(a.set_bus_route(b, &loop_route), 0, "{}", a.issues());
+    assert!(!a.bus_first_off(b));
+    assert!(!a.save().windows(4).any(|w| w == b"LAF1"));
+    assert_eq!(a.set_bus_route(b, &route), 0, "{}", a.issues());
+    assert!(!a.bus_first_off(b) && kinds(&a, b).first() == Some(&KIND_END));
+
+    // 3. Switch Manual -> Auto -> Manual: leaving Manual clears `first_off` even when `hand_kept` is restored
+    let (mut a, b, _) = setup();
+    assert_eq!(a.set_bus_spacing(b, 0.0), 0, "{}", a.issues());
+    assert!(!a.bus_first_off(b));
+    assert_eq!(a.set_bus_hand(b), 0, "{}", a.issues());
+    assert!(!a.bus_first_off(b) && kinds(&a, b) == vec![KIND_END, KIND_MIDDLE, KIND_END]);
+    assert_eq!(a.undo(), 0);
+    assert_eq!(a.undo(), 0);
+    assert!(a.bus_first_off(b) && kinds(&a, b) == vec![KIND_MIDDLE, KIND_END]);
+}
+
 #[test]
 fn stops_by_hand_clear_the_automatic_ones_and_keep_through_undo_a_redraw_and_a_save() {
     let bits = |a: &TrackApi, b: u32| stops(a, b).iter().flatten().map(|v| v.to_bits()).collect::<Vec<_>>();

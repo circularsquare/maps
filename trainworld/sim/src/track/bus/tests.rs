@@ -364,3 +364,29 @@ fn a_cheaper_stop_comes_sooner_and_stands_its_cost() {
         assert!((plain.duration - cut.duration - 10.0).abs() < 1e-9, "{spaced}");
     }
 }
+
+/// T-4382: a BRT station between two train stations within `STATION_GAP_M` keeps its own stop while the two train
+/// stations still merge to the one nearer the route, in road order.
+#[test]
+fn a_brt_station_between_two_close_train_stations_does_not_stop_them_merging() {
+    use crate::track::net::{NodeData, StationData};
+    let make = |y1: f64, y2: f64| {
+        let mut net = Network::new(-73.985, 40.758, true);
+        let mut add = |x: f64, y: f64, road: Option<f64>| {
+            let n = net.alloc_node();
+            net.set_node(n, Some(NodeData { x, y, level: 0, flying: false })).unwrap();
+            net.set_station(n, Some(StationData { platform: 2, name: "S".into(), named: false, built: true, off: false, upgrades: 0, berth: None, day: 0, one: 0, fare: 0, own: String::new(), road })).unwrap();
+            n
+        };
+        let t1 = add(1000.0, y1, None);
+        let brt = add(1030.0, 10.0, Some(0.0));
+        let t2 = add(1060.0, y2, None);
+        let poly = Poly::new(&net, &[[0.0, 0.0], [2000.0, 0.0]], &[K_CORNER, K_CORNER | K_ROAD]);
+        let got: Vec<u32> = reach(&net, &poly, false, true).into_iter().map(|k| k.1).collect();
+        (t1, brt, t2, got)
+    };
+    let (_, brt, t2, got) = make(50.0, 20.0);
+    assert_eq!(got, vec![brt, t2], "nearer second train station wins and stays after BRT in road order");
+    let (t1, brt, _, got) = make(20.0, 50.0);
+    assert_eq!(got, vec![t1, brt], "nearer first train station wins and stays before BRT in road order");
+}

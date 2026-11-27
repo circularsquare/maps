@@ -1107,7 +1107,7 @@ fn build_bus(net: &Network, l: u32, r: &super::bus::BusRoute) -> LineSvc {
     let rev_street: Vec<f64> = plan.street.iter().rev().map(|s| len - s).collect();
     // T-4380: a by-hand line whose start is no stop still runs from it: the trip is worked out from the route's end (a point
     // that is no stop, `lead`), and the stops' own times are kept
-    let lead = matches!(r.rule(), super::bus::StopRule::Hand(_, _, true)) && !super::bus::is_closed(&r.points) && plan.stops[0].s > 0.0;
+    let lead = plan.first_off && plan.stops[0].s > 0.0;
     let make = |s: Vec<f64>, dw: &[f64], cut: &[f64], street: &[f64], pace: &super::bus::Pace, pre: bool, post: bool| {
         let (mut ps, mut pd, mut pc) = (s.clone(), dw.to_vec(), cut.to_vec());
         if pre {

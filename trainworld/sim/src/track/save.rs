@@ -1674,6 +1674,9 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             if let Some(Some(route)) = net.line_bus.get_mut(i).filter(|_| i < n_lines) {
                 route.first_off = true;
             }
+            if net.line_bus.get(i).and_then(|b| b.as_ref()).is_some_and(|r| !super::bus::first_off_ok(&net, i as u32, r)) {
+                net.line_bus[i].as_mut().unwrap().first_off = false;
+            }
         }
     }
     for l in manual {

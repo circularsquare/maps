@@ -331,6 +331,9 @@ impl Network {
                 self.line_weekend[i] = d.weekend;
                 self.line_twin[i] = if d.bus.is_some() || d.ferry.is_some() { Default::default() } else { d.twin };
                 self.line_bus[i] = d.bus;
+                if self.line_bus[i].as_ref().is_some_and(|r| r.first_off && !crate::track::bus::first_off_ok(self, id, r)) {
+                    self.line_bus[i].as_mut().unwrap().first_off = false;
+                }
                 self.line_ferry[i] = d.ferry;
                 // after its kind and twin, which decide its rows (`rows`)
                 self.line_tph[i] = self.places_in(i, places(d.tph, d.x.tph), 0.0);

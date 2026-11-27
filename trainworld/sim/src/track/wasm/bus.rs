@@ -219,9 +219,13 @@ impl TrackApi {
         }
         r.exact.retain(|p| hand.contains(p));
         r.hand = Some(hand);
+        let next = bus::plan_route(net, id, r, r.built);
+        if !on && r.first_off && !next.first_off {
+            return 0;
+        }
         // T-3123: compared stop by stop, as a loop's first placed stop takes the place of its stop at half its length
         let same = |a: &bus::Plan, b: &bus::Plan| a.stops.len() == b.stops.len() && a.stops.iter().zip(&b.stops).all(|(p, q)| p.s == q.s && p.station == q.station);
-        if same(&bus::plan_route(net, id, r, r.built), &plan) {
+        if same(&next, &plan) {
             return 0;
         }
         self.run(Op::Line { id, data: Some(d) })
