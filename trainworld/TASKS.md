@@ -258,6 +258,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
+- T-4410 [P2] {L:checks} Gemini agent reports and claims
+  - Context: 11-27: gemini_agent.py's reports carry every interim "Waiting for ..." line ahead of the answer, which the orchestrator reads in full; and its core claim returns at once when the cap is full ("waiting ... exit 0"), so four runs failed before starting.
+  - Goal: A report holds only the agent's final answer and the footer; a claim at the cap waits, as cores.py's --timeout intends.
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.

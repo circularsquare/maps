@@ -81,6 +81,21 @@ These come before everything below; the first two are her two top priorities (11
   -File trainworld/tools/ops/reserve_cores.ps1 -All -Loop 30` (one loop for every Claude session, later ones too; a second copy exits; its top comment says what it pins and what it leaves alone).
 - The cap: "Her standing calls" above.
 
+## Your own context
+
+maps-e0 (11-27) filled 500k in under two hours doing the agents' work itself (her note: "you were doing way too much
+work yourself and not delegating enough"). What filled it, and what to do instead:
+- **Whole files read to make a call**: Gemini reviews, agent notes, diffs, logs, resource reports. Read the verdict only
+  (`grep -nE "FAIL|PASS|^#{1,3} " <file>`, a report's first lines) and hand the path to the agent that acts on it.
+- **Reviewing diffs yourself.** The batch review is the review; a diff's file list (`git -c core.safecrlf=false diff
+  --stat`) is enough to spot a save-format or shared-file change.
+- **Long briefs.** Agents read TASKS.md, CLAUDE.md and the task's notes themselves. A brief is the budget row, the task
+  id, decisions the task doesn't hold yet, files to leave alone and ids it may file: about 15 lines, written to a file,
+  not echoed back. Don't paste task blocks or her words already in TASKS.md.
+- **Small investigations** (where a file is, a model list, why a claim failed, which line a task joins): an agent or a
+  Gemini read (`gemini_audit.py`) does them, or ask her.
+- **Screenshots**: only the one going to her, once. **Messages**: short, new news only.
+
 ## Your own cycling
 
 At about 500k tokens (the stop hook says so), day or night, hand over without waiting for her, and keep starting
