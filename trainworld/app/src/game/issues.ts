@@ -26,7 +26,7 @@ const TEXT: Record<string, () => string> = {
   BridgeNoRoomJunction: () => t("issues.bridgeNoRoomJunction"),
   BridgeNoRoomBuilt: () => t("issues.bridgeNoRoomBuilt"),
   WaterTooLong: () => t("issues.waterTooLong", { distance: roughDistance(30000) }),
-  Crossing: () => t("issues.crossing"),
+  Crossing: () => t("issues.crossing", { ramp: length(onTram() ? 100 : 160) }), // T-3027: the floor, as RampTooShort
   CrossingOverlap: () => t("issues.crossingOverlap"),
   NodeHeading: () => t("issues.nodeHeading"),
   NodeOneSided: () => t("issues.nodeOneSided"),

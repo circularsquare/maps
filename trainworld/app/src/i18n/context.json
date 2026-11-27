@@ -1145,7 +1145,7 @@
   "issues.bridgeNoRoomJunction": "Refusal of a track edit. No final period.",
   "issues.bridgeNoRoomBuilt": "Refusal of a track edit. No final period.",
   "issues.waterTooLong": "Refusal of a track edit. distance: \"30 km\".",
-  "issues.crossing": "Refusal of a track edit.",
+  "issues.crossing": "Refusal of a track edit: two tracks cross where one is still partway up a ramp, so they are under a full level apart there. ramp: a length, \"160 m\" (\"100 m\" on tram track), the shortest a ramp may be per level.",
   "issues.crossingOverlap": "Refusal of a track edit.",
   "issues.nodeHeading": "Refusal of a track edit.",
   "issues.nodeOneSided": "Refusal of a track edit.",
