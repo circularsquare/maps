@@ -3,6 +3,30 @@
   "line": "",
   "items": [
     {
+      "id": "c011",
+      "text": "fixed calculating trips failing on some phones",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4390",
+      "by": "packfix",
+      "at": "2026-11-27T15:12:42Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": true
+    },
+    {
+      "id": "c010",
+      "text": "removed the limit of 100 buses an hour on a bus lane",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4381",
+      "by": "lanecap",
+      "at": "2026-11-27T15:04:31Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
       "id": "c009",
       "text": "use more cores is now a cores slider, with the memory and load time each count gives",
       "edited": "replaced use more cores with a cores slider showing memory and load time per count",

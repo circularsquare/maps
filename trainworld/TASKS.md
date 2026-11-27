@@ -254,7 +254,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4359: a load adds each zone viewed while it runs and keeps it open until the load ends (Lantian 208 s in your session); a game load's card still does. At a save's load the default zone (New York) kept a "Loading city data" bar for 7 s after the view left it.
   - Goal: A zone viewed during a load opens and closes on its own.
   - Other: notes/T-4359.md
-- T-4261 [P2] {L:checks} Gemini agents can run play.mjs games
+- T-4261 [P2] {L:checks} Gemini agents can run play.mjs games (taking, 2026-11-27, agent gemplay)
   - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
   - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
 - T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends
@@ -284,9 +284,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4346 [P3] {L:loading} Move or close the first load's card
-  - Context: You, 11-25: "having the initial load panel that shows up in the middle of the screen be draggable to the side or dismissable with an x. if we dismiss it it can jus go into the small form at the top of the screen like the normal loads that happen in the middle of playing"
-  - Goal: The first load's card can be dragged aside or closed with an x; closed, it becomes the small loading bar at the top that loads during play use.
+- T-4346 [P2] {L:loading} Move or close the first load's card (taking, 2026-11-27, agent loadcard)
+  - Context: You, 11-25: "the initial load panel ... draggable to the side or dismissable with an x. if we dismiss it it can jus go into the small form at the top of the screen like the normal loads". 11-27: build it, "people often just wanna build before trips are done calculating".
+  - Goal: The first load's card can be dragged aside or closed with an x; closed, it becomes the small bar at the top and the player can build meanwhile.
 - T-4230 [P2] {L:loading} The clock worker's first state sooner on load
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
@@ -352,18 +352,15 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4395 [P2] {L:loading} A game load ends after the first round (taking, 2026-11-27, agent loadround0)
-  - Context: From loadreports (11-27): a game load waits for all 4 rounds of the zone in view (HOLD_ROUND in demandClient.ts) though round 0 already has figures; on one worker about 55-60% of the wait comes after it. You, 11-27: file it, a proposal to judge, not gospel.
+- T-4395 [P2] {L:loading} {waits:Anita} A game load ends after the first round
+  - Need from Anita: End game loads at the first round? It halves a one-worker NYC load (198 to 101 s), but some lines read 17-68% off meanwhile, fares included. Recommended: no.
+  - Context: Your T-347 and T-2560 hold the card and clock to the final round. On the real NYC save round 0 is 2.7% high in all, but 18 of 82 big lines are over 10% off (HBLR +68%, PATH +43%), and fares are paid on them.
   - Goal: A game load ends at round 0 and the later rounds refine in the background as after an edit; a one-worker load's wait about halved.
-  - Other: notes/load-reports-2026-11-27.md, proposal 3
+  - Other: notes/load-reports-2026-11-27.md proposal 3, notes/T-4395.md
 - T-4396 [P2] {L:memory} A second try for a one-worker load out of memory
   - Context: From loadreports (11-27): 7 load deaths in 5 days, all phones or 4 GB PCs on one solving worker. The retry halves workers, so below two it can't help (oomRetry.ts) and they reload into the same crash; 3 of 5 died in the first 11 s, on Tokyo. You, 11-27: a proposal, not gospel.
   - Goal: A one-worker load that runs out of memory tries again with less (intercity trips off or coarser zones), saying so on the card; fewer loads end at the out-of-memory screen.
   - Other: notes/load-reports-2026-11-27.md, proposal 1; T-4370, T-3160
-- T-4390 [P2] {L:loading} Trips worker crash on a 2 GB phone (taking, 2026-11-27, agent packfix)
-  - Context: A player on 0.4.6 (tw-feedback 1795602207-5e283c5f, 11-25), 2 GB Android, one worker, 30 lines, "load failed": the worker panicked at sim/src/demand/everyday.rs:655, index 10191 of len 10191 (Columns::pack's placing pass, per loadreports). Not memory. Reach: unknown, one report.
-  - Goal: The panic's cause found in the code and fixed, with a Rust test that fails before the fix; figures unchanged where it never panicked.
-  - Other: notes/load-reports-2026-11-27.md
 - T-4370 [P2] {L:memory} iPad games crash on big saves
   - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines (maybe T-4367's "Demand stopped", fixed 11-26, if not a tab reload). Related: T-3160.
   - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
@@ -1123,9 +1120,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-4382 [P3] {L:buses} A bus can stop at linked BRT stations (taking, 2026-11-27, agent busstops)
   - Context: A player (tw-feedback 1795726122-552c98fc, 11-26): when two BRT stations are linked (a walkway, built touching, or close), or a BRT station sits next to a train station, a bus line can stop at only one of them. You, 11-27: yes, allow it.
   - Goal: A bus line can stop at every BRT station it passes, linked or not, shown on the player's shapes.
-- T-4381 [P3] {L:buses} No cap on buses per hour in a bus lane (taking, 2026-11-27, agent lanecap)
-  - Context: You, 11-27: drop the 100 buses an hour lane cap, players asked; "its kind of counterintuitive given that you can run infinite buses on a normal road". Not high priority.
-  - Goal: Bus lanes take any number of buses an hour, and the line panel shows no cap row for them.
 - T-4374 [P2] {L:stops} Closing a loop refused with "at least two different stations" (taking, 2026-11-27, agent loopfix)
   - Context: A player on 0.4.7 (tw-feedback 1795784564-e03329a7, 11-27), 42 lines, couldn't loop a line that had many stops. The message is validate.rs's catch-all LineStops (adjacent equal stops, first or last stop off the path), so the real cause is unknown. Reach: unknown, loops are common.
   - Goal: Closing a loop on a line with several stations works, or the refusal names its real cause; shown on a small case.

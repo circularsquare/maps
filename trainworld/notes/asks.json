@@ -21,9 +21,9 @@
     "by": "maps-3a"
   },
   {
-    "id": "a-2026-11-27-7",
-    "title": "Cores slider text",
-    "text": "T-3932 landed (8800 has it): 'Use more cores' -> 'Cores', its old hover removed. New: 'Auto' (hover 'Picked for your device and how big the game is'); 'Uses about {gb} GB' (red hover 'The game runs on fewer cores when it would pass {gb} GB'); 'Loads in about {time}'; 'Trips are calculated in about {time} after an edit'; 'Running on {n} cores to fit in memory'; 'Applies after a reload'; 'Reload' (reused). Text acknowledged, or which lines to reword?",
+    "id": "a-2026-11-27-8",
+    "title": "Load ends at round 0",
+    "text": "T-4395: should a game load end at the first round? You set the hold on purpose (T-347, kept in T-2560). On the real NYC save with one worker, ending at round 0 cuts about half the wait (97 of 198 s), but round 0's figures are off: 3% high overall and 18 of 82 big lines over 10% off the final (HBLR +68%, PATH +43%), and fares are paid on them while the clock runs (11% of a day's fares extra at 100x). I'd say no. If yes: the card ends at round 0 and the clock stays at 4x until the final, about 4-6 h.",
     "since": "2026-11-27",
     "by": "maps-e0"
   }

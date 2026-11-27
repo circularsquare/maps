@@ -1,24 +1,25 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 6ed48fec-8b16-41be-8883-aad8f899bcb0, name maps-e0 [81f3a0], since 2026-11-27 14:30 UTC
-Updated: 2026-11-27 15:00 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-27 15:21 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. Running (7; her 11-27: 2-8, Gemini agents count): loopfix (Opus, T-4374, 6150); netcut10 (Opus, T-4153 stage 10,
-   6152); busstops (Sonnet, T-4380 + T-4382, 6153); showmodes (Opus, T-4400, 6154); loadround0 (Opus, T-4395, 6155:
-   judges first, may stop with a trade-off for her); packfix (Gemini Neon, T-4390); lanecap (Gemini Hydrogen, T-4381).
-   Ids handed out: loopfix T-4391/2, netcut10 T-4397/8, busstops T-4399, showmodes T-4401, loadround0 T-4402.
-2. Landed today: T-4377 (219012f25, c008), T-4383 Discord reader (b96384387; tools/ops/discord_reader.py, token at
-   ~/newDesktop), T-3932 Cores slider (916e0fbff, c009; strings sent to her for review). 8800 = 916e0fbf (14:59 UTC);
-   smoke on it running (scratch smoke-916e0fbff.log). Gemini adversarial review of T-3932 running:
-   artifacts/trainworld/gemini/batch-1127b-review.md. The morning batch's review: all five PASS. This batch's perf_bench
-   NYC (it touched the worker pool) waits for a quieter machine. Publish waits for her word.
-3. She is checking the redrawn zones on 8800 today; undo per country: notes/T-4364.md "The job". Backups
-   data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing. Disk 37.6 GB free after diskclean (notes/T-4088.md
-   "2026-11-27"), plus t4194/runs (4.3 GB) deleted; the 11-28 backups take it to about 60.
-4. Queued: T-4396 (after loadround0: same load code); T-4314 once netcut10's measuring is done (both bench edit speed);
-   then T-4309, T-4315, T-3160, T-3838. New tasks go to Gemini agents (her 11-27); Claude only for what Gemini can't do.
+1. Running (7): loopfix (Opus, T-4374, 6150); netcut10 (Opus, T-4153 s10, 6152); busstops (Sonnet, T-4380 + T-4382,
+   6153); showmodes (Opus, T-4400, 6154); gemplay (Sonnet, T-4261: Gemini agents run play.mjs games, 6156; Claude
+   because it changes Gemini's harness); reloadfix (Gemini Neon, no task: T-3932 review findings + her 8800 notes, a
+   pick overrides the 8 GB cap, saved estimates, "Will use/Will load", two strings); loadcard (Gemini Neon, T-4346: x
+   once only trips are left, clock held to the final, build meanwhile). Gemini can't hold a game across calls until
+   T-4261: their game run may be mine at landing. Ids: loopfix T-4391/2, netcut10 T-4397/8, busstops T-4399, showmodes
+   T-4401, gemplay T-4404.
+2. Landed today: T-4377 (c008), T-4383 Discord reader (tools/ops/discord_reader.py, token ~/newDesktop), T-3932 Cores
+   slider (916e0fbff, c009; Gemini review FAILED on Reload: reloadfix; publish waits for it), T-4381 lane cap
+   (b59a6e59c, c010), T-4390 phone panic (3d32ddb43), T-4395 notes only (waits for her). 8800 = 916e0fbf, smoke PASSED;
+   rebuild after reloadfix lands. This batch's perf_bench NYC waits for a quieter machine.
+3. She is checking the redrawn zones on 8800; undo: notes/T-4364.md "The job". Backups data/work/pre-T4364* (19 GB) go
+   11-28 if she finds nothing; disk 37.6 GB free now, about 60 after.
+4. Queued: T-4396 (after reloadfix: pool cap code); T-4314 once netcut10's measuring is done; then T-4309, T-4315,
+   T-3160, T-3838. New tasks go to Gemini agents (her 11-27); Claude only for what Gemini can't do. 0.4.7.1 live.
 
 ## Her words
 - 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."
@@ -28,7 +29,6 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   minimal"); T-4370/T-3160 stay high P2 unless an easy clear path; "buses are settled" dropped (DECISIONS); loads felt
   instant sometimes, 10 min others, 30 min for players: is that expected? Her guess: low memory / resources. She asked
   about reading Discord directly (T-4383). With Gemini back she's started work again (agents running 11-27).
-- 11-25 ~15:00: quiet-machine work (baseline, edit-speed stages) "would make sense to start after" her League game.
 - 11-25 ~12:50: "ok, ship." 0.4.7 (via standby maps-d6, after Belgrade setup +23% over her one-time 20% threshold).
 - 11-25 ~12:15: (1-4 agents that week, lifted 11-27); usage at 83%, "dont worry about running out... dont want you
   to perform worse cuz u feel limited"; after the release, mostly quiet-machine work. T-4346 is P3.
@@ -43,7 +43,6 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   ask her to test edit speed until it feels right on 8800. Edit-speed memory budget 30 MB. Game stays at anita.garden.
 - 11-25 00:51: "the game reworking the whole network after each edit is really the target here and everything else is
   kinda just flavor." (DECISIONS T-4097.) Asia: station adds 1-3 s, removal about 4 s.
-- 11-25: Airports later, P3. 180th meridian: "if people want to build it, they should ideally be able to".
 - 11-19: player complaints before new features. 11-25: player region requests are leads, not orders ("we gotta judge").
 
 ## Only a person knows
