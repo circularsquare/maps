@@ -10,8 +10,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    synced; master has its entry (6692949a3). Filed T-4372 (smoke with phone settings, her "should have caught").
    11-27 running: coreslider2 (Opus, T-3932, tree coreslider2, 6148), flyovertext (Sonnet, T-4379, 6149). Asked her:
    load-time investigation, the BRT linked-stations call, Discord read access, crash counts (a-2026-11-26-6), T-4372.
-2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
-   review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
+2. Gemini is back (her 11-27: a free Thanksgiving reset): Gemini first for reading and review again. Batch review of
+   d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 running (artifacts/trainworld/gemini/batch-1127-*).
 3. Region redraws done (T-4364, T-4365 archived; 5b1fab73d): all her picks but Poland, IL rejoined for seams, place
    names refreshed, c007. 8800 at 5b1fab73, smoke passed (12 checks). The undo backups data/work/pre-T4364* (19 GB;
    49.9 GB free) stay until she has seen the zones on 8800; delete them 11-28 if nothing comes up.
