@@ -10,6 +10,10 @@ says yes to that action. Commands run from the maps root.
 
 ## Before asking for the yes
 
+0. **Release review.** Run one Gemini adversarial pass over everything since the last publish, plus every line in
+   `trainworld/notes/release-findings.md` (trainworld/docs/orchestrator.md "Landing, commits, 8800"); one fix round; clear
+   the list after the publish.
+
 1. **Changelog review.** A fresh Sonnet agent reads every shown item not yet reviewed and asks as a player "would i
    ever care about this / want to read it in a changelog". It hides each no (`changelog.py hide <id>`), may tighten
    wording, and lists what it hid and why in `notes/changelog-review.md` (ids reviewed, so the next pass skips

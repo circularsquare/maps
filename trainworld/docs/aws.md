@@ -34,7 +34,7 @@ user `bench` (EC2 and S3 full access). Setup she followed: notes/aws-own-account
    (notes/aws-budget-action.md); a machine already up ends by its timer. Billing data lags up to a day.
 4. **One 4-vCPU machine at a time**, at most $0.25 an hour (spot first, then on-demand), at most 3 hours, with a hard
    timer: a shutdown set first thing at launch, a cron check of the deadline, and shutdown behaviour terminate. The quota raises were refused;
-   on 2026-11-24 AWS enforced **1 vCPU on-demand and no spot**, so nothing launches until AWS lifts it.
+   on 2026-11-24 AWS enforced **1 vCPU on-demand and no spot**. Her 11-27: the raise to about 5 vCPU was refused too; AWS wants a usage history first, so use the account now and then for runs that fit (country adds, say) to build one.
 5. **Nothing billing while idle**: no NAT gateway, VPC endpoint, load balancer, Elastic IP, snapshot, AMI, extra
    volume, IAM role or stack. What stays is the data cache in bucket `twbench-use2-r7k2m9`
    (private, tagged `project=twbench`; `runs/` objects expire in 3 days, `data/` in 45): about 60 MB, under a

@@ -50,3 +50,10 @@ meanwhile.
   inline, retried failed landings.
 - Light: briefs in files, report heads only, review findings go to the fix agent unread, tool fixes go to agents,
   landing with `finish` only.
+
+## Too much review and testing during development
+
+- Her words: 11-27 ~14:30: "i feel like we maybe rely too much on review, especially when we aren't actually ready to
+  ship. this is a repeated complaint of mine. how might we make changes to speed up development time / require less
+  review and testing during active development?" Earlier: 11-24 "review, not playtest"; the 11-24 testing budget.
+- Adopted 11-27 (her yes to 1-5; notes/workflow-review-2026-11-27.md): development lands on its own tests, only save, slot and cash diffs get review, only save, edit-loss, crash and wrong-money findings are fixed then, no waiting for Gemini; one Gemini pass at release prep with notes/release-findings.md. Where: docs/orchestrator.md "Landing, commits, 8800", publish skill step 0, DECISIONS.md Tooling and process, T-4426 (occasional non-default settings check). Closes when she says development feels faster.

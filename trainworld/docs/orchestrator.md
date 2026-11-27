@@ -38,7 +38,7 @@ These come before everything below; the first two are her two top priorities (11
   only the tasks that share files with a running agent: name them, start something else.
 - **Size tasks to about an hour or one stage**; a brief whose work looks bigger is split before it starts: stages,
   each its own id and report. An agent that compacts was given too much.
-- **Model**: nearly every new task goes to a Gemini code agent (her 11-27: Claude usage runs out first; "lets see how it goes"), Gemini 4 Neon (`gemini_agent.py`'s default) for an Opus-tier task, Hydrogen (`--model gemini-4-hydrogen-medium`) for a Sonnet-tier one; they count among the 2-8. A task that needs a game run gets `--game nyc` (Gemini agents below); without it, the game run is the orchestrator's short check at landing. Claude only where Gemini can't do the work: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands;
+- **Model**: Claude agents (her 11-27, two Claude subscriptions now; Gemini is the tighter limit): Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands; no Gemini code agents unless she asks;
   no Fable for agents unless she asks (the successor's advisor, "Your own cycling", is the one Fable use). Advisor: as trainworld/CLAUDE.md "Advisor", and briefs don't invite it otherwise; log each
   call in notes/handoff-log.md (what was asked, whether the advice changed anything).
 - **Briefs** start with two lines: the kind of change and its row of the measuring budget (trainworld/CLAUDE.md
@@ -140,19 +140,26 @@ when this account runs low (2 is `~/.claude-2`, the `claude2` command; setup in 
 
 ## Landing, commits, 8800
 
-Risky changes (sim, saves, demand numbers, money) are reviewed in batches (11-20, T-3902; her 11-24: review, not
-playtest). Land each on master as its own commit once its builder's tests and one in-game run pass. Then one review per
-batch on master, by Gemini (Tools below): given each change's Goal and the batch's diff, not the builders' reports, it
-reads the diff and the code around it and lists how it breaks, interactions included: what the player does, what goes
-wrong, the line. A batch that changes saves or could lose data also gets a fresh Sonnet reviewer on the same diff. The
-agent that fixes a finding checks it against the code first. Play only to confirm a finding the reading can't settle. Pass or fail with evidence per change; no benchmarks. A failure is
-fixed on master by a fix agent, or that commit is reverted if the fix is big; publishing waits until the batch passes.
-8800 is rebuilt right after the batch lands, without waiting for the review (11-21); if the batch raises the save level,
-tell her a save made there may not load if a change is reverted. Own review before landing: anything that could stop an
-existing save loading or lose data, and sim-core changes others build on (undo, the solve, edits). Labels, text, docs,
-CSS and small UI skip review (the agent's screenshot plus your look).
+Development is the default (her 11-27: less review and testing while not ready to ship). Land each change on master as
+its own commit once its builder's tests (typecheck, the budget row, one game run) pass; 8800 is rebuilt right after,
+without waiting for anything (11-21). If the batch raises the save level, tell her a save made there may not load if a
+change is reverted.
 
-1. Smoke runs only on master (her 11-24): once after a batch lands (a failure is fixed or reverted) and once before a
+- **Review during development** only for a diff that changes what a save writes or reads, writes, clears or reloads a
+  slot, or settles cash: before landing, a fresh Sonnet saves reviewer on the diff. Everything else (edit speed,
+  drawing, demand timing, UI, tools, labels, docs) lands on its own tests.
+- **A finding is fixed during development only if** it is a save that won't load, lost edits, a crash, or wrong money
+  or figures written into a save. Every other finding is one line in `notes/release-findings.md` (task id, the line,
+  what breaks), with no fix agent and no task. The agent that fixes a finding checks it against the code first; no
+  re-review of a fix unless it touches saves or money. A master bench that moves when the batch didn't touch speed is
+  noted, not chased.
+- **Never wait for Gemini during development.** Its quota out: skip, and a saves review falls back to Sonnet.
+- **Release prep** starts when you run the `publish` skill: one Gemini adversarial pass (Tools below) over the diff
+  of everything since the last publish, split by area, given each change's Goal and not the builders' reports, plus
+  the list in `notes/release-findings.md`; one fix round; then smoke, `perf_bench` and her test list as the skill
+  says. Clear the list after the publish.
+
+1. Smoke runs only on master (her 11-24): once after a batch lands (a failure is fixed or reverted; revert a commit that breaks master) and once before a
    publish. Agents don't run it in their trees (trainworld/CLAUDE.md "Testing"), and briefs don't ask for it.
    `node trainworld/checks/smoke.mjs [url]` from the maps root, about 3 minutes; `$env:TW_CORES='4'` for a light run
    on your own Vite.
@@ -203,16 +210,18 @@ she thinks it's ready; then run the skill. Keep the checks it needs (smoke, perf
 - Resources, once a day: `venv\Scripts\python.exe trainworld/tools/ops/check_resources.py` from the maps root,
   read-only, about 2 minutes. Every flagged line (OVER, HIGH, SOON, MISSING) goes in that day's report to her with
   what docs/ops-checks.md says to do about it.
+- **Non-default settings check** (T-4426): after changes to cpu, memory, loading or worker code, about weekly, at most
+  daily (the check warns past once a week).
 
-- **Gemini first for reading and review** (her 11-25: Claude usage runs out before Gemini's). Gemini: batch and
+- **Gemini for adversarial review only** (her 11-27, superseding 11-25's Gemini-first). Earlier split, kept for if she switches back: release and
   design reviews, PR surveys, sorting player requests, task sweeps, scoping a task from the code ("the code says
   why", what a change would touch), research reading. Claude: orchestration and bookkeeping, anything that runs the
   game or benchmarks, player text. Code that needs only a typecheck, Rust tests or a node check can go to a Gemini code
   agent (below).
-- **Gemini as adversarial reviewer** on every risky batch and every big design before it's built (her 11-24: "if we run
+- **Gemini as adversarial reviewer** in release prep and on every big design before it's built (her 11-24: "if we run
   out i'll likely upgrade the sub"):
   `venv\Scripts\python.exe trainworld/tools/gemini_audit.py --brief <file> --out <file>` (read-only: it reads files and runs
-  only git's read commands and Get-ChildItem; Gemini 4 Neon medium by default, her pick; its top comment). Write the diff to a
+  only git's read commands and Get-ChildItem; Gemini 4 Neon medium by default, her pick; its top comment). Write the diff (at release, since the last publish) to a
   file under artifacts/trainworld/gemini/ and name it in the brief (diff plus the task's Goal, "try to break it"). A finding
   is checked against the code by the agent that acts on it. It doesn't run the game or write code.
 - **Gemini code agents** (her 11-25): `venv\Scripts\python.exe trainworld/tools/gemini_agent.py start <name> --brief <file>

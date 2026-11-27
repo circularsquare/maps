@@ -282,8 +282,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: a situation where the line-up refusal shows is most likely a bug, to prevent. T-4152 cut the end-to-end join sweep's refusals from 26 of 288 to 0.
   - Goal: Ordinary drawing (joins, junctions, node drags, trams) never shows it; any case found is fixed or filed.
   - Other: notes/T-4152.md
-- T-4166 [P2] {L:checks} {after:AWS Support reply} First bench run on your own AWS account
-  - Context: You asked AWS Support for 4 on-demand vCPUs (11-24: "we're waiting on response"); the account runs 1. tools/aws/bench.py is ready (one machine per run: build, perf and edit benches, results home, machine terminated, about 5 cents) and docs/aws.md has the account. Every launch on 11-24 was refused by the limit. Your $20 cutoff steps: notes/aws-budget-action.md.
+- T-4166 [P2] {L:checks} First bench run on your own AWS account
+  - Context: AWS refused the raise (your 11-27: they want usage history first), so the account runs 1 vCPU; use it now and then for runs that fit, country adds say. tools/aws/bench.py is ready (about 5 cents a run); every launch on 11-24 was refused by the limit. Your $20 cutoff steps: notes/aws-budget-action.md.
   - Goal: One real nyc run through bench.py, with its cost.
   - Other: notes/T-4166.md
 - T-4168 [P4] {L:solve-speed} {after:T-4158} Does the bus stop merge shift riders one way
@@ -390,6 +390,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
+- T-4426 [P2] {L:checks} Occasional test under non-default settings
+  - Context: You 11-27: "an occasional test of various non-default settings (at most daily, on average probably ~weekly, we should alert if we're doing it more than weekly)" after cpu or memory changes. Repeatable. Settings to cover: Cores slider (1-5), low device memory, phone or tablet, Calculate intercity trips off, coarse demand; find more in ui.ts and workers/deviceMemory.ts.
+  - Goal: One check runs those settings, writes each run's date where the orchestrator sees it, and warns when it ran more than once in 7 days.
+- T-4425 [P3] {L:checks} Store perfbench builds more compactly
+  - Context: perf_bench.mjs leaves a whole built game per run in perfbench/dist (7.9 GB for a full copy) and rebuilds it next run anyway; 57 GB had piled up (cleared 11-27). You 11-27: find a more efficient way to store them.
+  - Goal: A run leaves at most a few hundred MB behind, with reruns as fast as now.
 - T-3457 [P3] {L:checks} Slim the standing checks
   - Context: The code tour (notes/code-tour.md) counts 283 of 320 checks named after the task that made them, 42 more in checks/old, 45,700 lines, more than the pipeline. You 11-16: Claude leans a bit too much toward writing checks.
   - Goal: Checks that no longer guard anything are deleted, the rest named by what they check; smoke and the standing set still pass.

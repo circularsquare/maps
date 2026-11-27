@@ -352,10 +352,11 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
-- 2026-11-27 (Anita): Run 2-8 agents again (the 11-25 week cap of 1-4 lifted), Gemini code agents counted among them. On her Gemini 5x plan, Gemini 4 Neon stands in for Opus and Hydrogen for Sonnet.
+
+- 2026-11-27 (Anita): Development is the default: changes land on their own tests, only save, slot and cash diffs get a review, and only save, lost-edit, crash or wrong-money findings are fixed. One Gemini review at release prep covers the rest.
 - 2026-11-25 (Anita, T-4269): The game stays at anita.garden. Google shows one icon per host, so its search result keeps the website's leaf icon; a separate address for the game would leave players' browser saves behind ("it is what it is").
 - 2026-11-25 (Anita, T-4252): Gemini code agents run commands unattended inside their own worktree (tools/gemini_agent.py), limited by agy's allow and deny rules; with no OS sandbox here, an allowed check runs whatever the tree holds. Their first three runs are asked about permissions.
-- 2026-11-27 (Anita): Claude usage runs out before Gemini's, so nearly every new task goes to a Gemini code agent ("lets see how it goes"), and Gemini takes most reading and review; Claude keeps orchestration and what Gemini can't do. Replaces 11-25's split.
+- 2026-11-27 (Anita): With two Claude subscriptions, Gemini is the tighter limit again, so Gemini does adversarial review only (batch and design reviews) "for the forseeable future unless i want to do otherwise"; code agents and other reading go back to Claude. Replaces the morning's Gemini-first split.
 - 2026-11-24 (T-4166): The AWS bench installs Node, Chrome and Rust on each machine instead of keeping an image (6-8 minutes, under a cent, against a snapshot billing every month) and ships only the files the save reads. Its numbers never go in the home ledgers (Linux, SwiftShader).
 - 2026-11-24 (Anita, T-4177): Stop using the friend's AWS account; agents lose access to it (profile removed, guard.py and awslib refuse it; its scripts kept as a record). AWS means her own account (anita-own) from now on. Gemini may take tasks in this repo, never AWS (GEMINI.md).
 

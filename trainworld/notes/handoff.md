@@ -1,6 +1,6 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session b48f5ab5-f4f4-40bd-8d9d-48e27f778e65, name maps-48 [99e2b4], since 2026-11-27 15:48 UTC
+Orchestrator: session b9171a67-c849-4831-91d5-3e9c74c64f32, name maps-2c (account 2, claude2), since 2026-11-27 18:53 UTC
 Updated: 2026-11-27 18:25 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
 
@@ -19,6 +19,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
+- 11-27 ~13:50 her time (to maps-2c, account 2): pushed master on her yes; Windows 11 upgrade coming (machine restarts; agents diskclean and win11guide running for it). Gemini for adversarial review only now that there are two Claude subs (DECISIONS). AWS raise to ~5 vCPU refused, wants usage history: use it now and then, e.g. country adds (docs/aws.md).
 - 11-27 11:26 her time: Gemini quota out; "oki we can move bus fix to sonnet. but mostly just pause starting new work". Core cap 10 "for a while".
 - 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."
 - 11-27 ~09:45: agents 2-8, Gemini agents counted; Gemini 5x plan, Neon as Opus, Hydrogen as Sonnet (DECISIONS). Load
