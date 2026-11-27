@@ -1,24 +1,21 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session b48f5ab5-f4f4-40bd-8d9d-48e27f778e65, name maps-48 [99e2b4], since 2026-11-27 15:48 UTC
-Updated: 2026-11-27 16:57 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-27 18:25 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
 
 ## Next
-1. Running: pagestage5 (Gemini Neon, T-4284 stage 5, her Asia save), busfix (Gemini Neon, tree busfix: batch-1127d
-   findings on T-4380 first_off; report as T-4380), loadsave (Gemini Neon, T-4408 plus Sonnet review findings 4-5 on
-   T-4396: retry notice says where to turn Settings back; strings to her). Gemini agents can't run tools/edit_bench.mjs
-   (allowlist): edit_bench is mine on master.
-2. Batch 1127d reviewed: T-4153 s10, T-4374, T-4396 PASS; T-4380 FAIL (busfix). Gemini finding 2 (putEntries,
-   sampleStroke on empty path) goes into T-4153 stage 11. Smoke PASSED on 6a475fa84. Next batch (1127e): hidepick
-   6c421c790, reachfill e1880608c, crashcount 0988a9a09, then pagestage5, busfix, loadsave: one Gemini review, then
-   1 edit_bench NYC on master. perf_bench NYC and a quiet edit_bench on Asia still owed. Publish waits for her word.
-3. Asks open: T-4396 notices (a-2026-11-27-13); shonei-server deploy 54c6241 + ff4e198 (a-2026-11-27-14; the save
-   check at level 42 must be live before the next publish). _track sits at save level 42 too (LBN1): renumber at sync.
-4. Gemini quota ran out 16:24 UTC (resets ~19:45 UTC); loadsave failed at start (tree loadsave empty), pagestage5 and busfix
-   failed. busfix landed via Sonnet (b5697efed), smoke PASSED after it (31 checks). loadsave and pagestage5 restart
-   (--tree) only when she lifts the pause on new work (her 11:26).
-5. Then T-4153 stage 11, T-4309, T-4315, T-3160, T-4370, T-3838; maps-e0's T-4420-4422 (tooling). Core cap 10.
+1. Paused by her (11:26 her time): no new work. Parked: loadsave (T-4408 + Sonnet findings 4-5 on T-4396, tree
+   loadsave empty) and pagestage5 (T-4284 s5, tree has partial work); restart with --tree when she lifts the pause.
+   Gemini quota was out 16:24 UTC, back ~19:45 UTC. Gemini agents can't run tools/edit_bench.mjs: it's mine on master.
+2. Batch 1127d reviewed; T-4380's findings fixed (b5697efed); smoke PASSED after it. Gemini finding 2 (putEntries,
+   sampleStroke on an empty path) goes into T-4153 stage 11. Batch 1127e (hidepick, reachfill, crashcount, busfix,
+   later pagestage5 and loadsave): one Gemini review, then 1 edit_bench NYC on master. perf_bench NYC owed.
+3. Asks open: T-4396 notices (a-2026-11-27-13); shonei-server deploy 54c6241 + ff4e198 (a-2026-11-27-14; save
+   check level 42 must be live before the next publish). _track also sits at level 42 (LBN1): renumber at sync.
+4. T-4424 second Claude account: set up and committed; left her login (claude2) and the test in notes/T-4424.md.
+   Uncommitted from it: maps .claude/settings.json autoMemoryDirectory, tools/checks_index.py (has others' edits).
+5. Then T-4153 stage 11, T-4309, T-4315, T-3160, T-4370, T-3838; T-4420-4422 (tooling). Core cap 10.
 6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
