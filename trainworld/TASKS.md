@@ -258,18 +258,15 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
-- T-4411 [P2] {L:checks} The orchestrator's tools print short by default
+- T-4420 [P2] {L:checks} The orchestrator's tools print short by default
   - Context: You, 11-27, after maps-e0 filled 500k in under two hours, mostly with tool output it didn't need. With T-4410 (Gemini reports) and the 200k notice in the stop hook.
   - Goal: reports.py show prints a report's first 10 lines (--full for all); verdict.py prints only a review's PASS and FAIL lines; git's line-ending warnings off in the maps repo.
-- T-4412 [P2] {L:checks} A brief generator for the orchestrator
+- T-4421 [P2] {L:checks} A brief generator for the orchestrator
   - Context: You, 11-27: briefs were hand-written at 3-5k characters, pasting task blocks and restating CLAUDE.md, which docs/orchestrator.md "Briefs" already says not to do.
   - Goal: brief.py <task id> with the budget row, decisions, files to avoid and ids writes the usual brief of about 15 lines to a file.
-- T-4413 [P2] {L:cleanup} Trim docs/orchestrator.md
+- T-4422 [P2] {L:cleanup} Trim docs/orchestrator.md
   - Context: You, 11-27: "trimming is almost always helpful". It is about 21,000 characters, read once at takeover; the most-broken rules sit mid-page.
   - Goal: A card of about ten lines at the top with the rules broken most, and the rest cut to what an orchestrator acts on.
-- T-4410 [P2] {L:checks} Gemini agent reports and claims (taking, 2026-11-27, agent claimfix)
-  - Context: 11-27: gemini_agent.py's reports carry every interim "Waiting for ..." line ahead of the answer, which the orchestrator reads in full; and its core claim returns at once when the cap is full ("waiting ... exit 0"), so four runs failed before starting.
-  - Goal: A report holds only the agent's final answer and the footer; a claim at the cap waits, as cores.py's --timeout intends.
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.
