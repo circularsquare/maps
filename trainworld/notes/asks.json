@@ -19,5 +19,12 @@
     "text": "Start T-4372 (smoke plays a second game with phone settings: intercity trips off, one worker, long lines), which would have caught the 0.4.7 crash? About 1-2 hours of agent work. I'd say yes.",
     "since": "2026-11-27",
     "by": "maps-3a"
+  },
+  {
+    "id": "a-2026-11-27-12",
+    "title": "Show modes text",
+    "text": "T-4400 landed: new 'Show modes' and 'Show all' (all 12 languages); 'Buses and ferries' removed; the buttons' hovers reuse Train, High speed, Tram, Bus, Ferry. Hidden levels now leave the map too (an even fade was ruled out: an opaque faded line paints over shown track it crosses). Text acknowledged, or which to reword?",
+    "since": "2026-11-27",
+    "by": "maps-e0"
   }
 ]

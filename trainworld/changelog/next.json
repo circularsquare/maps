@@ -3,6 +3,31 @@
   "line": "",
   "items": [
     {
+      "id": "c013",
+      "text": "the first load's card can be closed or moved, and you can build while trips are calculated",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4346",
+      "by": "loadcard",
+      "at": "2026-11-27T15:35:27Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
+      "id": "c012",
+      "text": "added settings buttons to hide trains, trams, high-speed lines, buses or ferries; hidden levels now disappear",
+      "edited": "added buttons in settings to hide trains, trams, high-speed lines, buses or ferries",
+      "hidden": false,
+      "task": "T-4400",
+      "by": "showmodes",
+      "at": "2026-11-27T15:33:48Z",
+      "rev": 2,
+      "area": "schematic",
+      "fix": false,
+      "changed": "2026-11-27T15:34:08Z"
+    },
+    {
       "id": "c011",
       "text": "fixed calculating trips failing on some phones",
       "edited": null,

@@ -281,9 +281,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4346 [P2] {L:loading} Move or close the first load's card (taking, 2026-11-27, agent loadcard)
-  - Context: You, 11-25: "the initial load panel ... draggable to the side or dismissable with an x. if we dismiss it it can jus go into the small form at the top of the screen like the normal loads". 11-27: build it, "people often just wanna build before trips are done calculating".
-  - Goal: The first load's card can be dragged aside or closed with an x; closed, it becomes the small bar at the top and the player can build meanwhile.
 - T-4230 [P2] {L:loading} The clock worker's first state sooner on load
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
@@ -349,7 +346,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4396 [P2] {L:memory} A second try for a one-worker load out of memory
+- T-4396 [P2] {L:memory} A second try for a one-worker load out of memory (taking, 2026-11-27, agent oomretry)
   - Context: From loadreports (11-27): 7 load deaths in 5 days, all phones or 4 GB PCs on one solving worker. The retry halves workers, so below two it can't help (oomRetry.ts) and they reload into the same crash; 3 of 5 died in the first 11 s, on Tokyo. You, 11-27: a proposal, not gospel.
   - Goal: A one-worker load that runs out of memory tries again with less (intercity trips off or coarser zones), saying so on the card; fewer loads end at the out-of-memory screen.
   - Other: notes/load-reports-2026-11-27.md, proposal 1; T-4370, T-3160
@@ -504,10 +501,11 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4400 [P2] {L:map-look} Show modes buttons in Settings (taking, 2026-11-27, agent showmodes)
-  - Context: You, 11-27: players asked for a way to hide all trains; "replace the 'buses and ferries' visibility toggle in settings with separate buttons for train track, tram track, hsr track, buses, ferries (we can use the icon buttons) and it kinda parallels the show levels."
-  - Goal: A Show modes row of five icon toggles beside Show levels; hidden modes and hidden levels gone from the map, unless a level's fade can be made even.
-- T-4373 [P3] {L:small-fixes} Line panel shows another city's line and won't close
+- T-4401 [P3] {L:map-look} Stray stroke joins two lines zoomed out
+  - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
+  - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
+  - Other: notes/T-4400.md
+- T-4373 [P3] {L:small-fixes} Line panel shows another city's line and won't close (taking, 2026-11-27, agent linepanel)
   - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line, then no click closed it. Reach: few, a city filter with a panel open.
   - Goal: Changing the city filter or picking another line always shows that line's stops, and the panel closes.
 - T-4375 [P3] {L:map-look} Station circles missing on an Android phone

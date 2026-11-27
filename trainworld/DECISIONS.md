@@ -53,6 +53,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
+- 2026-11-27 (T-4374): Deleting a station a line stops at takes the stop out as a stop edit does (a loop closes again on its new first stop). Where the line cannot run without it, the delete is refused as the station in use. notes/T-4374.md
 - 2026-11-24 (Anita, T-4220): Edits made during a whole re-solve get quick figures from a second worker that re-solves only the touched cities against the figures on screen (lie: up to about 4.5 min on Asia); off on phones and short memory. notes/T-4220.md
 - 2026-11-24 (Anita, T-4239): The train-count settle need not be exact. A line circling across a jump in its round trip (passing-track waits, following loss) is held: counts where its fleet falls short (lie: up to 3% more trains an hour than it runs), headways under one train spare. notes/T-4239.md
 - 2026-11-24 (, T-4227): A period two of a line's rows share (moved hours) runs each row's weekend trains there. A headway line's weekend percent counts the trains its headway takes; on full track the period's rate is cut and shared (the lie). notes/T-4227.md
@@ -184,7 +185,8 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
-- 2026-11-27 (Anita, T-4400): A hidden mode (Settings, Show modes) is removed from the map entirely. A hidden level is removed too, unless its fade can be made even: today's fade shows a line's bends doubled where it overlaps itself.
+- 2026-11-27 (Anita, T-4400): Hidden modes and hidden levels are removed from the map entirely. An even fade was ruled out: an opaque colour mixed toward the land paints over shown track crossing it and reads as a causeway over water. A ramp still fades out toward a hidden level.
+- 2026-11-27 (T-4400): A mode hides lines by their kind (high speed by its trains) and track by its own (a busway is the buses'); a station stays while its own kind or any line stopping there is shown. Lie: a shown line can run over hidden track.
 - 2026-11-25 (T-4311): An undo or redo during a track run that is not its own Backspace (Ctrl+Z, the blueprint panel's) ends the run at its send, as the run ended before stage D; it is not treated as Backspace. notes/T-4311.md
 - 2026-11-25 (T-4214): A track run's next segment is sent at its click from the previous one's end as the worker will have it, never after that one's answer; a refused segment refuses those clicked on from it, and the run draws on from its start. notes/T-4214.md
 - 2026-11-25 (T-4214): Track hidden at a click that the drawn network holds only inside a longer edge (a just-split far half) hides that whole edge and redraws what stays from the tools' map. Lie: lines on it vanish until the network. notes/T-4214.md

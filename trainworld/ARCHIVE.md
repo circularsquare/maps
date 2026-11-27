@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4346 [P2] {L:loading} Move or close the first load's card (2026-11-27): x and drag once only trips are left; closed card becomes the top tag with a thin bar; building works while the clock is held. notes/T-4346.md.
+- T-4400 [P2] {L:map-look} Show modes buttons in Settings (2026-11-27): Show modes row; hidden modes and levels removed from the map (even fade ruled out: opaque strokes paint over shown track) notes/T-4400.md.
 - T-4404 [P2] {L:checks} Gemini's git rules can start a program (2026-11-27): git_option_denies() in backstop_rules: 37 bad strings refused, 21 good allowed, trial refused -Oless, --output and -c. notes/T-4404.md.
 - T-4395 [P2] {L:loading} A game load ends after the first round (2026-11-27): closed without code: her 11-27: a game load should not end at the first round (round 0 has lines up to 68% off the final on NYC; the hold stays) notes/T-4395.md.
 - T-4261 [P2] {L:checks} Gemini agents can run play.mjs games (2026-11-27): gemini_agent.py --game starts and stops a play.mjs game for the run outside agy's job; quoted args allowed in the git read and play.mjs rules; trial passed (0c3dd8b08) notes/T-4261.md.
