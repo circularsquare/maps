@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c019",
+      "text": "fixed edits made while the game loads being lost when the load fails and you try again",
+      "edited": "fixed edits made during a load being lost when the load failed",
+      "hidden": false,
+      "task": "T-4408",
+      "by": "loadsave2",
+      "at": "2026-11-27T22:09:55Z",
+      "rev": 3,
+      "area": "other",
+      "fix": true,
+      "changed": "2026-11-27T22:10:23Z"
+    },
+    {
       "id": "c018",
       "text": "sorted station lines by line group and riders, with a toggle to collapse groups",
       "edited": null,

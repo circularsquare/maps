@@ -268,3 +268,27 @@ yet, so these bullets assume only what the briefs and `research/world-sampler.md
   systems (a 1.12 player compared a Dutch network to real boardings and found 2x over).
 - Not found: how he handles non-urban or low-population saves; he says only that low-population
   saves get too little demand and "some kind of aid" is planned.
+
+## Comparison with this design (moved from docs/world.md)
+
+From research/nimby-rails.md (the developer's own posts; much of it is not public):
+
+- **Supports this design.** NIMBY keeps one save for the whole Earth with no regions or chunks of
+  track, stores positions in full-precision longitude and latitude, and draws them on the GPU as
+  pairs of 32-bit floats "using vector shader tricks", with no 64-bit floats on the GPU. That is
+  the same split as here: exact global positions on the CPU, small Float32 numbers on the GPU.
+  Our Mercator metres are a fixed one-to-one function of longitude and latitude, so storing them
+  is the same as storing longitude and latitude.
+- **Not known.** How NIMBY gets its Float32 precision (an origin offset or a high and low split)
+  and what plane its track geometry is laid out in are not published, so it neither confirms nor
+  rules out Mercator with the `k` correction.
+- **Determinism.** NIMBY saves only control points and rebuilds geometry, as we do. Once its load
+  path and its play path rebuilt geometry differently (by about a micrometre) and train timings
+  changed; the fix was one rebuild path for both. Here the rule holds: `k` and the rhumb
+  lengths are computed inside `derive`, the one path for load and edit, and the existing check
+  that derived geometry hashes the same after a save and load covers it.
+- **Long searches.** NIMBY caps its track route search at 100 km (or a multiple of the straight
+  line) because an impossible request scanned every segment. Ours (`Network::find_path`, a line's
+  path between two stops) has the same worst case, but it only reaches track connected to the
+  start, and separate cities' networks are not connected, so it does not grow with the world. No
+  cap now; worth one if continents get joined by track.

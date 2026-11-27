@@ -152,7 +152,7 @@ the far-end selection does not yet (T-2256).
 
 #### Weights, ferry fans, driving and parking
 
-Weights (perceived minutes per real minute), from Subway Builder's published constants where they
+Weights (perceived minutes per real minute), from published transit-model constants (research/) where they
 exist: riding 1.0, the walk to and from stations 1.5 (below), walking between platforms on a
 transfer 1.39, waiting for a train 1.0 (half the headway, plain minutes: Anita, T-585), congested
 driving 1.33 (2.66 on a ride to a station, below), plus parking (below).
@@ -321,8 +321,8 @@ the same roads (unscaled).
 
 #### Route choice and getting to the station
 
-Route choice is not all-or-nothing shortest path. NIMBY Rails' best-known complaint is riders
-waiting 50 minutes for a fast train that arrives one minute earlier. A wait counts its plain
+Route choice is not all-or-nothing shortest path: riders do not wait 50 minutes for a fast train
+that arrives one minute earlier (research/nimby-rails.md). A wait counts its plain
 minutes (T-585) and the crowding loop (4.4) spreads riders, from 70% of a train's rated load (160
 a car). After it no line carries more in a period than its trains hold at crush (150% of rated,
 240 a car, T-2186) in the busiest hour: the

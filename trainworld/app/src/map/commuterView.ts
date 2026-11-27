@@ -1,4 +1,4 @@
-// Commuter bubbles (T-097, SPEC 8), Anita's Subway Builder style view: where commuters live (or
+// Commuter bubbles (T-097, SPEC 8), Anita's view: where commuters live (or
 // work), as bubbles sized by people and coloured by how they travel, aggregated to H3 parents by
 // zoom. A click on a bubble, or a long press and a drag over several, selects them (a
 // `commuters` selection, so Escape and an empty click clear it): the map then shows the selected

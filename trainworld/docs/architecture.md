@@ -7,7 +7,7 @@ Sections 2, 7 and 11 of the spec in detail. Where files live: `docs/code-map.md`
 ## 2. The core performance idea
 
 **Trains are cheap; passengers are expensive.** Passenger work is what has to stay cheap and
-never come in bursts (the evidence from Subway Builder: notes/architecture-history.md).
+never come in bursts (the evidence: notes/architecture-history.md).
 
 - **Trains are a function of time, not things that get stepped.** A line has a route, a run-time
   profile (accelerate, cruise at the curve-limited speed, brake, dwell, plus junction delays,
@@ -24,7 +24,7 @@ never come in bursts (the evidence from Subway Builder: notes/architecture-histo
 - **Optional flavour agents**: if the screen wants little people, sample a few from the flows for
   display; they never drive the simulation.
 
-Borrowed from Factorio and NIMBY Rails (`research/performance-factorio-nimby.md`):
+Techniques taken from other simulations (`research/performance-factorio-nimby.md`):
 
 - Sleep what is idle; wake on timed events, never poll (FFF-148, FFF-421).
 - Cosmetics are a pure function of the clock, evaluated only when drawn (FFF-204, FFF-421).
@@ -34,7 +34,7 @@ Borrowed from Factorio and NIMBY Rails (`research/performance-factorio-nimby.md`
 - Deterministic simulation: save = inputs, replays and bug repro for free (FFF-76).
 - Snapshot-then-compress saving off the main thread (FFF-201).
 
-How NIMBY Rails does it, for comparison: notes/architecture-history.md.
+Comparison with how another game does it: notes/architecture-history.md.
 
 ### 2.1 No signals, with the door left open
 

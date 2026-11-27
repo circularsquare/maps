@@ -25,7 +25,7 @@ and the regional layer. Changing zone clears cell-indexed selections and cached 
 
 ## Colours
 
-**Mode colours**, Subway Builder's (Anita) [T-097, T-099; `game/palette.ts`]: driving red #e61e1e,
+**Mode colours** (Anita) [T-097, T-099; `game/palette.ts`]: driving red #e61e1e,
 train blue #1e3ce6, walking green #1eaa3c, near-pure so a mix reads as RGB (all car red, all train
 blue, half and half magenta). A bubble's mix is pulled towards a grey (190, 190, 190 in the dark theme,
 160, 160, 160 in the light one, T-1694) as its smallest

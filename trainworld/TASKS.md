@@ -257,6 +257,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4421 [P2] {L:checks} A brief generator for the orchestrator
   - Context: You, 11-27: briefs were hand-written at 3-5k characters, pasting task blocks and restating CLAUDE.md, which docs/orchestrator.md "Briefs" already says not to do.
   - Goal: brief.py <task id> with the budget row, decisions, files to avoid and ids writes the usual brief of about 15 lines to a file.
+- T-4427 [P3] {L:cleanup} No other games named in research and notes
+  - Context: You, 11-27: "lets just ideally remove all references to other games". Current docs, SPEC, DECISIONS and code comments are done (11-27); research/, notes/ (archive too) and ARCHIVE-to-2026-10-19.md still hold 623 mentions in about 70 .md files.
+  - Goal: git grep finds no game name there; three game-named research files renamed, every link updated.
+  - Other: notes/T-4427.md
 - T-4424 [P2] {L:checks} Second Claude account (taking, 2026-11-27, agent claude2)
   - Context: You, 11-27: "i think i'll get a second claude subscription." Set up 11-27: the claude2 command, the .claude-2 folder, shared maps memory, tools look in both folders, next_orchestrator.py --account 2. Logged in 11-27; sessions on the two accounts do not see each other (no messages between them). Left: memory check from a claude2 session.
   - Goal: A claude2 session in maps uses the shared memory and your global CLAUDE.md.
@@ -506,9 +510,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
   - Other: notes/T-4400.md
-- T-4408 [P2] {L:loading} Edits made during the first load kept when it fails (taking, 2026-11-27, agent loadsave)
-  - Context: Gemini's review of T-4346 (batch-1127c-review.md, finding 3): with the card closed, a failed load's Try again or Back to start reloads without saving, and the out-of-memory retry saves with a 1.5 s cutoff. Also its finding 6, two small Cores slider gaps. Waits for oomretry (same files).
-  - Goal: Every reload or exit from a load saves through the slot switch's path first; finding 6 fixed.
 - T-4373 [P4] {L:small-fixes} Line panel shows another city's line and won't close
   - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line. Not reproduced 11-27: the panel keys by line id, and Escape or a map click close it.
   - Goal: Reopen if another player reports it with steps or a diagnostics download.

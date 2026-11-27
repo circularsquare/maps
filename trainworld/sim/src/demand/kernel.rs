@@ -207,7 +207,7 @@ pub struct Params {
     /// change minutes) are more than walking the whole way's, around water where the pack routes
     /// walks. All in metres walked at walking's pace (`walk_eq_m`). 0 turns it off.
     pub walk_rule: f32,
-    /// The transfer walk is on foot: speed and perceived weight (Subway Builder's 1.39).
+    /// The transfer walk is on foot: speed and perceived weight (1.39).
     pub xfer_mps: f32,
     pub w_xfer: f32,
     /// Stations of the snapshot this close together are one demand station (`api::merge_stations`).

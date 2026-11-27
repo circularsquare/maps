@@ -1,1 +1,2 @@
 # Release findings: lower findings left for the release review, one line each (task id, the line, what breaks); cleared after each publish
+- T-4408: Try again's 10 s fallback reload could cut a very large save mid-write; check that a slot write is one IndexedDB transaction (else a slot that won't load). Also low: a slot switch clicked with Try again loses to the reload; saveThen (oom retry) has no timeout.

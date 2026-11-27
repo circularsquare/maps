@@ -249,8 +249,8 @@ Full design, numbers and sources: `notes/T-008.md`.
 #### Track settings
 
 - **What the player builds**: a **route** drawn as one stroke, **double track by default** (4 m
-  apart, trains keeping right everywhere, T-319). (Anita, 2026-10-08; not NIMBY-style individual
-  tracks.) **Single track** is the track bar's other count (any track type, T-3352; high-speed track costs 0.9x double and upkeep 0.9x, single tram 0.6x its price): cheaper, one
+  apart, trains keeping right everywhere, T-319). (Anita, 2026-10-08; not individually
+  drawn tracks.) **Single track** is the track bar's other count (any track type, T-3352; high-speed track costs 0.9x double and upkeep 0.9x, single tram 0.6x its price): cheaper, one
   track for both directions unless it runs one way (below), with sections split at stations; a
   single-track station has one shared platform track and gets no passing loop. Built or blueprint single track can be rebuilt as double ("Rebuilding constructed track", 6.4).
 - **Single track meeting double track** (T-3137, notes/T-3137.md "C2 as built"): where a single-track
@@ -1652,7 +1652,7 @@ Greedy on
 
 #### Construction prices
 
-Money is present, not tight, as in NIMBY Rails: construction, train purchase, operating cost per
+Money is present, not tight: construction, train purchase, operating cost per
 train-km and car-km, a player-set fare curve by distance. One price list worldwide. Track costs a **base of
 US$75M per route-km of double track** (single track 0.6x, high-speed track 1.5x, T-817; ramps at
 the dearer level) times a
@@ -2189,7 +2189,7 @@ is over `FARE_MAX`, curve US$1,000 (T-3303: a typed 90 billion once went into ev
   days from the load. A loan is refused while its payment a day is more than the profit a day
   (fares minus running costs and upkeep) averaged over the last 7 whole game days, fewer in a
   younger game; before a whole day with fares, only the $1B loan can be taken.
-- **Economy at 100x** (Anita, 2026-10-09, as Subway Builder does; T-081): fares and running costs
+- **Economy at 100x** (Anita, 2026-10-09; T-081): fares and running costs
   per game day count 100 times the real figures (`ECONOMY` in `sim/src/track/params.rs`, the one
   constant; running costs scale in the track model, fares in `app/src/game/money.ts`), so a game
   day earns and spends what a hundred real days would. The fare the player sets and the US$4 a

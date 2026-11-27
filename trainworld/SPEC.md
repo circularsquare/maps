@@ -2,9 +2,8 @@
 
 **trainsworld** is the game's name wherever a player sees it (page title, UI, file names a player
 saves), lowercase. **trainworld** stays the internal name: this folder, the crate, packages, the
-serve.py registration and code. A browser game for building rail on a real world map, in the line
-of Subway Builder and NIMBY Rails: Subway Builder's data-driven demand, NIMBY Rails' whole world,
-and neither one's performance problems.
+serve.py registration and code. A browser game for building rail on a real world map: demand comes from real data, the
+whole world is one map, and the simulation stays fast.
 
 This file is a summary of what is true **now**, one short section per area with a link to its
 detailed doc. It is rewritten in place when a decision changes; the history and the reasons live

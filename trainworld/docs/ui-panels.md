@@ -5,7 +5,7 @@
 
 ## Look
 
-Cuter than Subway Builder and NIMBY Rails: a little pastel, a little Japanese, a little 2010 web,
+Cute: a little pastel, a little Japanese, a little 2010 web,
 still minimal with the map first. **The style applies to the UI only** (dock, panels, buttons,
 bars); the network takes the line colours ([ui-map.md](ui-map.md)).
 
