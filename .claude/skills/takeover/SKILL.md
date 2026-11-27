@@ -41,7 +41,7 @@ wrong for the situation, do the sensible thing and say why in your first message
    which session it is, ask Anita in your first message to tell the old tab. From now on you alone talk to Anita: the old tab sends her
    one line, finishes the landing it is in and stops. In trainworld its agents still running are yours to adopt
    from the board (`handoff.py status`): start the board watch now (docs/orchestrator.md, `watch.py --session <your
-   id>`); each report arrives as `agent report <id> ...`; read it with `reports.py show <id>`, act on it as on your
+   id>`); each report arrives as `agent report <id> ...`; read it with `reports.py show <id>` (first 10 lines; `--full` for all), act on it as on your
    own, then `reports.py read <id> --by <you>`. A follow-up to an adopted agent goes to a fresh agent on its tree
    and notes. A project without a report inbox: the old tab passes agents' reports to you.
 5. **While `Previous:` is there, hold off on shared work.** The old session is landing its

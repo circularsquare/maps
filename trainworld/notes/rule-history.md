@@ -120,3 +120,19 @@ don't read it whole. Add a line when a rule is added for a reason worth remember
   entire issue. this is what we should fix"), which had been left to the track rework.
 - Her standing calls moved to the top of orchestrator.md, and her direction calls go into DECISIONS.md when she says
   them, not only the handoff: Anita, 2026-11-24 (T-4165).
+- The "Your own context" card at the top of orchestrator.md (T-4422, 2026-11-27): maps-e0 filled 500k in under two
+  hours on 11-27 (her: "you were doing way too much work yourself and not delegating enough"), mostly by breaking rules
+  already written: it investigated, restated CLAUDE.md and pasted task blocks into briefs, rewrote the handoff with live
+  state, committed bookkeeping a dozen times and wrote long messages.
+- Don't read files inside a tree: maps-48, 2026-11-27; each read loaded that tree's two CLAUDE.md files, about 10k tokens.
+- Claude agents by default: Anita, 2026-11-27, with two Claude subscriptions; Gemini is the tighter limit.
+- Gemini for adversarial review only: Anita, 2026-11-27, superseding 11-25's Gemini-first. The earlier split, kept in
+  case she switches back: Gemini for release and design reviews, PR surveys, sorting player requests, task sweeps,
+  scoping a task from the code, research reading; Claude for orchestration, bookkeeping, game runs, benchmarks and
+  player text; Gemini code agents for code that needs only a typecheck, Rust tests or a node check. Gemini as the
+  adversarial reviewer: "if we run out i'll likely upgrade the sub" (Anita, 2026-11-24).
+- PR closing comments in normal capitalization: they are ours, not her voice (2026-11-25).
+- Stash by name, pop by index: on 2026-11-24 two agents bare-popped at once and swapped changes.
+- No `tail -F` on a PowerShell job's log: on 2026-11-26 the open handle made Add-Content fail and the log went silent.
+- Rust-constants trials into a notes/ patch: T-3029.
+- The last full task sweep before T-4422 was notes/task-sweep-2026-11-18.md.
