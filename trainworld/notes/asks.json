@@ -5,5 +5,26 @@
     "text": "Bugs like T-4367 would show within hours of a publish if the game sent the server a count of 'Demand stopped' and similar failures (version, the error's first line, phone or computer; nothing about the player), shown on twstats. Today we only hear when a player writes in. Worth building? It's a game and server change, so yours to say.",
     "since": "2026-11-26",
     "by": "maps-3a"
+  },
+  {
+    "id": "a-2026-11-27-1",
+    "title": "Flyover refusal text",
+    "text": "T-4379 landed: while drawing, 'One track is still on its ramp where they cross, so they are less than a level apart. Cross past the end of the ramp. Each level needs at least 160 m of ramp.' (was 'Tracks cannot cross on a ramp unless they are a full level apart.'); the red crossing mark's hover 'One track is still on its ramp here' (was 'Tracks cross on a ramp less than a level apart'). Japanese in notes/T-4379.md. OK, or reworded?",
+    "since": "2026-11-27",
+    "by": "maps-3a"
+  },
+  {
+    "id": "a-2026-11-27-2",
+    "title": "Discord channels to read",
+    "text": "Once the read-only Discord bot is set up (steps sent 11-27, token in C:\\Users\\anita\\discord-reader-token.txt), which channels besides #bug-reports should it read? Then an agent writes the reader (T-4383).",
+    "since": "2026-11-27",
+    "by": "maps-3a"
+  },
+  {
+    "id": "a-2026-11-27-3",
+    "title": "Start T-4372",
+    "text": "Start T-4372 (smoke plays a second game with phone settings: intercity trips off, one worker, long lines), which would have caught the 0.4.7 crash? About 1-2 hours of agent work. I'd say yes.",
+    "since": "2026-11-27",
+    "by": "maps-3a"
   }
 ]

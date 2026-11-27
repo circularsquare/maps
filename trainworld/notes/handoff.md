@@ -1,29 +1,29 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 72757b8d-c220-47a4-ac30-041ad0a7ac39, name maps-3a [8d9b93], since 2026-11-26 14:17 UTC
-Updated: 2026-11-27 04:35 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-27 14:30 UTC (maps-3a cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. 0.4.7.1 live 11-26 17:07 UTC (her yes): 0.4.7 (058b348af) plus T-4367's fix, app only, data R2 2026-11-25,
-   build mwxs0pfz, website fc62297, verify --page all PASS; branch tw/hotfix471 (a71808780) on origin, open-source
-   synced; master has its entry (6692949a3). Filed T-4372 (smoke with phone settings, her "should have caught").
-   11-27 running: coreslider2 (Opus, T-3932, tree coreslider2, 6148), flyovertext (Sonnet, T-4379, 6149). Asked her:
-   load-time investigation, the BRT linked-stations call, Discord read access, crash counts (a-2026-11-26-6), T-4372.
-2. Gemini is back (her 11-27: a free Thanksgiving reset): Gemini first for reading and review again. Batch review of
-   d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 running (artifacts/trainworld/gemini/batch-1127-*).
-3. Region redraws done (T-4364, T-4365 archived; 5b1fab73d): all her picks but Poland, IL rejoined for seams, place
-   names refreshed, c007. 8800 at 5b1fab73, smoke passed (12 checks). The undo backups data/work/pre-T4364* (19 GB;
-   49.9 GB free) stay until she has seen the zones on 8800; delete them 11-28 if nothing comes up.
-4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
+1. Running in maps-3a's tab (reports reach the inbox): coreslider2 (Opus, T-3932 P1, tree coreslider2, port 6148:
+   slider + estimates + "takes effect after a reload", 12 languages) and loadreports (Sonnet: reads players' load
+   diagnostics only, her "dont load the same save several ways"; writes notes/load-reports-2026-11-27.md). Gemini batch
+   review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 runs in that tab too: result in
+   artifacts/trainworld/gemini/batch-1127-review.md (findings go to a fix agent, then publish can follow).
+2. 8800 at 5b1fab73 (region redraws, smoke passed); master has T-4379 since (381db4060): rebuild 8800 after coreslider2
+   lands. She is checking the redrawn zones on 8800 today (her main task); undo per country: notes/T-4364.md "The job".
+   Backups data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
+3. 0.4.7.1 live (T-4367 hotfix, 11-26). A Twitter "numbers stopped updating" alert posted ~06:30 UTC 11-27, after the
+   hotfix: version unknown; suggested she ask the player to send it via the in-game feedback button.
+4. Queued: T-4382, T-4380, T-4381 (buses, her 11-27 calls); T-4383 Discord reader once she makes the bot (steps sent);
+   T-4374, T-4377 (P2 bugs from triage-2026-11-27); then T-4153 s10, T-4309, T-4314/T-4315, T-3160, T-3838.
+   Gemini is back (her 11-27, a free reset): Gemini first for reading, review, triage.
 
 ## Her words
 - 11-27 ~10:00: core slider is high leverage now (T-3932, P1); light mode wouldn't help ("drawing is already very
   minimal"); T-4370/T-3160 stay high P2 unless an easy clear path; "buses are settled" dropped (DECISIONS); loads felt
-  instant sometimes, 10 min others, 30 min for players: is that expected?
-- 11-26 ~09:10: Skierniewice: "ok i guess we can leave out poland. everything else fine to do." Asked whether Macau
-  is part of Zhuhai ("shouldnt it be separate so that there can be a border factor?"): answered as item 3.
-- 11-25 ~17:20: usage at 88%: finish the running tasks and wind down; no new agents. Batch review waits for later.
+  instant sometimes, 10 min others, 30 min for players: is that expected? Her guess: low memory / resources. She asked
+  about reading Discord directly (T-4383). With Gemini back she's started work again (agents running 11-27).
 - 11-25 ~15:00: quiet-machine work (baseline, edit-speed stages) "would make sense to start after" her League game.
 - 11-25 ~12:50: "ok, ship." 0.4.7 (via standby maps-d6, after Belgrade setup +23% over her one-time 20% threshold).
 - 11-25 ~12:15: rest of the week 1-4 agents (not 2-8); usage at 83%, "dont worry about running out... dont want you
