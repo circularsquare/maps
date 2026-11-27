@@ -25,6 +25,10 @@ from pathlib import Path
 
 AGENTS_DIR = Path.home() / ".gemini" / "config" / "agents"
 SAFE = r"[^;&|<>$`(){}\r\n]"   # one argument: no chaining, pipes, redirection, subexpressions or escapes
+# T-4261: ARG is SAFE plus quoted strings, inside which PowerShell treats | ( ) { } ; & < > as plain text: a git grep
+# pattern "a|b" or "foo(" or a play.mjs call 'act.camera([1,2], 3)'. Quotes are read the way PowerShell reads them: a
+# bare " or ' cannot start inside an unquoted run, a "..." holds no $ or backtick (they expand), a '...' holds anything.
+ARG = r"(?:[^;&|<>$`(){}\r\n\"']|\"[^\"$`\r\n]*\"|'[^'\r\n]*')"
 SEP = r"[/\\]"
 
 
@@ -33,7 +37,7 @@ def read_rules():
     \"grep_search\" is deprecated and has no effect"), so an agent searches through the shell: git grep and
     Get-ChildItem. It reads files with its file tool, which keeps to the workspace and the read_file rules; Get-Content
     and Select-String would not."""
-    return [r"command(regex:git (status|diff|log|show|blame|ls-files|grep)( %s*)?)" % SAFE,
+    return [r"command(regex:git (status|diff|log|show|blame|ls-files|grep)( %s*)?)" % ARG,
             r"command(regex:(Get-ChildItem|ls|dir)( %s*)?)" % SAFE]
 
 

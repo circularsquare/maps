@@ -2,6 +2,7 @@
 
     venv\Scripts\python.exe trainworld/tools/gemini_agent.py start <name> --brief <file> [--task T-1234] [--tree <tree>]
         [--new-tree] [--cores 2] [--timeout 90] [--model gemini-4-neon-medium] [--trial]
+        [--game <city|file.save>]
     venv\Scripts\python.exe trainworld/tools/gemini_agent.py list
     venv\Scripts\python.exe trainworld/tools/gemini_agent.py stop <name>
 
@@ -14,6 +15,17 @@ prints "agent report ... (gemini, ...)"; a run that fails or times out reports t
 artifacts/trainworld/gemini/agents/<name>-<time>/agy.log (agy's own log beside it; steps.txt lists each tool call).
 For the first runs (notes/gemini-agent-rounds.json, her 11-25) the same conversation is then asked which permissions
 it lacked or didn't need, and the answer goes in the report under "Permissions"; --trial runs ask but don't count.
+
+A game (T-4261, --game): agy and everything a tool call starts sit in a job object that is killed when the call ends, so an
+agent can't keep a Vite or a play.mjs game alive between calls. With --game the runner (outside that job) starts the tree's
+Vite (checks/dev-nowatch.mjs, a free port in 6100-6199) and `play.mjs start <game> --port P --cores 1 --idle <timeout>` before
+the session, tells the agent in its prompt (port; use play.mjs do|sim|edits|reload only), and in its finally (a failure or
+timeout too; `stop` does it after killing the runner) runs `play.mjs stop --port P` and `taskkill /F /T /PID <vite pid>`, the
+pids and port recorded in state.json, nothing broader. If the game can't be opened the agent is told and works without.
+The runner dying hard leaves the game to its --idle stop. Quoted arguments pass the command rules (agy_session.ARG: "..."
+without $ or backtick, '...'): git grep -e "a" -e "b", git grep -E "a|b", play.mjs do '<js>'; an unquoted | ; & ( ) { } is
+still refused. TW_MAPS_ROOT (env) points trees, runs, venv and cores.py at the main maps root, to try a copy of this file
+from a worktree.
 
 What the agent can do (agy 1.5 on Windows 10, which has no terminal sandbox):
 - Its tools are only those of the custom agent trainworld-coder (written to ~/.gemini/config/agents/ each run): read,
@@ -32,11 +44,14 @@ can run anything as Anita's user. The rules in GEMINI.md and trainworld/CLAUDE.m
 import argparse
 import json
 import os
+import random
 import re
+import socket
 import subprocess
 import sys
 import tempfile
 import time
+import urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -45,7 +60,7 @@ import agy_session  # noqa: E402
 import reports  # noqa: E402
 
 TW = HERE.parent
-MAPS = TW.parent
+MAPS = Path(os.environ.get("TW_MAPS_ROOT") or TW.parent)   # the maps root (trees, runs, venv, cores.py); set only to try a copy of this file from a worktree (T-4261)
 TREES = MAPS / ".tw-trees"
 RUNS = MAPS / "artifacts" / "trainworld" / "gemini" / "agents"
 ROUNDS = TW / "notes" / "gemini-agent-rounds.json"
@@ -73,7 +88,7 @@ def temp_dirs():
 
 
 def settings():
-    SAFE, SEP = agy_session.SAFE, agy_session.SEP
+    SAFE, SEP, ARG = agy_session.SAFE, agy_session.SEP, agy_session.ARG
     py = r"(python|py|venv%sScripts%spython(\.exe)?)" % (SEP, SEP)
     return {
         "agentMode": "accept-edits",
@@ -84,6 +99,8 @@ def settings():
                 r"command(regex:%s trainworld%stools%s(agent_cargo\.py (test|wasm)|changelog\.py (add|list|reword))( %s*)?)"
                 % (py, SEP, SEP, SAFE),
                 r"command(regex:node trainworld%schecks%s[\w.-]+\.mjs( %s*)?)" % (SEP, SEP, SAFE),
+                # play.mjs calls are JS in quotes: do 'act.camera([1,2], 3)' (T-4261)
+                r"command(regex:node trainworld%schecks%splay\.mjs( %s*)?)" % (SEP, SEP, ARG),
                 "read_file(%s)" % MAPS.as_posix(),
             ],
             "deny": agy_session.backstop_rules() + ["write_file(%s)" % p for p in sorted(temp_dirs()) + PROTECTED],
@@ -104,8 +121,11 @@ This run:
     python trainworld/tools/agent_cargo.py test | wasm
     python trainworld/tools/changelog.py add | list | reword ...
     node trainworld/checks/<check>.mjs ...       (a Vite of your own on a port in 6100-6199, never 8800)
+  Search for alternatives with several -e patterns or one pattern in double quotes: git grep -n -e "a" -e "b" dir/,
+  git grep -n -E "a|b" dir/ (single quotes work too; a | outside quotes is a pipe and is refused).
   Anything else is refused, and a refused command ends your turn; you will be told to carry on. Never commit, push,
   stash, reset or check out anything.
+{game}
 - {cores} cores are claimed for you (TW_CORES is set). Don't run cores.py, tasks.py or handoff.py.
 - The file tools can't write to TASKS.md, DECISIONS.md, ARCHIVE.md, LINES.md, TODO.md, notes/handoff.md,
   notes/asks.json or the CLAUDE.md and GEMINI.md files: say in your report what should change there. Detail goes
@@ -178,6 +198,80 @@ def summary(sess, tree, minutes):
     return ", ".join(parts)
 
 
+GAME_TEXT = """- A game is open for you: {what}, paused, on :{port}, in a Vite and a headless Chrome that this run started outside your\n  tool calls and stops when you finish. Use only play.mjs do | sim | edits | reload | status, with calls in quotes (one game\n  in your tree, so --port is optional). Don't run play.mjs start, stop or serve, or your own Vite for it: a process you\n  start in a tool call ends with the call. For another city or save, use play.mjs reload <city|file.save>."""
+GAME_NONE = "- No game is open for you. A process you start in a tool call ends with the call, so play.mjs can't keep a game here."
+GAME_FAILED = "- A game could not be opened for you (" + "{err}" + "). Work without one and say so in your report."
+
+
+def free_port():
+    """A port in 6100-6199 that nothing listens on and no play.mjs game has a state file for."""
+    base = random.randrange(100)
+    for i in range(100):
+        port = 6100 + (base + i) % 100
+        if (Path(tempfile.gettempdir()) / "tw-play" / ("%d.json" % port)).exists():
+            continue
+        busy = False
+        for host, fam in (("127.0.0.1", socket.AF_INET), ("::1", socket.AF_INET6)):
+            try:
+                with socket.socket(fam, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.5)
+                    busy = busy or s.connect_ex((host, port)) == 0
+            except OSError:
+                pass
+        if not busy:
+            return port
+    raise RuntimeError("no free port in 6100-6199")
+
+
+def open_game(tree, what, timeout_min, run_dir, say):
+    """T-4261: agy's job object ends everything a tool call starts, so the harness (outside that job) starts the agent's Vite
+    and its play.mjs game, and close_game stops them. Returns {port, vite_pid}."""
+    port = free_port()
+    log = open(run_dir / "vite.log", "w", encoding="utf-8")
+    vite = subprocess.Popen(["node", str(tree / "trainworld" / "checks" / "dev-nowatch.mjs"), str(port)], cwd=str(tree),
+                            stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT, close_fds=True,
+                            creationflags=0x08000000 | 0x200)   # CREATE_NO_WINDOW, CREATE_NEW_PROCESS_GROUP
+    game = {"port": port, "vite_pid": vite.pid}
+    say("vite pid %d on :%d" % (vite.pid, port))
+    try:
+        t0 = time.time()
+        while True:
+            if vite.poll() is not None:
+                raise RuntimeError("Vite exited (%s); see vite.log" % vite.returncode)
+            try:
+                urllib.request.urlopen("http://localhost:%d/" % port, timeout=5).close()
+                break
+            except Exception:
+                if time.time() - t0 > 120:
+                    raise RuntimeError("Vite not answering after 120 s")
+                time.sleep(1)
+        code, out = sh(["node", "trainworld/checks/play.mjs", "start", what, "--port", str(port), "--cores", "1",
+                        "--idle", str(timeout_min), "--timeout", "150"], cwd=tree, timeout=240)
+        say("play.mjs start: exit %d %s" % (code, out.strip()[-300:]))
+        if code != 0 or not out.strip().startswith("ready:"):
+            raise RuntimeError("play.mjs start: " + out.strip()[-300:])
+    except Exception:
+        close_game(tree, game, say)
+        raise
+    return game
+
+
+def close_game(tree, game, say):
+    """Stop the game (play.mjs stop ends its Chrome) and the Vite, by the pids and port this run recorded, nothing broader."""
+    if not game:
+        return
+    try:
+        code, out = sh(["node", "trainworld/checks/play.mjs", "stop", "--port", str(game["port"])], cwd=tree, timeout=90)
+        say("play.mjs stop: exit %d %s" % (code, out.strip()[-200:]))
+    except Exception as ex:
+        say("play.mjs stop failed: %s" % ex)
+    try:
+        code, out = sh(["taskkill", "/F", "/T", "/PID", str(game["vite_pid"])], timeout=60)
+        say("vite stop: exit %d" % code)
+    except Exception as ex:
+        say("vite stop failed: %s" % ex)
+
+
 def run(a):
     run_dir = Path(a.run_dir) if a.run_dir else RUNS / ("%s-%s" % (a.name, time.strftime("%Y%m%d-%H%M")))
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -207,15 +301,26 @@ def run(a):
                             "--model", a.model, "--tree", a.tree])
             say("tasks.py start: exit %d %s" % (code, out.strip()))
         granted = claim(a.name, a.cores, say)
+        state["cores_claimed"] = granted
         if not granted:
             raise RuntimeError("cores.py claim for %d cores failed or timed out" % a.cores)
         brief = Path(a.brief).read_text(encoding="utf-8")
+        game_text = GAME_NONE
+        if a.game:
+            try:
+                game = open_game(tree, a.game, a.timeout, run_dir, say)
+                state["game"] = {"port": game["port"], "vite_pid": game["vite_pid"]}
+                save_json(state_path, state)
+                game_text = GAME_TEXT.format(what=a.game, port=game["port"])
+            except Exception as ex:   # the run goes on without a game, and the agent is told
+                say("game: %s: %s" % (type(ex).__name__, ex))
+                game_text = GAME_FAILED.format(err=str(ex)[-400:])
         (run_dir / "brief.md").write_text(brief, encoding="utf-8")
         settings_path = run_dir / "settings.json"
         save_json(settings_path, settings())
         agy_session.ensure_agent(AGENT, "Code agent for trainworld/tools/gemini_agent.py (files, search, commands)",
                                  TOOLS, AGENT_BODY)
-        prompt = PROMPT.format(name=a.name, tree=tree, tree_name=a.tree, cores=granted, mark=MARK, brief=brief,
+        prompt = PROMPT.format(name=a.name, tree=tree, tree_name=a.tree, cores=granted, mark=MARK, brief=brief, game=game_text,
                                note=(a.task + ".md") if a.task else "T-xxxx.md")
         env = dict(os.environ, TW_CORES=str(granted), CARGO_BUILD_JOBS=str(granted))
         sess = agy_session.Session(tree, run_dir / "agy.log", model=a.model, agent=AGENT, settings=settings_path,
@@ -250,6 +355,7 @@ def run(a):
     finally:
         if sess:
             sess.close()
+        close_game(tree, state.get("game"), say)
         if granted:
             release(a.name)
         minutes = round((time.time() - t0) / 60)
@@ -298,6 +404,8 @@ def start(a):
         args.append("--new-tree")
     if a.trial:
         args.append("--trial")
+    if a.game:
+        args += ["--game", a.game]
     out = open(run_dir / "runner-console.txt", "w", encoding="utf-8")
     # CREATE_NO_WINDOW, not DETACHED_PROCESS: a detached process has no console, so the venv's python.exe redirector and
     # every console program the run starts would each open a window on her screen; a hidden console is inherited.
@@ -319,6 +427,7 @@ def stop(a):
     for r in live:
         if alive(r["pid"]):
             sh(["taskkill", "/F", "/PID", str(r["pid"])], timeout=60)   # its job object takes agy and its children
+        close_game(TREES / r["tree"], r.get("game"), lambda m: print(m))   # the runner died before its own finally
         release(a.name)
         text = "Stopped by the orchestrator before it reported. Log: %s" % (Path(r["dir"]) / "agy.log")
         rec = reports.Box(str(TW)).add(a.name, text, task=r.get("task"), kind="gemini", model=r.get("model"),
@@ -345,6 +454,7 @@ def main():
         s.add_argument("--timeout", type=int, default=90, help="minutes")
         s.add_argument("--model", default="gemini-4-neon-medium")
         s.add_argument("--trial", action="store_true", help="a test run: not counted as a round")
+        s.add_argument("--game", help="a city id (nyc) or .save path: a game is opened for the agent before the run (play.mjs)")
         s.add_argument("--run-dir", help=argparse.SUPPRESS)
     sub.add_parser("list")
     t = sub.add_parser("stop")

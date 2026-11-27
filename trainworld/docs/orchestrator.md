@@ -38,7 +38,7 @@ These come before everything below; the first two are her two top priorities (11
   only the tasks that share files with a running agent: name them, start something else.
 - **Size tasks to about an hour or one stage**; a brief whose work looks bigger is split before it starts: stages,
   each its own id and report. An agent that compacts was given too much.
-- **Model**: nearly every new task goes to a Gemini code agent (her 11-27: Claude usage runs out first; "lets see how it goes"), Gemini 4 Neon (`gemini_agent.py`'s default) for an Opus-tier task, Hydrogen (`--model gemini-4-hydrogen-medium`) for a Sonnet-tier one; they count among the 2-8. Its game run, if it can't make one (play.mjs is a node check it may run), is the orchestrator's short check at landing. Claude only where Gemini can't do the work: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands;
+- **Model**: nearly every new task goes to a Gemini code agent (her 11-27: Claude usage runs out first; "lets see how it goes"), Gemini 4 Neon (`gemini_agent.py`'s default) for an Opus-tier task, Hydrogen (`--model gemini-4-hydrogen-medium`) for a Sonnet-tier one; they count among the 2-8. A task that needs a game run gets `--game nyc` (Gemini agents below); without it, the game run is the orchestrator's short check at landing. Claude only where Gemini can't do the work: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands;
   no Fable for agents unless she asks (the successor's advisor, "Your own cycling", is the one Fable use). Advisor: as trainworld/CLAUDE.md "Advisor", and briefs don't invite it otherwise; log each
   call in notes/handoff-log.md (what was asked, whether the advice changed anything).
 - **Briefs** start with two lines: the kind of change and its row of the measuring budget (trainworld/CLAUDE.md
@@ -211,7 +211,12 @@ she thinks it's ready; then run the skill. Keep the checks it needs (smoke, perf
   stashes, resets, pushes, tools/ops, tools/aws, 8800, and file writes outside its tree or to TASKS, DECISIONS, ARCHIVE,
   LINES, TODO and the handoff. Not enforced: there is no OS sandbox here, so an allowed command runs whatever the tree
   holds (an edited check or package.json). Its first three runs end with a "Permissions" answer for her. `list`, `stop`:
-  its top comment.
+  its top comment. **Games (T-4261)**: agy's job object ends whatever a tool call starts, so an agent can't keep a game
+  itself. Add `--game nyc` (a city id or a .save path) and the runner starts the agent's Vite (free port in 6100-6199)
+  and `play.mjs start` before the session, the prompt says so, the agent uses `play.mjs do | sim | edits | reload`
+  across calls, and the runner stops both at the end (failure, timeout and `stop` too, by their own pids). It costs
+  1 more core and about a minute: leave it off for a task with no game run. Quoted arguments now pass the rule
+  (`git grep -n -e "a" -e "b"`, `git grep -E "a|b"`, `play.mjs do 'act.camera([1,2], 3)'`); a bare | or ; is still refused.
 
 ## Traps
 
