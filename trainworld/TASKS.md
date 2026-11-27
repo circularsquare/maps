@@ -178,10 +178,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-27, agent netcut10)
-  - Context: You, 11-23: "this is the entire issue". Stage 9 landed 11-25: a cut line's bands worked out only near the cut. Your Asia save, Node, a station on a three-line trunk: network build about 149 to 117 ms. Left: per-line passes (about 20 ms), train speeds (20), the bands' last whole-line copies (10-15).
-  - Goal: A station on a line's track on Asia under 100 ms of network build (T-4097's aim): per-line passes and speeds redone only for lines that changed.
-  - Other: notes/T-4153.md "Stage 9"
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+  - Context: You, 11-23: "this is the entire issue". Stage 10 landed 11-27: per-line passes redone only for the lines an edit changed (their parts 41 to 31 ms on your Asia save). By its parts a trunk station now builds in about 92-96 ms, not yet timed on a quiet machine. Left: train speeds (14-53 ms), the bands' last whole-line copies.
+  - Goal: A station on a line's track on Asia under 100 ms of network build, timed on a quiet machine; train speeds redone only for lines that changed.
+  - Other: notes/T-4153.md "Stage 10"
 - T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
@@ -505,9 +505,13 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
   - Other: notes/T-4400.md
-- T-4373 [P3] {L:small-fixes} Line panel shows another city's line and won't close (taking, 2026-11-27, agent linepanel)
-  - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line, then no click closed it. Reach: few, a city filter with a panel open.
-  - Goal: Changing the city filter or picking another line always shows that line's stops, and the panel closes.
+- T-4406 [P2] {L:map-look} One Show block for levels and modes (taking, 2026-11-27, agent showblock)
+  - Context: You, 11-27, after T-4400: "lets have them have the mode colros tho (blue, purple, etc) and also i'd like to not have the extra 'show modes' row. isntead lets change the 'show levels' row to say just 'show'. the one 'show all' button should apply show all to levels and modes."
+  - Goal: Settings shows "Show" and one "Show all" (levels and modes), then the levels row, the modes row in the modes' colours, then Blueprints.
+- T-4373 [P4] {L:small-fixes} Line panel shows another city's line and won't close
+  - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line. Not reproduced 11-27: the panel keys by line id, and Escape or a map click close it.
+  - Goal: Reopen if another player reports it with steps or a diagnostics download.
+  - Other: notes/T-4373.md
 - T-4375 [P3] {L:map-look} Station circles missing on an Android phone
   - Context: A player on 0.4.7.1 (tw-feedback 1795782306-1df30531, 11-27), Chrome 145 on a Qualcomm Adreno 650, 8 lines, says station circles aren't shown on mobile. No picture, no zoom given. Reach: few, since most phones would show it.
   - Goal: Cause found on an emulated phone at the player's zoom, or closed as not reproducible.
