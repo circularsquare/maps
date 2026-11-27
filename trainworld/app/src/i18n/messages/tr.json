@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "Zemin seviyesindeki istasyon suda duramaz.",
   "issues.stationOnJunction": "İstasyon kavşağın üstüne kurulamaz.",
   "issues.stationTrack": "İstasyonun ihtiyaç duyduğu ray bu. Önce istasyonu kaldır.",
+  "issues.stopNotStation": "Hattın duraklarından biri artık bir istasyon değil.",
+  "issues.stopTwice": "Bir hat aynı istasyonda art arda iki kez duramaz.",
   "issues.terrainMissing": "Buradaki arazi yüklenmedi. Tekrar dene.",
   "issues.tooManyPorts": "Burada çok fazla ray birleşiyor.",
   "issues.tracks": "Ray çift ya da dörtlü hat olmalı.",

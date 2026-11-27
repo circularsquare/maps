@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "A station at ground level cannot stand in water.",
   "issues.stationOnJunction": "A station cannot be on a junction.",
   "issues.stationTrack": "A station needs this track. Remove the station first.",
+  "issues.stopNotStation": "One of the line's stops is not a station any more.",
+  "issues.stopTwice": "A line cannot stop at the same station twice in a row.",
   "issues.terrainMissing": "The terrain here did not load. Try again.",
   "issues.tooManyPorts": "Too many tracks meet here.",
   "issues.tracks": "Track has to be double or quad.",

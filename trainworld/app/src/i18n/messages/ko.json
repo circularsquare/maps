@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "지상 역은 물 위에 세울 수 없어요.",
   "issues.stationOnJunction": "역은 분기 위에 놓을 수 없어요.",
   "issues.stationTrack": "역에 필요한 선로예요. 먼저 역을 철거하세요.",
+  "issues.stopNotStation": "이 노선의 정차역 하나가 이제 역이 아니에요.",
+  "issues.stopTwice": "노선은 같은 역에 두 번 연속 정차할 수 없어요.",
   "issues.terrainMissing": "여기 지형 정보를 불러오지 못했어요. 다시 시도해 보세요.",
   "issues.tooManyPorts": "여기서 만나는 선로가 너무 많아요.",
   "issues.tracks": "선로는 복선이나 복복선이어야 해요.",

@@ -316,3 +316,17 @@ fn deleting_termini_past_one_way_stations_keeps_capacity_whole() {
     assert_eq!(a.w.net.line_data(l).unwrap().stops, vec![s0, pa, pb, t]);
     assert!(a.w.svc.lines[l as usize].running);
 }
+
+/// T-4374: deleting a terminus past the one-way loop, the line's last stops its two legs, takes the stop
+/// out as a stop edit does (the one-way stations where the track puts them, T-3565); it was refused,
+/// saying a line needs two different stations (T-4098's notes).
+#[test]
+fn a_terminus_past_a_one_way_loop_goes_as_its_stop_would() {
+    let mut a = api();
+    let [s0, _, pa, pb, _, t] = loop_past(&mut a);
+    let l = line(&mut a.w, &[s0, pa, pb, t], [8.0, 4.0, 2.0]);
+    assert_eq!(a.remove_station(t), 0, "{}", a.issue_kinds());
+    a.settle_owed();
+    assert_eq!(a.w.net.line_stops(l), &[s0, pb, pa]);
+    assert!(a.w.net.check_line(l).is_ok() && !a.w.net.line_broken[l as usize]);
+}

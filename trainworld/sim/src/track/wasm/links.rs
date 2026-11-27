@@ -499,21 +499,34 @@ impl TrackApi {
                 tail.push(Op::Node { id: n, data: None });
             }
         }
-        // lines stopping at a removed station: routed on the track as it will be, the stop left out,
-        // never with a reversal the old path did not make (as DeleteEdge reroutes, T-797)
+        // lines stopping at a removed station: routed on the track as it will be, the stop left out as
+        // a stop edit takes it out (`edited_stops`; T-3050: a loop that loses its first stop closes
+        // again on its new first stop), never with a reversal the old path did not make (as DeleteEdge
+        // reroutes, T-797)
         let users: Vec<_> = (0..net.line_count() as u32)
             .filter(|&l| net.line_ok(l) && net.line_stops(l).iter().any(|s| st.binary_search(s).is_ok()))
-            .filter_map(|l| net.line_data(l).map(|d| (l, net.turn_count(&d.stops, &d.path), d)))
+            .filter_map(|l| net.line_data(l).filter(|d| d.ferry.is_none() && d.bus.is_none()).map(|d| (l, net.turn_count(&d.stops, &d.path), d)))
             .collect();
         if !users.is_empty() {
             let inv = self.w.sketch(Op::Batch(ops.clone()), false).ok();
             for (l, turns, mut d) in users {
-                let mut stops: Vec<u32> = d.stops.iter().copied().filter(|s| st.binary_search(s).is_err()).collect();
-                stops.dedup();
-                if let Some(p) = self.w.net.route(&stops, &d.ones).filter(|p| self.w.net.turn_count(&stops, p) <= turns && self.w.net.route_runs(l, &stops, p)) {
-                    d.path = p;
+                let net = &self.w.net;
+                let mut kept: Vec<u32> = d.stops.iter().copied().filter(|s| st.binary_search(s).is_err()).collect();
+                kept.dedup();
+                let mut again = kept.clone();
+                if closed(&d.stops) && again.len() >= 2 && again[0] != again[again.len() - 1] {
+                    again.push(again[0]);
                 }
-                d.stops = stops;
+                let rerouted = super::lines::edited_stops(net, &again, d.hand, &d.ones).filter(|(s, p)| net.turn_count(s, p) <= turns && net.route_runs(l, s, p));
+                match rerouted {
+                    Some((s, p)) => (d.stops, d.path) = (s, p),
+                    // the old path kept where it still runs the rest, or runs over removed track (the line
+                    // is then left broken, as removed track leaves it)
+                    None if d.path.iter().any(|&p| !net.edge_ok(p >> 1)) || net.route_runs(l, &kept, &d.path) => d.stops = kept,
+                    // T-4374: else the line keeps its stop, and the station's removal is refused as in use
+                    // (`StationInUse`) rather than for the old path not fitting the stops left
+                    None => continue,
+                }
                 ops.push(Op::Line { id: l, data: Some(d) });
             }
             if let Some(inv) = inv {

@@ -1151,6 +1151,8 @@
   "issues.stationInWater": "A station at ground level cannot stand in water.",
   "issues.stationInUse": "A line stops here. Take the station out of that line first.",
   "issues.lineStops": "A line needs at least two different stations.",
+  "issues.stopTwice": "A line cannot stop at the same station twice in a row.",
+  "issues.stopNotStation": "One of the line's stops is not a station any more.",
   "issues.linePath": "No track joins these stations in this order.",
   "issues.noWayBack": "No way back from this station on one-way track.",
   "issues.insertStop": "No track joins these stations with that stop inserted. Check the track connections.",

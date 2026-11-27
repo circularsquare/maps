@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "地上の駅は水の中には置けません。",
   "issues.stationOnJunction": "分岐の上には駅を置けません。",
   "issues.stationTrack": "駅にこの線路が必要です。先に駅を撤去してください。",
+  "issues.stopNotStation": "この路線の停車駅のひとつが、もう駅ではありません。",
+  "issues.stopTwice": "路線は同じ駅に2回続けて停車できません。",
   "issues.terrainMissing": "ここの地形データを読み込めませんでした。もう一度試してください。",
   "issues.tooManyPorts": "ここに集まる線路が多すぎます。",
   "issues.tracks": "線路は複線か複々線である必要があります。",

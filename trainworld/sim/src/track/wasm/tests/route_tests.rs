@@ -258,6 +258,46 @@ fn the_first_stop_closes_and_opens_a_loop() {
     assert_eq!(b.stop_tiers(id).chunks(3).find(|c| c[0] as u32 == ns[0]).unwrap()[1], 5.0, "the ring leads round");
 }
 
+/// T-4374: a loop whose first station is removed closes again on its new first stop (T-3050), as
+/// taking the stop out of the line does, instead of turning into an open line.
+#[test]
+fn removing_a_loops_first_station_keeps_the_loop() {
+    let mut a = api();
+    let (w, ns) = super::super::super::tests::ring_fixture();
+    a.w = w;
+    let id = a.new_line_id();
+    let mut stops = ns[..4].to_vec();
+    stops.push(ns[0]);
+    assert_eq!(a.set_line_with_trains(id, &stops, 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    assert_eq!(a.w.net.line_loop(id), crate::track::net::LoopKind::Circle);
+    assert_eq!(a.remove_station(ns[0]), 0, "{}", a.issues());
+    a.settle_owed();
+    assert_eq!(a.w.net.line_stops(id), &[ns[1], ns[2], ns[3], ns[1]]);
+    assert_eq!(a.w.net.line_loop(id), crate::track::net::LoopKind::Circle, "still a circle");
+    assert!(a.w.net.check_line(id).is_ok());
+}
+
+/// T-4374: each problem with a line's stops is its own issue; LineStops is only a line with
+/// fewer than two stops and a path to run.
+#[test]
+fn each_problem_with_a_lines_stops_is_named() {
+    use crate::track::net::Issue;
+    let mut a = api();
+    let (w, ns) = super::super::super::tests::ring_fixture();
+    a.w = w;
+    let id = a.new_line_id();
+    assert_eq!(a.set_line_with_trains(id, &ns[..3], 6, 4, 2, 30.0, 180.0, 0, 0, "L".into()), 0, "{}", a.issues());
+    let net = &a.w.net;
+    let path = net.line_path(id).to_vec();
+    let check = |stops: &[u32]| net.check_route(id, stops, &path, false).map(|_| ());
+    assert_eq!(check(&ns[..3]), Ok(()));
+    assert_eq!(check(&[ns[0]]), Err(Issue::LineStops { line: id }));
+    assert_eq!(check(&[ns[0], ns[1], ns[1], ns[2]]), Err(Issue::StopTwice { line: id, node: ns[1] }));
+    assert_eq!(check(&[ns[0], 99_999, ns[2]]), Err(Issue::StopNotStation { line: id, node: 99_999 }));
+    assert_eq!(check(&[ns[2], ns[1], ns[0]]), Err(Issue::StopsOffPath { line: id }), "the path starts at another stop");
+    assert_eq!(check(&[ns[0], ns[2], ns[1], ns[2]]), Err(Issue::StopsOffPath { line: id }), "not along the path in order");
+}
+
 /// T-4223: a line round part of a ring closes into a circle however long the stretch from its last
 /// stop round to its first, stop-less: going back over its own track is no way round.
 #[test]

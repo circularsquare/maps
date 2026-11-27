@@ -43,6 +43,10 @@ const TEXT: Record<string, () => string> = {
   StationGroundOverWater: () => t("issues.stationInWater"),
   StationInUse: () => t("issues.stationInUse"),
   LineStops: () => t("issues.lineStops"),
+  // T-4374: what LineStops once said for every problem with a line's stops
+  StopTwice: () => t("issues.stopTwice"),
+  StopNotStation: () => t("issues.stopNotStation"),
+  StopsOffPath: () => t("issues.linePath"),
   LinePath: () => t("issues.linePath"),
   InsertStop: () => t("issues.insertStop"),
   DropStop: () => t("issues.dropStop"),

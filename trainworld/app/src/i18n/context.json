@@ -1155,6 +1155,8 @@
   "issues.stationInWater": "Refusal of placing a station.",
   "issues.stationInUse": "Refusal of removing a station.",
   "issues.lineStops": "Refusal when making a line.",
+  "issues.stopTwice": "Refusal when making a line: the same station twice in a row among its stops.",
+  "issues.stopNotStation": "Refusal when making a line: one of its stops was removed or was never a station.",
   "issues.linePath": "Refusal when making a line.",
   "issues.noWayBack": "Refusal when adding a stop to a line: the stop is reachable on one-way track, but trains could not come back from it.",
   "issues.insertStop": "Refusal when adding a stop to a line.",

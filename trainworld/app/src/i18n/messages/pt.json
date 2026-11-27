@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "Uma estação no nível do solo não pode ficar na água.",
   "issues.stationOnJunction": "Uma estação não pode ficar numa bifurcação.",
   "issues.stationTrack": "Uma estação precisa desta via. Remova a estação primeiro.",
+  "issues.stopNotStation": "Uma das paradas da linha não é mais uma estação.",
+  "issues.stopTwice": "Uma linha não pode parar duas vezes seguidas na mesma estação.",
   "issues.terrainMissing": "O terreno daqui não carregou. Tente de novo.",
   "issues.tooManyPorts": "Vias demais se encontram aqui.",
   "issues.tracks": "A via precisa ser dupla ou quádrupla.",

@@ -1204,8 +1204,10 @@ line panel's round-trip split, waiting at busy track among it: [ui-inspectors.md
   deleting one reroutes by the fastest path, unless that path reverses where the old one did not
   or the line would not run on it (`check_line`'s rules, a way back over one-way track included:
   `Network::route_runs`, T-4000), or marks the line broken. Removing a station a line stops at takes it out of the line's stops
-  and routes the line through the rest the same way, else leaves it broken (T-859); one undo
-  restores both. The two pieces left either side of a removed station become one where they
+  as a stop edit does (`edited_stops`: a loop that loses its first stop closes again on its new first stop,
+  T-3050) and routes the line through the rest the same way; failing that the line keeps its path where that
+  still runs the rest, or where the removal takes its track too (left broken, T-859); else the removal is
+  refused as the station in use (T-4374). One undo restores both. The two pieces left either side of a removed station become one where they
   would join under a platform (on one straight, alike in track count, type and built state;
   `unjoin_near`), in the same edit (T-1299). A line may pass a station without stopping, and may stop at a station
   twice, never twice in a row: stops that would repeat in a row count once (`distinct_stops` in

@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "地面车站不能建在水里。",
   "issues.stationOnJunction": "车站不能建在分岔上。",
   "issues.stationTrack": "车站需要这段轨道。请先移除车站。",
+  "issues.stopNotStation": "这条线路的一个停靠站已经不是车站了。",
+  "issues.stopTwice": "线路不能连续两次停靠同一座车站。",
   "issues.terrainMissing": "这里的地形数据没有加载出来。请重试。",
   "issues.tooManyPorts": "在这里交汇的轨道太多了。",
   "issues.tracks": "轨道必须是双线或四线。",

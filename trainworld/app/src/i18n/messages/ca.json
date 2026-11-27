@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "Una estació en superfície no pot estar dins l’aigua.",
   "issues.stationOnJunction": "Una estació no pot estar en una bifurcació.",
   "issues.stationTrack": "Una estació necessita aquesta via. Primer elimina l’estació.",
+  "issues.stopNotStation": "Una de les parades de la línia ja no és una estació.",
+  "issues.stopTwice": "Una línia no pot parar dues vegades seguides a la mateixa estació.",
   "issues.terrainMissing": "El terreny d’aquí no s’ha carregat. Torna-ho a provar.",
   "issues.tooManyPorts": "Aquí hi conflueixen massa vies.",
   "issues.tracks": "La via ha de ser doble o quàdruple.",

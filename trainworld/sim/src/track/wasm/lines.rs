@@ -1236,7 +1236,7 @@ fn distinct_stops(stops: &[u32]) -> Vec<u32> {
 /// turns back takes a straighter order of the same stops where one exists (T-1899, `straighten`),
 /// unless the player set its order by hand (`hand`, T-2895). A loop stops at every pass of a station
 /// it stops at (T-3122, `every_pass`).
-fn edited_stops(net: &Network, stops: &[u32], hand: bool, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
+pub(super) fn edited_stops(net: &Network, stops: &[u32], hand: bool, ones: &[(u32, u8)]) -> Option<(Vec<u32>, Vec<u32>)> {
     let stops = distinct_stops(stops);
     // T-3565: one-way stations where the track puts them
     if !hand {

@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "Stasiun di permukaan tanah tidak bisa berdiri di air.",
   "issues.stationOnJunction": "Stasiun tidak bisa berada di persimpangan.",
   "issues.stationTrack": "Stasiun butuh rel ini. Hapus stasiunnya dulu.",
+  "issues.stopNotStation": "Salah satu pemberhentian lini ini sudah bukan stasiun lagi.",
+  "issues.stopTwice": "Lini tidak bisa berhenti dua kali berturut-turut di stasiun yang sama.",
   "issues.terrainMissing": "Data medan di sini gagal dimuat. Coba lagi.",
   "issues.tooManyPorts": "Terlalu banyak rel bertemu di sini.",
   "issues.tracks": "Harus rel ganda atau rel empat.",

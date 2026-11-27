@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "Une station au niveau du sol ne peut pas être dans l’eau.",
   "issues.stationOnJunction": "Une station ne peut pas être sur une bifurcation.",
   "issues.stationTrack": "Une station a besoin de cette voie. Supprimez d’abord la station.",
+  "issues.stopNotStation": "Un des arrêts de la ligne n’est plus une station.",
+  "issues.stopTwice": "Une ligne ne peut pas s’arrêter deux fois de suite à la même station.",
   "issues.terrainMissing": "Le relief d’ici n’a pas chargé. Réessayez.",
   "issues.tooManyPorts": "Trop de voies se rejoignent ici.",
   "issues.tracks": "La voie doit être en double voie ou en voie quadruple.",

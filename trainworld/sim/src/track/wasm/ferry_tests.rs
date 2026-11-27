@@ -150,7 +150,7 @@ fn a_port_is_a_station_off_the_track() {
     // leaves a line its route no longer fits)
     let l = ferry_line(&mut a, &[p, q], &straight(&[0.0, 250.0], &[0, 1], 10.0));
     assert_ne!(a.remove_station(p), 0);
-    assert!(a.is_port(p) && a.line_stops(l) == vec![p, q], "{}", a.issue_kinds());
+    assert!(a.issue_kinds().contains("StationInUse") && a.is_port(p) && a.line_stops(l) == vec![p, q], "{}", a.issue_kinds());
     // its route must start, stop and end at its ports' berths
     let refused = |a: &mut TrackApi, ports: &[u32], route: &[f64]| a.set_ferry_route(l, ports, route) != 0;
     assert!(refused(&mut a, &[p, q], &[0.0, 0.0, K_PORT as f64, 2.0, 250.0, 80.0, K_PORT as f64, 2.0]), "80 m off the berth");

@@ -1266,6 +1266,8 @@
   "issues.stationInWater": "Eine ebenerdige Station kann nicht im Wasser stehen.",
   "issues.stationOnJunction": "Eine Station kann nicht auf einem Abzweig liegen.",
   "issues.stationTrack": "Eine Station braucht dieses Gleis. Entferne zuerst die Station.",
+  "issues.stopNotStation": "Einer der Halte der Linie ist keine Station mehr.",
+  "issues.stopTwice": "Eine Linie kann nicht zweimal hintereinander an derselben Station halten.",
   "issues.terrainMissing": "Das Gelände hier wurde nicht geladen. Versuch es nochmal.",
   "issues.tooManyPorts": "Hier treffen zu viele Gleise zusammen.",
   "issues.tracks": "Gleis muss zwei- oder viergleisig sein.",

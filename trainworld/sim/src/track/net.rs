@@ -544,7 +544,15 @@ pub enum Issue {
     PlatformCrossing { node: u32 },
     StationGroundOverWater { node: u32 },
     StationInUse { node: u32, line: u32 },
+    /// A line with fewer than two stops that has a path to run.
     LineStops { line: u32 },
+    /// T-4374: a line stopping at one station twice in a row.
+    StopTwice { line: u32, node: u32 },
+    /// T-4374: a stop of a line that is no station (a ferry line's: no port).
+    StopNotStation { line: u32, node: u32 },
+    /// T-4374: a line's stops not along its path in order, or a path that does not start at the
+    /// first stop and end at the last (a ferry route not calling at its ports).
+    StopsOffPath { line: u32 },
     LinePath { line: u32 },
     /// T-3889: a line with no tram stop (a train line) would run on tram track.
     TramTrack { line: u32 },

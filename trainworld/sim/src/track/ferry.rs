@@ -197,18 +197,25 @@ pub fn check(net: &Network, l: u32, ports: &[u32], r: &FerryRoute) -> Result<(),
     if ground_cum(net, pts).last().copied().unwrap_or(0.0) < MIN_ROUTE_M {
         return Err(path);
     }
-    let stops = Issue::LineStops { line: l };
-    if ports.len() < 2 || ports.windows(2).any(|w| w[0] == w[1]) || !ports.iter().all(|&p| net.is_port(p)) {
-        return Err(stops);
+    // T-4374: each problem with the ports is its own issue, as a rail line's (`Network::check_route`)
+    if let Some(&p) = ports.iter().find(|&&p| !net.is_port(p) || net.node_berth[p as usize].is_none()) {
+        return Err(Issue::StopNotStation { line: l, node: p });
     }
+    if let Some(w) = ports.windows(2).find(|w| w[0] == w[1]) {
+        return Err(Issue::StopTwice { line: l, node: w[0] });
+    }
+    if ports.len() < 2 {
+        return Err(Issue::LineStops { line: l });
+    }
+    let off = Issue::StopsOffPath { line: l };
     let at = r.port_points();
     if at.len() != ports.len() || at.first() != Some(&0) || at.last() != Some(&(pts.len() - 1)) {
-        return Err(stops);
+        return Err(off);
     }
     for (&i, &p) in at.iter().zip(ports) {
-        let Some(b) = net.node_berth[p as usize] else { return Err(stops) };
+        let Some(b) = net.node_berth[p as usize] else { return Err(off) };
         if ground_m(net, pts[i], b) > BERTH_TOL_M {
-            return Err(stops);
+            return Err(off);
         }
     }
     Ok(())

@@ -200,14 +200,20 @@ impl Network {
     /// `check_line` for a rail line's stops and path not yet on a line (`once`: it runs its path once
     /// round, one way); `l` names the line in the issue (T-3333: a twin is checked before it is made).
     pub fn check_route(&self, l: u32, stops: &[u32], path: &[u32], once: bool) -> Result<Vec<u32>, Issue> {
+        // T-4374: each problem with the stops is its own issue, so a refusal says which
+        if let Some(&s) = stops.iter().find(|&&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) {
+            return Err(Issue::StopNotStation { line: l, node: s });
+        }
+        if let Some(w) = stops.windows(2).find(|w| w[0] == w[1]) {
+            return Err(Issue::StopTwice { line: l, node: w[0] });
+        }
         if stops.len() < 2 && path.is_empty() {
-            if stops.iter().all(|&s| self.node_ok(s) && self.node_platform[s as usize] > 0) { return Ok(stops.to_vec()); }
-            return Err(Issue::LineStops { line: l });
+            return Ok(stops.to_vec());
         }
         if path.is_empty() {
             return Err(Issue::LinePath { line: l });
         }
-        if stops.len() < 2 || stops.windows(2).any(|w| w[0] == w[1]) {
+        if stops.len() < 2 {
             return Err(Issue::LineStops { line: l });
         }
         for &p in path {
@@ -236,15 +242,12 @@ impl Network {
             nodes.push(to);
         }
         if stops[0] != nodes[0] || *stops.last().unwrap() != *nodes.last().unwrap() {
-            return Err(Issue::LineStops { line: l });
-        }
-        if stops.iter().any(|&s| !self.node_ok(s) || self.node_platform[s as usize] == 0) {
-            return Err(Issue::LineStops { line: l });
+            return Err(Issue::StopsOffPath { line: l });
         }
         let turns = self.stop_reversals(path);
         let ones = self.line_ones(l);
         let Some((at, _)) = self.match_run(&nodes, stops, &turns, ones, path) else {
-            return Err(if turns.is_empty() { Issue::LineStops { line: l } } else { Issue::LinePath { line: l } });
+            return Err(if turns.is_empty() { Issue::StopsOffPath { line: l } } else { Issue::LinePath { line: l } });
         };
         // the return run goes round one-way track when the path back is against it (T-3094), and each
         // run stops at the platform on its own track (T-3348)
