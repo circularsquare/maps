@@ -1189,3 +1189,31 @@ fn same_fare_weight_keeps_periods() {
     a.set_fare_weight(w * 2.0).unwrap();
     assert_eq!(a.solved_mask(), 0);
 }
+
+/// T-4390: `Columns::pack` must test `to_bits() != 0` (integer comparison) in both passes rather
+/// than float `!= 0.0`, so 32-bit ARM NEON's subnormal flush-to-zero in an auto-vectorised
+/// counting pass cannot disagree with the scalar placing pass and write past `src.len()`.
+/// Native x86_64 has no asymmetric NEON/VFP FTZ, so `-0.0` (`0x8000_0000`) guards against
+/// regressing back to float `!= 0.0`, alongside subnormals in the last column.
+#[test]
+fn columns_pack_uses_integer_nonzero_for_subnormals() {
+    let s = 8;
+    let mut od = vec![0.0f32; s * s];
+    let sub1 = f32::from_bits(1);
+    let sub2 = f32::from_bits(0x007f_ffff);
+    let neg_zero = f32::from_bits(0x8000_0000);
+    od[0 * s + 0] = 1.5;
+    od[0 * s + 7] = sub1;
+    od[3 * s + 7] = sub2;
+    od[5 * s + 2] = neg_zero;
+    let mut cols = Columns::new(1, s);
+    cols.rows[0] = true;
+    cols.rows[3] = true;
+    cols.rows[5] = true;
+    cols.pack(&mut od, s, 0);
+    assert_eq!(cols.off[0], vec![0, 1, 1, 2, 2, 2, 2, 2, 4]);
+    assert_eq!(cols.src[0], vec![0, 5, 0, 3]);
+    assert_eq!(cols.trips[0].iter().map(|v| v.to_bits()).collect::<Vec<_>>(), vec![1.5f32.to_bits(), neg_zero.to_bits(), sub1.to_bits(), sub2.to_bits()]);
+    assert!(od.iter().all(|v| v.to_bits() == 0));
+    assert!(cols.rows.iter().all(|&r| !r));
+}

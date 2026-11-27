@@ -629,13 +629,17 @@ impl Columns {
     /// Moves one kind's trips out of `od` (`od[a * s + b]`), leaving it zero. Counted, then placed
     /// in arrays of the kind's own exact length, so packing copies nothing: the everyday pass sets
     /// a solving worker's peak (T-3160).
+    ///
+    /// Both passes test `to_bits() != 0` (integer comparison) rather than `!= 0.0`: on 32-bit ARM
+    /// WebAssembly, an auto-vectorised `f32x4.ne` (NEON) flushes subnormals to zero while scalar
+    /// `f32.ne` (VFP) keeps them, making the placing pass write past the counted length (T-4390).
     fn pack(&mut self, od: &mut [f32], s: usize, kind: usize) {
         debug_assert!(self.off[kind].is_empty(), "the pairs are stored purpose by purpose");
         let mut off = vec![0u32; s + 1];
         for (a, row) in od.chunks_exact(s).enumerate() {
             if self.rows[a] {
                 for (b, v) in row.iter().enumerate() {
-                    off[b + 1] += (*v != 0.0) as u32;
+                    off[b + 1] += (v.to_bits() != 0) as u32;
                 }
             }
         }
@@ -650,7 +654,7 @@ impl Columns {
                 continue;
             }
             for (b, v) in row.iter_mut().enumerate() {
-                if *v != 0.0 {
+                if v.to_bits() != 0 {
                     let j = at[b] as usize;
                     (src[j], trips[j]) = (a as u32, *v);
                     at[b] += 1;
