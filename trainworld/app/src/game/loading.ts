@@ -116,6 +116,7 @@ export function startGameWait(key: string, choice?: { slot?: string; newGame?: b
   // T-3927: the kind for a died-load report (the slot's name stays out of it)
   const kind = !choice ? "unknown" : choice.game?.real ? "real network" : choice.newGame ? "new game" : choice.pending ? "file, backup or shared game" : "saved slot";
   setLoadFlag(true, kind);
+  if (choice?.slot) noteLoadSlot(choice.slot);
   if (choice?.game?.start) noteLoad("picked", { city: choice.game.start });
   wait ={ seq: wait.seq, since: performance.now(), key };
   cardDismissed.value = false;
@@ -263,10 +264,12 @@ const LOAD_FLAG = "tw-load-started";
  * that ran out of memory may have cut them before the tab died), the slot the game is in once the page knows it
  * (`slot`), whether this load is itself the retry of one that died (`retry`), and whether the page saw its failure and
  * reloaded for the retry (`caught`). */
-interface LoadMark { kind: string; zones?: string; city?: string; stations?: number; lines?: number; step: string; ms: number; workers?: number; slot?: string; retry?: boolean; caught?: boolean }
+/** T-3933, T-4396: what an out-of-memory retry lowered for the next load */
+export type RetryKind = "cores" | "intercity" | "detail";
+interface LoadMark { kind: string; zones?: string; city?: string; stations?: number; lines?: number; step: string; ms: number; workers?: number; slot?: string; retry?: boolean | RetryKind; caught?: boolean }
 let mark: (LoadMark & { t0: number }) | null = null;
-/** T-3933: the next load to start is the retry of one that died (main.ts) */
-let nextIsRetry = false;
+/** T-3933, T-4396: the next load to start is the retry of one that died (main.ts) */
+let nextIsRetry: RetryKind | null = null;
 function writeMark() {
   try {
     if (!mark) { sessionStorage.removeItem(LOAD_FLAG); return; }
@@ -275,7 +278,7 @@ function writeMark() {
   } catch { /* storage unavailable */ }
 }
 function setLoadFlag(on: boolean, kind = "unknown") {
-  if (on) { mark = { kind, step: "picked", ms: 0, t0: Date.now(), ...(nextIsRetry ? { retry: true } : {}) }; nextIsRetry = false; }
+  if (on) { mark = { kind, step: "picked", ms: 0, t0: Date.now(), ...(nextIsRetry ? { retry: nextIsRetry } : {}) }; nextIsRetry = null; }
   else mark = null;
   writeMark();
 }
@@ -333,7 +336,7 @@ export function noteClockStep(step: string) {
 }
 export const clockStepNow = () => (clockStep ? `${clockStep.step}, ${Math.round((performance.now() - clockStep.at) / 1000)} s ago` : ""); // i18n-ignore
 /** T-3933: what a retry of the died load needs (null when none died, or an old flag) */
-let died: Pick<LoadMark, "workers" | "slot" | "retry"> | null = null;
+let died: { workers?: number; slot?: string; retry?: boolean } | null = null;
 export const diedLoad = () => died;
 /** Whether the last load in this tab never ended; the flag is cleared. */
 export function lastLoadDied(): boolean {
@@ -351,14 +354,16 @@ export function lastLoadDied(): boolean {
           m.city ? "start city " + String(m.city).slice(0, 40) : "",
           m.stations !== undefined ? `${m.stations} stations, ${m.lines ?? "?"} lines` : "counts not known yet",
           m.workers !== undefined ? `up to ${m.workers} solving workers` : "",
-          m.retry ? "it was the retry with fewer workers" : "",
+          m.retry === "intercity" ? "it was the retry without intercity trips"
+            : m.retry === "detail" ? "it was the retry in less detail"
+            : m.retry ? "it was the retry with fewer workers" : "",
           m.caught ? "a worker ran out of memory and the page reloaded to load it again" : "",
           `last step: ${String(m.step ?? "?").slice(0, 80)}, ${secs(m.ms)} s after the pick`,
         ].filter(Boolean).join("; ");
         died = {
           workers: Number.isInteger(m.workers) && m.workers! >= 1 ? m.workers : undefined,
           slot: typeof m.slot === "string" && m.slot ? m.slot : undefined,
-          retry: m.retry === true,
+          retry: Boolean(m.retry),
         };
         if (died.slot) setDiedSlot(died.slot);
       }
@@ -366,14 +371,14 @@ export function lastLoadDied(): boolean {
     return true;
   } catch { return false; }
 }
-/** T-3933: the load main.ts starts next retries one that died; the notice is up until a while after it is ready */
-export const loadRetried = signal(false);
-export function startRetry() {
-  nextIsRetry = true;
-  loadRetried.value = true;
+/** T-3933, T-4396: the load main.ts starts next retries one that died; the notice is up until a while after it is ready */
+export const loadRetried = signal<RetryKind | null>(null);
+export function startRetry(kind: RetryKind) {
+  nextIsRetry = kind;
+  loadRetried.value = kind;
 }
 /** T-3933: the load in hand, for a retry of it (null when none) */
-export const loadInHand = (): Pick<LoadMark, "workers" | "slot" | "retry"> | null => mark && { workers: mark.workers, slot: mark.slot, retry: mark.retry };
+export const loadInHand = (): { workers?: number; slot?: string; retry?: boolean } | null => mark && { workers: mark.workers, slot: mark.slot, retry: Boolean(mark.retry) };
 /** T-3933: the page is about to reload to open the load in hand again (it saves first), so its flag stays set for the
  * next page; `keepLoadForRetry(false)` lets it go after all */
 let leavingForRetry = false;

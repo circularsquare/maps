@@ -1821,13 +1821,14 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   tag's "Demand could not load". A page that finds the flag set in sessionStorage at its start
   (set when a game starts loading, cleared when the load ends, fails or the page is left) was
   reloaded by the browser mid-load, as iOS does on running out of memory (desktop Chrome's tab dies so too, and
-  is reloaded by the player): if that load ran more than one solving worker at its most (after the memory
-  estimate's planned cut) and its game was in a slot, the page opens that slot again, once, with half of them,
-  at least 1 (the tab's pool cap, as `memoryShort`'s), and a note at the bottom of the map says "This game ran out of
-  memory, so it loaded again with fewer cores." from the start of that load until 45 s after it [T-3933;
-  `game/oomRetry.ts`, notes/T-3933.md]. A load whose last solving worker fails for memory in the page's sight is
-  saved and reloaded into the same retry. Otherwise, or when the retry runs out too, it starts no game and shows the
-  memory sentence with Try again (whose load then has the lower cap). A browser with no WebGL2 at all (no `WebGL2RenderingContext`;
+  is reloaded by the player): if its game was in a slot and it was not already a retry, the page opens that slot again
+  once with less — half the solving workers (at least 1, the tab's pool cap, as `memoryShort`'s) when it ran more than
+  one, else with intercity trips off (`dropMarket`), or with less detail on (`coarseDemand`) if intercity trips were
+  already off — and a note at the bottom of the map says so ("This game ran out of memory, so it loaded again with fewer
+  cores." / "... without intercity trips." / "... in less detail.") from the start of that load until 45 s after it
+  [T-3933, T-4396; `game/oomRetry.ts`, notes/T-3933.md, notes/T-4396.md]. A load whose last solving worker fails for
+  memory in the page's sight is saved and reloaded into the same retry. Otherwise, or when the retry runs out too, it
+  starts no game and shows the memory sentence with Try again (whose load then has the lower cap). A browser with no WebGL2 at all (no `WebGL2RenderingContext`;
   MapLibre cannot start; `webgl2State`, `map/webgl2.ts`, asked at the top of main.ts) gets its own screen
   before anything else starts: one sentence saying to turn on hardware acceleration or update the browser,
   and no button, since a retry or a way on cannot help [T-3307]. A browser that has WebGL2 but refuses the

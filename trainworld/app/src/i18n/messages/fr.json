@@ -1899,6 +1899,8 @@
   "renameStops.cancel": "Annuler",
   "renameStops.save": "{count, plural, =0 {Renommer} one {Renommer # station} other {Renommer # stations}}",
   "retryNote.text": "La partie a manqué de mémoire, elle a donc été rechargée avec moins de cœurs.",
+  "retryNote.intercity": "La partie a manqué de mémoire, elle a donc été rechargée sans déplacements interurbains.",
+  "retryNote.detail": "La partie a manqué de mémoire, elle a donc été rechargée avec moins de détail.",
   "reversalMarks.limit": "{end, select, true {Jusqu’à {n} trains par heure font demi-tour ici} other {Jusqu’à {n} trains par heure font demi-tour ici, de chaque côté}}",
   "reversalMarks.reverses": "{vehicle, select, tram {Le demi-tour ici limite {name} à {n, plural, one {# tram} other {# trams}} par heure} other {Le demi-tour ici limite {name} à {n, plural, one {# train} other {# trains}} par heure}}",
   "routeParts.aLine": "une ligne",

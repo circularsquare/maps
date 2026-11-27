@@ -1899,6 +1899,8 @@
   "renameStops.cancel": "Abbrechen",
   "renameStops.save": "{count, plural, =0 {Umbenennen} one {# Station umbenennen} other {# Stationen umbenennen}}",
   "retryNote.text": "Dem Spiel ging der Speicher aus, darum wurde es mit weniger Kernen neu geladen.",
+  "retryNote.intercity": "Dem Spiel ging der Speicher aus, darum wurde es ohne Fernreisen neu geladen.",
+  "retryNote.detail": "Dem Spiel ging der Speicher aus, darum wurde es mit weniger Details neu geladen.",
   "reversalMarks.limit": "{end, select, true {Hier wenden höchstens {n} Züge pro Stunde} other {Hier wenden höchstens {n} Züge pro Stunde von jeder Seite}}",
   "reversalMarks.reverses": "{vehicle, select, tram {Wenden hier begrenzt {name} auf {n, plural, one {# Tram} other {# Trams}} pro Stunde} other {Wenden hier begrenzt {name} auf {n, plural, one {# Zug} other {# Züge}} pro Stunde}}",
   "routeParts.aLine": "eine Linie",

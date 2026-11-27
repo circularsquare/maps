@@ -1899,6 +1899,8 @@
   "renameStops.cancel": "Cancel",
   "renameStops.save": "{count, plural, =0 {Rename} one {Rename # station} other {Rename # stations}}",
   "retryNote.text": "This game ran out of memory, so it loaded again with fewer cores.",
+  "retryNote.intercity": "This game ran out of memory, so it loaded again without intercity trips.",
+  "retryNote.detail": "This game ran out of memory, so it loaded again in less detail.",
   "reversalMarks.limit": "{end, select, true {{n} trains an hour at most reverse here} other {{n} trains an hour at most reverse here from each side}}",
   "reversalMarks.reverses": "{vehicle, select, tram {Reversing here limits {name} to {n, plural, one {# tram} other {# trams}} per hour} other {Reversing here limits {name} to {n, plural, one {# train} other {# trains}} per hour}}",
   "routeParts.aLine": "a line",

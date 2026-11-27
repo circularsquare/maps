@@ -1899,6 +1899,8 @@
   "renameStops.cancel": "Cancelar",
   "renameStops.save": "{count, plural, =0 {Renomear} one {Renomear # estação} other {Renomear # estações}}",
   "retryNote.text": "O jogo ficou sem memória, então foi carregado de novo com menos núcleos.",
+  "retryNote.intercity": "O jogo ficou sem memória, então foi carregado de novo sem deslocamentos interurbanos.",
+  "retryNote.detail": "O jogo ficou sem memória, então foi carregado de novo com menos detalhes.",
   "reversalMarks.limit": "{end, select, true {No máximo {n} trens por hora invertem o sentido aqui} other {No máximo {n} trens por hora invertem o sentido aqui, vindo de cada lado}}",
   "reversalMarks.reverses": "{vehicle, select, tram {Inverter o sentido aqui limita {name} a {n, plural, one {# bonde} other {# bondes}} por hora} other {Inverter o sentido aqui limita {name} a {n, plural, one {# trem} other {# trens}} por hora}}",
   "routeParts.aLine": "uma linha",

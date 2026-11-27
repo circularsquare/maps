@@ -1899,6 +1899,8 @@
   "renameStops.cancel": "キャンセル",
   "renameStops.save": "{count, plural, =0 {名前を変更} other {#駅の名前を変更}}",
   "retryNote.text": "このゲームはメモリ不足になったため、コア数を減らして読み込み直しました。",
+  "retryNote.intercity": "このゲームはメモリ不足になったため、都市間の移動なしで読み込み直しました。",
+  "retryNote.detail": "このゲームはメモリ不足になったため、簡易計算にして読み込み直しました。",
   "reversalMarks.limit": "{end, select, true {ここで折り返せるのは毎時{n}本まで} other {ここで折り返せるのは各方向から毎時{n}本まで}}",
   "reversalMarks.reverses": "{vehicle, select, tram {ここで折り返すため、{name}は毎時{n, plural, other {トラム#本}}までです} other {ここで折り返すため、{name}は毎時{n, plural, other {列車#本}}までです}}",
   "routeParts.aLine": "ある路線",

@@ -1899,6 +1899,8 @@
   "renameStops.cancel": "Vazgeç",
   "renameStops.save": "{count, plural, =0 {Yeniden adlandır} one {# istasyonu yeniden adlandır} other {# istasyonu yeniden adlandır}}",
   "retryNote.text": "Bu oyunun belleği yetmedi, bu yüzden daha az çekirdekle yeniden yüklendi.",
+  "retryNote.intercity": "Bu oyunun belleği yetmedi, bu yüzden şehirlerarası yolculuklar olmadan yeniden yüklendi.",
+  "retryNote.detail": "Bu oyunun belleği yetmedi, bu yüzden daha az ayrıntıyla yeniden yüklendi.",
   "reversalMarks.limit": "{end, select, true {Saatte en fazla {n} tren burada yön değiştirir} other {Saatte her taraftan en fazla {n} tren burada yön değiştirir}}",
   "reversalMarks.reverses": "{vehicle, select, tram {Burada yön değiştirmek {name} hattını saatte {n, plural, one {# tramvayla} other {# tramvayla}} sınırlar} other {Burada yön değiştirmek {name} hattını saatte {n, plural, one {# trenle} other {# trenle}} sınırlar}}",
   "routeParts.aLine": "bir hat",

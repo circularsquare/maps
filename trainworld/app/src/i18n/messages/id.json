@@ -1899,6 +1899,8 @@
   "renameStops.cancel": "Batal",
   "renameStops.save": "{count, plural, =0 {Ganti nama} other {Ganti nama # stasiun}}",
   "retryNote.text": "Game ini kehabisan memori, jadi dimuat ulang dengan lebih sedikit core.",
+  "retryNote.intercity": "Game ini kehabisan memori, jadi dimuat ulang tanpa perjalanan antarkota.",
+  "retryNote.detail": "Game ini kehabisan memori, jadi dimuat ulang dengan lebih sedikit detail.",
   "reversalMarks.limit": "{end, select, true {Paling banyak {n} kereta per jam berbalik arah di sini} other {Paling banyak {n} kereta per jam berbalik arah di sini dari tiap sisi}}",
   "reversalMarks.reverses": "{vehicle, select, tram {Berbalik arah di sini membatasi {name} sampai {n, plural, other {# trem}} per jam} other {Berbalik arah di sini membatasi {name} sampai {n, plural, other {# kereta}} per jam}}",
   "routeParts.aLine": "sebuah lini",

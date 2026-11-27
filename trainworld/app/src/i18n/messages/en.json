@@ -715,6 +715,8 @@
   "noMarketNote.text": "Intercity trips are off on mobile. You can turn them on in Settings, or try a computer for bigger games.",
   "noMarketNote.memory": "This device has 4GB of RAM or less. The game probably will not run well.",
   "retryNote.text": "This game ran out of memory, so it loaded again with fewer cores.",
+  "retryNote.intercity": "This game ran out of memory, so it loaded again without intercity trips.",
+  "retryNote.detail": "This game ran out of memory, so it loaded again in less detail.",
   "basemapNote.text": "The base map didn't load. If you're using an ad blocker, try turning it off for this site.",
   "installBanner.iosSafari": "Safari can delete locally stored saves. You can install trainsworld as an app: tap Share, then Add to Home Screen",
   "installBanner.ios": "Your browser can delete locally stored saves. You can install trainsworld as an app: tap Share, then Add to Home Screen",
