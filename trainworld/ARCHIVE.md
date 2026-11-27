@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4383 [P2] {L:feedback} Read Discord bug reports (2026-11-27): read-only Discord reader works on the real server: all four channels readable, 388 messages in 48 h. notes/T-4383.md.
 - T-4377 [P2] {L:small-fixes} Dragging a line onto another to group it fails on touch (2026-11-27): touch drag to group lines works after a 350 ms press and hold; swipes still scroll. notes/T-4377.md.
 - T-4379 [P2] {L:track-drawing} Flyover refusal says what's missing (2026-11-27): refusal and crossing mark reworded to name the ramp and its 160 m per level; 12 languages. notes/T-4379.md.
 - T-4365 [P2] {L:region-redraws} plan_edit fails on Guangdong's spec (2026-11-26): plan_edit takes units from another level from the build's sources (osm_units.gb_source); Guangdong applied. notes/T-4364.md.
