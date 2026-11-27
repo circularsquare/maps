@@ -2,7 +2,7 @@
 orchestrator is current reads it, not only the session that started the agent. Run from the maps root:
 
   venv\Scripts\python.exe trainworld/tools/reports.py list [--all]          unread reports, one line each
-  venv\Scripts\python.exe trainworld/tools/reports.py show <key> ...        full text (key: report id, T-id or agent name)
+  venv\Scripts\python.exe trainworld/tools/reports.py show <key> ... [--full]  first 10 lines, or all with --full (key: report id, T-id or agent name)
   venv\Scripts\python.exe trainworld/tools/reports.py read <key> ... | --session <id>  --by <name> [--note "..."]
                                                         mark read once acted on (tasks.py done/close does it for its T-id)
   venv\Scripts\python.exe trainworld/tools/reports.py sweep [--session <id>] [--since <ISO time>]
@@ -314,6 +314,7 @@ def from_stop(box, data):
 
 REPORT_MAX_LINES = 18
 REPORT_TARGET = 15
+SHOW_LINES = 10
 
 
 def too_long(box, data):
@@ -386,6 +387,7 @@ def main():
     l.add_argument("--all", action="store_true")
     s = sub.add_parser("show")
     s.add_argument("keys", nargs="+")
+    s.add_argument("--full", action="store_true", help=f"print every line, not the first {SHOW_LINES}")
     r = sub.add_parser("read")
     r.add_argument("keys", nargs="*")
     r.add_argument("--session", help="every unread report from this session (id or its first 8 characters)")
@@ -448,7 +450,10 @@ def main():
         for rec in hits:
             if a.cmd == "show":
                 print(f"== {line(rec, 200).split(': ')[0]}" + (f"; read by {rec['read_by']}" if rec.get("read_by") else ""))
-                print(rec.get("text", ""))
+                body = (rec.get("text", "") or "").splitlines()
+                print("\n".join(body if a.full else body[:SHOW_LINES]))
+                if not a.full and len(body) > SHOW_LINES:
+                    print(f"... {len(body) - SHOW_LINES} more lines cut (--full shows all {len(body)})")
             else:
                 box.mark_read(rec, a.by, a.note)
                 print(f"read: {rec['id']} {rec.get('name')} {rec.get('task') or ''}")
