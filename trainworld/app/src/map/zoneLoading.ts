@@ -20,7 +20,7 @@ import { cityDemandViews } from "../game/demand";
 import { loadFailure, loadLines, mapBlank, zoneLoads, zoneSteps } from "../game/loading";
 import { nearbyZones } from "../game/zones";
 import { zoneShown } from "../game/realms";
-import { LoadBar, loadingCardShown } from "../ui/LoadingScreen";
+import { LoadBar, loadingHeld } from "../ui/LoadingScreen";
 import { cityGeometry } from "./boundaryGeometry";
 import { firstSymbolId } from "./basemap";
 import { screenBounds } from "./labelLayout";
@@ -111,7 +111,7 @@ export function startZoneLoading(map: MlMap): () => void {
       if (s) fc.features.push({ type: "Feature", properties: { id }, geometry: s.geometry });
     }
     (map.getSource(SHADE) as GeoJSONSource | undefined)?.setData(fc);
-    const cardUp = loadingCardShown();
+    const cardUp = loadingHeld();
     shownBars = cardUp ? new Map<CityId, number>() : barsShown();
     for (const [id, el] of bars) if (!shownBars.has(id)) { render(null, el); el.remove(); bars.delete(id); }
     for (const id of shownBars.keys()) {
@@ -167,7 +167,7 @@ export function startZoneLoading(map: MlMap): () => void {
     const shown = cityDemandViews.value;
     const ids = new Set(loads.keys());
     if (!loadFailure.value) for (const id of nearbyZones.value) if (!shown.has(id) && zoneShown(id)) ids.add(id);
-    loadingCardShown(); // the bars follow the card
+    loadingHeld(); // the bars follow the initial load's hold
     zoneSteps.value; // and their hovers the stage and time left
     const blank = mapBlank.value; // T-1051: no grey either while a game loads
     // T-350: only the zone in view takes the fill: every other zone already lies under the outside

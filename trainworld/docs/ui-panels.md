@@ -1660,14 +1660,19 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   until the zone in view's cluster has its fresh final (the tag's own rule in "Status and busy
   tags"); the clock is not capped for it [T-2622]. Zones still solving then show their own loading bar and grey ("A zone still loading
   is grey" in [ui-demand-views.md](ui-demand-views.md)) until their final lands. The time is
-  greyed and its hover says "The clock starts when demand has loaded". Meanwhile a card in the
-  middle of the map names the stage in hand over a filling bar [T-1194]: "Loading" (the game itself,
-  until its network reaches demand), "Loading city data" (the packs downloading and opening in every
-  worker) and "Calculating demand" (the solve to the zone in view's final), naming no cities and
-  counting nothing (the packs open in one batch per worker, so no count could move). The percentage is
-  only the bar's hover ("42% loaded"). The card has no Cancel (T-1236: a reload does the same). It
-  takes no input but the bar's hover (a press elsewhere pans the map beneath) and goes when the
-  clock starts.
+  greyed, the play and speed buttons are dimmed, and their hovers say "The clock starts when demand
+  has loaded". Meanwhile a card in the middle of the map names the stage in hand over a filling bar
+  [T-1194]: "Loading" (the game itself, until its network reaches demand), "Loading city data" (the
+  packs downloading and opening in every worker) and "Calculating trips" (the solve to the zone in
+  view's final), naming no cities and counting nothing (the packs open in one batch per worker, so
+  no count could move). The percentage is only the bar's hover ("42% loaded"). The card has no
+  Cancel (T-1236: a reload does the same). While loading the game and city data it takes no input
+  but the bar's hover (a press elsewhere pans the map beneath). Once the map and network are in and
+  only trips are left to calculate (`STAGE_TEXT.demand`), its header drags the card anywhere inside
+  the window (not remembered between loads) and an x closes it into the top status tag ("Calculating
+  trips here…" or "Calculating trips in N cities…" with the same filling bar) so the player can
+  build while the clock stays held until the final lands [T-4346]. The card goes when the clock
+  starts; a failure still shows the failure screen whether the card was closed or not.
   Loading is the one place with motion [T-647, T-677, T-2693, Anita; `ui/Spinner.tsx`]: on top of the card a
   drawn bunny rides a toy train in the theme's accent (104 px wide; wheels turn, the track's ties run
   by, the train chugs, the ears bob; each moving part a box of its own moved by a CSS transform, so its motion never

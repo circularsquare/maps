@@ -7,9 +7,10 @@
 // T-950: so does a load that can never finish (the game itself not starting, or nothing moving).
 
 import { h, render } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { clock } from "../game/clock";
 import { world } from "../game/world";
-import { cardEnding, choosing, clockStepNow, continueWithoutDemand, demandIdle, gameFailed, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadGraphicsGone, loadStepNow, loadStuck, loadProgress, noSimd, noWebgl2, startup, unitQuietMs } from "../game/loading";
+import { cardDismissed, cardEnding, choosing, clockStepNow, continueWithoutDemand, demandIdle, dismissLoadingCard, gameFailed, gameLoadSeq, graphicsGone, lastAlive, loadCannotFinish, loadFailure, loadGraphicsGone, loadStepNow, loadStuck, loadProgress, noSimd, noWebgl2, startup, unitQuietMs } from "../game/loading";
 import { contextsLost, freshContextWorks } from "../map/graphicsInfo";
 import { GL_LOST } from "../map/gl";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
@@ -19,6 +20,7 @@ import { playWithoutIntercity } from "./DemandStopped";
 import { FeedbackOpen, feedbackOpen, startFeedbackUi } from "./FeedbackPanel";
 import { blockKeysOutside } from "./keys";
 import { BunnyTrain } from "./Spinner";
+import { Icon } from "./widgets";
 import { t, tNumber } from "../i18n";
 
 function LoadingScreen() {
@@ -58,9 +60,14 @@ function LoadingScreen() {
   </div>;
 }
 
-/** True while the loading card is up: a loaded game's clock waits for its demand (T-180). */
-export function loadingCardShown(): boolean {
+/** True while a loaded game's clock waits for its demand (T-180), whether the card is up or closed (T-4346). */
+export function loadingHeld(): boolean {
   return clock.held.value && !loadFailure.value && !demandIdle.value && !choosing.value; // T-318: nothing to load over dead space
+}
+
+/** True while the loading card is up in the middle of the map (T-180, T-4346). */
+export function loadingCardShown(): boolean {
+  return loadingHeld() && !cardDismissed.value;
 }
 
 /** T-243: a bar filling as the load goes, in place of a percentage; the percentage is its hover.
@@ -74,24 +81,88 @@ export function LoadBar({ fraction, step, thin, tip, quiet }: { fraction: number
 }
 
 /** T-180: while a loaded game's clock waits for its first demand estimate, a card in the middle of
- * the map. Pointer events pass through it to the map, except on the bar (its hover).
+ * the map. Pointer events pass through it to the map, except on the bar (its hover), and once the
+ * map and network are in and only trips remain (T-4346: STAGE_TEXT.demand), its header drags the
+ * card anywhere in the window and its x closes it into the top status bar.
  * T-677: the bunny's train on top (only here; the small statuses have their bar alone, T-2728). T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
  * until the demand pool has a load to describe. */
 function LoadingCard() {
   // (T-2574: a load ended at a cached result shows its bar full a moment first)
   const up = loadingCardShown(), ending = cardEnding.value;
-  if (!up && (!ending || loadFailure.value)) return null;
+  const shown = up || (!!ending && !loadFailure.value);
   const load = up ? loadProgress.value : ending;
+  const seq = gameLoadSeq.value;
+  const canDismiss = up && !!world.value && load?.step === STAGE_TEXT.demand;
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ id: number; startX: number; startY: number; origX: number; origY: number; w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    setPos(null);
+    setDragging(false);
+    dragRef.current = null;
+  }, [seq, shown]);
+
+  useEffect(() => {
+    if (!pos) return;
+    const onResize = () => {
+      const el = cardRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      setPos((p) => p && {
+        x: Math.max(0, Math.min(window.innerWidth - r.width, p.x)),
+        y: Math.max(0, Math.min(window.innerHeight - r.height, p.y)),
+      });
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [!!pos]);
+
+  if (!shown) return null;
   const step = load?.step ?? STAGE_TEXT.game;
   const fraction = load?.fraction ?? 0;
   const left = load?.leftMs;
+
+  const onHeadDown = (e: PointerEvent) => {
+    if (!canDismiss || e.button !== 0) return;
+    const el = cardRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    dragRef.current = { id: e.pointerId, startX: e.clientX, startY: e.clientY, origX: r.left, origY: r.top, w: r.width, h: r.height };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    setDragging(true);
+  };
+  const onHeadMove = (e: PointerEvent) => {
+    const d = dragRef.current;
+    if (!d || d.id !== e.pointerId) return;
+    const x = Math.max(0, Math.min(window.innerWidth - d.w, d.origX + e.clientX - d.startX));
+    const y = Math.max(0, Math.min(window.innerHeight - d.h, d.origY + e.clientY - d.startY));
+    setPos({ x, y });
+  };
+  const onHeadUp = (e: PointerEvent) => {
+    const d = dragRef.current;
+    if (!d || d.id !== e.pointerId) return;
+    dragRef.current = null;
+    setDragging(false);
+  };
+
   // T-1479: the share done and, once there is an estimate, the time left
-  return <div class="loading-card-wrap">
-    <div class="loading-card" role="status">
-      <BunnyTrain />
-      <p class="big">{step}</p>
-      <LoadBar fraction={fraction} step={step} />
-      <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left)}</span>}</p>
+  const posStyle = pos ? { position: "fixed" as const, left: `${pos.x}px`, top: `${pos.y}px` } : undefined;
+  return <div class={"loading-card-wrap" + (pos ? " dragged" : "")}>
+    <div class="loading-card-pos" style={posStyle}>
+      <div class={"loading-card" + (canDismiss ? " movable" : "") + (dragging ? " dragging" : "")} role="status" ref={cardRef}>
+        <div class="loading-card-head" onPointerDown={canDismiss ? onHeadDown : undefined} onPointerMove={onHeadMove} onPointerUp={onHeadUp} onPointerCancel={onHeadUp}>
+          <BunnyTrain />
+          <p class="big">{step}</p>
+        </div>
+        {canDismiss && <button type="button" class="btn icon loading-card-close" aria-label={t("modal.close")}
+          onPointerDown={(e) => e.stopPropagation()} onClick={() => dismissLoadingCard()}>
+          <Icon.cross />
+        </button>}
+        <LoadBar fraction={fraction} step={step} />
+        <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left)}</span>}</p>
+      </div>
     </div>
   </div>;
 }
@@ -118,7 +189,7 @@ function startWatchdog() {
   const timer = setInterval(() => {
     const now = performance.now();
     if (loadFailure.peek()) return clearInterval(timer);
-    if (!loadingCardShown() || document.visibilityState !== "visible" || now - lastCheck > 3 * WATCH_MS) from = now;
+    if (!loadingHeld() || document.visibilityState !== "visible" || now - lastCheck > 3 * WATCH_MS) from = now;
     lastCheck = now;
     const limit = quietMs(!!loadProgress.peek());
     if (now - Math.max(from, lastAlive()) < limit) return;

@@ -233,6 +233,7 @@ const times = (x: number) =>
 function Speed() {
   const running = clock.running.value;
   const capped = clock.capped.value;
+  const loadHeld = clock.held.value;
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -261,14 +262,14 @@ function Speed() {
     const btn = (i: number, icon: ComponentChildren, title: string, extra: Record<string, unknown> = {}) => {
       const on = running && (custom !== null ? 2 : speed) === i;
       return (
-        <button class={"btn icon" + (on ? " on" : "") + (on && held ? " held" : "") + (i === 2 ? " rate legacy" : "")} data-tip={on ? heldTip(title) : title} aria-label={title} onClick={() => (i === 2 && custom !== null ? clock.setMultiple(custom) : clock.setSpeed(i))} {...extra}>
+        <button class={"btn icon" + (on ? " on" : "") + (loadHeld || (on && held) ? " held" : "") + (i === 2 ? " rate legacy" : "")} data-tip={loadHeld ? t("topBar.clockHeld") : on ? heldTip(title) : title} aria-label={title} onClick={() => (i === 2 && custom !== null ? clock.setMultiple(custom) : clock.setSpeed(i))} {...extra}>
           {i === 2 ? times(custom ?? SPEEDS[2] / SPEEDS[0]) : icon}
         </button>
       );
     };
     return (
       <div class="group speed" ref={box}>
-        <button class={"btn icon" + (!running ? " on" : "")} data-tip={t("topBar.pauseTip")} aria-label={t("topBar.pause")} onClick={() => clock.setRunning(!running)}>
+        <button class={"btn icon" + (!running ? " on" : "") + (loadHeld ? " held" : "")} data-tip={loadHeld ? t("topBar.clockHeld") : t("topBar.pauseTip")} aria-label={t("topBar.pause")} onClick={() => clock.setRunning(!running)}>
           <Icon.pause />
         </button>
         {btn(0, <Icon.play1 />, t("topBar.normalSpeed"), { "data-guide": "play" })}
@@ -280,16 +281,16 @@ function Speed() {
   }
   return (
     <div class="group speed" ref={box}>
-      <button class={"btn icon" + (!running ? " on" : "")} data-guide="play" data-tip={t("topBar.pauseTip")} aria-label={t("topBar.pause")} onClick={() => clock.setRunning(!running)}>
+      <button class={"btn icon" + (!running ? " on" : "") + (loadHeld ? " held" : "")} data-guide="play" data-tip={loadHeld ? t("topBar.clockHeld") : t("topBar.pauseTip")} aria-label={t("topBar.pause")} onClick={() => clock.setRunning(!running)}>
         <Icon.pause />
       </button>
-      <button class="btn icon" data-tip={t("topBar.slower")} aria-label={t("topBar.slower")} disabled={stop <= 0} onClick={() => clock.stepSpeed(-1)}>
+      <button class={"btn icon" + (loadHeld ? " held" : "")} data-tip={loadHeld ? t("topBar.clockHeld") : t("topBar.slower")} aria-label={t("topBar.slower")} disabled={stop <= 0} onClick={() => clock.stepSpeed(-1)}>
         <Icon.slower />
       </button>
-      <button class={"btn icon rate" + (held ? " held" : "")} data-tip={held ? t("topBar.speedCapped", { speed: times(chosen), cap: times(DEMAND_CAP) }) : t("topBar.speedPick", { speed: times(chosen) })} aria-label={t("topBar.speedPick", { speed: times(chosen) })} onClick={(e) => { if (e.detail < 2) setOpen((o) => !o); }}>
+      <button class={"btn icon rate" + (loadHeld || held ? " held" : "")} data-tip={loadHeld ? t("topBar.clockHeld") : held ? t("topBar.speedCapped", { speed: times(chosen), cap: times(DEMAND_CAP) }) : t("topBar.speedPick", { speed: times(chosen) })} aria-label={t("topBar.speedPick", { speed: times(chosen) })} onClick={(e) => { if (e.detail < 2) setOpen((o) => !o); }}>
         {times(chosen)}
       </button>
-      <button class="btn icon" data-tip={t("topBar.faster")} aria-label={t("topBar.faster")} disabled={stop >= SLIDER_STOPS.length - 1} onClick={() => clock.stepSpeed(1)}>
+      <button class={"btn icon" + (loadHeld ? " held" : "")} data-tip={loadHeld ? t("topBar.clockHeld") : t("topBar.faster")} aria-label={t("topBar.faster")} disabled={stop >= SLIDER_STOPS.length - 1} onClick={() => clock.stepSpeed(1)}>
         <Icon.play2 />
       </button>
       {slider}

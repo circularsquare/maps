@@ -34,6 +34,11 @@ export interface LoadProgress {
 
 /** What the demand pool is loading now; null when nothing is. */
 export const loadProgress = signal<LoadProgress | null>(null);
+/** T-4346: the player closed the first load's card into the top status tag (resets on each load) */
+export const cardDismissed = signal(false);
+export function dismissLoadingCard() {
+  cardDismissed.value = true;
+}
 /** T-2574: a card whose load ended at a cached result, shown full for END_BEAT_MS after the clock runs, so its bar
  * reaches the end before it goes (ui/LoadingScreen.tsx) */
 export const cardEnding = signal<LoadProgress | null>(null);
@@ -41,8 +46,8 @@ const END_BEAT_MS = 400;
 let endingTimer: ReturnType<typeof setTimeout> | undefined;
 export function endCardFull(p: LoadProgress | null) {
   clearTimeout(endingTimer);
-  cardEnding.value = p && { ...p, fraction: 1, leftMs: null };
-  if (p) endingTimer = setTimeout(() => (cardEnding.value = null), END_BEAT_MS);
+  cardEnding.value = p && !cardDismissed.peek() ? { ...p, fraction: 1, leftMs: null } : null;
+  if (cardEnding.value) endingTimer = setTimeout(() => (cardEnding.value = null), END_BEAT_MS);
 }
 /** the card's last progress, so any load that ends with the card up shows its bar full first (a guess leaves the bar
  * at half at most, `barPlace`) */
@@ -113,6 +118,7 @@ export function startGameWait(key: string, choice?: { slot?: string; newGame?: b
   setLoadFlag(true, kind);
   if (choice?.game?.start) noteLoad("picked", { city: choice.game.start });
   wait ={ seq: wait.seq, since: performance.now(), key };
+  cardDismissed.value = false;
   gameReady.value = false;
   viewFigures.value = false;
   gameLoadSeq.value++;
@@ -122,6 +128,7 @@ export function startGameWait(key: string, choice?: { slot?: string; newGame?: b
 export function holdForGameLoad(key?: string) {
   if (loadFailure.peek()) return; // no demand to wait for
   endCardFull(null);
+  cardDismissed.value = false;
   gameReady.value = false;
   if (!holdArmed) { viewFigures.value = false; gameLoadSeq.value++; }
   wait = holdArmed ? { ...wait, key: key ?? wait.key } : { seq: wait.seq + 1, since: performance.now(), key: key ?? "last" };
@@ -152,6 +159,7 @@ export function loadComplete() {
   if (holdArmed) return;
   if (clock?.held.peek() && lastCardLoad && !cardEnding.peek()) endCardFull(lastCardLoad);
   lastCardLoad = null;
+  cardDismissed.value = false;
   clock?.setHeld(false);
   // T-1655: a chime for a wait over 30 s, once per game
   if (!gameReady.peek() && performance.now() - wait.since > LONG_LOAD_MS) onLoadChime?.();
@@ -400,6 +408,7 @@ export function loadFailed(why: string, retried = false) {
   console.error("load failed:", why); // i18n-ignore
   loadFailure.value = why;
   loadProgress.value = null;
+  cardDismissed.value = false;
   holdArmed = false;
   gameReady.value = true;
   if (startup.peek() === "loading") startup.value = "failed";
@@ -504,6 +513,7 @@ export function loadNoSimd() {
 
 /** Carry on without demand after a failed startup (the loading screen's second button). */
 export function continueWithoutDemand() {
+  cardDismissed.value = false;
   clock?.setHeld(false);
   gameReady.value = true;
   startup.value = "ready";

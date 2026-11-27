@@ -8,7 +8,7 @@ import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
 import { activeCity, cityById, viewedZone, type CityId } from "../game/cities";
-import { barPlace, nextLeft, STAGE_TEXT, type BarPlace } from "../game/loadBar";
+import { barPlace, leftText, nextLeft, STAGE_TEXT, type BarPlace } from "../game/loadBar";
 import { editLeftOf, editPrior } from "../game/editLeft";
 import { loadFailText } from "../game/loadText";
 import { cityNames,demandIdle, demandStopped, loadFailure, loadLines, loadProgress, memoryResolve, oldestDownload, solveLeft, tripsOff, zoneFailures, zoneLoads, zoneSteps } from "../game/loading";
@@ -297,7 +297,8 @@ export function StatusTag() {
     : loadingCardShown() ? null
     // T-212: "Loading data", not the cities' names (those are in the hover)
     // T-243: a thin bar after it, not a percentage
-    : load ? t("statusTag.loadingData")
+    // T-4346: when the first load's card is closed while calculating trips, show the calculating trips wording
+    : load ? (load.step === STAGE_TEXT.demand ? recomputing() : t("statusTag.loadingData"))
     : terrain ? terrain
     : mapWait ? mapWait
     : wholeSolveUnseen.value ? t("statusTag.recomputingCities", { count: count(demandSolving.value?.size ?? demandScope.value) })
@@ -326,7 +327,7 @@ export function StatusTag() {
   const onTerrain = busy === terrain, terrainFailed = onTerrain && !terrainSlow.value;
   const onMap = !onTerrain && busy === mapWait;
   const base = onMap ? "" : onTerrain ? (terrainFailed ? t("statusTag.terrainFailTip") : "")
-    : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? t("statusTag.loadingTip", { cities: cityNames(load.cities), pct: Math.floor(load.fraction * 100), step: load.step })
+    : (loadFailure.value ? loadFailText(loadFailure.value) : undefined) ?? (zoneFailure ? zoneFailure : load && !loadingCardShown() ? [load.cities.length ? t("statusTag.loadingTip", { cities: cityNames(load.cities), pct: Math.floor(load.fraction * 100), step: load.step }) : load.step, load.leftMs != null ? leftText(load.leftMs) : ""].filter(Boolean).join("\n")
     : wholeSolveUnseen.value ? (demandWork.value && shownLeft() !== null ? afterChangeLeft() : "")
     // T-4264: a wait behind a running solve has that solve's time left
     : !demandView.value ? (demandUpdating.value && shownLeft() !== null ? afterChangeLeft() : busy)
