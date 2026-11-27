@@ -83,18 +83,12 @@ These come before everything below; the first two are her two top priorities (11
 
 ## Your own context
 
-maps-e0 (11-27) filled 500k in under two hours doing the agents' work itself (her note: "you were doing way too much
-work yourself and not delegating enough"). What filled it, and what to do instead:
-- **Whole files read to make a call**: Gemini reviews, agent notes, diffs, logs, resource reports. Read the verdict only
-  (`grep -nE "FAIL|PASS|^#{1,3} " <file>`, a report's first lines) and hand the path to the agent that acts on it.
-- **Reviewing diffs yourself.** The batch review is the review; a diff's file list (`git -c core.safecrlf=false diff
-  --stat`) is enough to spot a save-format or shared-file change.
-- **Long briefs.** Agents read TASKS.md, CLAUDE.md and the task's notes themselves. A brief is the budget row, the task
-  id, decisions the task doesn't hold yet, files to leave alone and ids it may file: about 15 lines, written to a file,
-  not echoed back. Don't paste task blocks or her words already in TASKS.md.
-- **Small investigations** (where a file is, a model list, why a claim failed, which line a task joins): an agent or a
-  Gemini read (`gemini_audit.py`) does them, or ask her.
-- **Screenshots**: only the one going to her, once. **Messages**: short, new news only.
+maps-e0 (11-27) filled 500k in under two hours (her: "you were doing way too much work yourself and not delegating
+enough") mostly by not following rules already here: it investigated (Her standing calls: "You don't investigate"),
+restated CLAUDE.md and pasted task blocks into briefs (Briefs), rewrote the handoff with live state the status command
+prints (the `handoff` skill), committed bookkeeping a dozen times (Commit at the end of a round) and wrote long
+messages (Final messages are short). Two things not written elsewhere: of a review, report or diff read only the
+verdict lines and pass the path to the agent that acts on it; after a Gemini review, a diff's file list is enough.
 
 ## Your own cycling
 
