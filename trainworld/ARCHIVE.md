@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4379 [P2] {L:track-drawing} Flyover refusal says what's missing (2026-11-27): refusal and crossing mark reworded to name the ramp and its 160 m per level; 12 languages. notes/T-4379.md.
 - T-4365 [P2] {L:region-redraws} plan_edit fails on Guangdong's spec (2026-11-26): plan_edit takes units from another level from the build's sources (osm_units.gb_source); Guangdong applied. notes/T-4364.md.
 - T-4364 [P2] {L:region-redraws} Build the region redraws you picked (2026-11-26): her picks built (all but Poland), Mansoura and Chiayi/Tainan added; three stops fixed (centres off their land, Boston's hand steps); Israel rejoined for its seams; place names refreshed. notes/T-4364.md.
 - T-4367 [P1] {L:edit-speed} Demand crash after making a line in 0.4.7 (2026-11-26): fixed: the edit's window is built only with a market part; figures unchanged where the old code ran. notes/T-4367.md.

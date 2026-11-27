@@ -1105,9 +1105,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-4379 [P2] {L:track-drawing} Flyover refusal says what's missing (taking, 2026-11-27, agent flyovertext)
-  - Context: A player (tw-feedback 1795755139-1f66826d, 11-27) read the refusal as "the heights differ by 1 but it still refused"; the rule works as built (160 m of slope per level). You, 11-27: "yes sure" to rewording it.
-  - Goal: The refusal names the missing slope length, in every language; old and new text listed for you.
 - T-4380 [P3] {L:buses} A bus line's first stop can be removed
   - Context: You, 11-27: "let bus first stop be removable (but default still there)". Today a new bus line's starting point is always a stop (archive T-2937: a line's two ends are end stops); a player asked (tw-feedback 1795726122-552c98fc).
   - Goal: A player can remove a bus line's first stop like any other; new lines still start with one.
