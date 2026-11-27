@@ -5,6 +5,7 @@ Updated: 2026-11-27 18:25 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
 
 ## Next
+0. 11-27 ~14:45 her time: she is upgrading the PC to Windows 11 (BIOS fTPM + Secure Boot first). After the reboot: 8800 (serve.py), the board watch and reserve_cores need starting again; Claude sessions start fresh (/takeover trainworld).
 1. Paused by her (11:26 her time): no new work. Parked: loadsave (T-4408 + Sonnet findings 4-5 on T-4396, tree
    loadsave empty) and pagestage5 (T-4284 s5, tree has partial work); restart with --tree when she lifts the pause.
    Gemini quota was out 16:24 UTC, back ~19:45 UTC. Gemini agents can't run tools/edit_bench.mjs: it's mine on master.
