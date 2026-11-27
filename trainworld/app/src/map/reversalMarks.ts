@@ -17,6 +17,7 @@ import { anchor, toLocal } from "./geo";
 import { tipBeside } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { quietBadgeRadius, STATIONS_ZOOM } from "./stationGeometry";
+import { hidden, nodeOff, stationOff } from "./visibility";
 
 const PLACING = new Set<string>(["track", "station", "line", "blueprint", "bus", "ferry", "building"]);
 /** how much larger the icon is with a placing tool on (T-1581) */
@@ -30,6 +31,11 @@ interface Item {
   ly: number;
   shown: boolean;
   transform: string;
+  /** the station or track end (`Reversal.station`) and the lines, by number, whose sign it is */
+  at: string;
+  lines: number[];
+  /** T-4400: every one of its lines hidden, or its station or track end */
+  off: boolean;
 }
 
 type Reversal = { station: string; name: string; lng: number; lat: number; lines: { id: string; name: string; tph: number; tram: boolean }[] };
@@ -70,6 +76,8 @@ export class ReversalMarks {
   private on = true;
   private big = false;
   private size = "";
+  /** the `hidden.v` the items' `off` were worked out for */
+  private hiddenV = -1;
 
   constructor(private map: MlMap, private overlay: Overlay) {
     const c = map.getContainer();
@@ -122,8 +130,9 @@ export class ReversalMarks {
       };
       this.box.appendChild(el);
       const [lx, ly] = toLocal(r.lng, r.lat);
-      return { el, lx, ly, shown: true, transform: "" };
+      return { el, lx, ly, shown: true, transform: "", at: r.station, lines: r.lines.map((l) => Number(l.id)), off: false };
     });
+    this.hiddenV = -1;
     this.place();
   }
 
@@ -138,9 +147,14 @@ export class ReversalMarks {
     const size = `${Math.round(2 * quietBadgeRadius(zoom) * (this.big ? PLACING_SCALE : 1) * 2) / 2}px`;
     if (size !== this.size) this.box.style.setProperty("--rs", (this.size = size));
     const W = this.overlay.cssW, H = this.overlay.cssH;
+    // T-4400: a sign goes when all its lines are hidden, or its station or track end is
+    if (hidden.v !== this.hiddenV) {
+      this.hiddenV = hidden.v;
+      for (const it of this.items) it.off = it.lines.every((l) => hidden.lines.has(l)) || (it.at.startsWith("end:") ? nodeOff(Number(it.at.slice(4))) : stationOff(it.at));
+    }
     for (const it of this.items) {
       const [x, y] = this.overlay.toScreen(it.lx, it.ly);
-      const on = x > -40 && y > -60 && x < W + 40 && y < H + 20;
+      const on = !it.off && x > -40 && y > -60 && x < W + 40 && y < H + 20;
       if (on !== it.shown) {
         it.el.style.display = on ? "" : "none";
         it.shown = on;

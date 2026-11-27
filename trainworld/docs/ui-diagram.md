@@ -129,7 +129,7 @@ networks"). The rail lines alone make the graph, so a network's rail layout is t
 **Mode buttons** (Anita, 2026-11-17: "toggle their visibility, as well as tram and train visibility ... with buttons on
 the top. can use icons"): one per kind of line the network has (trains, trams, buses, ferries; none when it has one
 kind, and a kind hidden in another game then counts for nothing), each pressed while shown, hovers "Show trains",
-"Show trams", "Show buses", "Show ferries"; kept per browser as `anitabuilder-diagram-modes`. A **line hidden on the map** (the Lines tab's hide mode, Settings' buses and ferries switch)
+"Show trams", "Show buses", "Show ferries"; kept per browser as `anitabuilder-diagram-modes`. A **line hidden on the map** (the Lines tab's hide mode, Settings' Show modes)
 is left out the same way (T-3785). Both act at paint time: the line is not drawn, nor the pills and names of stations
 whose every line stopping there is left out, and it cannot be picked; the layout keeps the room it had, so a toggle is
 instant.

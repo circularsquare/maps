@@ -30,6 +30,7 @@ import { stationZone } from "../game/listScope";
 import { moneyState } from "../game/money";
 import { zonesLoaded } from "../game/zones";
 import { profileLine, profileRun } from "./profiles";
+import { hidden, stationOff } from "./visibility";
 
 /** Samples a second. */
 const SAMPLE_MS = 125;
@@ -189,13 +190,15 @@ export function startStationLife(map: MlMap, overlay: Overlay, post: (notes: Rec
     const bounds = map.getBounds();
     const west = bounds.getWest(), east = bounds.getEast(), south = bounds.getSouth(), north = bounds.getNorth();
     const inView = new Map<string, StationInput>();
+    // T-4400: nothing at a station the player hid, or from a line they hid
+    const offs = !!(hidden.levels || hidden.modes);
     for (const s of w.save.stations) {
-      if (s.built && s.lng >= west && s.lng <= east && s.lat >= south && s.lat <= north) inView.set(s.id, s);
+      if (s.built && s.lng >= west && s.lng <= east && s.lat >= south && s.lat <= north && !(offs && stationOff(s.id))) inView.set(s.id, s);
     }
     if (!inView.size) return;
     const lines = new Map<string, VisLine>();
     for (const l of w.save.lines) {
-      if (w.lineStats[l.id]?.bus || !(l.stops.some((id) => inView.has(id)) || w.lineStats[l.id]?.backStops?.some((id) => inView.has(id)))) continue; // a bus uses no platform (T-1464)
+      if (w.lineStats[l.id]?.bus || hidden.lines.has(Number(l.id)) || !(l.stops.some((id) => inView.has(id)) || w.lineStats[l.id]?.backStops?.some((id) => inView.has(id)))) continue; // a bus uses no platform (T-1464)
       const run0: { k: number; s: StationInput }[] = [], run1: { k: number; s: StationInput }[] = [];
       // T-3348: the return run stops at its own platforms where they differ
       const back = w.lineStats[l.id]?.backStops;

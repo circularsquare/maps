@@ -1,6 +1,6 @@
 // Small shared pieces: line chip, stepper, segmented buttons, checkbox, icons (inline SVG).
 
-import type { ComponentChildren } from "preact";
+import type { ComponentChildren, JSX } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { levelLabel } from "../game/format";
 import { inkOn, LEVEL_COLOURS } from "../game/palette";
@@ -12,7 +12,7 @@ import { LINE_SHAPES, type LineShape, type PickShape } from "../game/lineShape";
 import { LEVELS, type Level, type LineInput } from "../game/types";
 import { selection, uiScale, type ListSort } from "../game/ui";
 import { knock } from "../game/world";
-import { transitParts, type TransitShares } from "../game/transitModes";
+import { transitName, transitParts, type TransitMode, type TransitShares } from "../game/transitModes";
 import type { Signal } from "@preact/signals";
 import { t, type MessageKey } from "../i18n";
 import { mobileDevice } from "../workers/deviceMemory";
@@ -454,7 +454,7 @@ export function LevelButtons({ value, onPick, tip, levels = LEVELS }: { value: L
   );
 }
 
-/** T-3420: the level buttons with every level shown lit; a click fades or restores that level (T-3560). */
+/** T-3420: the level buttons with every level shown lit; a click hides or shows that level. */
 export function LevelToggles({ hidden, onToggle }: { hidden: ReadonlySet<Level>; onToggle: (l: Level) => void }) {
   return (
     <div class="group levels level-toggles">
@@ -463,6 +463,21 @@ export function LevelToggles({ hidden, onToggle }: { hidden: ReadonlySet<Level>;
           aria-label={t("widgets.level", { level: levelLabel(l) })} aria-pressed={!hidden.has(l)} onClick={() => onToggle(l)}>
           {levelLabel(l)}
         </button>
+      ))}
+    </div>
+  );
+}
+
+/** T-4400: the kinds of line in the Lines tab's Type order, with its icons */
+const SHOW_MODES: [TransitMode, () => JSX.Element][] = [["train", Icon.train], ["hsr", Icon.highSpeed], ["tram", Icon.tram], ["bus", Icon.bus], ["ferry", Icon.ferry]];
+
+/** T-4400: a button per kind of line, each lit while that kind is drawn; a click hides or shows it, as LevelToggles. */
+export function ModeToggles({ hidden, onToggle }: { hidden: ReadonlySet<TransitMode>; onToggle: (m: TransitMode) => void }) {
+  return (
+    <div class="group mode-toggles">
+      {SHOW_MODES.map(([m, I]) => (
+        <button key={m} class={"btn icon" + (hidden.has(m) ? "" : " on")} data-tip={transitName(m)} aria-label={transitName(m)}
+          aria-pressed={!hidden.has(m)} onClick={() => onToggle(m)}><I /></button>
       ))}
     </div>
   );

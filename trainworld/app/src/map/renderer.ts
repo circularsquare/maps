@@ -38,7 +38,9 @@ import { aheadChevrons, aheadEmpty, aheadParts, joinStations, noAhead, standInSt
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_RANGE, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
-import { codeHidden, hidden as vis, levelHidden, levelShown, pickSkip } from "./visibility";
+import { codeHidden, hidden as vis, levelShown, modesHidden, pickSkip, stationOff, strokeMode } from "./visibility";
+import { edgesNear } from "./snapIndex";
+import { MARK_STRIDE } from "./markData";
 import { EPOCH_S, STAGE_WAIT_MS, TripArgs, LINE_PX, noBays, BAYS, StationGroups, DrawOptions, StrokeVao, TexName, plainWmul, fullAttr, STROKE_ATTRIBS, STILL_MAX_MS, StrokeLodState, NetworkLayers, TRAIN_MAX_MPS, CROWD_STEP_S, type StrokeBand } from "./rendererParts";
 export { EPOCH_S, laneState, passingState, CROWD_ZOOM, CONFLICT_ZOOM } from "./rendererParts";
 export type { StationGroups, DrawOptions, NetworkLayers } from "./rendererParts";
@@ -56,6 +58,9 @@ import { drawFrame, bindTrainTextures } from "./rendererDraw";
 // the current game hour, so the float32 time uniform stays under 3600 s. The clock worker sends
 // each hour's trips (and the next hour's, ahead); when the hour turns, only that buffer is
 // re-uploaded. Phase tables change only on edits.
+
+/** T-4400: a mark is on a track that passes within this many local units of it (marks sit on their track's points) */
+const MARK_ON_TRACK = 1.5;
 
 export class NetworkRenderer {
   gl!: WebGL2RenderingContext;
@@ -553,7 +558,7 @@ export class NetworkRenderer {
     this.hasStencil = (gl.getParameter(gl.STENCIL_BITS) ?? 0) > 0;
     // (Firefox with fingerprinting resistance says 2048 for both, under many a window's canvas)
     this.cacheMax = Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE) ?? 0, gl.getParameter(gl.MAX_TEXTURE_SIZE) ?? 0);
-    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide", "u_ahead_lines", "u_ahead_edges", "u_ahead_n", "u_ahead"]);
+    this.strokeU = uniforms(gl, this.strokeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_width", "u_casing", "u_casing_rgb", "u_cap", "u_kind", "u_sel_line", "u_sel_n", "u_sel_set", "u_sel_edge", "u_hot", "u_only_sel", "u_bp_part", "u_lanes", "u_lane_mode", "u_pass_off","u_dim", "u_by_level", "u_by_speed", "u_by_profit", "u_profit", "u_profit_n", "u_level_colours", "u_track", "u_bad", "u_sel", "u_bp", "u_bp_mid", "u_bp_rail", "u_bp_off_mid", "u_bp_off_rail", "u_bp_off_fade", "u_line_colours", "u_full_pass", "u_full_px", "u_full_out", "u_full_dash", "u_full_rgb", "u_full_inside", "u_ghost", "u_ghost_layer", "u_ghost_rgb", "u_ghost_min", "u_hsr", "u_wire", "u_band", "u_band_traffic", "u_band_gap", "u_band_m", "u_mute", "u_level_hide", "u_mode_hide", "u_ahead_lines", "u_ahead_edges", "u_ahead_n", "u_ahead"]);
     this.stationU = uniforms(gl, this.stationProg, [...PROJECT_UNIFORMS, "u_viewport", "u_radius", "u_ring", "u_ink", "u_line", "u_boxes", "u_fixed", "u_pass_half", "u_pass_in", "u_pass", "u_layer", "u_pixel", "u_bad", "u_crowd_rgb", "u_tint", "u_mask", "u_stline", "u_lanes", "u_hot_st", "u_hot_n", "u_room", "u_bld", "u_one", "u_one_mid", "u_no_bp"]);
     this.bridgeProg = compile(gl, BRIDGE_VS, STATION_FS);
     this.bridgeU = uniforms(gl, this.bridgeProg, [...PROJECT_UNIFORMS, "u_viewport", "u_ring", "u_bridge", "u_pass", "u_layer", "u_ink", "u_bad", "u_crowd_rgb", "u_mask", "u_hot_st", "u_hot_n", "u_no_bp"]);
@@ -1000,13 +1005,11 @@ export class NetworkRenderer {
     this.uploads++;
   }
 
-  /** the stations on a hidden level, a blueprint the player hid, or hidden ahead of the network (T-4145) */
+  /** the stations on a hidden level or of hidden kinds only (T-4400), a blueprint the player hid, or hidden ahead of
+   * the network (T-4145) */
   private hideStations(n: NetworkBuffers) {
     this.stationHid = new Uint8Array(n.stationCount);
-    if (vis.levels) for (let i = 0; i < n.stationCount; i++) {
-      const l = vis.stationLevel(n.stationIds[i]);
-      if (l !== undefined && levelHidden(l)) this.stationHid[i] = 1;
-    }
+    if (vis.levels || vis.modes) for (let i = 0; i < n.stationCount; i++) if (stationOff(n.stationIds[i])) this.stationHid[i] = 1;
     if (vis.blueprints) for (let i = 0; i < n.stationCount; i++) if ((n.stations[i * 3 + 2] & 2) !== 0) this.stationHid[i] = 1;
     for (const id of this.ahead.hideStations) {
       const i = stationIndexOf(n, String(id));
@@ -1227,7 +1230,7 @@ export class NetworkRenderer {
   /** T-3420: the network and the `vis.v` the line colours' alphas, the station flags and the picks' skips were set for */
   hiddenFor: NetworkBuffers | null = null;
   hiddenV = -1;
-  /** per station: on a hidden level */
+  /** per station: hidden (`hideStations`) */
   stationHid = new Uint8Array(0);
   /** T-3420: the line colours with a hidden line's alpha 0 (the stroke and train shaders read it) */
   shownColours(n: NetworkBuffers): Uint8Array {
@@ -1246,12 +1249,12 @@ export class NetworkRenderer {
     for (const l of [...vis.lines, ...gone]) if (l * 4 + 3 < c.length) c[l * 4 + 3] = 0;
     return c;
   }
-  /** Whether station `i` is on a hidden level (T-3420). */
+  /** Whether station `i` is hidden (T-3420). */
   stationHidden(i: number): boolean {
     return this.stationHid[i] === 1;
   }
   sampleLv: Float32Array | null = null;
-  /** T-3560: whether a train (as `tripAt` places it) is on a switched-off level, drawn faint and not pickable */
+  /** T-3560: whether a train (as `tripAt` places it) is on a hidden level, not drawn or pickable */
   tripOnOffLevel(at: { geo: number; gr: number; s: number }): boolean {
     const n = this.net;
     if (!vis.levels || !this.sampleLv || !n) return false;
@@ -1277,15 +1280,48 @@ export class NetworkRenderer {
     this.hideStations(n);
     this.putLevels(vis.levels ? this.sampleLevels(n) : null);
     const L = n.lines, T = n.track;
-    if (vis.lines.size || vis.levels || vis.blueprints) {
-      const bp = vis.blueprints;
+    if (vis.lines.size || vis.levels || vis.modes || vis.blueprints) {
+      const bp = vis.blueprints, modes = vis.modes;
       pickSkip.set(L.seg, (i) => vis.lines.has(L.colour[i]) || codeHidden(L.level[i]) || (bp && (L.flags[i] & F_BLUEPRINT) !== 0));
-      if (vis.levels || bp) pickSkip.set(T.seg, (i) => codeHidden(T.level[i]) || (bp && (T.flags[i] & F_BLUEPRINT) !== 0));
+      if (vis.levels || modes || bp) pickSkip.set(T.seg, (i) => codeHidden(T.level[i]) || (modes & strokeMode(T.flags[i])) !== 0 || (bp && (T.flags[i] & F_BLUEPRINT) !== 0));
       else pickSkip.delete(T.seg);
     } else {
       pickSkip.delete(L.seg);
       pickSkip.delete(T.seg);
     }
+    this.hideMarks(n);
+  }
+  /** T-4400: the junction, crossing and ramp marks that lie on track of hidden kinds only, not drawn or picked */
+  private hideMarks(n: NetworkBuffers) {
+    const mk = n.marks;
+    if (!mk) return;
+    if (!vis.modes) {
+      pickSkip.delete(mk);
+      this.marks.setShown(mk);
+      return;
+    }
+    const off = new Set<number>(), R = MARK_ON_TRACK;
+    for (let i = 0; i < mk.length; i += MARK_STRIDE) {
+      const x = mk[i], y = mk[i + 1];
+      let bits = 0;
+      for (const { edge, pts, ks } of edgesNear(n, x, y, R) ?? []) {
+        for (const k of ks) {
+          const ax = pts[k], ay = pts[k + 1], dx = pts[k + 3] - ax, dy = pts[k + 4] - ay, l2 = dx * dx + dy * dy;
+          const u = l2 > 0 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+          if ((ax + u * dx - x) ** 2 + (ay + u * dy - y) ** 2 <= R * R) { bits |= vis.edgeModes(edge); break; }
+        }
+      }
+      if (modesHidden(bits)) off.add(i);
+    }
+    if (!off.size) {
+      pickSkip.delete(mk);
+      this.marks.setShown(mk);
+      return;
+    }
+    pickSkip.set(mk, (i) => off.has(i));
+    const kept: number[] = [];
+    for (let i = 0; i < mk.length; i += MARK_STRIDE) if (!off.has(i)) for (let k = 0; k < MARK_STRIDE; k++) kept.push(mk[i + k]);
+    this.marks.setShown(new Float32Array(kept));
   }
   dropPlaced() {
     this.uncached(() => { for (const r of this.placedRes) r.del(); });

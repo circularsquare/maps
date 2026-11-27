@@ -26,7 +26,7 @@ import { crossTrams, M_BAD, M_CONVERGE, M_CROSSING, M_DIVERGE, M_JUNCTION, M_POR
 import { quietBadgeRadius } from "./stationGeometry";
 import type { TipLine } from "./networkTips";
 import { elevationFact } from "./trackTagRows";
-import { hidden, LEVEL_FADE, levelHidden } from "./visibility";
+import { hidden, levelHidden, pickSkip } from "./visibility";
 
 /** ?perfOff=marks (measurement only, src/perfFlags.ts) */
 const NO_MARKS = perfOff("marks");
@@ -59,7 +59,7 @@ uniform float u_thick;       // a ramp end's thickness, device px
 uniform float u_ends;        // 1: ramp ends are drawn (the track level view)
 uniform float u_ramps;       // 0: no marks on ramps and portals
 uniform float u_flat;        // 0: no marks on flat crossings and junctions
-uniform int u_level_hide;    // T-3420: the levels switched off (drawn faint, T-3560), a bit each from level -3
+uniform int u_level_hide;    // T-3420: the levels hidden (not drawn), a bit each from level -3
 uniform int u_no_bp;         // 1: blueprint marks are not drawn (Settings' Show blueprints)
 in vec4 a_mark;              // x, y, shape, angle
 in vec2 a_style;             // tier (0 built, 1 blueprint), level
@@ -67,7 +67,6 @@ out vec2 v_p;
 flat out vec4 v_m;
 flat out vec2 v_s;
 flat out float v_r;
-flat out float v_fade;
 void main() {
   int shape = int(a_mark.z + 0.5);
   bool ramp = shape == ${M_RAMP} || shape == ${M_PORTAL};
@@ -76,7 +75,7 @@ void main() {
   if (u_ramps < 0.5 && ramp) r = 0.0;
   if (u_flat < 0.5 && (shape == ${M_CROSSING} || shape == ${M_JUNCTION})) r = 0.0;
   if (u_no_bp == 1 && (rend ? (int(a_style.x + 0.5) & 1) == 1 : a_style.x > 0.5)) r = 0.0;
-  v_fade = ((u_level_hide >> (clamp(int(round(a_style.y)), -3, 3) + 3)) & 1) != 0 ? ${LEVEL_FADE.toFixed(2)} : 1.0;
+  if (((u_level_hide >> (clamp(int(round(a_style.y)), -3, 3) + 3)) & 1) != 0) r = 0.0;
   if (r <= 0.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float rq = rend ? length(vec2(0.5625 * r, 0.5 * u_thick)) + 2.0 : ramp ? 1.8 * r + 3.0 : r + 3.0;
   vec2 corner = vec2(float(gl_VertexID & 1), float(gl_VertexID >> 1)) * 2.0 - 1.0;
@@ -110,7 +109,6 @@ in vec2 v_p;
 flat in vec4 v_m;
 flat in vec2 v_s;
 flat in float v_r;
-flat in float v_fade;
 out vec4 o;
 float cov(float d) { return clamp(0.5 - d, 0.0, 1.0); }
 float seg(vec2 p, vec2 a, vec2 b) {
@@ -210,7 +208,6 @@ void mark() {
 }
 void main() {
   mark();
-  o *= v_fade;
 }`;
 
 interface Instances {
@@ -263,6 +260,16 @@ export class GradeMarks {
   setNetwork(marks: Float32Array | undefined) {
     this.marks = marks ?? new Float32Array(0);
     this.built = this.upload(this.built, marks);
+    this.shown = marks;
+  }
+
+  /** the built marks uploaded: `marks`, or fewer (`setShown`) */
+  private shown: Float32Array | undefined;
+  /** T-4400: the built marks to draw, `marks` less those on track of a hidden kind; the same array again is a no-op */
+  setShown(data: Float32Array) {
+    if (data === this.shown) return;
+    this.shown = data;
+    this.built = this.upload(this.built, data);
   }
 
   /** The drawing tool's marks, or none. A crossing or junction where one is already marked is left out. */
@@ -326,7 +333,10 @@ export function markAt(ov: Overlay, marks: Float32Array, px: number, py: number,
   const flat = display.peek().flatMarks, ramps = display.peek().rampMarks;
   let best = -1, bestD = Infinity;
   const at = new Float64Array(2);
+  // T-4400: a mark on track of a hidden kind only
+  const skip = pickSkip.get(marks);
   for (let i = 0; i < marks.length; i += MARK_STRIDE) {
+    if (skip?.(i)) continue;
     const shape = marks[i + 2], isRamp = shape === M_RAMP || shape === M_PORTAL;
     if (!flat && (shape === M_CROSSING || shape === M_JUNCTION)) continue;
     if (!ramps && isRamp || shape === M_RAMPEND) continue;

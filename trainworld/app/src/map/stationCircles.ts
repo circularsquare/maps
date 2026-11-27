@@ -18,6 +18,7 @@ import { world } from "../game/world";
 import { fitSparse } from "./gl";
 import type { Overlay } from "./overlay";
 import { stationHaloRadius, STATIONS_ZOOM } from "./stationGeometry";
+import { hidden, stationOff } from "./visibility";
 
 /** Circle area is proportional to riders a day (T-722, no cap). The radius is
  * `stationHaloRadius(zoom)` times the size setting (T-1565) times this scale, so STATION_FULL riders have that radius at any zoom; a
@@ -67,7 +68,7 @@ let circles: Circle[] = [];
 /** Every circle with riders (T-630), biggest first; kept until the network, world, solve or display
  * changes, since working it out is a pass over every station's complex (tens of ms on a world save). */
 export function circleList(net: NonNullable<Overlay["renderer"]["net"]>, w: WorldView, dv: DemandView, mode: StationUseMode): Circle[] {
-  const key = [net, w, dv, mode, complexes.peek(), stationUse.peek()];
+  const key = [net, w, dv, mode, complexes.peek(), stationUse.peek(), hidden.v];
   if (key.every((v, i) => v === circleKey[i])) return circles;
   circleKey = key;
   const index = new Map(net.stationIds.map((id, i) => [id, i]));
@@ -77,10 +78,13 @@ export function circleList(net: NonNullable<Overlay["renderer"]["net"]>, w: Worl
   const split = stationUse.peek()?.at;
   const seen = new Set<string>();
   const out: Circle[] = [];
+  const offs = !!(hidden.levels || hidden.modes);
   for (const s of w.save.stations) {
     if (!s.built || seen.has(s.id)) continue;
     const k0 = cx.of.get(s.id);
     const members = k0 !== undefined ? (cx.members.get(k0) ?? [s.id]).filter((m) => built.has(m)) : [s.id];
+    // T-4400: no circle for a complex whose stations the player all hid
+    if (offs && members.every((m) => stationOff(m))) { for (const m of members) seen.add(m); continue; }
     let riders = 0, transfers = 0, known = false, top = s.id, topV = -1;
     for (const m of members) {
       seen.add(m);

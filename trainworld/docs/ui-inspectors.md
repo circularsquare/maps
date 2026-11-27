@@ -241,7 +241,7 @@ purpose filter the purpose drawn is ringed in the bar.
   over them (the track under it stays), and a hidden line's twin (T-3333) goes with it. Where lines run side by side
   its band's slot stays empty. The hidden lines are saved with the game (the header's `hidden`, outside the undo
   history; none once hide mode is left), and a game opened with lines hidden opens in hide mode; a new line or a copy
-  is shown. Settings' Show levels and Buses and ferries hide by level and by mode ([ui-panels.md](ui-panels.md)
+  is shown. Settings' Show levels and Show modes hide by level and by kind of line ([ui-panels.md](ui-panels.md)
   "Settings").
 - **A group's bullet** [T-1813, `ui/GroupPill.tsx`]: a pill with a see-through body, a 2 px
   outline and bold text in one colour, reading the group's name with a trailing " line" or " main

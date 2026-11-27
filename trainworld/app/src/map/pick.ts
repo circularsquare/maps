@@ -18,7 +18,7 @@ import { LOT_STRIDE } from "./facilityPlace";
 import { BAND_M_RANGE, BAND_RANGE, BAND_STRIDE } from "./lineBands";
 import { floorAt } from "./buildingFloors";
 import { buildingMembersById } from "../game/buildingView";
-import { hidden, levelHidden, pickSkip } from "./visibility";
+import { hidden, nodeOff, pickSkip } from "./visibility";
 import { profileLine } from "./profiles";
 import { timed } from "../game/stepTimes";
 
@@ -504,7 +504,7 @@ export function pick(ov: Overlay, px: number, py: number, trainsShown: boolean, 
   if (lineHit && !(current?.kind === "line" && current.line === lineHit)) return { kind: "line", line: lineHit };
 
   for (let i = n.junctionIds.length - 1; i >= 0; i--) {
-    if (hidden.levels) { const l = hidden.nodeLevel(n.junctionIds[i]); if (l !== undefined && levelHidden(l)) continue; }
+    if ((hidden.levels || hidden.modes) && nodeOff(n.junctionIds[i])) continue;
     ov.toScreenInto(n.junctions[i * 2], n.junctions[i * 2 + 1], SCRATCH, 0);
     const d = (SCRATCH[0] - px) ** 2 + (SCRATCH[1] - py) ** 2;
     if (d < best) {

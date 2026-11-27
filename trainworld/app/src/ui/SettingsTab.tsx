@@ -15,8 +15,8 @@ import { DETAIL_RANGE } from "../map/demandOverlay";
 import { canReloadIntoGame, clockRunning, makeSandbox, reloadIntoGame, saveGuide, saveSlotsState } from "../workers/clockClient";
 import { coresAuto, coresCapped, coresChanged, coresEstimate, coresMax, coresPicked, forgetPoolCap } from "../workers/demandClient";
 import { mobileDevice } from "../workers/deviceMemory";
-import { Check, Icon, LevelToggles, Segmented, ShapePicker, Stepper } from "./widgets";
-import { hiddenLevels, hideBlueprints, hideBlueprintsView, hideBuses, showAllLevels, toggleLevel } from "../game/lineVisibility";
+import { Check, Icon, LevelToggles, ModeToggles, Segmented, ShapePicker, Stepper } from "./widgets";
+import { hiddenLevels, hiddenModes, hideBlueprints, hideBlueprintsView, showAllLevels, showAllModes, toggleLevel, toggleMode } from "../game/lineVisibility";
 import { SHAPE_MODES } from "../game/lineShape";
 import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
@@ -152,7 +152,7 @@ export function SettingsTab() {
           <span data-tip={t("settingsTab.terrainTip")}>{t("settingsTab.terrain")}</span>
         </Check>
       </div>
-      {/* T-3420: every level lit; a click draws that level's track, lines, stations and trains faint and not pickable (T-3560) while the page is open */}
+      {/* T-3420: every level lit; a click hides that level's track, lines, stations and trains while the page is open */}
       <div class="level-show">
         <div class="level-head">
           <span>{t("settingsTab.showLevels")}</span>
@@ -162,10 +162,16 @@ export function SettingsTab() {
         </div>
         <LevelToggles hidden={hiddenLevels.value} onToggle={toggleLevel} />
       </div>
+      {/* T-4400: the same for each kind of line, with its track and the stations no shown kind uses */}
+      <div class="level-show mode-show">
+        <div class="level-head">
+          <span>{t("settingsTab.showModes")}</span>
+          <button class="btn text mini" style={{ visibility: hiddenModes.value.size ? undefined : "hidden" }} tabIndex={hiddenModes.value.size ? undefined : -1}
+            aria-hidden={!hiddenModes.value.size} onClick={showAllModes}>{t("settingsTab.showAllModes")}</button>
+        </div>
+        <ModeToggles hidden={hiddenModes.value} onToggle={toggleMode} />
+      </div>
       <div class="checks">
-        <Check checked={!hideBuses.value} onChange={(v) => (hideBuses.value = !v)}>
-          {t("settingsTab.busesFerries")}
-        </Check>
         <Check checked={!(saveSlotsState.value.viewing ? hideBlueprintsView : hideBlueprints).value}
           onChange={(v) => ((saveSlotsState.peek().viewing ? hideBlueprintsView : hideBlueprints).value = !v)}>
           {t("settingsTab.blueprints")}

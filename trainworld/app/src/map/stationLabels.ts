@@ -32,6 +32,7 @@ import { insideOutline } from "../game/buildings";
 import { groundScale, packToLngLat } from "../game/coords";
 import { busStopsById, listedLines, namedBusStops, stationsById, world } from "../game/world";
 import { FLOOR_ZOOM } from "./buildingFloors";
+import { hidden, MODE_BIT, stationOff } from "./visibility";
 import { complexTitle } from "../game/complexLead";
 
 /** a station building's name goes in its cross-hall from here in (the floor's full zoom) */
@@ -85,6 +86,8 @@ export class StationLabels {
   private placedSize: [number, number] = [0, 0];
   private anchor: [number, number] = [0, 0];
   private needsPlacement = true;
+  /** the `hidden.v` the names were last placed for: a station hidden or shown places them again (T-4400) */
+  private hiddenV = -1;
   /** Shown labels' boxes in screen px at the last full placement, before the pan offset. */
   /** The labels behind `placed`, same order, for `follow`. */
   private shownLabels: Label[] = [];
@@ -349,6 +352,7 @@ export class StationLabels {
       this.needsPlacement = true;
     }
     if (!show || !this.overlay.camMatrix) return;
+    if (hidden.v !== this.hiddenV) (this.hiddenV = hidden.v), (this.needsPlacement = true);
     const W = this.overlay.cssW, H = this.overlay.cssH;
     const m = this.overlay.camMatrix;
     const prev = this.placedMatrix;
@@ -408,8 +412,14 @@ export class StationLabels {
     // stations' own names go
     const inBuilding = this.placeBuildings(zoom, W, H, margin, placedBoxes, padX, padY);
     const trams = zoom < TRAM_NAME_ZOOM ? this.tramStops() : null;
+    // T-4400: a name whose stations are all hidden (on hidden levels or of hidden kinds) goes with them
+    const offs = !!(hidden.levels || hidden.modes);
     for (let i = 0; i < this.labels.length; i++) {
       const l = this.labels[i];
+      if (offs && this.names.list[i]?.members.every((m) => stationOff(m.id))) {
+        hide(l);
+        continue;
+      }
       if (trams?.size && this.names.list[i]?.members.every((m) => trams.has(m.id))) {
         hide(l);
         continue;
@@ -444,8 +454,9 @@ export class StationLabels {
       l.oy = ry - sy;
     }
     // T-4080: a bus stop's name comes after every station's, so a station's name wins a collision
+    const busOff = (hidden.modes & MODE_BIT.bus) !== 0;
     for (const l of this.busLabels) {
-      if (zoom < BUS_NAME_ZOOM) { hide(l); continue; }
+      if (zoom < BUS_NAME_ZOOM || busOff) { hide(l); continue; }
       if (!l.w) { l.w = l.el.offsetWidth; l.h = l.el.offsetHeight; }
       const [sx, sy] = this.overlay.toScreen(l.x, l.y);
       const x = sx + BUS_GAP, y = sy - l.h / 2;

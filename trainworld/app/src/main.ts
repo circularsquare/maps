@@ -35,7 +35,8 @@ import { aheadMapMoved } from "./map/aheadShow"; // T-4145: draws the edits wait
 import { pendingNetIn, pendingTaken } from "./game/pending";
 import { drawnEdgesOf } from "./map/lineAhead";
 import type { NetworkBuffers } from "./map/network";
-import { hiddenLevels, hiddenLines, hideBlueprints, hideBlueprintsView, hideBuses, levelBits } from "./game/lineVisibility";
+import { hiddenLevels, hiddenLines, hiddenModes, hideBlueprints, hideBlueprintsView, levelBits, modeBits, stationModes, trackModes } from "./game/lineVisibility";
+import { modeOf } from "./game/vehicle";
 import { setBlueprintsHidden, setHidden } from "./map/visibility";
 import "./game/capLoad";
 import { removeThing, setTrackHider } from "./game/remove";
@@ -516,13 +517,13 @@ effect(() => {
 });
 const demandOnTop = (x: number, y: number, add: boolean) => (onMark(x, y) || netFirst(x, y) ? undefined : demandClick?.(x, y, add));
 
-// T-3420: the lines and levels the player hid; a hidden line's twin with it (T-3333)
+// T-3420: the lines, levels and kinds (T-4400) the player hid; a hidden line's twin with it (T-3333)
 /** Settings' Show blueprints, as it stands in the game in hand: a viewed community network has its own (T-4002) */
 const blueprintsOff = computed(() => (saveSlotsState.value.viewing ? hideBlueprintsView : hideBlueprints).value);
 const hiddenNums = computed(() => {
-  const ids = hiddenLines.value, w = world.value, out = new Set<number>();
+  const ids = hiddenLines.value, w = world.value, modes = hiddenModes.value, out = new Set<number>();
   for (const id of ids) out.add(Number(id));
-  if (hideBuses.value && w) for (const l of w.save.lines) if (w.lineStats[l.id]?.bus) out.add(l.num);
+  if (modes.size && w) for (const l of w.save.lines) { const st = w.lineStats[l.id]; if (st && modes.has(modeOf(st))) out.add(l.num); }
   // a planned bus line is a blueprint too; hidden as a bus line is, so the picks pass over it
   if (blueprintsOff.value && w) for (const l of w.save.lines) { const st = w.lineStats[l.id]; if (st?.bus && st.status === "planned") out.add(l.num); }
   if (w && ids.size) for (const [twin, of] of w.twins) if (ids.has(of)) out.add(Number(twin));
@@ -530,9 +531,16 @@ const hiddenNums = computed(() => {
 });
 effect(() => {
   const w = world.value;
-  // (T-4150 stage 2: the stations by id only once a hidden level asks)
-  const changed = setHidden(hiddenNums.value, levelBits(hiddenLevels.value), (id) => (w ? stationsById(w).get(id)?.level : undefined), (id) => w?.nodes.get(id)?.level);
-  if (changed) overlay.invalidate();
+  // (T-4150 stage 2: the stations by id only once a hidden level or kind asks)
+  const changed = setHidden(hiddenNums.value, levelBits(hiddenLevels.value), modeBits(hiddenModes.value), {
+    stationLevel: (id) => (w ? stationsById(w).get(id)?.level : undefined),
+    nodeLevel: (id) => w?.nodes.get(id)?.level,
+    stationModes: (id) => (w ? stationModes(w).get(id) ?? 0 : 0),
+    nodeModes: (id) => (w ? trackModes(w).nodes.get(id) ?? 0 : 0),
+    edgeModes: (id) => (w ? trackModes(w).edges.get(id) ?? 0 : 0),
+  });
+  // (a MapLibre frame too: the station names, capacity gauges and reversal signs are placed on its frames)
+  if (changed) overlay.invalidate(), map.triggerRepaint();
 });
 // Settings' Show blueprints: every blueprint piece is not drawn or picked (map/visibility.ts)
 effect(() => {

@@ -136,6 +136,7 @@ function strokeUniforms(rnd: NetworkRenderer, c: Ctx1) {
   gl.activeTexture(gl.TEXTURE0);
   gl.uniform1i(u.u_ahead, 0);
   gl.uniform1i(u.u_level_hide, vis.levels);
+  gl.uniform1i(u.u_mode_hide, vis.modes);
   // T-2058: the other lines thinner, faded and solid
   const mute = MUTE && (opt.dimOthers ?? 1) < 1 ? MUTE : null;
   gl.uniform1f(u.u_dim, mute ? 1 : opt.dimOthers ?? 1);
@@ -625,7 +626,7 @@ function stationsPass(rnd: NetworkRenderer, c: Ctx3) {
     // riders changing trains walking between stations (T-1124), with the platform crowds
     const placed = rnd.crowds.stationOfQueue;
     if (rnd.crowdsShown && boxes && placed) {
-      rnd.bubbles.sync(rnd.board, n, placed);
+      rnd.bubbles.sync(rnd.board, n, placed, rnd.stationHid);
       rnd.bubbles.draw(lc, vp, uTime, 0.5 * boxWhite * dpr, rgbf(shades.walkers), rgbf(shades.casing), dpr);
     }
   }

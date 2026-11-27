@@ -5,10 +5,14 @@ import { t } from "../i18n";
 import { BUS_CARS } from "./boarding";
 import { BOATS, boatOf } from "./boats";
 import type { LineStats } from "./types";
+import type { TransitMode } from "./transitModes";
 
 export type Vehicle = "train" | "tram" | "bus" | "boat";
 
 export const vehicleOf = (st: LineStats): Vehicle => (st.bus?.ferry ? "boat" : st.bus ? "bus" : st.tram ? "tram" : "train");
+
+/** The kind of line it is (T-3695, T-4400): high speed is its trains' kind (T-817), whatever track it runs on. */
+export const modeOf = (st: LineStats): TransitMode => (st.bus ? (st.bus.ferry ? "ferry" : "bus") : st.tram ? "tram" : st.fast ? "hsr" : "train");
 
 /** A tram runs on rails and is sized in cars like a train, so the two share every rule except their noun. */
 export const onRails = (v: Vehicle): boolean => v === "train" || v === "tram";

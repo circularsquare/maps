@@ -1,7 +1,7 @@
 // T-3420: hiding lines and track levels on the map. On the real save: the Lines tab has no new bus or ferry
 // button; its eye button (hide mode) shows a box per row; unticking lines takes their strokes, trains and picks
 // off the map; the hidden lines survive the save file and its load (opening in hide mode); leaving hide mode
-// shows them all and the save then holds none; Settings' Buses and ferries hides bus and ferry lines; Show
+// shows them all and the save then holds none; Settings' Show modes bus button hides bus lines (T-4400); Show
 // levels hides a level's track, lines, stations and picks. Shots of
 // the Lines tab, Settings and the map, light and dark. From the maps root:
 //   node trainworld/checks/t3420-visibility.mjs [url]   (about two minutes; default localhost:6113)
@@ -113,13 +113,13 @@ try {
   console.log('a bus line', bus);
   await S(({ ui }) => { ui.tab.value = 'settings'; });
   await frame();
-  const busCheck = await page.$('.level-show + .checks input');
-  check(!!busCheck && await busCheck.evaluate((x) => x.checked), 'Buses and ferries starts ticked');
-  await busCheck.click();
+  const modeBtns = await page.$$('.mode-show .btn.icon');
+  check(modeBtns.length === 5 && await page.$$eval('.mode-show .btn.icon.on', (b) => b.length) === 5, 'Show modes has five buttons, all lit');
+  await modeBtns[3].click(); // bus
   await frame();
-  const busHidden = await S(({ v, vis, live }, num) => ({ on: v.hideBuses.peek(), hidden: vis.hidden.lines.has(num), layer: live.live.overlay.renderer.buses.has(num) }), bus);
-  check(bus !== null && busHidden.on && busHidden.hidden && !busHidden.layer, `unticking hides bus and ferry lines (bus line ${bus}): ${JSON.stringify(busHidden)}`);
-  await busCheck.click();
+  const busHidden = await S(({ v, vis, live }, num) => ({ on: v.hiddenModes.peek().has('bus'), hidden: vis.hidden.lines.has(num), layer: live.live.overlay.renderer.buses.has(num) }), bus);
+  check(bus !== null && busHidden.on && busHidden.hidden && !busHidden.layer, `the bus button hides bus lines (bus line ${bus}): ${JSON.stringify(busHidden)}`);
+  await modeBtns[3].click();
   await frame();
 
   // levels

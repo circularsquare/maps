@@ -22,6 +22,7 @@ import { perfOff } from "../perfFlags";
 import type { Map as MlMap } from "maplibre-gl";
 import { BoxGrid, MIN_LABEL_ZOOM, tipBeside } from "./labelLayout";
 import { PlaceThrottle } from "./moving";
+import { hidden, nodeOff } from "./visibility";
 
 /** ?perfOff=markers (T-045, measurement only). */
 const NO_MARKERS = perfOff("markers");
@@ -75,7 +76,10 @@ export class CapacityMarkers {
   selectClick: ((px: number, py: number, add: boolean) => void) | null = null;
   private box: HTMLDivElement;
   private plane: HTMLDivElement;
-  private items: { el: HTMLDivElement; x: number; y: number; shown?: boolean; transform?: string }[] = [];
+  /** `node`: the track node the dot is nearest, by which it hides with what the player hid (T-4400); `off`: hidden so */
+  private items: { el: HTMLDivElement; x: number; y: number; node: number | null; off?: boolean; shown?: boolean; transform?: string }[] = [];
+  /** the `hidden.v` the items' `off` were worked out for */
+  private hiddenV = -1;
   private visible = true;
   private placedMatrix: number[] | null = null;
   private placedSize = "";
@@ -119,11 +123,13 @@ export class CapacityMarkers {
     this.plane.textContent = "";
     this.tip.style.display = "none";
     this.placedMatrix = null;
+    this.hiddenV = -1;
     this.items = sorted.map((m, i) => {
       const el = document.createElement("div");
       el.className = "cap-mark";
       el.innerHTML = capacityDot(m.rho, !!m.held);
-      const tip = capacityTip(m.kind, m.rho, m.tph, m.delayS, level, tramSpot(w, m.x, m.y) ? "tram" : "train");
+      const node = nearestNode(w, m.x, m.y, "track");
+      const tip = capacityTip(m.kind, m.rho, m.tph, m.delayS, level, node && (node.kind === 2 || node.kind === 3) ? "tram" : "train");
       const junction = m.kind === 4 ? junctions[i] : null;
       if (junction !== null) el.classList.add("link");
       const point = (e: MouseEvent) => {
@@ -155,7 +161,7 @@ export class CapacityMarkers {
       el.onmousemove = hover;
       el.onmouseleave = () => hoverHeld() || (this.tip.style.display = "none");
       this.plane.appendChild(el);
-      return { el, x: m.x, y: m.y };
+      return { el, x: m.x, y: m.y, node: node?.id ?? null };
     });
     this.place();
   }
@@ -178,6 +184,13 @@ export class CapacityMarkers {
     const m = this.overlay.camMatrix;
     if (!m) return;
     const W = this.overlay.cssW, H = this.overlay.cssH;
+    // T-4400: a dot on a hidden level or on track of a hidden kind goes with it
+    if (hidden.v !== this.hiddenV) {
+      this.hiddenV = hidden.v;
+      const any = !!(hidden.levels || hidden.modes);
+      for (const it of this.items) it.off = any && it.node !== null && nodeOff(it.node);
+      this.placedMatrix = null;
+    }
     const size = `${W},${H},${zoom < 14}`;
     if (size === this.placedSize && this.placedMatrix?.every((v, i) => v === m[i])) return;
     // T-1614: between full placements every shown dot follows its resource each frame; which dots
@@ -191,7 +204,7 @@ export class CapacityMarkers {
     for (const it of this.items) {
       const [x, y] = this.overlay.toScreen(it.x, it.y);
       const tx = Math.round(x) - half, ty = Math.round(y) - half;
-      let on = Number.isFinite(tx + ty) && !(tx + DOT < 0 || tx > W || ty + DOT < 0 || ty > H); // NaN: far side of the globe (T-1777)
+      let on = !it.off && Number.isFinite(tx + ty) && !(tx + DOT < 0 || tx > W || ty + DOT < 0 || ty > H); // NaN: far side of the globe (T-1777)
       if (on) {
         const r = [tx - pad, ty - pad, tx + DOT + pad, ty + DOT + pad];
         if (taken.hits(r)) on = false;

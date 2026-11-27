@@ -67,7 +67,7 @@ export class TransferBubbles {
   private count = 0;
   /** the bubbles as built, STRIDE floats each, for the hover */
   private data = new Float32Array(0);
-  private src: { board: BoardHour | null; net: NetworkBuffers | null } = { board: null, net: null };
+  private src: { board: BoardHour | null; net: NetworkBuffers | null; hid: Uint8Array | null } = { board: null, net: null, hid: null };
   /** ms the last build took (`?debug=1`) */
   buildMs = 0;
 
@@ -94,10 +94,11 @@ export class TransferBubbles {
   }
 
   /** The bubbles of `board`'s hour on `net` (each station's platform middle to the other's), when
-   * either changed. `station[q]` is queue q's station in the station buffer (-1 for none). */
-  sync(board: BoardHour | null, net: NetworkBuffers | null, station: Int32Array | null) {
-    if (board === this.src.board && net === this.src.net) return;
-    this.src = { board, net };
+   * either changed. `station[q]` is queue q's station in the station buffer (-1 for none); `hid`, per station in it,
+   * 1 for one the player hid (T-4400: no walk to or from it; a new array each time what is hidden changes). */
+  sync(board: BoardHour | null, net: NetworkBuffers | null, station: Int32Array | null, hid: Uint8Array | null = null) {
+    if (board === this.src.board && net === this.src.net && hid === this.src.hid) return;
+    this.src = { board, net, hid };
     const t0 = performance.now();
     // T-1207: written straight into typed arrays, sized by a first pass over the pulses (a growing
     // number array and its copies took 40-47 ms at 4x CPU throttling each game hour)
@@ -112,13 +113,13 @@ export class TransferBubbles {
       const fromOf = new Int32Array(P.length / 2).fill(-1);
       for (let q = 0; q < board.queueCount; q++) {
         const to = station[q];
-        if (to < 0) continue;
+        if (to < 0 || hid?.[to]) continue;
         const base = q * QUEUE_STRIDE, first = Q[base + 10], end = first + Q[base + 11];
         for (let p = first; p < end; p++) {
           const walk = F[p * 2 + 1];
           if (!(walk >= MIN_WALK_S) || !(P[p * 2 + 1] >= 1)) continue;
           const from = index.get(F[p * 2]);
-          if (from === undefined || from === to) continue;
+          if (from === undefined || from === to || hid?.[from]) continue;
           fromOf[p] = from;
           count++;
         }

@@ -54,7 +54,7 @@ import { dailyRiders } from "../map/trackHover";
 import { factRow, lineBullet } from "../map/trackTagRows";
 import { TAG_OFFSET_PX, tagLines } from "../map/labelLayout";
 import { ACTION_KEYS, BUS_KEY, FERRY_KEY, TOOL_KEYS, TRIP_KEY } from "../ui/toolKeys";
-import { hiddenLines, hideBuses } from "../game/lineVisibility";
+import { hiddenLines, hiddenModes } from "../game/lineVisibility";
 import { hidden } from "../map/visibility";
 import type { ThinIn } from "./thin";
 import { THIN_BOX_PAD } from "./busGraph";
@@ -1065,7 +1065,7 @@ export function startDiagramView(client: ClockClient, mapEl: HTMLElement): void 
   // brought up to date from the same signals by main.ts before the frame)
   effect(() => {
     const m = diagramModes.value;
-    void hiddenLines.value, hideBuses.value;
+    void hiddenLines.value, hiddenModes.value;
     try { localStorage.setItem(MODES_STORE, JSON.stringify(m)); } catch { /* this visit only */ }
     if (diagramShown.peek()) draw();
   });
