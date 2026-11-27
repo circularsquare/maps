@@ -255,6 +255,8 @@ export interface NetPatch {
 
 /** a run with no passing places (`linePassing`) */
 const NO_PASS: number[] = [];
+/** a run's passing places that read no way out (`PassRec`), never added to */
+const NO_READS: Set<number> = new Set();
 
 /** T-4280: whether two runs' samples give other per-sample stretches (1: `sampleStretch`) or lanes or bands (2:
  * `sampleLane`, `sampleBand`) */
@@ -840,6 +842,7 @@ export function previewMarks(pts: ArrayLike<number>, sim?: ArrayLike<number>): F
 }
 
 const sameArray = (a: ArrayLike<number>, b: ArrayLike<number>) => {
+  if (a === b) return true;
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
   return true;
@@ -1577,10 +1580,11 @@ function passingTracks(b: StrokeBuilder, at: readonly ClockState["nodes"][number
  * every one on its path, `PASS_STRIDE` numbers (`NetworkBuffers.passing`); and per station where its
  * trains stand on the outer track: offset, half the platform, the leads before and after (`mine`,
  * for `NetworkBuffers.samplePass`). `inner`: the stations where the line stops on the running track
- * (`innerStops`). */
+ * (`innerStops`). `wayOf`: a passing station's way out along an edge and the lead it has room for (`passWay`); the edges
+ * those ways take go on `reads` (T-4153 stage 10: what a line's kept passing places read besides its own path). */
 export const PASS_STRIDE = 7;
 export const PASS_THROUGH = 0, PASS_OUTER = 1, PASS_INNER = 2;
-function linePassing(l: ClockState["lines"][number], at: ReadonlyMap<number, ClockState["nodes"][number]>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>, lens: readonly number[], inner: ReadonlySet<number> | undefined, leadOf: (node: number, edge: number) => number, out: number[]): number[] {
+function linePassing(l: ClockState["lines"][number], at: ReadonlyMap<number, ClockState["nodes"][number]>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>, lens: readonly number[], inner: ReadonlySet<number> | undefined, wayOf: (node: number, edge: number) => { edges: readonly number[]; lead: number }, out: number[], reads: number[]): number[] {
   const stops = new Set(l.stops.slice(1, -1));
   const mine: number[] = [];
   let d = 0;
@@ -1592,7 +1596,9 @@ function linePassing(l: ClockState["lines"][number], at: ReadonlyMap<number, Clo
     const node = (p & 1) ? e.a : e.b, n = at.get(node);
     if (!n || !n.stationBuilt) return;
     const where = !stops.has(node) ? PASS_THROUGH : inner?.has(node) ? PASS_INNER : PASS_OUTER;
-    const before = leadOf(node, p >> 1), after = leadOf(node, l.path[k + 1] >> 1);
+    const wb = wayOf(node, p >> 1), wa = wayOf(node, l.path[k + 1] >> 1), before = wb.lead, after = wa.lead;
+    for (const x of wb.edges) reads.push(x);
+    for (const x of wa.edges) reads.push(x);
     out.push(l.id, d, n.platform / 2, node, where, before, after);
     if (where === PASS_OUTER) mine.push(d, n.platform / 2, before, after);
   });
@@ -1608,56 +1614,104 @@ export function passLead(lenM: number, half: number, otherHalf: number): number 
   return Math.max(PASS_LEAD_MIN_M, Math.min(PASS_LEAD_M, room));
 }
 
-/** each line row's nodes along its path, and the edges (`EdgeSide`) they were read from */
-const nodeSeqOf = new WeakMap<object, { side: object; nodes: number[] }>();
+/** T-4153 stage 10: what `innerStops` read of a rail line (its row, the nodes along its path, its stops and the middle ones
+ * among them), kept with the result while the row and the edges along its path are */
+interface InnerLine { row: LineRow; nodes: number[]; stops: Set<number>; mids: Set<number> }
+/** T-4153 stage 10: `innerStops`' kept work, of the last finished build: per rail line what it read, the passing stations
+ * it was worked out at, and per line the stations where it stops on the running track (`InnerStops.out`) */
+interface InnerState { side: EdgeSide; lines: Map<number, InnerLine>; at: ReadonlyMap<number, unknown>; out: Map<number, Set<number>> }
+/** `innerStops`' answer: `out` per line; `changed` the lines whose set differs from the kept state's (null: worked out whole) */
+interface InnerStops { state: InnerState; out: Map<number, Set<number>>; changed: Set<number> | null }
+const innerLine = (l: LineRow, edgeEnds: ReadonlyMap<number, { a: number; b: number }>): InnerLine => {
+  const nodes: number[] = [];
+  for (let k = 0; k < l.path.length; k++) {
+    const p = l.path[k], e = edgeEnds.get(p >> 1);
+    if (!e) break;
+    if (k === 0) nodes.push((p & 1) ? e.b : e.a);
+    nodes.push((p & 1) ? e.a : e.b);
+  }
+  return { row: l, nodes, stops: new Set(l.stops), mids: new Set(l.stops.slice(1, -1)) };
+};
+const sameSet = (a: ReadonlySet<number>, b: ReadonlySet<number>) => {
+  if (a.size !== b.size) return false;
+  for (const v of a) if (!b.has(v)) return false;
+  return true;
+};
+/** of the lines `ls` stopping at passing station `st`, those that stop on its running track (`innerStops`) */
+function innerAtStation(st: number, ls: readonly number[], L: ReadonlyMap<number, InnerLine>): Set<number> {
+  const out = new Set<number>();
+  for (const a of ls) for (const b of ls) {
+    if (a === b) continue;
+    const la = L.get(a)!, lb = L.get(b)!, A = la.nodes, B = lb.nodes, i = A.indexOf(st), j = B.indexOf(st);
+    if (i < 0 || j < 0) continue;
+    const meets = (x: number | undefined, y: number | undefined) => x !== undefined && x === y;
+    const dir = meets(A[i + 1], B[j + 1]) || meets(A[i - 1], B[j - 1]) ? 1 : meets(A[i + 1], B[j - 1]) || meets(A[i - 1], B[j + 1]) ? -1 : 0;
+    if (!dir) continue;
+    const sa = la.stops, sb = lb.stops;
+    let na = 0, nb = 0;
+    for (const step of [1, -1]) for (let d = step === 1 ? 0 : -1; meets(A[i + d], B[j + d * dir]); d += step) {
+      if (sa.has(A[i + d])) na++;
+      if (sb.has(A[i + d])) nb++;
+    }
+    if (na < nb) out.add(a);
+  }
+  return out;
+}
 /** T-2248: per line, the passing stations in `at` where its trains stop on the running track: beside a
  * slower line's train standing on the outer track (passing-tracks design, notes/T-2228.md 5). Of two
  * lines stopping at a station and sharing the track through it, the slower is the one that stops at
- * more of the stations on the stretch they run together; equal, both stand on the outer track. */
-function innerStops(lines: ClockState["lines"], at: ReadonlyMap<number, unknown>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>, side: object): Map<number, Set<number>> {
-  const seq = new Map<number, number[]>(), stopsOf = new Map<number, Set<number>>(), by = new Map<number, number[]>();
+ * more of the stations on the stretch they run together; equal, both stand on the outer track.
+ * T-4153 stage 10: from `kept` (the last finished build's, made at `side`), only the stations where a line whose row,
+ * nodes or stops changed stops, now or then, and those that became or stopped being passing stations, are worked out
+ * again; `same`: a line whose path's edges are as at `kept`'s build (its nodes then are as kept with its row). */
+function innerStops(lines: ClockState["lines"], at: ReadonlyMap<number, unknown>, edgeEnds: ReadonlyMap<number, { a: number; b: number }>, side: EdgeSide, kept: InnerState | null, same: (id: number) => boolean): InnerStops {
+  const L = new Map<number, InnerLine>();
+  /** lines whose row, nodes or stops differ from the kept state's, or that came or went */
+  const moved = new Set<number>();
   for (const l of lines) {
     if (!l.ok || l.bus || !l.path.length) continue;
-    // (T-4153: kept with the row while the edges are)
-    let kept = nodeSeqOf.get(l);
-    if (kept?.side !== side) {
-      const nodes: number[] = [];
-      for (const [k, p] of l.path.entries()) {
-        const e = edgeEnds.get(p >> 1);
-        if (!e) break;
-        if (k === 0) nodes.push((p & 1) ? e.b : e.a);
-        nodes.push((p & 1) ? e.a : e.b);
-      }
-      nodeSeqOf.set(l, (kept = { side, nodes }));
-    }
-    const nodes = kept.nodes;
-    seq.set(l.id, nodes);
-    stopsOf.set(l.id, new Set(l.stops));
-    for (const n of new Set(l.stops.slice(1, -1))) if (at.has(n)) by.set(n, [...(by.get(n) ?? []), l.id]);
+    const k = kept?.lines.get(l.id);
+    if (k && k.row === l && same(l.id)) { L.set(l.id, k); continue; }
+    const e = innerLine(l, edgeEnds);
+    L.set(l.id, e);
+    if (!k || !sameArray(k.nodes, e.nodes) || !sameSet(k.stops, e.stops) || !sameSet(k.mids, e.mids)) moved.add(l.id);
   }
-  const out = new Map<number, Set<number>>();
-  for (const [st, ls] of by) {
-    for (const a of ls) for (const b of ls) {
-      if (a === b) continue;
-      const A = seq.get(a)!, B = seq.get(b)!, i = A.indexOf(st), j = B.indexOf(st);
-      if (i < 0 || j < 0) continue;
-      const meets = (x: number | undefined, y: number | undefined) => x !== undefined && x === y;
-      const dir = meets(A[i + 1], B[j + 1]) || meets(A[i - 1], B[j - 1]) ? 1 : meets(A[i + 1], B[j - 1]) || meets(A[i - 1], B[j + 1]) ? -1 : 0;
-      if (!dir) continue;
-      const sa = stopsOf.get(a)!, sb = stopsOf.get(b)!;
-      let na = 0, nb = 0;
-      for (const step of [1, -1]) for (let d = step === 1 ? 0 : -1; meets(A[i + d], B[j + d * dir]); d += step) {
-        if (sa.has(A[i + d])) na++;
-        if (sb.has(A[i + d])) nb++;
-      }
-      if (na < nb) {
-        const v = out.get(a);
-        if (v) v.add(st);
-        else out.set(a, new Set([st]));
-      }
-    }
+  if (!kept) {
+    const by = new Map<number, number[]>(), out = new Map<number, Set<number>>();
+    for (const [id, e] of L) for (const n of e.mids) if (at.has(n)) { const v = by.get(n); if (v) v.push(id); else by.set(n, [id]); }
+    for (const [st, ls] of by) for (const a of innerAtStation(st, ls, L)) { const v = out.get(a); if (v) v.add(st); else out.set(a, new Set([st])); }
+    return { state: { side, lines: L, at, out }, out, changed: null };
   }
-  return out;
+  for (const id of kept.lines.keys()) if (!L.has(id)) moved.add(id);
+  const redo = new Set<number>();
+  for (const id of moved) {
+    if (fault !== "inner") for (const n of kept.lines.get(id)?.mids ?? []) redo.add(n);
+    for (const n of L.get(id)?.mids ?? []) redo.add(n);
+  }
+  for (const n of at.keys()) if (!kept.at.has(n)) redo.add(n);
+  for (const n of kept.at.keys()) if (!at.has(n)) redo.add(n);
+  // (each line's set copied once it changes; the kept sets are the last build's, read only)
+  const out = new Map(kept.out), own = new Set<number>(), changed = new Set<number>();
+  const put = (a: number, st: number, on: boolean) => {
+    let v = out.get(a);
+    if (!own.has(a)) { v = new Set(v); own.add(a); }
+    else v ??= new Set();
+    if (on) v.add(st); else v.delete(st);
+    if (v.size) out.set(a, v); else out.delete(a);
+    changed.add(a);
+  };
+  for (const id of moved) if (!L.has(id) && out.has(id)) { out.delete(id); changed.add(id); }
+  for (const st of redo) {
+    const now = at.has(st), was = kept.at.has(st);
+    if (!now && !was) continue;
+    const ls: number[] = [];
+    if (now) for (const [id, e] of L) if (e.mids.has(st)) ls.push(id);
+    const inner = ls.length > 1 ? innerAtStation(st, ls, L) : new Set<number>();
+    const look = new Set(ls);
+    if (was) for (const [id, e] of kept.lines) if (L.has(id) && e.mids.has(st)) look.add(id);
+    for (const a of look) if (inner.has(a) !== (out.get(a)?.has(st) ?? false)) put(a, st, inner.has(a));
+  }
+  return { state: { side, lines: L, at, out }, out, changed };
 }
 
 /** T-4153: `bandPoints`' working arrays, grown as needed; what it returns lies in them until its next call */
@@ -2008,19 +2062,63 @@ function makeSamples(c: LineEntry, path: readonly number[], lens: number[], coun
   return { c, path, count, step, lens, rel, lane, band, bus, ks };
 }
 
-/** T-4153: a run's samples' strokes (from `base`, the line's first) and stretches into the network's tables at `first`,
- * a fill per entry (its samples all take its first stroke) */
-function writeSamples(sm: LineSamples, first: number, base: number, stretchOf: ArrayLike<number>, stroke: Int32Array, stretch: Float32Array) {
-  const ks = sm.ks, rel = sm.rel;
+/** T-4153 stage 10: one of the train samples' tables as a build makes it: the last finished build's (`own` false) until a
+ * slot is written to other values in it, then a copy of its own (the kept one is posted by reference, never changed) */
+interface SampleTab<A extends Int32Array | Float32Array> { t: A; own: boolean }
+const owned = <A extends Int32Array | Float32Array>(x: SampleTab<A>): A => {
+  if (!x.own) { x.t = x.t.slice() as A; x.own = true; netWork.tables++; }
+  return x.t;
+};
+/** T-4153: a run's samples' strokes (`valueOf` its line's stroke, from its first) or stretches into a samples' table at
+ * `first`, a fill per entry (its samples all take its first stroke), -1 off any stroke. `check`: the table holds the last
+ * build's values, so each entry's samples are written only where they differ. */
+function putEntries(x: SampleTab<Int32Array | Float32Array>, first: number, sm: LineSamples, valueOf: (f: number) => number, check: boolean) {
+  const ks = sm.ks, rel = sm.rel, f32 = x.t instanceof Float32Array;
   for (let j = 0; j + 1 < ks.length; j++) {
-    const a = ks[j], b = ks[j + 1];
+    const a = first + ks[j], b = first + ks[j + 1];
     if (a >= b) continue;
-    const f = rel[a];
-    if (f < 0) continue;
-    stroke.fill(base + f, first + a, first + b);
-    stretch.fill(stretchOf[f], first + a, first + b);
+    const f = rel[ks[j]];
+    if (!check) {
+      if (f >= 0) x.t.fill(valueOf(f), a, b);
+      continue;
+    }
+    const v = f < 0 ? -1 : f32 ? Math.fround(valueOf(f)) : valueOf(f);
+    let q = a;
+    while (q < b && Object.is(x.t[q], v)) q++;
+    if (q < b) owned(x).fill(v, q, b);
   }
 }
+/** T-4153 stage 10: a slot's `n` values from `at` in a samples' table made `src` and then `fill` (`check`: the table holds
+ * the last build's, so written only where they differ; else it holds `fill` there) */
+function putRange(x: SampleTab<Int32Array | Float32Array>, at: number, n: number, src: Float32Array | null, fill: number, check: boolean) {
+  const len = src?.length ?? 0;
+  if (len && (!check || !sameFloats(x.t.subarray(at, at + len) as Float32Array, src!))) owned(x).set(src!, at);
+  if (!check || len >= n) return;
+  const v = x.t instanceof Float32Array ? Math.fround(fill) : fill, end = at + n;
+  let q = at + len;
+  while (q < end && Object.is(x.t[q], v)) q++;
+  if (q < end) owned(x).fill(v, q, end);
+}
+/** T-4153 stage 10: two line tables that give every slot the same first sample and count */
+function sameLayout(a: ArrayLike<number>, b: ArrayLike<number>): boolean {
+  if (a.length !== b.length) return false;
+  for (let k = 0; k + 1 < a.length; k += 4) if (a[k] !== b[k] || a[k + 1] !== b[k + 1]) return false;
+  return true;
+}
+/** whether set `a` and `b` share a member, by the smaller */
+function meets(a: ReadonlySet<number>, b: ReadonlySet<number>): boolean {
+  const [s, t] = a.size <= b.size ? [a, b] : [b, a];
+  for (const v of s) if (t.has(v)) return true;
+  return false;
+}
+/** T-4153 stage 10: a sampled run's passing places (`linePassing`: `out` its numbers in `NetworkBuffers.passing`, `mine` its
+ * stops on outer track) and what they were worked out from besides its path's own edges: its row and path, its inner stops,
+ * the edges its stations' ways out take and those edges' ends */
+interface PassRec { row: LineRow; path: readonly number[]; inner: ReadonlySet<number> | undefined; out: number[]; mine: number[]; edges: Set<number>; nodes: Set<number> }
+/** T-4153 stage 10: the train samples' tables of the last finished build (`NetworkBuffers.sampleStroke` and the rest, posted
+ * by reference: workers/clockPost.ts `BY_REFERENCE`), a copy of the line table they are laid out by, and per slot what its
+ * range was written from (its samples, its line's first stroke and stretches, its passing values) */
+interface SampleTables { table: Float32Array; stroke: Int32Array; lane: Float32Array; band: Float32Array; stretch: Float32Array; pass: Float32Array; slots: Map<number, { first: number; count: number; base: number; sm: LineSamples; stretchOf: ArrayLike<number>; pv: Float32Array | null }> }
 
 /** T-2233: per sample of a run `step` m apart, how far it is past the nearest passing place's platform (`linePassing`) */
 function passValues(mine: readonly number[], count: number, step: number): Float32Array {
@@ -2083,6 +2181,13 @@ export interface NetCache {
   passOf: Map<number, number[]>;
   /** T-4153: per sampled run (by its row key), its samples' passing values (`passValues`) and what they are of */
   passVals: Map<number, { count: number; step: number; mine: number[]; v: Float32Array }>;
+  /** T-4153 stage 10: `innerStops`' kept work, the passing stations as found (`passingAt`), and per sampled run (by its row
+   * key) its passing places (`linePassing`) with what they read */
+  inner: InnerState | null;
+  passAt: ReadonlyMap<number, ClockState["nodes"][number]> | null;
+  passRecs: Map<number, PassRec>;
+  /** T-4153 stage 10: the train samples' tables as the last finished build left them */
+  tables: SampleTables | null;
   /** T-4153: per edge the lines whose rows (`edgeRows`, those of the last build) use it, plan, run or way back */
   edgeLines: Map<number, Set<number>>;
   edgeRows: Map<number, ClockState["lines"][number]>;
@@ -2095,7 +2200,7 @@ export interface NetCache {
   last: { serial: number; track: EdgeEntry[]; lines: LineEntry[]; trackCount: number; lineCount: number; pts: Map<number, Float32Array> } | null;
 }
 
-export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), trains: new Map(), samples: new Map(), passages: new Map(), facilities: newFacilityCache(), bands: newBandState(), side: null, lineRows: new Map(), counts: null, ways: null, lined: null, turnbacks: new Map(), nodeSlots: new Map(), bldBoxes: newEdgeBoxes(), turnStrokes: null, outside: new Map(), stArr: null, passTracks: new Map(), passOf: new Map(), passVals: new Map(), edgeLines: new Map(), edgeRows: new Map(), nodes: null, loop: null, serial: 0, last: null });
+export const newNetCache = (): NetCache => ({ edges: new Map(), lines: new Map(), stations: new Map(), speeds: new Map(), trains: new Map(), samples: new Map(), passages: new Map(), facilities: newFacilityCache(), bands: newBandState(), side: null, lineRows: new Map(), counts: null, ways: null, lined: null, turnbacks: new Map(), nodeSlots: new Map(), bldBoxes: newEdgeBoxes(), turnStrokes: null, outside: new Map(), stArr: null, passTracks: new Map(), passOf: new Map(), passVals: new Map(), inner: null, passAt: null, passRecs: new Map(), tables: null, edgeLines: new Map(), edgeRows: new Map(), nodes: null, loop: null, serial: 0, last: null });
 
 /**
  * T-1170: the cache's pieces moved to a new draw anchor, so the next build reuses them rather than
@@ -2445,10 +2550,14 @@ export function netSelfTest(on: boolean) { netTrust = on; }
  * must catch (a copy of a line changes the stops it serves) */
 let stationTrust = false;
 export function stationSelfTest(on: boolean) { stationTrust = on; }
+/** `?patch=check` (T-4153 stage 10): the network's kept work that nothing drawn shows yet (`innerStops`' and the passing
+ * places along the lines) also worked out whole and compared */
+let netCheck = false;
+export function setNetCheck(on: boolean) { netCheck = on; }
 /** T-4153: per part of the last build, ms (for measuring the parts an edit's build still pays for) */
 export const netLaps: Record<string, number> = {};
 /** T-4153: per build, the pieces of track, lines, line samples, stations and line speeds worked out again (counts) */
-export const netWork = { edges: 0, lines: 0, entries: 0, samples: 0, kept: 0, stations: 0, speeds: 0, side: "", entriesAll: 0, keptAll: 0 };
+export const netWork = { edges: 0, lines: 0, entries: 0, samples: 0, kept: 0, stations: 0, speeds: 0, side: "", entriesAll: 0, keptAll: 0, passMade: 0, passKept: 0, tables: 0, passMadeAll: 0, passKeptAll: 0, tablesAll: 0, laidAll: 0 };
 let lapT = 0;
 const lap = (k: string) => { const t = performance.now(); netLaps[k] = (netLaps[k] ?? 0) + t - lapT; lapT = t; };
 export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): Generator<void, NetworkBuffers, void> {
@@ -2463,7 +2572,7 @@ export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), de
 }
 function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean): Generator<void, NetworkBuffers, void> {
   for (const k in netLaps) delete netLaps[k];
-  netWork.edges = netWork.lines = netWork.entries = netWork.samples = netWork.kept = netWork.stations = netWork.speeds = 0;
+  netWork.edges = netWork.lines = netWork.entries = netWork.samples = netWork.kept = netWork.stations = netWork.speeds = netWork.passMade = netWork.passKept = netWork.tables = 0;
   lapT = performance.now();
   const r = s.render;
   const parts = r.edgeParts!, speedParts = r.edgeSpeedParts;
@@ -2689,7 +2798,27 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
   // stations whose passing tracks work: on double track (T-2233, sim `overtake::passing_at`)
   const passingAt = new Map<number, ClockState["nodes"][number]>();
   for (const n of s.nodes) if (n.platform > 0 && hasUpgrade(n.upgrades, UPGRADE.passing) && (nodeEnds.get(n.id)?.double ?? 0) > 0) passingAt.set(n.id, n);
-  const innerAt = passingAt.size ? innerStops(s.lines, passingAt, edgeEnds, side) : null;
+  // (T-4153 stage 10: worked out again from the last finished build's where a line or station changed)
+  const innerAt = passingAt.size ? innerStops(s.lines, passingAt, edgeEnds, side, diff && cache.inner?.side === prevSide ? cache.inner : null, (id) => !touched.has(id)) : null;
+  if (netCheck && innerAt?.changed) {
+    const w = innerStops(s.lines, passingAt, edgeEnds, side, null, () => false).out, bad: number[] = [];
+    for (const id of new Set([...w.keys(), ...innerAt.out.keys()])) if (!sameSet(w.get(id) ?? new Set(), innerAt.out.get(id) ?? new Set())) bad.push(id);
+    if (bad.length) console.error(`T-4153 check: the inner stops kept for lines ${bad.slice(0, 8).join(", ")} differ from a whole pass's`);
+  }
+  // T-4153 stage 10: the passing stations that came, went or whose rows changed since the last finished build, and the
+  // lines on their edges (by its rows): a run's kept passing places (`PassRec`) are its own while its row, its path's edges,
+  // its inner stops and what its stations' ways out read are as then, and none of these is on its path
+  const passWas = diff ? cache.passAt : null;
+  const passMoved = new Set<number>(), passHit = new Set<number>();
+  if (passWas) {
+    for (const [id, n] of passingAt) if (passWas.get(id) !== n) passMoved.add(id);
+    for (const id of passWas.keys()) if (!passingAt.has(id)) passMoved.add(id);
+    if (fault !== "pass-moved") for (const n of passMoved) for (const e of edgesAt.get(n) ?? []) for (const id of cache.edgeLines.get(e) ?? []) passHit.add(id);
+  }
+  /** nodes whose passing station or edges changed (a way out reads both at each node it reaches), and edges whose rows did */
+  const nodeHit = side !== prevSide && side.touched ? new Set([...passMoved, ...side.touched]) : passMoved;
+  const edgeHit = gone.size ? new Set([...rowsNew, ...gone]) : rowsNew;
+  const passRecsSeen: NetCache["passRecs"] = new Map(), passBad: number[] = [];
   lap("lines.setup");
   // T-2248: a passing station's way out along an edge, carried on through plain nodes (two edges) until
   // its outer track's lead fits, and the lead it has room for
@@ -2717,11 +2846,18 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
   const leadOf = (node: number, edge: number) => (passingAt.has(node) ? passWay(node, edge).lead : PASS_LEAD_M);
   const passing: number[] = [];
   const nSamples = r.samples.length / 2;
-  const samplePass = new Float32Array(passingAt.size ? nSamples : 0).fill(1e9);
-  const sampleStroke = new Int32Array(nSamples).fill(-1);
-  const sampleLane = new Float32Array(nSamples).fill(1);
-  const sampleBand = new Float32Array(nSamples * 2);
-  const sampleStretch = new Float32Array(Math.max(1, nSamples)).fill(-1);
+  // T-4153 stage 10: laid out as the last finished build's (each slot's first sample and count as then), the samples' tables
+  // are that build's, each copied once a slot is written to other values in it, and the slots written then and not now put
+  // back to the fill values after the lines
+  const tk = cache.tables;
+  const laid = !!tk && tk.stroke.length === nSamples && tk.pass.length === (passingAt.size ? nSamples : 0) && sameLayout(tk.table, r.lineTable);
+  const tab = <A extends Int32Array | Float32Array>(kept: A | undefined, make: () => A): SampleTab<A> => (laid ? { t: kept!, own: false } : { t: make(), own: true });
+  const samplePass = tab(tk?.pass, () => new Float32Array(passingAt.size ? nSamples : 0).fill(1e9));
+  const sampleStroke = tab(tk?.stroke, () => new Int32Array(nSamples).fill(-1));
+  const sampleLane = tab(tk?.lane, () => new Float32Array(nSamples).fill(1));
+  const sampleBand = tab(tk?.band, () => new Float32Array(nSamples * 2));
+  const sampleStretch = tab(tk?.stretch, () => new Float32Array(Math.max(1, nSamples)).fill(-1));
+  const slotsSeen: SampleTables["slots"] = new Map();
   for (const l of s.lines) lineColours.set([...rgb(l.colour), 255], l.id * 4);
   lap("lines.arrays");
   // lines sharing track side by side (T-1799)
@@ -2865,22 +3001,48 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
         if (differ & 2) lanesNew.add(l.id);
       }
       samplesSeen.set(key, sm!);
-      writeSamples(sm!, first, base, c!.strokes.stretch!, sampleStroke, sampleStretch);
-      sampleLane.set(sm!.lane, first);
-      if (sm!.band.length) sampleBand.set(sm!.band, first * 2);
-      let mine = NO_PASS;
+      // (T-4153 stage 10: a slot's range in each table written only when what it was written from at the last build differs,
+      // and then only where the values do)
+      const stretchOf = c!.strokes.stretch!, w = laid ? tk!.slots.get(slot) : undefined, at = !!w && w.first === first && w.count === count;
+      if (!(at && w!.sm === sm && (w!.base === base || fault === "tables"))) putEntries(sampleStroke, first, sm!, (f) => base + f, laid);
+      if (!(at && w!.sm === sm && w!.stretchOf === stretchOf)) putEntries(sampleStretch, first, sm!, (f) => stretchOf[f], laid);
+      if (!(at && w!.sm === sm)) {
+        putRange(sampleLane, first, count, sm!.lane, 1, laid);
+        putRange(sampleBand, first * 2, count * 2, sm!.band.length ? sm!.band : null, 0, laid);
+      }
+      let mine = NO_PASS, pvs: Float32Array | null = null;
       if (passingAt.size && !l.bus) {
+        const inner = innerAt?.out.get(l.id), pr = cache.passRecs.get(key);
+        let rec = pr && passWas && untouched && pr.row === l && pr.path === path && pr.inner === inner && !passHit.has(l.id) && (fault === "pass-reads" || (!meets(nodeHit, pr.nodes) && !meets(edgeHit, pr.edges))) ? pr : undefined;
         // (a return run's own stops go on a scratch list: the outer tracks are drawn from its path's)
         // (T-3348: the return run stops at its own platforms where they differ)
-        mine = linePassing(back ? { ...l, path: path as number[], stops: (l.backStops ?? l.stops).slice().reverse() } : l, passingAt, edgeEnds, lens, innerAt?.get(l.id), leadOf, back ? [] : passing);
+        const row = () => (back ? { ...l, path: path as number[], stops: (l.backStops ?? l.stops).slice().reverse() } : l);
+        if (!rec) {
+          netWork.passMade++;
+          const out: number[] = [], reads: number[] = [];
+          const m = linePassing(row(), passingAt, edgeEnds, lens, inner, passWay, out, reads), nodes = new Set<number>();
+          for (const e of reads) { const x = edgeEnds.get(e); if (x) nodes.add(x.a).add(x.b); }
+          rec = { row: l, path, inner, out, mine: m, edges: reads.length ? new Set(reads) : NO_READS, nodes: nodes.size ? nodes : NO_READS };
+        } else {
+          netWork.passKept++;
+          if (netCheck) {
+            const out: number[] = [], m = linePassing(row(), passingAt, edgeEnds, lens, inner, passWay, out, []);
+            if (!sameArray(out, rec.out) || !sameArray(m, rec.mine)) passBad.push(l.id);
+          }
+        }
+        passRecsSeen.set(key, rec);
+        if (!back) for (const v of rec.out) passing.push(v);
+        mine = rec.mine;
         if (mine.length) {
           // (T-4153: the same passing places along as many samples as far apart give the same values)
           const kp = cache.passVals.get(key);
           const pv = kp && kp.count === count && kp.step === step && sameArray(kp.mine, mine) ? kp : { count, step, mine, v: passValues(mine, count, step) };
           passValsSeen.set(key, pv);
-          samplePass.set(pv.v, first);
+          pvs = pv.v;
         }
       }
+      if (samplePass.t.length && !(at && w!.pv === pvs)) putRange(samplePass, first, count, pvs, 1e9, laid);
+      slotsSeen.set(slot, { first, count, base, sm: sm!, stretchOf, pv: pvs });
       // (T-4280: the same passing places along the same samples give the same values)
       if (mine.length) passOf.set(key, mine);
       if (!sameArray(cache.passOf.get(key) ?? NO_PASS, mine)) lanesNew.add(l.id);
@@ -2891,6 +3053,15 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
     if (slot >= 0 && l.back?.length) runSamples(slot, l.id * 2 + 1, l.back, c.backStroke ?? [], true);
     netLaps["lines.samples"] = (netLaps["lines.samples"] ?? 0) + performance.now() - ts0;
   }
+  // (T-4153 stage 10: a slot written at the last build and not now holds the fill values, as a whole build's tables do)
+  if (laid) for (const [slot, w] of tk!.slots) if (!slotsSeen.has(slot)) {
+    putRange(sampleStroke, w.first, w.count, null, -1, true);
+    putRange(sampleStretch, w.first, w.count, null, -1, true);
+    putRange(sampleLane, w.first, w.count, null, 1, true);
+    putRange(sampleBand, w.first * 2, w.count * 2, null, 0, true);
+    if (samplePass.t.length) putRange(samplePass, w.first, w.count, null, 1e9, true);
+  }
+  if (passBad.length) console.error(`T-4153 check: the passing places kept for lines ${passBad.slice(0, 8).join(", ")} differ from a whole pass's`);
   lap("lines.loop");
   yield;
   lapT = performance.now();
@@ -3393,6 +3564,17 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
   cache.passTracks = passSeen;
   cache.passOf = passOf;
   cache.passVals = passValsSeen;
+  cache.inner = innerAt?.state ?? null;
+  cache.passAt = passingAt;
+  cache.passRecs = passRecsSeen;
+  cache.tables = { table: r.lineTable.slice(), stroke: sampleStroke.t, lane: sampleLane.t, band: sampleBand.t, stretch: sampleStretch.t, pass: samplePass.t, slots: slotsSeen };
+  // (over the builds from a kept cache alone, not `?patch=check`'s from scratch)
+  if (diff) {
+    netWork.passMadeAll += netWork.passMade;
+    netWork.passKeptAll += netWork.passKept;
+    netWork.tablesAll += netWork.tables;
+    if (laid) netWork.laidAll++;
+  }
   // T-4153: each edge's lines, patched where a line's row changed
   const el = diff ? cache.edgeLines : new Map<number, Set<number>>(), er = diff ? cache.edgeRows : new Map<number, ClockState["lines"][number]>();
   const rowEdges = (l: ClockState["lines"][number]) => {
@@ -3453,11 +3635,11 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
     lineCars,
     stationShape,
     stationLine,
-    sampleStroke,
-    sampleLane,
-    sampleBand,
+    sampleStroke: sampleStroke.t,
+    sampleLane: sampleLane.t,
+    sampleBand: sampleBand.t,
     corridor: bands.corridor,
-    sampleStretch,
+    sampleStretch: sampleStretch.t,
     pathTable,
     pathEntry,
     pathFrom,
@@ -3468,7 +3650,7 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
     turnbacks,
     ...(oneWay.length ? { oneWay: new Float32Array(oneWay) } : {}),
     ...(oneWayTrack.length ? { oneWayTrack: new Float32Array(oneWayTrack) } : {}),
-    ...(passingAt.size ? { samplePass, passing: new Float32Array(passing) } : {}),
+    ...(passingAt.size ? { samplePass: samplePass.t, passing: new Float32Array(passing) } : {}),
     edgePts,
     anchor: anchor(),
     serial,

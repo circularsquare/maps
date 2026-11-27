@@ -20,7 +20,10 @@
 //   --self-test=stations: a station's numbers are kept unless its own node's row changed, and a copy of the line sharing
 //     the most track (its stops then served by one more line) must fail the check
 //   --self-test=<pass> (a patched pass with one input left out, each with its own edits: splits, legs, lined, facilities,
-//     corridors, buildings, and st-lined, one input of the stations' dirty set; the check must fail. Not planted: the
+//     corridors, buildings, and st-lined, one input of the stations' dirty set; stage 10's inner (the stations a line
+//     stopped at before its stops changed), pass-moved (the lines through a station that became a passing station),
+//     pass-reads (what a passing station's way out read off the line's path) and tables (a samples' table slot kept when
+//     only its line's first stroke moved); the check must fail. Not planted: the
 //     dirty set's other inputs (the edges' ends, the removed edges, the nodes whose ways were sorted again, the splits,
 //     the outside records), which cover one another or a station's own row, which carries its heading)
 import { readFileSync } from 'node:fs';
@@ -31,10 +34,10 @@ import { loadApp, REAL_SAVE, ARTIFACTS } from './lib.mjs';
 globalThis.postMessage = (m, o) => { for (const b of o?.transfer ?? []) if (b instanceof ArrayBuffer && !b.detached && b.byteLength) b.transfer(); };
 globalThis.self ??= globalThis;
 globalThis.location ??= { search: '', hash: '', href: 'http://localhost/' };
-const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, spliceSelfTest, windowSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest, stationSelfTest } from '@app/src/map/network.ts'; export { setFault } from '@app/src/map/selfTest.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
+const app = await loadApp("export * from '@app/src/workers/clockMain.ts'; export { putApi, syncFrame, frame } from '@app/src/workers/clockState.ts'; export { putPatchMode, posted, sender } from '@app/src/workers/clockPost.ts'; export { setAnchor, makeAnchor, anchor } from '@app/src/map/geo.ts'; export { setBandCheck, bandSelfTest, spliceSelfTest, windowSelfTest, bandWork } from '@app/src/map/lineBands.ts'; export { netWork, netSelfTest, stationSelfTest, setNetCheck } from '@app/src/map/network.ts'; export { setFault } from '@app/src/map/selfTest.ts'; export { default as initSim, TrackApi } from '@app/src/wasm/track/sim.js';");
 await app.initSim({ module_or_path: readFileSync(new URL('../app/src/wasm/track/sim_bg.wasm', import.meta.url)) });
 
-const FAULTS = ['splits', 'legs', 'lined', 'facilities', 'corridors', 'buildings', 'st-lined'];
+const FAULTS = ['splits', 'legs', 'lined', 'facilities', 'corridors', 'buildings', 'st-lined', 'inner', 'pass-moved', 'pass-reads', 'tables'];
 const faultArg = process.argv.find((a) => a.startsWith('--self-test=') && FAULTS.includes(a.slice(12)))?.slice(12) ?? '';
 const SELF = faultArg ? 'fault' : process.argv.includes('--self-test') ? 'orders' : process.argv.includes('--self-test=strokes') ? 'strokes' : process.argv.includes('--self-test=splice') ? 'splice' : process.argv.includes('--self-test=window') ? 'window' : process.argv.includes('--self-test=stations') ? 'stations' : '';
 const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
@@ -45,6 +48,7 @@ const errors = [];
 console.error = (...a) => errors.push(a.join(' '));
 app.putPatchMode('check');
 app.setBandCheck(true);
+app.setNetCheck(true);
 if (SELF === 'orders') app.bandSelfTest(true);
 if (SELF === 'strokes') app.netSelfTest(true);
 if (SELF === 'splice') app.spliceSelfTest(true);
@@ -359,6 +363,54 @@ function plannedStation(api, o, rnd) {
 }
 // (the lined pass's own fault, the changed edges' ends left unlooked at, shows in the same edit)
 SCENES.lined = SCENES['st-lined'];
+// T-4153 stage 10: two lines on double track through three passing stations, one stopping at each and one at the middle one
+// only (it stops on the running track there, the other on the outer track), then the first's stop there dropped, and undone
+SCENES.inner = (api, o, rnd) => {
+  const c = lay(api, o, rnd, 4, 500, 2);
+  if (!c) return null;
+  for (const n of c.ids) if (api.add_station(1, n, 0, 0, 120, 'Birch') !== 0) return null;
+  if (api.set_station_upgrade(Uint32Array.from(c.ids.slice(1, 4)), 8, true) !== 0) return null;
+  const slow = api.new_line_id();
+  if (api.set_line_with_trains(slow, Uint32Array.from(c.ids), 2, 2, 2, 30, 60, 8, 0xff0000, 'Slow') !== 0) return null;
+  if (api.set_line_with_trains(api.new_line_id(), Uint32Array.from([c.ids[0], c.ids[2], c.ids[4]]), 2, 2, 2, 30, 60, 8, 0x0000ff, 'Fast') !== 0) return null;
+  // (built, as a passing station's places are only for built stations: the first line's track and stops are all of it)
+  if (api.construct_line(slow) !== 0) return null;
+  return [() => api.set_stops(slow, Uint32Array.from([c.ids[0], c.ids[1], c.ids[3], c.ids[4]])), () => api.undo()];
+};
+// (stage 10) a line alone on double track through three stations, stopping at the end ones, then passing tracks at the
+// middle one (a passing station on its path, the line's row and edges as they were), and that undone
+SCENES['pass-moved'] = (api, o, rnd) => {
+  const c = lay(api, o, rnd, 4, 500, 2);
+  if (!c) return null;
+  for (const k of [1, 2, 3]) if (api.add_station(1, c.ids[k], 0, 0, 120, 'Birch') !== 0) return null;
+  // (passing tracks at its first stop too, so the line has passing places kept before the edit)
+  if (api.set_station_upgrade(Uint32Array.from([c.ids[1]]), 8, true) !== 0) return null;
+  const id = api.new_line_id();
+  if (api.set_line_with_trains(id, Uint32Array.from([c.ids[1], c.ids[3]]), 2, 2, 2, 30, 60, 8, 0xff0000, 'L') !== 0 || api.construct_line(id) !== 0) return null;
+  // (the station it runs through built too: a passing station's places are only for built ones)
+  if (api.construct(new Uint32Array(), Uint32Array.from([c.ids[2]])) !== 0) return null;
+  return [() => api.set_station_upgrade(Uint32Array.from([c.ids[2]]), 8, true), () => api.undo()];
+};
+// (stage 10) a line on double track through a passing station with plain nodes 60 and 120 units past it, inside the reach
+// of its way out, then a branch off the second (the way out stops there: a shorter lead, read off the line's own edges),
+// and that undone
+SCENES['pass-reads'] = (api, o, rnd) => {
+  const [x, y] = o.near(o.model()), h = rnd() * 2 * Math.PI, at = (d) => [x + Math.cos(h) * d, y + Math.sin(h) * d];
+  const pts = [0, 500, 1000, 1060, 1120, 1600];
+  if (api.add_route(new Float64Array([...F(at(pts[0])), ...F(at(pts[1]))]), new Float64Array(), 2, false) !== 0) return null;
+  for (let k = 2; k < pts.length; k++) {
+    const last = o.nodeAt(...at(pts[k - 1]));
+    if (!last || api.add_route(new Float64Array([...Nn(last.id), ...F(at(pts[k]))]), new Float64Array(), 2, false) !== 0) return null;
+  }
+  const ids = pts.map((d) => o.nodeAt(...at(d))?.id);
+  if (ids.some((i) => i === undefined)) return null;
+  for (const k of [0, 2, 5]) if (api.add_station(1, ids[k], 0, 0, 80, 'Birch') !== 0) return null;
+  if (api.set_station_upgrade(Uint32Array.from([ids[2]]), 8, true) !== 0) return null;
+  const id = api.new_line_id();
+  if (api.set_line_with_trains(id, Uint32Array.from([ids[0], ids[2], ids[5]]), 2, 2, 2, 30, 60, 8, 0xff0000, 'L') !== 0 || api.construct_line(id) !== 0) return null;
+  const [bx, by] = at(pts[4]);
+  return [() => api.add_route(new Float64Array([...Nn(ids[4]), ...F([bx + Math.cos(h + 1.2) * 400, by + Math.sin(h + 1.2) * 400])]), new Float64Array(), 1, false), () => api.undo()];
+};
 const weights = { building: 2, byBuilding: 4, byStation: 3, aroundStation: 4, nearChange: 3, shortShared: 2, trunkStation: 3, stationAtNode: 3, stationOnLine: 3, removeStation: 3, copyLine: 3, removeLine: 2, setStops: 2, undo: 4, redo: 2, trackStation: 3, routeFromNode: 2, deleteEdge: 2, doubleUp: 2, moveNode: 2, construct: 2, oneWay: 2 };
 
 let builds = 0, dropped = 0, rowsStates = 0, moves = 0, failures = 0;
@@ -366,7 +418,7 @@ const applied = {};
 for (let seed = 1; seed <= SEEDS && !failures; seed++) {
   const api = load(), rnd = rng(seed * 7919), o = ops(api, rnd);
   // (a planted fault is looked for with the edits that reach it)
-  const POOLS = { buildings: ['byBuilding', 'byBuilding', 'building'] };
+  const POOLS = { buildings: ['byBuilding', 'byBuilding', 'building'], tables: ['trunkStation', 'stationOnLine', 'trackStation'] };
   const pool = SELF === 'fault' ? POOLS[faultArg] : Object.keys(o).filter((k) => k !== 'model' && k !== '__around' && k !== 'near' && k !== 'nodeAt').flatMap((k) => Array(weights[k] ?? 1).fill(k));
   state();
   // (two station buildings to begin with, so the patched buildings pass runs on every save)
@@ -426,7 +478,7 @@ for (let seed = 1; seed <= SEEDS && !failures; seed++) {
     else if (process.env.VERBOSE) console.log('seed', seed, 'step', step, kind, r === 0 ? 'applied' : 'refused ' + r);
   }
 }
-console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}; line entries' strokes copied: ${app.netWork.entriesAll}, line samples copied: ${app.netWork.keptAll}; band builds that followed the network's changed edges: ${app.bandWork.followed}; lines worked out again in part: ${app.bandWork.splicedAll} (their entries worked out ${app.bandWork.sweptAll}, copied ${app.bandWork.copiedAll}); lines' bands worked out in a window: ${app.bandWork.windowedAll} (${app.bandWork.winSamplesAll} samples), whole after all: ${app.bandWork.winMiss} (pieces beside the window not as kept), ${app.bandWork.winLinked} (a change kept linked to one that moved)`);
+console.log(`${builds} checked builds, ${dropped} dropped part way, ${rowsStates} rows states, ${moves} anchor moves; edits applied: ${Object.entries(applied).map(([k, v]) => k + ' ' + v).join(', ')}; pairs of lines kept on edges where their paths changed: ${app.bandWork.passedAll}; line entries' strokes copied: ${app.netWork.entriesAll}, line samples copied: ${app.netWork.keptAll}; band builds that followed the network's changed edges: ${app.bandWork.followed}; lines worked out again in part: ${app.bandWork.splicedAll} (their entries worked out ${app.bandWork.sweptAll}, copied ${app.bandWork.copiedAll}); lines' bands worked out in a window: ${app.bandWork.windowedAll} (${app.bandWork.winSamplesAll} samples), whole after all: ${app.bandWork.winMiss} (pieces beside the window not as kept), ${app.bandWork.winLinked} (a change kept linked to one that moved); runs' passing places kept ${app.netWork.passKeptAll}, worked out ${app.netWork.passMadeAll}; builds with the samples' tables kept ${app.netWork.laidAll} (tables copied to be written ${app.netWork.tablesAll})`);
 if (SELF) {
   const what = SELF === 'fault' ? `the ${faultArg} pass leaves out one input` : SELF === 'strokes' ? "lines' entries are copied whatever their knots" : SELF === 'splice' ? 'only the entries that changed are worked out again' : SELF === 'window' ? 'a window keeps no hold boxes after it' : SELF === 'stations' ? "stations' numbers are kept unless their own node changed" : 'the kept orders are trusted';
   console.log(`${failures ? 'PASS' : 'FAIL'}  t4153 net self-test (${SELF === 'fault' ? faultArg : SELF}): ${failures ? `the check fails when ${what}` : `the check did not notice when ${what}`}`);

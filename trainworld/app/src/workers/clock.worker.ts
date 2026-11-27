@@ -20,6 +20,7 @@ import { foldLedger } from "./ledgerFold";
 import { shiftAt } from "../game/localTime";
 import { strengths } from "../game/moneyTiming";
 import { setBandCheck, setBandMode } from "../map/lineBands";
+import { setNetCheck } from "../map/network";
 import { placeOutlines, readOutlinesForPlaces } from "../map/coarseOutlines";
 import { canvasReadsTrue } from "../map/canvasRead";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
@@ -565,6 +566,7 @@ async function processMessage(msg: ToClock) {
   if (msg.kind === "init") {
     if (msg.patch) putPatchMode(msg.patch);
     setBandCheck(patchMode === "check");
+    setNetCheck(patchMode === "check");
     if (msg.bandMode !== undefined) setBandMode(msg.bandMode);
     putPackBase(msg.pack);
     putTerrainBase(msg.terrain);

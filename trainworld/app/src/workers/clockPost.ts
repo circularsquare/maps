@@ -226,9 +226,10 @@ export function keepPosted(k: string, v: ArrayBufferView) {
   posted.arrays.set(k, (v as Float32Array).slice());
 }
 /** arrays kept by reference and posted as a copy: their makers keep them as they are, never changed in place, and hand
- * out the same array while unchanged: the rows' phase tables (`StateRows.phases`) and the bands' Traffic table (T-4187,
- * `LineBands.corridor`, which the bands read again) */
-const BY_REFERENCE: ReadonlySet<SameField> = new Set(["phases", "corridor"]);
+ * out the same array while unchanged: the rows' phase tables (`StateRows.phases`), the bands' Traffic table (T-4187,
+ * `LineBands.corridor`, which the bands read again) and the train samples' tables (T-4153 stage 10, `NetCache.tables`,
+ * which the next build patches) */
+const BY_REFERENCE: ReadonlySet<SameField> = new Set(["phases", "corridor", "sampleStroke", "sampleLane", "sampleBand", "sampleStretch", "samplePass"]);
 function keepPostedField(out: NetworkBuffers, k: SameField, v: ArrayBufferView) {
   if (!BY_REFERENCE.has(k)) return keepPosted(k, v);
   posted.arrays.set(k, v);
