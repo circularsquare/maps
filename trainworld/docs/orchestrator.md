@@ -38,7 +38,7 @@ These come before everything below; the first two are her two top priorities (11
   only the tasks that share files with a running agent: name them, start something else.
 - **Size tasks to about an hour or one stage**; a brief whose work looks bigger is split before it starts: stages,
   each its own id and report. An agent that compacts was given too much.
-- **Model**: Gemini code agents count among the 2-8 (her 11-27); a task whose checks need no game run can go to one, Gemini 4 Neon (`gemini_agent.py`'s default) for an Opus-tier task, Hydrogen (`--model gemini-4-hydrogen-medium`) for a Sonnet-tier one. Claude: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands;
+- **Model**: nearly every new task goes to a Gemini code agent (her 11-27: Claude usage runs out first; "lets see how it goes"), Gemini 4 Neon (`gemini_agent.py`'s default) for an Opus-tier task, Hydrogen (`--model gemini-4-hydrogen-medium`) for a Sonnet-tier one; they count among the 2-8. Its game run, if it can't make one (play.mjs is a node check it may run), is the orchestrator's short check at landing. Claude only where Gemini can't do the work: Sonnet by default; Opus for UI layout, design calls nobody has made, and debugging nobody understands;
   no Fable for agents unless she asks (the successor's advisor, "Your own cycling", is the one Fable use). Advisor: as trainworld/CLAUDE.md "Advisor", and briefs don't invite it otherwise; log each
   call in notes/handoff-log.md (what was asked, whether the advice changed anything).
 - **Briefs** start with two lines: the kind of change and its row of the measuring budget (trainworld/CLAUDE.md

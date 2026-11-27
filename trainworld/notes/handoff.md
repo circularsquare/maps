@@ -18,9 +18,10 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing. Disk 37.6 GB free after diskclean (notes/T-4088.md
    "2026-11-27"), plus t4194/runs (4.3 GB) deleted; the 11-28 backups take it to about 60.
 4. Queued: T-4396 (after loadround0: same load code); T-4314 once netcut10's measuring is done (both bench edit speed);
-   then T-4309, T-4315, T-3160, T-3838. Gemini first for reading, review, triage. 0.4.7.1 live.
+   then T-4309, T-4315, T-3160, T-3838. New tasks go to Gemini agents (her 11-27); Claude only for what Gemini can't do.
 
 ## Her words
+- 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."
 - 11-27 ~09:45: agents 2-8, Gemini agents counted; Gemini 5x plan, Neon as Opus, Hydrogen as Sonnet (DECISIONS). Load
   proposals "3 then 1", "just proposals so no need to treat them as gospel"; Discord 30-minute loads: assume low memory or big saves.
 - 11-27 ~10:00: core slider is high leverage now (T-3932, P1); light mode wouldn't help ("drawing is already very

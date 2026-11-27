@@ -19,5 +19,12 @@
     "text": "Start T-4372 (smoke plays a second game with phone settings: intercity trips off, one worker, long lines), which would have caught the 0.4.7 crash? About 1-2 hours of agent work. I'd say yes.",
     "since": "2026-11-27",
     "by": "maps-3a"
+  },
+  {
+    "id": "a-2026-11-27-7",
+    "title": "Cores slider text",
+    "text": "T-3932 landed (8800 has it): 'Use more cores' -> 'Cores', its old hover removed. New: 'Auto' (hover 'Picked for your device and how big the game is'); 'Uses about {gb} GB' (red hover 'The game runs on fewer cores when it would pass {gb} GB'); 'Loads in about {time}'; 'Trips are calculated in about {time} after an edit'; 'Running on {n} cores to fit in memory'; 'Applies after a reload'; 'Reload' (reused). Text acknowledged, or which lines to reword?",
+    "since": "2026-11-27",
+    "by": "maps-e0"
   }
 ]
