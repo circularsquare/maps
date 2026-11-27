@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "Убрано: {name} на станции {station}. Деньги не возвращаются.",
   "stationUpgrades.someAct": "{some, select, true {Улучшение есть на {have} из {count, plural, one {# станции} few {# станций} many {# станций} other {# станции}}. Нажмите, чтобы построить на остальных {missing}{blueprint, select, true { в проекте} other {}}} other {Нажмите, чтобы построить на всех {count, plural, one {# станции} few {# станциях} many {# станциях} other {# станции}}{blueprint, select, true { в проекте} other {}}}}",
   "stationsTab.apart": "Показывать станции отдельно",
+  "stationsTab.collapseGroups": "Свернуть группы линий",
   "stationsTab.footer": "{scoped, select, true {{shown} из {total} станций, {what}} other {{count, plural, one {# станция} few {# станции} many {# станций} other {# станции}}, {what}}}",
   "stationsTab.name": "Название",
   "stationsTab.near": "Рядом",

@@ -28,6 +28,7 @@ import { shownStation } from "../../map/stationAhead";
 import { CAR_M, nextLeavingAt, platformsAt, stepPlatform } from "../../game/boarding";
 import { carsText } from "./schedule";
 import { today, useToday, type LineToday } from "../../game/today";
+import { stationLineOrder } from "../stationLines";
 import { moneyState } from "../../game/money";
 import { nodeUpkeepOf } from "../../game/regionMoney";
 import { Actions, Built, Chip, Icon, Row, Stepper } from "../widgets";
@@ -70,12 +71,12 @@ interface ComplexRow {
 /** Bullets a station's row shows before the "+" (as the line view's stop rows do). */
 const ROW_CHIPS = 3;
 
-function complexRows(members: string[], lines: LineInput[], byId: Map<string, StationInput>, now: ComplexNow | null, today: Map<string, LineToday>): ComplexRow[] {
+function complexRows(members: string[], lines: LineInput[], byId: Map<string, StationInput>, now: ComplexNow | null, today: Map<string, LineToday>, sortLines: (ls: readonly LineInput[]) => LineInput[]): ComplexRow[] {
   const rows: ComplexRow[] = [];
   for (const m of members) {
     const station = byId.get(m);
     if (!station) continue;
-    const byName = new Map<string, { l: LineInput; n: number }>();
+    const byName = new Map<string, LineInput>();
     let boardings = 0, todayB: number | null = null;
     for (const l of lines) {
       const t = today.get(l.id);
@@ -84,19 +85,18 @@ function complexRows(members: string[], lines: LineInput[], byId: Map<string, St
         const n = lineDemand(l.id)?.boardings[k] ?? 0;
         boardings += n;
         if (t) todayB = (todayB ?? 0) + (t.stops[k] ?? 0);
-        const have = byName.get(l.name);
-        byName.set(l.name, { l: have?.l ?? l, n: (have?.n ?? 0) + n });
+        if (!byName.has(l.name)) byName.set(l.name, l);
       });
     }
-    const own = [...byName.values()].sort((a, b) => b.n - a.n);
-    const first = own[0] && world.peek()?.lineStats[own[0].l.id];
+    const own = sortLines([...byName.values()]);
+    const first = own[0] && world.peek()?.lineStats[own[0].id];
     const vehicle = first ? vehicleOf(first) : "train";
     const qs = (now?.queues ?? []).filter((q) => q.station === m);
     const waiting = now && now.platforms.size && own.length ? qs.reduce((a, q) => a + q.waiting, 0) : null;
     const p = now?.platforms.get(m);
     const full = qs.some((q) => q.leftBehind) || (!!p && Math.max(p.side[0], p.side[1]) >= p.room);
     rows.push({
-      station, lines: own.map((x) => x.l), built: station.built, waiting, full, boardings, today: todayB,
+      station, lines: own, built: station.built, waiting, full, boardings, today: todayB,
       waitTip: waiting === null ? tr("stationInspector.noTrain", { vehicle })
         : [...waitToward(qs).map((w) => (w.to ? tr("complexMap.waitToward", { count: count(w.count), name: w.to }) : tr("complexMap.waitOpen", { count: count(w.count) }))), ...(full ? [tr("stationInspector.leftBehind", { vehicle })] : [])].join("\n"),
     });
@@ -154,7 +154,9 @@ function ComplexSummary({ id, members }: { id: string; members: string[] }) {
  * the station's terminal button. A click on the row opens the station alone; a chip selects its line. Its
  * own component, re-rendered as today's counts move. */
 function ComplexStations({ id, members, lines, byId, now }: { id: string; members: string[]; lines: LineInput[]; byId: Map<string, StationInput>; now: ComplexNow | null }) {
-  const rows = complexRows(members, lines, byId, now, today.value);
+  const w = world.value, tod = today.value;
+  const order = w ? stationLineOrder(w) : null;
+  const rows = complexRows(members, lines, byId, now, tod, (ls) => order ? order.sortLines(ls, (l) => tod.get(l.id)?.riders ?? 0) : [...ls]);
   return (
     <ul class="rows pick complex-stations">
       <li class="cols muted small">

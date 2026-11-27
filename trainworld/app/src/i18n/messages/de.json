@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "Entfernt von {station}: {name}. Nichts wird erstattet.",
   "stationUpgrades.someAct": "{some, select, true {Schon an {have} von {count, plural, one {# Station} other {# Stationen}} vorhanden. {blueprint, select, true {Klicke, um den Entwurf an den übrigen {missing} zu ergänzen} other {Klicke zum Bauen an den übrigen {missing}}}} other {{blueprint, select, true {Klicke, um den Entwurf an allen {count, plural, one {# Station} other {# Stationen}} zu ergänzen} other {Klicke zum Bauen an allen {count, plural, one {# Station} other {# Stationen}}}}}}",
   "stationsTab.apart": "Stationen einzeln anzeigen",
+  "stationsTab.collapseGroups": "Liniengruppen einklappen",
   "stationsTab.footer": "{scoped, select, true {{shown} von {total} Stationen, {what}} other {{count, plural, one {# Station} other {# Stationen}}, {what}}}",
   "stationsTab.name": "Name",
   "stationsTab.near": "Nähe",

@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "S’ha tret de l’estació {station}: {name}. No es retorna res.",
   "stationUpgrades.someAct": "{some, select, true {Millora present a {have}/{count, plural, one {# estació} other {# estacions}}. Fes clic per construir-la a les que falten ({missing}){blueprint, select, true { al projecte} other {}}} other {Fes clic per construir la millora {count, plural, one {a l’estació} other {a les # estacions}}{blueprint, select, true { al projecte} other {}}}}",
   "stationsTab.apart": "Mostra les estacions per separat",
+  "stationsTab.collapseGroups": "Replega els grups de línies",
   "stationsTab.footer": "{scoped, select, true {{shown} de les {total} estacions, {what}} other {{count, plural, one {# estació} other {# estacions}}, {what}}}",
   "stationsTab.name": "Nom",
   "stationsTab.near": "Distància",

@@ -8,7 +8,7 @@ import type { LineInput } from "../game/types";
 import { shade } from "../game/ui";
 import { bulletEpoch, inkBox } from "./bullet";
 
-export function GroupPill({ ls, g, size = "", tip, onClick, look }: {
+export function GroupPill({ ls, g, size = "", tip, onClick, look, gone }: {
   /** the group's lines at any depth, oldest first */
   ls: readonly LineInput[];
   /** the group */
@@ -18,6 +18,8 @@ export function GroupPill({ ls, g, size = "", tip, onClick, look }: {
   onClick?: (e: MouseEvent) => void;
   /** a colour being picked, shown before the edit lands */
   look?: { colour?: string };
+  /** hidden but keeping its space (a station row's bullets past its "+") */
+  gone?: boolean;
 }) {
   const t = today.value;
   const b = groupBullet(ls, g, (id) => t.get(id)?.riders ?? 0);
@@ -42,7 +44,7 @@ export function GroupPill({ ls, g, size = "", tip, onClick, look }: {
     if (Number.isFinite(dy)) t.style.top = Math.round(dy * 4) / 4 + "px";
   });
   return (
-    <span ref={pill} class={"group-pill " + size + (onClick ? " link" : "")} style={{ "--c": c }} data-tip={tip} onClick={onClick}>
+    <span ref={pill} class={"group-pill " + size + (onClick ? " link" : "")} style={{ "--c": c, visibility: gone ? "hidden" : undefined }} data-tip={tip} onClick={onClick}>
       <span ref={text} class="group-pill-text">{b.text}</span>
     </span>
   );

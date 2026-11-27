@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "{station}: {name} kaldırıldı. Para iade edilmedi.",
   "stationUpgrades.someAct": "{some, select, true {{count, plural, one {# istasyondan} other {# istasyondan}} {have} tanesinde var. Kalan {missing} istasyonda inşa etmek için tıkla{blueprint, select, true { (taslakta)} other {}}} other {Tüm istasyonlarda ({count, plural, one {# istasyon} other {# istasyon}}) inşa etmek için tıkla{blueprint, select, true { (taslakta)} other {}}}}",
   "stationsTab.apart": "İstasyonları ayrı göster",
+  "stationsTab.collapseGroups": "Hat gruplarını daralt",
   "stationsTab.footer": "{scoped, select, true {{shown}/{total} istasyon, {what}} other {{count, plural, one {# istasyon} other {# istasyon}}, {what}}}",
   "stationsTab.name": "Ad",
   "stationsTab.near": "Yakın",

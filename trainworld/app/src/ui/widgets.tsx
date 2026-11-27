@@ -139,6 +139,8 @@ export const Icon = {
   goOut: () => <svg viewBox="0 0 16 16"><path d="M2.5 8h10M9 4.5L12.5 8 9 11.5" /></svg>,
   chevron: () => <svg viewBox="0 0 16 16"><path d="M6 3.5L10.5 8 6 12.5" /></svg>,
   leaveGroup: () => <svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="8" height="11" rx="1" /><path d="M6.5 8h8M12 5.5L14.5 8 12 10.5" /></svg>,
+  // T-4411: collapse a station's line groups into one pill per group
+  collapseGroups: () => <svg viewBox="0 0 16 16"><rect x="1.5" y="4.5" width="13" height="7" rx="3.5" /><circle class="solid" cx="5.5" cy="8" r="1.1" /><circle class="solid" cx="10.5" cy="8" r="1.1" /></svg>,
   goBack: () => <svg viewBox="0 0 16 16"><path d="M13.5 8h-10M7 4.5L3.5 8 7 11.5" /></svg>,
   pin: () =><svg viewBox="0 0 16 16"><path d="M8 14.5s4.5-4.2 4.5-7.6a4.5 4.5 0 00-9 0c0 3.4 4.5 7.6 4.5 7.6z" /><circle cx="8" cy="6.8" r="1.6" /></svg>,
   globe: () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /><path d="M2 8h12M8 2c-2.2 2-2.2 10 0 12M8 2c2.2 2 2.2 10 0 12" /></svg>,

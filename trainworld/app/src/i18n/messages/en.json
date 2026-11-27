@@ -2225,6 +2225,7 @@
   "stationInspector.waitingNow": "Waiting now",
   "stationInspector.wholeComplex": "Show the whole complex",
   "stationsTab.apart": "Show stations separately",
+  "stationsTab.collapseGroups": "Collapse line groups",
   "stationsTab.footer": "{scoped, select, true {{shown} of {total} stations, {what}} other {{count, plural, one {# station} other {# stations}}, {what}}}",
   "stationsTab.name": "Name",
   "stationsTab.stationName": "Station name",

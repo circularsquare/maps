@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "{name} dihapus dari {station}. Uang tidak dikembalikan.",
   "stationUpgrades.someAct": "{some, select, true {{have} dari {count, plural, other {# stasiun}} sudah punya. Klik untuk membangunnya di {missing} stasiun lainnya{blueprint, select, true { dalam rencana} other {}}} other {Klik untuk membangunnya di semua {count, plural, other {# stasiun}}{blueprint, select, true { dalam rencana} other {}}}}",
   "stationsTab.apart": "Tampilkan stasiun terpisah",
+  "stationsTab.collapseGroups": "Ciutkan grup lini",
   "stationsTab.footer": "{scoped, select, true {{shown} dari {total} stasiun, {what}} other {{count, plural, other {# stasiun}}, {what}}}",
   "stationsTab.name": "Nama",
   "stationsTab.near": "Jarak",

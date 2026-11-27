@@ -14,10 +14,12 @@ import { listedLines, edit } from "../game/world";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
 import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
-import { stationsToday, todayLoaded, useToday } from "../game/today";
+import { stationsToday, today, todayLoaded, useToday } from "../game/today";
 import { Chip, Icon, SortHead } from "./widgets";
+import { GroupPill } from "./GroupPill";
 import { locateStation } from "./locate";
 import { byNear, natural, Near, ScopeToggle } from "./listParts";
+import { stationLineOrder, type StationLineOrder } from "./stationLines";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { t } from "../i18n";
 
@@ -59,20 +61,42 @@ function watchSize(el: Element, f: () => void) {
   return () => { chipsObserver?.unobserve(el); fitters.delete(el); };
 }
 
+type StationBullet =
+  | { kind: "line"; line: LineInput }
+  | { kind: "group"; g: number; ls: LineInput[]; here: LineInput[] };
+
+function rowBullets(lines: readonly LineInput[], order: StationLineOrder, collapse: boolean): StationBullet[] {
+  if (!collapse) return lines.map((line) => ({ kind: "line", line }));
+  const out: StationBullet[] = [];
+  const seen = new Map<number, { kind: "group"; g: number; ls: LineInput[]; here: LineInput[] }>();
+  for (const l of lines) {
+    const g = order.topGroup(l);
+    if (!g) { out.push({ kind: "line", line: l }); continue; }
+    let b = seen.get(g);
+    if (!b) {
+      b = { kind: "group", g, ls: order.groups.get(g) ?? [l], here: [] };
+      seen.set(g, b);
+      out.push(b);
+    }
+    b.here.push(l);
+  }
+  return out;
+}
+
 /** T-521, T-530: a station row's bullets, laid out with the row's name (`.grow > span`, its sibling)
  * in the room the fixed columns leave (Anita: the name comes first). Every bullet shows when the
  * whole name fits beside them; otherwise as many as fit beside the whole name, never fewer than 3,
  * and only then is the name cut. Bullets left out sit behind a "+" whose hover names their lines;
  * they stay in the box, clipped, so their widths can be measured. */
-function Chips({ lines, name }: { lines: LineInput[]; name: string }) {
+function Chips({ bullets, name }: { bullets: StationBullet[]; name: string }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const [fit, setFit] = useState<{ shown: number; width: number }>({ shown: lines.length, width: -1 });
-  const key = lines.map((l) => l.id).join(",");
+  const [fit, setFit] = useState<{ shown: number; width: number }>({ shown: bullets.length, width: -1 });
+  const key = bullets.map((b) => (b.kind === "line" ? b.line.id : "g:" + b.g)).join(",");
   useLayoutEffect(() => {
     const el = ref.current, row = el?.parentElement;
     if (!el || !row) return;
     const measure = () => {
-      const chips = el.querySelectorAll<HTMLElement>(":scope > .chip");
+      const chips = el.querySelectorAll<HTMLElement>(":scope > :is(.chip, .group-pill)");
       const n = chips.length;
       const right = (i: number) => chips[i].offsetLeft + chips[i].offsetWidth;
       const cs = getComputedStyle(row);
@@ -95,12 +119,15 @@ function Chips({ lines, name }: { lines: LineInput[]; name: string }) {
     measure();
     return watchSize(row, measure);
   }, [key, name]);
-  const shown = Math.min(fit.shown, lines.length);
+  const shown = Math.min(fit.shown, bullets.length);
   return (
     <span class="chips" ref={ref} style={{ width: fit.width >= 0 ? `${fit.width}px` : undefined }}>
-      {lines.map((l, i) => <Chip line={l} size="sm" gone={i >= shown} />)}
-      {shown < lines.length && <span class="chips-more" style={{ left: `${fit.width - PLUS_W}px` }}
-        data-tip={[...new Set(lines.slice(shown).map((l) => l.name))].join("\n")}>+</span>}
+      {bullets.map((b, i) => b.kind === "line"
+        ? <Chip key={b.line.id} line={b.line} size="sm" gone={i >= shown} />
+        : <GroupPill key={"g:" + b.g} ls={b.ls} g={b.g} gone={i >= shown} tip={b.here.map((l) => l.name).join("\n")}
+            onClick={(e) => { e.stopPropagation(); selection.value = { kind: "group", group: b.g }; }} />)}
+      {shown < bullets.length && <span class="chips-more" style={{ left: `${fit.width - PLUS_W}px` }}
+        data-tip={[...new Set(bullets.slice(shown).flatMap((b) => (b.kind === "line" ? [b.line.name] : b.here.map((l) => l.name))))].join("\n")}>+</span>}
     </span>
   );
 }
@@ -140,7 +167,7 @@ interface StationRow {
 
 /** The Stations tab's rows: one per complex with a member in `stations` (T-530, Anita: Times Sq's
  * platforms were rows of one bullet each), its lines and numbers over the whole complex. */
-function stationRows(stations: readonly StationInput[], all: readonly StationInput[], lines: readonly LineInput[], dist: Map<string, number>, apart = false): StationRow[] {
+function stationRows(stations: readonly StationInput[], all: readonly StationInput[], lines: readonly LineInput[], dist: Map<string, number>, apart = false, sortLines: (ls: readonly LineInput[]) => LineInput[] = (ls) => [...ls]): StationRow[] {
   const cx = complexes.value;
   const byId = new Map(all.map((s) => [s.id, s]));
   const lineIdx = new Map<string, number[]>();
@@ -165,7 +192,7 @@ function stationRows(stations: readonly StationInput[], all: readonly StationInp
       if (dm !== undefined && (d === undefined || dm < d)) d = dm;
     }
     const lead = present.length ? leadOf(present, (id) => lineIdx.get(id)?.length ?? 0) : s;
-    rows.push({ lead, name: apart ? lead.name : complexTitle(lead), apart, members, lines: [...at].sort((a, b) => a - b).map((i) => lines[i]), built, dist: d });
+    rows.push({ lead, name: apart ? lead.name : complexTitle(lead), apart, members, lines: sortLines([...at].map((i) => lines[i])), built, dist: d });
   }
   return rows;
 }
@@ -177,6 +204,8 @@ function rowName(r: StationRow, name: string): EditOp {
 
 /** T-2788: list each station of a complex on its own row (off: one row per complex) */
 const apart = signal(false);
+/** T-4411: collapse each top-level line group's lines at a station into the group's one bullet */
+const collapseGroups = signal(false);
 
 export function StationsTab() {
   useToday(); // T-293
@@ -204,7 +233,10 @@ export function StationsTab() {
       : key === "near" ? byNear(a.dist, b.dist, dir) : 0)
     || natural(a.name, b.name) * (key === "name" ? dir : 1);
   const inOrder = (rows: StationRow[]) => (hand.length ? byHand(rows.sort(order), (r) => r.members, hand) : rows.sort(order));
-  const st = inOrder(stationRows(sc.stations, w.save.stations, listedLines(w), sc.stationDist, apart.value));
+  const tod = today.value;
+  const lineOrder = stationLineOrder(w, sc.lineDist);
+  const sortRowLines = (ls: readonly LineInput[]) => lineOrder.sortLines(ls, (l) => tod.get(l.id)?.riders ?? 0);
+  const st = inOrder(stationRows(sc.stations, w.save.stations, listedLines(w), sc.stationDist, apart.value, sortRowLines));
   // T-1813: a row dragged into the gap above or below another goes there; the order then covers
   // every station, the viewed place's or not
   const dropRow = (d: Drag) => {
@@ -252,7 +284,10 @@ export function StationsTab() {
   return (
     <>
       <div class="line-list-actions"><ScopeToggle />
-        <button class={"btn icon" + (apart.value ? " on" : "")} aria-pressed={apart.value} aria-label={t("stationsTab.apart")} data-tip={t("stationsTab.apart")} onClick={() => (apart.value = !apart.value)}><Icon.interchange /></button>
+        <span style={{ display: "flex", gap: "6px" }}>
+          <button class={"btn icon" + (collapseGroups.value ? " on" : "")} aria-pressed={collapseGroups.value} aria-label={t("stationsTab.collapseGroups")} data-tip={t("stationsTab.collapseGroups")} onClick={() => (collapseGroups.value = !collapseGroups.value)}><Icon.collapseGroups /></button>
+          <button class={"btn icon" + (apart.value ? " on" : "")} aria-pressed={apart.value} aria-label={t("stationsTab.apart")} data-tip={t("stationsTab.apart")} onClick={() => (apart.value = !apart.value)}><Icon.interchange /></button>
+        </span>
       </div>
       {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? t("stationsTab.none") : t("stationsTab.noneHere")}</p>}
       {st.length > 0 && <SortHead sort={stationSort} hand={hand.length ? () => setHandOrder("stations", []) : undefined} cols={[
@@ -273,7 +308,7 @@ export function StationsTab() {
               // T-2786: a triple click renames (a double click snaps the camera)
               <span class={"grow" + (r.built ? "" : " muted")}><span onClick={(e) => { if (e.detail === 3) { e.stopPropagation(); setRenamingStation(r.lead.id); } }}>{r.name}</span></span>
             )}
-            <Chips lines={r.lines} name={r.name} />
+            <Chips bullets={rowBullets(r.lines, lineOrder, collapseGroups.value)} name={r.name} />
             {r.built ? <StationToday ids={r.members} /> : <span class="val w-num">{t("stationsTab.plan")}</span>}
             {key === "near" && <Near m={r.dist} />}
           </li>

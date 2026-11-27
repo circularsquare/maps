@@ -2226,6 +2226,7 @@
   "stationInspector.waitingNow": "Heading of the list of riders waiting on the platforms in a station view.",
   "stationInspector.wholeComplex": "Hover on the Complex of n stations button.",
   "stationsTab.apart": "Toggle above the Stations tab list. On: each station of a complex gets its own row; off: one row per complex. Label starts with a verb.",
+  "stationsTab.collapseGroups": "Toggle above the Stations tab list beside Show stations separately. On: collapses each top-level line group's lines at a station into the group's one bullet. Label starts with a verb.",
   "stationsTab.footer": "Line under the Stations tab list. scoped: true when the list is limited to the viewed place; shown and count: stations listed, e.g. 12 (the same number); total: stations in the game, e.g. 340; what: stationsTab.ridersWhat.",
   "stationsTab.name": "Column heading of the Stations tab: the station name.",
   "stationsTab.stationName": "Screen reader name of the box for renaming a station or complex in the Stations list.",

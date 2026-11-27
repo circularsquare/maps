@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "Melhoria removida de {station}: {name}. Nada é reembolsado.",
   "stationUpgrades.someAct": "{some, select, true {{have} de {count, plural, one {# estação} other {# estações}} já têm. Clique para construir nas {missing} restantes{blueprint, select, true { no projeto} other {}}} other {Clique para construir em {count, plural, one {# estação} other {todas as # estações}}{blueprint, select, true { no projeto} other {}}}}",
   "stationsTab.apart": "Mostrar estações separadas",
+  "stationsTab.collapseGroups": "Recolher grupos de linhas",
   "stationsTab.footer": "{scoped, select, true {{shown} de {total} estações, {what}} other {{count, plural, one {# estação} other {# estações}}, {what}}}",
   "stationsTab.name": "Nome",
   "stationsTab.near": "Perto",

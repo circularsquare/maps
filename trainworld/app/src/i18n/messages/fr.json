@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "Amélioration supprimée de la station {station} : {name}. Aucun remboursement.",
   "stationUpgrades.someAct": "{some, select, true {Présente dans {have} sur {count, plural, one {# station} other {# stations}}. Cliquer pour la construire là où elle manque ({missing}){blueprint, select, true {, dans le projet} other {}}} other {Cliquer pour la construire {count, plural, one {dans # station} other {dans les # stations}}{blueprint, select, true {, dans le projet} other {}}}}",
   "stationsTab.apart": "Afficher les stations séparément",
+  "stationsTab.collapseGroups": "Réduire les groupes de lignes",
   "stationsTab.footer": "{scoped, select, true {{shown} sur {total} stations, {what}} other {{count, plural, one {# station} other {# stations}}, {what}}}",
   "stationsTab.name": "Nom",
   "stationsTab.near": "Proche",

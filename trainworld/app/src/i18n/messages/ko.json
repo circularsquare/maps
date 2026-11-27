@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "{station}에서 {name} 철거를 마쳤어요. 환불은 없어요.",
   "stationUpgrades.someAct": "{some, select, true {역 {count, plural, other {#개}} 중 {have}개에 있어요. 클릭하면 나머지 {missing}개에도 {blueprint, select, true {계획으로 추가해요} other {건설해요}}} other {클릭하면 {count, plural, other {역 #개}} 전체에 {blueprint, select, true {계획으로 추가해요} other {건설해요}}}}",
   "stationsTab.apart": "역 따로 표시",
+  "stationsTab.collapseGroups": "노선 그룹 접기",
   "stationsTab.footer": "{scoped, select, true {역 {shown}/{total}개, {what}} other {역 {count, plural, other {#개}}, {what}}}",
   "stationsTab.name": "이름",
   "stationsTab.near": "거리",

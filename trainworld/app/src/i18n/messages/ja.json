@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "{station}から{name}を撤去しました。建設費は戻りません。",
   "stationUpgrades.someAct": "{some, select, true {{count, plural, other {#駅}}のうち{have}駅にあります。クリックで残りの{missing}駅にも{blueprint, select, true {計画として} other {}}建設} other {クリックで全{count, plural, other {#駅}}に{blueprint, select, true {計画として} other {}}建設}}",
   "stationsTab.apart": "駅を個別に表示",
+  "stationsTab.collapseGroups": "路線グループを折りたたむ",
   "stationsTab.footer": "{scoped, select, true {{shown}/{total}駅、{what}} other {{count, plural, other {#駅}}、{what}}}",
   "stationsTab.name": "名前",
   "stationsTab.near": "距離",

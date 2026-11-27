@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "{name} removed from {station}. Nothing is refunded.",
   "stationUpgrades.someAct": "{some, select, true {{have} of {count, plural, one {# station} other {# stations}} have one. Click to build it at the other {missing}{blueprint, select, true { in the blueprint} other {}}} other {Click to build it for all {count, plural, one {# station} other {# stations}}{blueprint, select, true { in the blueprint} other {}}}}",
   "stationsTab.apart": "Show stations separately",
+  "stationsTab.collapseGroups": "Collapse line groups",
   "stationsTab.footer": "{scoped, select, true {{shown} of {total} stations, {what}} other {{count, plural, one {# station} other {# stations}}, {what}}}",
   "stationsTab.name": "Name",
   "stationsTab.near": "Near",

@@ -2371,6 +2371,7 @@
   "stationUpgrades.removed": "已從{station}移除{name}。不會退款。",
   "stationUpgrades.someAct": "{some, select, true {{count, plural, other {#座車站}}中有{have}座已經有了。按一下{blueprint, select, true {在規劃中} other {}}為其餘{missing}座興建} other {按一下{blueprint, select, true {在規劃中} other {}}為全部{count, plural, other {#座車站}}興建}}",
   "stationsTab.apart": "分開顯示車站",
+  "stationsTab.collapseGroups": "收合路線群組",
   "stationsTab.footer": "{scoped, select, true {{total}座車站中的{shown}座，{what}} other {{count, plural, other {#座車站}}，{what}}}",
   "stationsTab.name": "名稱",
   "stationsTab.near": "距離",
