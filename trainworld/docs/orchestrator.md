@@ -100,7 +100,8 @@ agents until then; what to finish and tell people: the `handoff` skill. The succ
 `ListAgents`, SendMessage it "Please run /takeover trainworld now (Skill takeover, args trainworld).", and delete its
 line once it answers. Otherwise `venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py trainworld --advisor
 fable` (a new Windows Terminal tab running /takeover in Code Mode). The same when she asks for a handover: she wants
-the orchestrator in Windows Terminal, not the VS Code panel.
+the orchestrator in Windows Terminal, not the VS Code panel. Add `--account 1|2` to start it on the other Claude login
+when this account runs low (2 is `~/.claude-2`, the `claude2` command; setup in notes/T-4424.md).
 
 ## Bookkeeping, asks and the board
 

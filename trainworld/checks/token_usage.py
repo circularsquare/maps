@@ -2,8 +2,9 @@
 
 Totals for one or more transcripts:
     python trainworld/checks/token_usage.py <transcript.jsonl> [...]
-An agent's transcript is ~/.claude/projects/<project>/<session>/subagents/agent-<id>.jsonl;
-the session's own is ~/.claude/projects/<project>/<session>.jsonl.
+An agent's transcript is <config folder>/projects/<project>/<session>/subagents/agent-<id>.jsonl;
+the session's own is <config folder>/projects/<project>/<session>.jsonl. The config folders are ~/.claude and
+~/.claude-2 (maps/claude2.py); a path that is not a file is looked up as a session id or agent id in all of them.
 
 Options (before the paths):
     --since 2026-10-14T21:24:45Z   count only calls at or after this time (UTC)
@@ -14,9 +15,14 @@ Options (before the paths):
 Weighted tokens: cache reads count 0.1, cache writes 1.25, output 5 (relative to fresh input), the
 ratios of Anthropic's API prices, so different kinds of token can be added into one figure.
 """
+import glob
 import json
+import os
 import sys
 from collections import defaultdict
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import claude2  # noqa: E402 (maps root; the list of Claude config folders)
 
 KINDS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens")
 WEIGHT = {"input_tokens": 1.0, "cache_creation_input_tokens": 1.25,
@@ -54,6 +60,21 @@ def calls(path, since="", until=""):
     return [seen[k] for k in order]
 
 
+def find(arg):
+    """arg itself if it is a file, else the transcript of that session id or agent id in any config folder."""
+    if os.path.isfile(arg):
+        return arg
+    name = os.path.basename(arg)
+    name = name[:-6] if name.endswith(".jsonl") else name
+    name = name[len("agent-"):] if name.startswith("agent-") else name
+    for d in claude2.project_dirs():
+        hits = (glob.glob(os.path.join(d, "*", name + ".jsonl"))
+                + glob.glob(os.path.join(d, "*", "*", "subagents", "agent-" + name + ".jsonl")))
+        if hits:
+            return hits[0]
+    sys.exit(f"no transcript for {arg} in {', '.join(claude2.config_dirs())}")
+
+
 def weighted(u):
     return sum(WEIGHT[k] * (u.get(k) or 0) for k in KINDS)
 
@@ -70,7 +91,7 @@ def main():
             until = args.pop(0)
         elif a == "--timeline":
             timeline = True
-    for path in args:
+    for path in map(find, args):
         cs = calls(path, since, until)
         if timeline:
             cum = 0.0

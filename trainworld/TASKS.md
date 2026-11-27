@@ -263,6 +263,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4422 [P2] {L:cleanup} Trim docs/orchestrator.md
   - Context: You, 11-27: "trimming is almost always helpful". It is about 21,000 characters, read once at takeover; the most-broken rules sit mid-page.
   - Goal: A card of about ten lines at the top with the rules broken most, and the rest cut to what an orchestrator acts on.
+- T-4424 [P2] {L:checks} Second Claude account (taking, 2026-11-27, agent claude2)
+  - Context: You, 11-27: "i think i'll get a second claude subscription." Set up 11-27: the claude2 command, the .claude-2 folder, shared maps memory, tools look in both folders, next_orchestrator.py --account 2. Left: your login and a 2-minute test.
+  - Goal: A claude2 session in maps sees and messages the orchestrator and uses the shared memory.
+  - Other: notes/T-4424.md
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
   - Context: 11-24 at cap 10: three agent games (play.mjs on 6151 and 6168, a smoke) ran on 14 cores with no claim in the ledger, and the edit bench's renderer used 8 cores on a 4-core claim.
   - Goal: Every agent browser stays on its claimed cores for its whole life, or stops when its claim ends.

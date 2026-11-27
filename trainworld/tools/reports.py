@@ -33,6 +33,9 @@ import sys
 import time
 from datetime import datetime, timedelta, timezone
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import claude2  # noqa: E402 (maps root; the list of Claude config folders)
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 TASK = re.compile(r"\bT-\d+\b")
 AGENT_NAME = re.compile(r"You are (?:the )?agent `([\w.-]+)`")
@@ -341,14 +344,14 @@ def too_long(box, data):
             "or fewer: what changed and where, check results, strings, anything for Anita. Detail goes in your notes file.")
 
 
-def projects_dir():
-    return os.path.join(os.path.expanduser("~"), ".claude", "projects")
+def projects_dirs():
+    return claude2.project_dirs()
 
 
 def sweep(box, sessions, since):
     made = []
     for sid in sessions:
-        for path in glob.glob(os.path.join(projects_dir(), "*", sid, "subagents", "agent-*.jsonl")):
+        for path in [p for d in projects_dirs() for p in glob.glob(os.path.join(d, "*", sid, "subagents", "agent-*.jsonl"))]:
             meta = meta_for(path)
             if int(meta.get("spawnDepth") or 1) > 1:
                 continue
