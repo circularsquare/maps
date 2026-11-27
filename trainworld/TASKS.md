@@ -503,6 +503,18 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4377 [P2] {L:small-fixes} Dragging a line onto another to group it fails on touch
+  - Context: A player on 0.4.7.1 (tw-feedback 1795759602-ff4995ab, 11-27), Chrome on a Huawei phone: the line list's drag-to-group works on desktop but not on mobile. Reach: every phone and tablet player who groups lines.
+  - Goal: A touch drag of a line onto another groups them like a mouse drag, checked in an emulated phone.
+- T-4373 [P3] {L:small-fixes} Line panel shows another city's line and won't close
+  - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line, then no click closed it. Reach: few, a city filter with a panel open.
+  - Goal: Changing the city filter or picking another line always shows that line's stops, and the panel closes.
+- T-4375 [P3] {L:map-look} Station circles missing on an Android phone
+  - Context: A player on 0.4.7.1 (tw-feedback 1795782306-1df30531, 11-27), Chrome 145 on a Qualcomm Adreno 650, 8 lines, says station circles aren't shown on mobile. No picture, no zoom given. Reach: few, since most phones would show it.
+  - Goal: Cause found on an emulated phone at the player's zoom, or closed as not reproducible.
+- T-4376 [P3] {L:map-look} No sound for days for one player
+  - Context: A Japanese player on 0.4.7.1 (tw-feedback 1795779886-f61e0c7e, 11-27), Chrome 158 on Windows, 109 lines, hears nothing for days. Could be the Sound switch, volume 0, a browser muted site or audio never starting after a reload. Reach: few.
+  - Goal: Sound starts after the first click in a fresh game on Chrome, or the cause is found.
 - T-4368 [P3] {L:map-look} A high-speed line made normal still shows as high-speed
   - Context: A player on 0.4.7 (tw-feedback 1795690226, 11-26): after changing a high-speed line to a normal one, the line is still drawn as high-speed. One report.
   - Goal: Changing a line's kind redraws it in the new kind's style at once.
@@ -1093,6 +1105,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
+- T-4374 [P2] {L:stops} Closing a loop refused with "at least two different stations"
+  - Context: A player on 0.4.7 (tw-feedback 1795784564-e03329a7, 11-27), 42 lines, couldn't loop a line that had many stops. The message is validate.rs's catch-all LineStops (adjacent equal stops, first or last stop off the path), so the real cause is unknown. Reach: unknown, loops are common.
+  - Goal: Closing a loop on a line with several stations works, or the refusal names its real cause; shown on a small case.
+- T-4378 [P3] {L:buses} Bus stop name labels flicker and the last stop is misnamed
+  - Context: A player on 0.4.7 (tw-feedback 1795764714-6043c5df, 11-27), Paris, 174 lines: with many bus stops named, the map's labels pop in and out and overlap other labels, and a route's last stop shows the wrong name. T-4080's naming landed 11-25. Reach: players who name many stops.
+  - Goal: Named stop labels stay put while names are edited and the last stop shows its own name, shown on a small case.
 - T-4369 [P3] {L:passing-tracks} Up trains skip a passing loop down trains use
   - Context: A player on 0.4.7 (tw-feedback 1795654684, 11-25): on a line with passing loops, down trains wait in the loop as they should, but up trains don't and get stuck behind. One report.
   - Goal: Both directions wait in a loop the timetable plans for, shown on a small case built like the player's.
