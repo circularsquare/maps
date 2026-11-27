@@ -1597,7 +1597,10 @@ function query(msg: Query) {
   const at = msg.kind === "cells" ? undefined : versions.get(msg.version);
   const cl = at?.clusters.find((c) => c.cities.includes(msg.city));
   const kept = !!cl && isHeld(cl);
-  const a = msg.kind === "cells" ? cities.get(msg.city) ?? bare.get(msg.city)?.a : jobCities.has(msg.city) || cl ? cities.get(msg.city) : undefined;
+  const own = msg.kind === "cells" ? undefined : jobCities.has(msg.city) || cl ? cities.get(msg.city) : undefined;
+  // T-4063: the zone reopened at another level since that network (`openPacks`) leaves the cluster without the
+  // population it solved, and the one open now has no view on it: answered as not open, never read through `viewOf`
+  const a = msg.kind === "cells" ? cities.get(msg.city) ?? bare.get(msg.city)?.a : own && cl && !cl.views.has(own) ? undefined : own;
   type WithoutCity<T> = T extends {city: CityId} ? Omit<T, "city"> : T;
   // T-285: when the question was taken up (epoch ms) and how long it took, for ?debug=1's timings
   const qStart = performance.timeOrigin + performance.now();

@@ -42,6 +42,7 @@ export const shownPeriod = computed(() => tripPeriod.value ?? tripView.value?.bu
 const HIT_PX = 6;
 /** T-979: how long after an empty answer on a final result the trip is asked again, ms. */
 const RETRY_MS = 3000;
+const RETRIES = 3;
 /** Opacity of the land-coloured veil over the map under a trip's routes. */
 const VEIL = 0.6;
 
@@ -238,20 +239,21 @@ export function startTripView(map: MlMap, overlay: Overlay): TripTool {
     if (!same) { drawn = null; straight = null; redraw(); }
     const opened = tripOpenedFrom.peek();
     const to = sel.to;
-    const run = (again: boolean) => explore(sel.from, to, filter, opened?.trip === sel ? opened.places : null, sel.far, sel.near).then((shown) => {
+    const run = (retries: number) => explore(sel.from, to, filter, opened?.trip === sel ? opened.places : null, sel.far, sel.near).then((shown) => {
       if (asked !== ask) return;
       if (shown) tripView.value = { key, ...shown, asking: false };
       // null: the workers moved on and the next result asks again. T-979: on a final result none
       // comes, so it is asked once more (a pack the trip needs may have been opening), then the
       // explorer says there is no answer
       else if (!(viewFinal.peek() && !viewUpdating.peek())) tripView.value = { ...tripView.peek()!, asking: true };
-      else if (!again) setTimeout(() => { if (asked === ask) run(true); }, RETRY_MS);
+      // (T-4063: a few times, a zone reopening at another level can take longer than one wait)
+      else if (retries < RETRIES) setTimeout(() => { if (asked === ask) run(retries + 1); }, RETRY_MS);
       else tripView.value = { ...tripView.peek()!, asking: false, failed: true };
     }, (err) => {
       console.error("trip explorer:", err);
       if (asked === ask) tripView.value = { ...tripView.peek()!, asking: false, failed: true };
     });
-    run(false);
+    run(0);
   });
   // ---- drawing: the shown period's routes ----
   // the network the rides were drawn along: a new one (it can land after `world`) redraws them
