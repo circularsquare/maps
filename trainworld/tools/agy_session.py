@@ -14,6 +14,7 @@ agy and anything it starts run in a Windows job object that is killed when the s
 Stdlib only.
 """
 import json
+import re
 import os
 import queue
 import shutil
@@ -41,6 +42,41 @@ def read_rules():
             r"command(regex:(Get-ChildItem|ls|dir)( %s*)?)" % SAFE]
 
 
+# T-4404: options of the allowed git reads that run a program, write a file, read outside the tree or change config for the
+# call. Long options are refused with every unique abbreviation git accepts (--ext, --open, --outp...), and with quotes
+# anywhere inside, since PowerShell joins --out"put" into --output. A quote-heavy false positive (a pickaxe -SOLD, a
+# search text holding " --output") is refused too: the agent rewords the call.
+GIT_DENY_LONG = [
+    ("--output", 3),                   # diff, log, show write the diff to any file
+    ("--open-files-in-pager", 4),      # grep -O: runs a program on the files
+    ("--ext-diff", 4),                 # runs the configured external diff driver
+    ("--textconv", 4),                 # runs the configured textconv driver (diff, show, blame, grep)
+    ("--no-index", 6),                 # diff and grep read files anywhere
+    ("--exec-path", 4), ("--config-env", 4), ("--git-dir", 4), ("--work-tree", 4), ("--namespace", 4),
+    ("--paginate", 4), ("--super-prefix", 4), ("--attr-source", 4),
+]
+Q = "[\"']*"
+
+
+def git_option_denies():
+    rules = []
+    for name, minlen in GIT_DENY_LONG:
+        body = name[2:]
+        # every prefix from minlen letters up, each as "-" "-" then letters with optional quotes between
+        alts = []
+        for n in range(minlen - 1, len(body) + 1):
+            alts.append(Q.join(re.escape(c) for c in body[:n]))
+        rules.append(r"command(regex:.* %s-%s-%s(%s)%s(=.*| .*)?)" % (Q, Q, Q, "|".join(alts), Q))
+    rules += [
+        # short -O (grep: pager program; diff: orderfile) as a word or inside a cluster such as -nO or -inOless
+        r"command(regex:.* %s-([A-Za-z0-9]*O|%sO).*)" % (Q, "[\"']+"),
+        # an option before the subcommand: -c name=value, -C dir, -p, --exec-path and the rest. The allow rule needs the
+        # subcommand straight after "git" already; this keeps that true if the allow rule is loosened.
+        r"command(regex:git +%s-.*)" % Q,
+    ]
+    return rules
+
+
 def backstop_rules():
     """Deny rules for what no Gemini run may do. A deny beats any allow, also the global grants in
     ~/.gemini/config/config.json (two aws commands among them), and fails only that call rather than the whole turn."""
@@ -49,10 +85,8 @@ def backstop_rules():
         r"|worktree|cherry-pick|revert|am|apply|gc|prune|update-ref|config|remote|submodule|filter-branch)( .*)?)",
         r"command(regex:.*\b(aws|taskkill|tskill|Stop-Process|wmic)\b.*)",
         r"command(regex:.*(8800|agent-tree|smoke|tools%s(ops|aws)%s).*)" % (SEP, SEP),
-        # git diff --output writes a file anywhere; --no-index reads one anywhere; git grep -O starts a program
-        r"command(regex:.*( --output| --no-index| -O| --open-files-in-pager| --ext-diff).*)",
         "mcp(*)",
-    ]
+    ] + git_option_denies()
 
 
 def find_agy():

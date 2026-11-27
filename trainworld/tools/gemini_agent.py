@@ -34,7 +34,10 @@ What the agent can do (agy 1.5 on Windows 10, which has no terminal sandbox):
   grep, Get-ChildItem, the typecheck, agent_cargo.py test|wasm, changelog.py add|list|reword, node
   trainworld/checks/<x>.mjs), one per call, no chaining or redirection. Anything else is refused by agy, and deny
   rules (agy_session.backstop_rules: git commit, push, stash, reset, checkout and the like, aws, taskkill, tools/ops,
-  tools/aws, agent-tree, smoke, 8800) also beat the global grants in ~/.gemini/config/config.json.
+  tools/aws, agent-tree, smoke, 8800) also beat the global grants in ~/.gemini/config/config.json. Refused in the git
+  reads too (T-4404, also as abbreviations and with quotes inside): -O / --open-files-in-pager (runs a program),
+  --output (writes a file), --ext-diff and --textconv (run a configured driver), --no-index (reads anywhere), and any
+  option before the subcommand (-c, --config-env, -C, --exec-path, --git-dir, --work-tree, -p).
 - File writes: inside its tree only (outside, including through the tree's links to the main tree's data, node_modules,
   venv and artifacts, agy asks and print mode refuses), and not to TASKS, DECISIONS, ARCHIVE, LINES, TODO, the
   handoff, asks.json, the CLAUDE.md and GEMINI.md files, .git, .agents or .claude, nor the temp folder.
