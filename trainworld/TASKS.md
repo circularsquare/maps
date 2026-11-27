@@ -1111,6 +1111,12 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-4380 [P3] {L:buses} A bus line's first stop can be removed
   - Context: You, 11-27: "let bus first stop be removable (but default still there)". Today a new bus line's starting point is always a stop (archive T-2937: a line's two ends are end stops); a player asked (tw-feedback 1795726122-552c98fc).
   - Goal: A player can remove a bus line's first stop like any other; new lines still start with one.
+- T-4382 [P3] {L:buses} A bus can stop at linked BRT stations
+  - Context: A player (tw-feedback 1795726122-552c98fc, 11-26): when two BRT stations are linked (a walkway, built touching, or close), or a BRT station sits next to a train station, a bus line can stop at only one of them. You, 11-27: yes, allow it.
+  - Goal: A bus line can stop at every BRT station it passes, linked or not, shown on the player's shapes.
+- T-4383 [P2] {L:feedback} Read Discord bug reports
+  - Context: You, 11-27: "is there a way i could hook you up to discord so you can read from the bug reports channel directly?" Yes: a read-only bot you add to the server, its token in a file on this PC.
+  - Goal: A read-only script lists new messages from the channels you pick, as feedback.py does for the in-game inbox.
 - T-4381 [P3] {L:buses} No cap on buses per hour in a bus lane
   - Context: You, 11-27: drop the 100 buses an hour lane cap, players asked; "its kind of counterintuitive given that you can run infinite buses on a normal road". Not high priority.
   - Goal: Bus lanes take any number of buses an hour, and the line panel shows no cap row for them.
