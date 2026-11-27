@@ -186,7 +186,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
   - Other: notes/T-4150.md "Stage 4" and "Left"
-- T-4314 [P1] {L:edit-speed} Station reach and trains' fill by what changed
+- T-4314 [P1] {L:edit-speed} Station reach and trains' fill by what changed (taking, 2026-11-27, agent reachfill)
   - Context: From T-4284: after each edit the renderer compares every station's platform for the delete tool's reach (2-4 ms on your Asia save) and the demand layers copy every line row of the trains' fill (2-4 ms, 30 when trips land). The network patch names neither the stations nor the rows it changed.
   - Goal: Both cost what the edit changed, under 1 ms each on Asia.
   - Other: notes/T-4150.md "Left"
@@ -505,6 +505,12 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
   - Other: notes/T-4400.md
+- T-4407 [P2] {L:map-look} Hidden modes and levels can still be picked
+  - Context: Gemini's review of T-4400 (artifacts/trainworld/gemini/batch-1127c-review.md, findings 1, 2, 4, 5): box select, dragging blueprint nodes and platform ends, the Delete tool and Park and Ride lots still act on hidden things; a split platform's way back ignores the hide. Unpublished.
+  - Goal: Nothing hidden can be selected, dragged or deleted, by one hidden test every tool shares.
+- T-4408 [P2] {L:loading} Edits made during the first load kept when it fails
+  - Context: Gemini's review of T-4346 (batch-1127c-review.md, finding 3): with the card closed, a failed load's Try again or Back to start reloads without saving, and the out-of-memory retry saves with a 1.5 s cutoff. Also its finding 6, two small Cores slider gaps. Waits for oomretry (same files).
+  - Goal: Every reload or exit from a load saves through the slot switch's path first; finding 6 fixed.
 - T-4406 [P2] {L:map-look} One Show block for levels and modes (taking, 2026-11-27, agent showblock)
   - Context: You, 11-27, after T-4400: "lets have them have the mode colros tho (blue, purple, etc) and also i'd like to not have the extra 'show modes' row. isntead lets change the 'show levels' row to say just 'show'. the one 'show all' button should apply show all to levels and modes."
   - Goal: Settings shows "Show" and one "Show all" (levels and modes), then the levels row, the modes row in the modes' colours, then Blueprints.
