@@ -32,13 +32,8 @@ pub struct Step {
 
 /// A route's road in town: its steps, and the stretches of road (frame) they cover.
 pub fn town_steps(net: &Network, pts: &[[f64; 2]], kinds: &[u8]) -> (Vec<Step>, Vec<[[f64; 2]; 2]>) {
-    steps_of(net, pts, kinds, false)
-}
-
-/// `town_steps`, or (`room`) the steps whose buses take a lane's room: those and the steps on constructed busways.
-fn steps_of(net: &Network, pts: &[[f64; 2]], kinds: &[u8], room: bool) -> (Vec<Step>, Vec<[[f64; 2]; 2]>) {
     let (mut steps, mut segs) = (vec![], vec![]);
-    each_town_step(net, pts, kinds, room, |s, line| {
+    each_town_step(net, pts, kinds, |s, line| {
         steps.push(s);
         segs.extend(line.windows(2).map(|w| [w[0], w[1]]));
     });
@@ -51,7 +46,7 @@ pub fn marks(net: &Network, pts: &[[f64; 2]], kinds: &[u8], kind: impl Fn(&Step)
     let mut out: Vec<f64> = vec![];
     // where the open run starts in `out`, its kind, and the road metres it ends at
     let mut open: Option<(usize, u8, f64)> = None;
-    each_town_step(net, pts, kinds, false, |s, line| {
+    each_town_step(net, pts, kinds, |s, line| {
         let k = kind(&s);
         let joins = open.is_some_and(|(_, ok, end)| ok == k && (s.a - end).abs() < 1e-6);
         if !joins {
@@ -70,9 +65,8 @@ pub fn marks(net: &Network, pts: &[[f64; 2]], kinds: &[u8], kind: impl Fn(&Step)
 }
 
 /// Each step of a route's road in town, with its stretch of road as points (frame): its start, the road's own
-/// points between, its end. T-3378: a step on a constructed busway needs no lane, so it is left out, unless `room`:
-/// its buses still take the room of one.
-fn each_town_step(net: &Network, pts: &[[f64; 2]], kinds: &[u8], room: bool, mut f: impl FnMut(Step, &[[f64; 2]])) {
+/// points between, its end. T-3378: a step on a constructed busway needs no lane, so it is left out.
+fn each_town_step(net: &Network, pts: &[[f64; 2]], kinds: &[u8], mut f: impl FnMut(Step, &[[f64; 2]])) {
     if pts.len() < 2 {
         return;
     }
@@ -85,8 +79,7 @@ fn each_town_step(net: &Network, pts: &[[f64; 2]], kinds: &[u8], room: bool, mut
     };
     let mut line: Vec<[f64; 2]> = vec![];
     for (i, &c) in pace.car.iter().enumerate() {
-        let on = pace.busway_step(i);
-        if if room { !brt_in_town(c) && !on } else { !brt_in_town(c) || on } {
+        if !brt_in_town(c) || pace.busway_step(i) {
             continue;
         }
         let (a, b) = (i as f64 * pace.step, ((i + 1) as f64 * pace.step).min(len));
@@ -131,15 +124,10 @@ pub struct Lanes {
 impl Lanes {
     /// The lanes of `lines` (bus lines; any other has none), in that order.
     pub fn build(net: &Network, lines: &[u32]) -> Lanes {
-        Self::build_of(net, lines, false)
-    }
-
-    /// `build`, or (`room`) over the steps that take a lane's room (`steps_of`).
-    fn build_of(net: &Network, lines: &[u32], room: bool) -> Lanes {
         let mut out = Lanes { lines: lines.to_vec(), steps: vec![], segs: vec![], grid: HashMap::new(), cell: 0.0 };
         for (i, &l) in lines.iter().enumerate() {
             let (steps, segs) = match net.line_bus.get(l as usize).and_then(|b| b.as_ref()) {
-                Some(r) if net.line_ok(l) => steps_of(net, &r.points, &r.kinds, room),
+                Some(r) if net.line_ok(l) => town_steps(net, &r.points, &r.kinds),
                 _ => (vec![], vec![]),
             };
             if out.cell == 0.0 {
@@ -166,12 +154,7 @@ impl Lanes {
 
     /// The positions in the order of the lines other than `own` whose lanes `s` shares, ascending.
     pub fn sharers(&self, s: &Step, own: Option<u32>) -> Vec<u32> {
-        self.sharers_way(s, own).into_iter().map(|x| x.0).collect()
-    }
-
-    /// `sharers`, each with whether that line's route runs the way `s` does there (else the other way).
-    pub fn sharers_way(&self, s: &Step, own: Option<u32>) -> Vec<(u32, bool)> {
-        let mut out: Vec<(u32, bool)> = vec![];
+        let mut out: Vec<u32> = vec![];
         if self.cell <= 0.0 {
             return out;
         }
@@ -181,7 +164,7 @@ impl Lanes {
         let tol = MATCH_M * s.k;
         for &j in cand {
             let (seg, i) = self.segs[j as usize];
-            if Some(i) == own || out.iter().any(|x| x.0 == i) {
+            if Some(i) == own || out.contains(&i) {
                 continue;
             }
             let (ex, ey) = (seg[1][0] - seg[0][0], seg[1][1] - seg[0][1]);
@@ -192,10 +175,10 @@ impl Lanes {
             }
             let t = (((s.x - seg[0][0]) * ex + (s.y - seg[0][1]) * ey) / (e * e)).clamp(0.0, 1.0);
             if (s.x - seg[0][0] - t * ex).hypot(s.y - seg[0][1] - t * ey) <= tol {
-                out.push((i, dot > 0.0));
+                out.push(i);
             }
         }
-        out.sort_unstable_by_key(|x| x.0);
+        out.sort_unstable();
         out
     }
 
@@ -241,68 +224,5 @@ impl Lanes {
     /// The lines, in the order built.
     pub fn lines(&self) -> &[u32] {
         &self.lines
-    }
-}
-
-/// T-3378 stage 2: buses an hour one way a BRT lane takes (Anita, 11-21: "60 buses an hour per lane each way, lines
-/// on it cut to fit past that, as trains do on full track"; raised to 100 the same day, T-4010: "kinda silly looking
-/// but i dont see why not"). Past it each line on the lane runs fewer.
-pub const LANE_BUSES_H: f64 = 100.0;
-
-/// One way of one stretch of lane: the lines whose buses run along it that way (ids, ascending), and the middle
-/// of one of its steps (frame) for where a panel names it.
-#[derive(Clone, Debug, PartialEq)]
-pub struct LaneWay {
-    pub lines: Vec<u32>,
-    pub x: f64,
-    pub y: f64,
-}
-
-/// T-3378 stage 2: the room on the constructed BRT lines' lanes (`Network::brt_room`): every distinct set of lines
-/// running one way along a stretch, as track's capacity resources are for trains (`Capacity::fill` cuts the lines'
-/// rates to fit them, `line_limits` counts them).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Room {
-    pub ways: Vec<LaneWay>,
-}
-
-impl Room {
-    /// The ways of the lanes of constructed BRT lines `lines`. A line runs both ways along its route unless it is
-    /// a loop run one way (`Network::line_one_way`).
-    pub fn build(net: &Network, lines: &[u32]) -> Room {
-        let lanes = Lanes::build_of(net, lines, true);
-        let both: Vec<bool> = lines
-            .iter()
-            .map(|&l| !(net.line_bus.get(l as usize).and_then(|b| b.as_ref()).is_some_and(|r| super::is_closed(&r.points)) && net.line_one_way.get(l as usize).copied().unwrap_or(false)))
-            .collect();
-        let mut ways: Vec<LaneWay> = vec![];
-        for (i, steps) in lanes.steps.iter().enumerate() {
-            for s in steps {
-                let by = lanes.sharers_way(s, Some(i as u32));
-                // the way along the step (true) and the other: who runs each
-                for fwd in [true, false] {
-                    if !both[i] && !fwd {
-                        continue;
-                    }
-                    let mut on = vec![lines[i]];
-                    on.extend(by.iter().filter(|&&(j, same)| both[j as usize] || same == fwd).map(|&(j, _)| lines[j as usize]));
-                    on.sort_unstable();
-                    if !ways.iter().any(|w| w.lines == on) {
-                        ways.push(LaneWay { lines: on, x: s.x, y: s.y });
-                    }
-                }
-            }
-        }
-        Room { ways }
-    }
-
-    /// The fullest way line `l` runs on at rates `tph` (buses an hour each way by line): (buses an hour through
-    /// it, its middle).
-    pub fn fullest(&self, l: u32, tph: impl Fn(u32) -> f64) -> Option<(f64, f64, f64)> {
-        self.ways
-            .iter()
-            .filter(|w| w.lines.contains(&l))
-            .map(|w| (w.lines.iter().map(|&x| tph(x)).sum::<f64>(), w.x, w.y))
-            .max_by(|a, b| a.0.total_cmp(&b.0))
     }
 }

@@ -181,7 +181,6 @@ impl Network {
             node_wet: Default::default(),
             mask_epoch: 0,
             wet_cache: true,
-            brt_room: Default::default(),
             brt_lanes: Default::default(),
             busways: Default::default(),
             busways_planned: Default::default(),
@@ -751,20 +750,6 @@ impl Network {
         }
         let steps = super::bus::lanes::town_steps(self, &r.points, &r.kinds).0;
         [steps.iter().map(|s| s.m).sum(), all.0.new_m_upto(&steps, None, upto), 0.0]
-    }
-    /// T-3378 stage 2: the room on the constructed BRT lines' lanes, worked out again only when one of their routes,
-    /// their one-way loops or the street grids have changed (it is read on every round of a settle).
-    pub fn brt_room(&self) -> std::sync::Arc<super::bus::lanes::Room> {
-        let order = self.brt_order(true);
-        let key = self.brt_key(&order);
-        if let Some((k, room)) = self.brt_room.borrow().as_ref() {
-            if *k == key {
-                return room.clone();
-            }
-        }
-        let room = std::sync::Arc::new(if order.is_empty() { Default::default() } else { super::bus::lanes::Room::build(self, &order) });
-        *self.brt_room.borrow_mut() = Some((key, room.clone()));
-        room
     }
     /// T-3378: each line's part of the constructed BRT lanes' upkeep, road metres, by line index.
     pub fn brt_upkeep_m(&self) -> Vec<f64> {

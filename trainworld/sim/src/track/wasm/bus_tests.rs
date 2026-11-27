@@ -837,11 +837,10 @@ fn brt_lines_on_one_road_share_its_lanes() {
     assert_eq!(a.cash(), cash);
 }
 
-/// T-3378 stage 2: a BRT lane takes `LANE_BUSES_H` buses an hour each way; past it the lines on it run fewer, each
-/// cut by the same share, plain lines on the road are not, and the panel's reads say so.
+/// T-4381: a BRT lane has no buses-per-hour cap: lines sharing a road above 100 buses an hour each way run all
+/// their buses on both weekdays and weekends, with no lane limit in `line_held`.
 #[test]
-fn a_full_brt_lane_cuts_its_lines_buses() {
-    use crate::track::bus::lanes::LANE_BUSES_H;
+fn brt_lane_has_no_bus_cap() {
     let mut a = api();
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
     assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
@@ -858,27 +857,10 @@ fn a_full_brt_lane_cuts_its_lines_buses() {
     let tph = |a: &TrackApi, l: u32| a.w.net.line_tph[l as usize][lev] as f64;
     let (p1, p2) = (tph(&a, l1), tph(&a, l2));
     assert!(p1 > 70.0 && p2 > 70.0, "{p1} {p2}");
-    // on plain lines nothing is cut, and the lane read is empty
-    assert_eq!(a.bus_lane_load(l1)[0], 0.0);
     brt_on(&mut a, l1);
-    assert!((tph(&a, l1) - p1).abs() < 0.5, "{} {p1}", tph(&a, l1));
-    // both on BRT: cut to fit, each by about the same share
     brt_on(&mut a, l2);
-    let (b1, b2) = (tph(&a, l1), tph(&a, l2));
-    assert!(b1 + b2 <= LANE_BUSES_H + 0.5 && b1 + b2 >= LANE_BUSES_H - 2.0, "{b1} {b2}");
-    assert!((b1 / p1 - b2 / p2).abs() < 0.05, "{b1} {b2} {p1} {p2}");
-    let load = a.bus_lane_load(l2);
-    assert!((load[0] - b1 - b2).abs() < 1e-3 && load[5] == LANE_BUSES_H, "{load:?}");
-    // a headway the lane can't give shows as limited by it (`LANE_KIND`)
-    let held = a.line_held(l1);
-    let limits = &held[7 * ROWS..12 * ROWS];
-    assert!(limits.chunks_exact(5).any(|r| r[1] == crate::track::capacity::LANE_KIND as f64 && r[0] > 60.0), "{held:?}");
-    // a plain line on the same road neither counts nor is cut
-    let l3 = line(&mut a, &[0.0, 5.0, 1.0, 2800.0, 5.0, 1.0]);
-    assert!(tph(&a, l3) > 70.0 && (tph(&a, l1) - b1).abs() < 0.5, "{} {}", tph(&a, l3), tph(&a, l1));
-    // one off BRT: the other runs all its buses again
-    assert_eq!(a.set_bus_brt(l2, false), 0, "{}", a.issues());
-    assert!(tph(&a, l1) > 70.0 && tph(&a, l2) > 70.0, "{} {}", tph(&a, l1), tph(&a, l2));
+    assert!((tph(&a, l1) - p1).abs() < 0.5 && (tph(&a, l2) - p2).abs() < 0.5, "{} {} vs {p1} {p2}", tph(&a, l1), tph(&a, l2));
+    assert!(a.line_held(l1).iter().all(|&x| x == 0.0));
 }
 
 /// T-3378 stage 3: a BRT station beside the road, constructed for its flat price: only a BRT line stops there,
@@ -971,11 +953,9 @@ fn brt_stations_and_blueprint_lanes_save_together() {
     assert!(a.bus_brt(built) && !a.bus_brt_bp(built) && a.brt_stations().is_empty());
 }
 
-/// T-3941: weekends settled on their own cut a full BRT lane's lines to fit as weekdays do: two lines at 40 an hour
-/// each way on one road, given weekend headways of their own (spare buses), then both put on BRT.
+/// T-4381: weekends on a shared BRT lane past 100 buses an hour also run uncapped.
 #[test]
-fn a_full_brt_lane_cuts_weekend_buses_too() {
-    use crate::track::bus::lanes::LANE_BUSES_H;
+fn brt_lane_has_no_weekend_bus_cap() {
     let mut a = api();
     let (pop, jobs) = ([30_000.0f32, 30_000.0, 50.0], [20_000.0f32, 20_000.0, 5.0]);
     assert!(a.add_pack_streets(2000.0, -1000.0, -1000.0, 3, 1, &pop, &jobs, &[0, 1, 2], &[0, 1, 2], &[0, 0, 0], &[], &[1, 1, 1], -73.985, 40.758) >= 0);
@@ -992,13 +972,14 @@ fn a_full_brt_lane_cuts_weekend_buses_too() {
     for l in [l1, l2] {
         assert_eq!(a.set_line_weekend_headways(l, 30, 30, 30, 50, 50, 50), 0, "{}", a.issues());
     }
-    assert!(a.w.net.rest_solved && rest(&a, l1) + rest(&a, l2) > LANE_BUSES_H + 5.0, "{} {}", rest(&a, l1), rest(&a, l2));
+    let (p1, p2) = (rest(&a, l1), rest(&a, l2));
+    assert!(a.w.net.rest_solved && p1 + p2 > 105.0, "{p1} {p2}");
     for l in [l1, l2] {
         assert_eq!(a.set_bus_brt(l, true), 0, "{}", a.issues());
     }
     assert_eq!(a.construct_all(), 0, "{}", a.issues());
     let (r1, r2) = (rest(&a, l1), rest(&a, l2));
-    assert!(r1 + r2 <= LANE_BUSES_H + 0.5 && r1 + r2 >= LANE_BUSES_H - 2.0, "weekends {r1} {r2}");
+    assert!(r1 >= 65.0 && r2 >= 65.0 && r1 + r2 > 130.0, "weekends {r1} {r2}");
 }
 
 /// T-3378 stage 4: a busway built over constructed BRT lanes frees them, and the blueprint's total is what Construct

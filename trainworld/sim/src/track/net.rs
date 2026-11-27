@@ -895,9 +895,7 @@ pub struct Network {
     mask_epoch: u32,
     /// Off: every node is asked of the mask each time (the rows check compares the two).
     pub wet_cache: bool,
-    /// T-3378: the BRT lanes' room (`brt_room`), kept with a hash of everything it was worked out from.
-    brt_room: std::cell::RefCell<Option<(u64, std::sync::Arc<super::bus::lanes::Room>)>>,
-    /// T-3378: every BRT line's lanes (`brt_lanes`), kept the same way.
+    /// T-3378: every BRT line's lanes (`brt_lanes`), kept with a hash of everything it was worked out from.
     brt_lanes: std::cell::RefCell<Option<(u64, std::sync::Arc<(super::bus::lanes::Lanes, u32)>)>>,
     /// T-3378 stage 4: the constructed busways (`busways`), kept with `busway_key`.
     busways: std::cell::RefCell<Option<(u64, std::sync::Arc<super::bus::busway::Busways>)>>,

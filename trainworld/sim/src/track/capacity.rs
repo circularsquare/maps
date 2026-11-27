@@ -19,12 +19,6 @@ use super::service::LineSvc;
 use super::upgrades;
 use std::sync::Arc;
 
-/// T-3378: the resource `Capacity::line_limits` names where a BRT lane's room limits a bus line (no index of
-/// `Capacity::res`); its wire kind is `LANE_KIND`.
-pub const LANE_RES: u32 = u32::MAX - 1;
-/// T-3378: the kind the app words a full BRT lane by (`Capacity::wire_kind`'s numbers).
-pub const LANE_KIND: u8 = 15;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ResKind {
     /// A run of directed double track over which the set of lines does not change.
@@ -219,19 +213,6 @@ impl Capacity {
                 *b = (most, r as u32);
             }
         });
-        // T-3378: a BRT lane's way, as track (`LANE_RES`)
-        for w in &net.brt_room().ways {
-            for lev in net.slots() {
-                let load: f64 = w.lines.iter().map(|&l| net.line_tph[l as usize][lev] as f64).sum();
-                for &l in &w.lines {
-                    let most = (net.line_tph[l as usize][lev] as f64 + super::bus::lanes::LANE_BUSES_H - load).max(0.0);
-                    let b = &mut out[l as usize][lev];
-                    if most < b.0 {
-                        *b = (most, LANE_RES);
-                    }
-                }
-            }
-        }
         out
     }
 
@@ -331,20 +312,6 @@ impl Capacity {
                         Some(c) => c.1 += occ / 3600.0,
                         None => coef.push((s, occ / 3600.0)),
                     },
-                }
-            }
-            if !coef.is_empty() {
-                res.push((fixed, coef));
-            }
-        }
-        // T-3378: each way of a BRT lane takes `LANE_BUSES_H` buses an hour, filled as track is
-        let lane = 1.0 / super::bus::lanes::LANE_BUSES_H;
-        for w in &net.brt_room().ways {
-            let (mut fixed, mut coef) = (0.0, vec![]);
-            for &l in &w.lines {
-                match slot.get(l as usize).copied().unwrap_or(u32::MAX) {
-                    u32::MAX => fixed += net.line_tph[l as usize][lev] as f64 * lane,
-                    s => coef.push((s, lane)),
                 }
             }
             if !coef.is_empty() {

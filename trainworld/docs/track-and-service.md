@@ -2503,17 +2503,6 @@ demand level), trips, the boarding account and the fare curve; a bus is one 12 m
   deleting a bus line charges nothing, though the lanes it shared are then counted on the other line. A level-34
   game loads with its overlapping lanes shared, its upkeep lower there and its cash as saved. Removing or redrawing
   a constructed route is final and refunds nothing.
-- **Lane room** (T-3378 stage 2, `bus::lanes::Room`, Anita 11-21): each way of a BRT lane takes 100 buses an hour
-  (`LANE_BUSES_H`). The constructed BRT lines' lanes make a list of ways: per step, the lines whose buses run along it
-  one way (a line runs both ways unless it is a loop run one way), each distinct set once. These are filled as track
-  is: `Capacity::fill` cuts the lines' rates by progressive filling over the ways beside the track's resources, and
-  `line_limits` names a way (`LANE_RES`, kind 15) where it limits a line, so a headway line keeps the buses its
-  share runs and the rest are not bought (`trim_auto`), and a count line's extra buses wait at its ends. Weekends
-  that run their own settle (`settle_weekend`) are cut the same way on their own rates (T-3941). No slowdown:
-  a full lane only cuts buses. Plain bus lines on the road neither count nor are cut. An edit of any bus line settles
-  every BRT line (`sharing_closure`). The bus panel shows the busiest way under the BRT row ("Busiest lane", n/100
-  buses per hour, red once full), the full lane's alert with the buses held out, and the headways it limits.
-  Worked out again only when a BRT route, a loop's one way or the street grids change (`Network::brt_room`).
 - **BRT stations** (T-3378 stage 3, Anita 11-21; `StationData::road`, `TrackApi::add_brt_station`): a station on no
   track, placed with the Station tool's BRT station kind (T-3999) beside a bus line's route within 80 screen pixels of
   ground (146 m at zoom 15 at 40° latitude; 50 m to 400 m), else beside the nearest road a bus may use within 50 m

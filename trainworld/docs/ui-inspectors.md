@@ -690,10 +690,7 @@ spinner on a level with buses while demand loads, the BRT row (T-3907, T-3944): 
 takes them out, or takes built ones away with nothing refunded) and "BRT", with "Construct for $X" beside it while a
 constructed line's lanes are in the blueprint; its hover the name, the floor, the price a km in town with the route's km
 in town and the upkeep a km there, the km another BRT line already has lanes on (T-3378), what the new lanes cost
-until built, and what a click does. On a constructed BRT line "Busiest lane" (its fullest stretch of lane now, "48/100 buses
-per hour", red at 100 with a hover), and the average speed. No track limits (T-2919), but a BRT line's lanes limit it as
-track does (T-3378): its headways red past its share, and under the rows a full lane's alert ("BRT lane near X is full")
-with the buses held out of service a row. Stops: the ends and the
+until built, and what a click does. Under it sits the average speed. No track limits (T-2919, T-4381: BRT lanes have no buses-per-hour cap either). Stops: the ends and the
 train stations met, the stops between folded into one row each ("8 street stops"), in the line panel's order (north or
 west end on top) with its stop times (the time from the stop on top after each name, "12m30s").
 The counts block, headingless as the line panel's: riders by purpose, Changing to trains (riders a day changing between this bus and any rail

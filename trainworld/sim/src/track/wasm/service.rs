@@ -386,40 +386,11 @@ impl TrackApi {
         if short > 0.01 { short } else { 0.0 }
     }
 
-    /// What limits a line at slot `lev` (`Capacity::line_limits`'s resource `r`): wire kind, node or -1, x, y; a full
-    /// BRT lane (T-3378, `LANE_RES`) by its fullest way's middle.
-    fn limit_place(&self, line: u32, lev: usize, r: u32) -> (f64, f64, f64, f64) {
+    /// What limits a line at slot `lev` (`Capacity::line_limits`'s resource `r`): wire kind, node or -1, x, y.
+    fn limit_place(&self, r: u32) -> (f64, f64, f64, f64) {
         let cap = &self.w.svc.cap;
-        if r == crate::track::capacity::LANE_RES {
-            let (_, x, y) = self.lane_load(line, lev).unwrap_or((0.0, 0.0, 0.0));
-            return (crate::track::capacity::LANE_KIND as f64, -1.0, x, y);
-        }
         let res = &cap.res[r as usize];
         (cap.wire_kind(r as usize) as f64, if res.node == u32::MAX { -1.0 } else { res.node as f64 }, res.x, res.y)
-    }
-
-    /// T-3378: the fullest way of a BRT lane line `line` runs on at slot `lev`: buses an hour through it, x, y.
-    fn lane_load(&self, line: u32, lev: usize) -> Option<(f64, f64, f64)> {
-        let n = &self.w.net;
-        n.brt_room().fullest(line, |l| n.line_tph.get(l as usize).map_or(0.0, |t| t[lev] as f64))
-    }
-
-    /// T-3378: `line_held`'s seven numbers where a full BRT lane keeps some of a bus line's buses from running at slot
-    /// `lev`: [buses that wait, `LANE_KIND`, -1, x, y, buses an hour through it, the most it takes].
-    fn lane_held(&self, line: u32, lev: usize) -> Option<[f64; 7]> {
-        let wait = self.waiting(line, lev);
-        let (load, x, y) = self.lane_load(line, lev)?;
-        let most = crate::track::bus::lanes::LANE_BUSES_H;
-        (wait > 0.0 && load >= most * FULL_RHO).then_some([wait, crate::track::capacity::LANE_KIND as f64, -1.0, x, y, load, most])
-    }
-
-    /// T-3378: per demand period (0-4), the buses an hour one way on the fullest stretch of BRT lane a line runs on (0
-    /// where it has none), then `LANE_BUSES_H`.
-    pub fn bus_lane_load(&self, line: u32) -> Vec<f64> {
-        let ps = self.w.net.period_slot();
-        let mut out: Vec<f64> = ps.iter().map(|&lev| self.lane_load(line, lev).map_or(0.0, |x| x.0)).collect();
-        out.push(crate::track::bus::lanes::LANE_BUSES_H);
-        out
     }
 
     /// Per level, where full track holds a line back (T-517): `[trains that wait, kind (ResKind
@@ -452,7 +423,7 @@ impl TrackApi {
             if r == u32::MAX {
                 continue;
             }
-            let (kind, node, x, y) = self.limit_place(line, slot(row), r);
+            let (kind, node, x, y) = self.limit_place(r);
             out[7 * ROWS + 5 * row..7 * ROWS + 5 * row + 5].copy_from_slice(&[if tph > 0.0 { 3600.0 / tph } else { f64::INFINITY }, kind, node, x, y]);
         }
         let worst = cap.bottlenecks(self.w.net.line_count())[line as usize];
@@ -460,10 +431,6 @@ impl TrackApi {
             let lev = slot(row);
             let (rho, r) = worst[lev];
             let wait = self.waiting(line, lev);
-            if let Some(h) = self.lane_held(line, lev).filter(|_| rho < FULL_RHO || r == u32::MAX) {
-                out[7 * row..7 * row + 7].copy_from_slice(&h);
-                continue;
-            }
             if rho < FULL_RHO || r == u32::MAX || wait <= 0.0 {
                 continue;
             }
@@ -495,15 +462,10 @@ impl TrackApi {
             out[12 * n + row] = tight;
             if let Some(s) = slots.iter().copied().filter(|&s| most[s].1 != u32::MAX).max_by(|&a, &b| limit_s(most[a].0).total_cmp(&limit_s(most[b].0))) {
                 let (tph, r) = most[s];
-                let (kind, node, x, y) = self.limit_place(line, s, r);
+                let (kind, node, x, y) = self.limit_place(r);
                 out[7 * n + 5 * row..7 * n + 5 * row + 5].copy_from_slice(&[limit_s(tph), kind, node, x, y]);
             }
             let held = slots.iter().copied().map(|s| (s, self.waiting(line, s))).filter(|&(s, w)| worst[s].0 >= FULL_RHO && worst[s].1 != u32::MAX && w > 0.0).max_by(|a, b| a.1.total_cmp(&b.1));
-            // T-3378: else a full BRT lane, at the slot holding the most buses back
-            let lane = slots.iter().copied().filter_map(|s| self.lane_held(line, s)).max_by(|a, b| a[0].total_cmp(&b[0]));
-            if let (None, Some(h)) = (held, lane) {
-                out[7 * row..7 * row + 7].copy_from_slice(&h);
-            }
             if let Some((lev, wait)) = held {
                 let (rho, r) = worst[lev];
                 let res = &cap.res[r as usize];

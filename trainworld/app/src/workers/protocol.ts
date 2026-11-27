@@ -819,9 +819,6 @@ export interface ClockBus {
   newM: number;
   /** T-3378: its part of the lanes' upkeep, road metres (a lane two lines share, half each); 0 off BRT */
   laneM: number;
-  /** T-3378: per demand period, buses an hour one way on its fullest stretch of BRT lane (0 with none), then the
-   * most a lane takes */
-  laneLoad: number[];
   /** T-2891: while `hand`, the stations the route can stop at, a stop or not */
   reach: { node: number; x: number; y: number; lng: number; lat: number }[];
   /** `route` and `street` as longitude, latitude pairs, flat */
