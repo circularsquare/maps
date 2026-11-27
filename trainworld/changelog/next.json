@@ -3,6 +3,54 @@
   "line": "",
   "items": [
     {
+      "id": "c017",
+      "text": "a bus line's first stop can be taken out in Manual mode",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4380",
+      "by": "busstops",
+      "at": "2026-11-27T15:57:59Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c016",
+      "text": "bus lines stop at every BRT station they pass, even two side by side",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4382",
+      "by": "busstops",
+      "at": "2026-11-27T15:57:59Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c015",
+      "text": "a load that runs out of memory on one core tries again without intercity trips",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4396",
+      "by": "oomretry",
+      "at": "2026-11-27T15:57:05Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
+      "id": "c014",
+      "text": "fixed deleting a loop line's first station turning the loop into an open line",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4374",
+      "by": "loopfix",
+      "at": "2026-11-27T15:50:28Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c013",
       "text": "the first load's card can be closed or moved, and you can build while trips are calculated",
       "edited": null,

@@ -513,9 +513,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
   - Other: notes/T-4400.md
-- T-4407 [P2] {L:map-look} Hidden modes and levels can still be picked (taking, 2026-11-27, agent hidepick)
-  - Context: Gemini's review of T-4400 (artifacts/trainworld/gemini/batch-1127c-review.md, findings 1, 2, 4, 5): box select, dragging blueprint nodes and platform ends, the Delete tool and Park and Ride lots still act on hidden things; a split platform's way back ignores the hide. Unpublished.
-  - Goal: Nothing hidden can be selected, dragged or deleted, by one hidden test every tool shares.
 - T-4408 [P2] {L:loading} Edits made during the first load kept when it fails
   - Context: Gemini's review of T-4346 (batch-1127c-review.md, finding 3): with the card closed, a failed load's Try again or Back to start reloads without saving, and the out-of-memory retry saves with a 1.5 s cutoff. Also its finding 6, two small Cores slider gaps. Waits for oomretry (same files).
   - Goal: Every reload or exit from a load saves through the slot switch's path first; finding 6 fixed.
@@ -1119,12 +1116,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
-- T-4380 [P3] {L:buses} A bus line's first stop can be removed (taking, 2026-11-27, agent busstops)
-  - Context: You, 11-27: "let bus first stop be removable (but default still there)". Today a new bus line's starting point is always a stop (archive T-2937: a line's two ends are end stops); a player asked (tw-feedback 1795726122-552c98fc).
-  - Goal: A player can remove a bus line's first stop like any other; new lines still start with one.
-- T-4382 [P3] {L:buses} A bus can stop at linked BRT stations (taking, 2026-11-27, agent busstops)
-  - Context: A player (tw-feedback 1795726122-552c98fc, 11-26): when two BRT stations are linked (a walkway, built touching, or close), or a BRT station sits next to a train station, a bus line can stop at only one of them. You, 11-27: yes, allow it.
-  - Goal: A bus line can stop at every BRT station it passes, linked or not, shown on the player's shapes.
 - T-4378 [P3] {L:buses} Bus stop name labels flicker and the last stop is misnamed
   - Context: A player on 0.4.7 (tw-feedback 1795764714-6043c5df, 11-27), Paris, 174 lines: with many bus stops named, the map's labels pop in and out and overlap other labels, and a route's last stop shows the wrong name. T-4080's naming landed 11-25. Reach: players who name many stops.
   - Goal: Named stop labels stay put while names are edited and the last stop shows its own name, shown on a small case.
@@ -1258,7 +1249,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
-- T-4372 [P2] {L:checks} Smoke plays with phone settings too
+- T-4372 [P2] {L:checks} Smoke plays with phone settings too (taking, 2026-11-27, agent phonesmoke)
   - Context: T-4367's crash shipped in 0.4.7 because it only happens with intercity trips off (the phone and tablet default) on a network big enough; smoke and agents' game runs use computer defaults. You, 11-26: "ideally we should have caught bugs like this."
   - Goal: Smoke builds long lines on a mid-size network once more with intercity trips off and one worker, and fails on "Demand stopped"; it would have caught T-4367.
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
@@ -1273,7 +1264,7 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You, 11-20: pack rather than drop, "we dont really have to do anything there til we get cloesr to the limit". Measured 11-20: 5.05 GB is 55% backups, 35% current saves, 9.5% pictures; the 16 GB cap fills Dec 5-10 at today's growth. A backup stored as a difference is 6-16% of its size; packing frees about 1.26 GB now.
   - Goal: Packing deployed, with the games cap raised to about 24 GB (safe on the disk), before the store reaches 12 GB.
   - Other: notes/T-3821.md, notes/T-3243.md "Games"
-- T-4409 [P2] {L:accounts-server} Count crashes automatically
+- T-4409 [P2] {L:accounts-server} Count crashes automatically (taking, 2026-11-27, agent crashcount)
   - Context: Bugs like T-4367 would show within hours of a publish if the game sent the server a count of "Demand stopped" and similar failures (version, the error's first line, phone or computer; nothing about the player), shown on twstats. You, 11-27: "yes we can do that". A server deploy, so its own yes.
   - Goal: The server counts failures by version and first line, and twstats shows them; the deploy waits for your word.
 - T-3395 [P1] {L:accounts-server} {after:the 11-20 and 11-21 scan reports} Close once the save scan runs clean

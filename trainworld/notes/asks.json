@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-27-13",
+    "title": "Out of memory retry text",
+    "text": "T-4396 (landed 3add0b644) adds two notices: \"This game ran out of memory, so it loaded again without intercity trips.\" and \"This game ran out of memory, so it loaded again in less detail.\" Text acknowledged, or name a line?",
+    "since": "2026-11-27",
+    "by": "maps-48"
+  }
+]

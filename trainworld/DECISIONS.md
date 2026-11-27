@@ -259,6 +259,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-27 (T-4396): A load on one worker that runs out of memory retries once on its own, with intercity trips off, else in less detail, by changing the real Settings toggles so the player can turn them back. notes/T-4396.md
 - 2026-11-27 (Anita, T-3932): The Cores slider goes to half the browser's threads, at most 5. A pick is an override: no 8 GB limit or stage A share ("we should just remove the cap"); it applies at the next load. Auto keeps the old rule. notes/T-3932.md
 - 2026-11-27 (T-3932): The Cores slider shows the Memory row's reading at the count shown, and scales this game's last load and edit by f + (1 - f) x the busiest worker's share (f 0.4 loads, 0.17 edits). Lie: the edit f predates local edit results (T-2188). notes/T-3932.md
 - 2026-11-25 (T-4281): The panels' past 24 hours keep each line's window, moved along as the clock runs; summing riders per stop and timing trains by their leave time moved figures only by rounding (2e-13 at most on her Asia save). notes/T-4281.md

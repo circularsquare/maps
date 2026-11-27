@@ -1,24 +1,21 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 6ed48fec-8b16-41be-8883-aad8f899bcb0, name maps-e0 [81f3a0], since 2026-11-27 14:30 UTC
-Updated: 2026-11-27 15:46 UTC (maps-e0 cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session b48f5ab5-f4f4-40bd-8d9d-48e27f778e65, name maps-48 [99e2b4], since 2026-11-27 15:48 UTC
+Updated: 2026-11-27 16:06 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. Running: busstops (Sonnet, T-4380 + T-4382, in maps-e0's tab: her "it should drive from the first point" plus
-   busstops-review.md findings 1-3; adds save block LAF1, level 42; land after its report); loopfix2 (Gemini Hydrogen
-   on tree loopfix: ferry port finding in loopfix-review.md, then land T-4374 from tree loopfix, texts acknowledged);
-   oomretry (Gemini Neon, T-4396); showblock (Gemini Hydrogen, T-4406, her one Show block: look at
-   artifacts/trainworld/review/showblock.png before landing); hidepick (Gemini Neon, T-4407) and reachfill (Gemini
-   Neon, T-4314), NOT running: their claims failed again 15:47 (briefs in maps-e0's scratchpad; restart with
-   --tree hidepick / reachfill when 2 cores are free each). gemini_agent's claim returns at once at the cap ("waiting ... exit 0"): worth a small fix.
-2. After busstops and loopfix land: rebuild 8800 (Show modes, load card, T-4153 s10 wait for it), smoke, then a Gemini
-   batch review of 02a97d401 + those landings. Then T-4408 (after oomretry: batch-1127c findings 3 and 6). perf_bench
-   NYC and a quiet edit_bench on Asia (T-4153's ~92-96 ms by parts) are owed when the machine is quiet. Publish waits
-   for her word and for T-4407/T-4408.
-3. Her board 11-27: start T-4372 (smoke with phone settings; Claude, since Gemini can't run smoke) and T-4409 (crash
-   counts; game and server, the deploy waits for her yes). Then T-4153 stage 11 (train speeds, after reachfill), T-4309, T-4315, T-3160, T-4370, T-3838. New tasks go to Gemini
-   agents (her 11-27), --game for a game run; Claude only for what Gemini can't. Corescheck: slider fixes PASS.
+1. Running: hidepick (Gemini Neon, T-4407), reachfill (Gemini Neon, T-4314), modeicons (Gemini Hydrogen, T-4423, her
+   mode icons: look at artifacts/trainworld/review/modeicons.png before landing), phonesmoke (Sonnet, T-4372),
+   crashcount (Sonnet, T-4409; may commit in shonei-server, deploy waits for her), saverev (Sonnet, read-only save
+   review of batch 1127d). Gemini review of batch 1127d running (artifacts/trainworld/gemini/batch-1127d-review.md).
+   8800 rebuild to 2ed96ddf8 running; smoke on master after it.
+2. Batch 1127d: 02a97d401 (T-4153 s10), 6e8ba815d (T-4374), 3add0b644 (T-4396), 2ed96ddf8 (T-4380/82, save level 42).
+   After both reviews: a fix agent for findings; then T-4408 with any T-4396 findings folded in (brief in maps-48's
+   scratchpad briefs/t4408.md, Gemini Neon --game nyc). perf_bench NYC and a quiet edit_bench on Asia owed. Publish
+   waits for her word and T-4407/T-4408. Ask open: T-4396's two notices (a-2026-11-27-13).
+3. Then T-4153 stage 11 (after reachfill), T-4411 (her stations list idea, P3), T-4309, T-4315, T-3160, T-4370,
+   T-3838; maps-e0's T-4420-4422 (tooling). New tasks to Gemini agents; Claude only for what Gemini can't.
 4. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
