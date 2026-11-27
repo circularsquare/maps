@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-27, agent netcut10)
   - Context: You, 11-23: "this is the entire issue". Stage 9 landed 11-25: a cut line's bands worked out only near the cut. Your Asia save, Node, a station on a three-line trunk: network build about 149 to 117 ms. Left: per-line passes (about 20 ms), train speeds (20), the bands' last whole-line copies (10-15).
   - Goal: A station on a line's track on Asia under 100 ms of network build (T-4097's aim): per-line passes and speeds redone only for lines that changed.
   - Other: notes/T-4153.md "Stage 9"
@@ -352,6 +352,18 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
+- T-4395 [P2] {L:loading} A game load ends after the first round
+  - Context: From loadreports (11-27): a game load waits for all 4 rounds of the zone in view (HOLD_ROUND in demandClient.ts) though round 0 already has figures; on one worker about 55-60% of the wait comes after it. You, 11-27: file it, a proposal to judge, not gospel.
+  - Goal: A game load ends at round 0 and the later rounds refine in the background as after an edit; a one-worker load's wait about halved.
+  - Other: notes/load-reports-2026-11-27.md, proposal 3
+- T-4396 [P2] {L:memory} A second try for a one-worker load out of memory
+  - Context: From loadreports (11-27): 7 load deaths in 5 days, all phones or 4 GB PCs on one solving worker. The retry halves workers, so below two it can't help (oomRetry.ts) and they reload into the same crash; 3 of 5 died in the first 11 s, on Tokyo. You, 11-27: a proposal, not gospel.
+  - Goal: A one-worker load that runs out of memory tries again with less (intercity trips off or coarser zones), saying so on the card; fewer loads end at the out-of-memory screen.
+  - Other: notes/load-reports-2026-11-27.md, proposal 1; T-4370, T-3160
+- T-4390 [P2] {L:loading} Trips worker crash on a 2 GB phone (taking, 2026-11-27, agent packfix)
+  - Context: A player on 0.4.6 (tw-feedback 1795602207-5e283c5f, 11-25), 2 GB Android, one worker, 30 lines, "load failed": the worker panicked at sim/src/demand/everyday.rs:655, index 10191 of len 10191 (Columns::pack's placing pass, per loadreports). Not memory. Reach: unknown, one report.
+  - Goal: The panic's cause found in the code and fixed, with a Rust test that fails before the fix; figures unchanged where it never panicked.
+  - Other: notes/load-reports-2026-11-27.md
 - T-4370 [P2] {L:memory} iPad games crash on big saves
   - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines (maybe T-4367's "Demand stopped", fixed 11-26, if not a tab reload). Related: T-3160.
   - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
@@ -503,9 +515,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4377 [P2] {L:small-fixes} Dragging a line onto another to group it fails on touch
-  - Context: A player on 0.4.7.1 (tw-feedback 1795759602-ff4995ab, 11-27), Chrome on a Huawei phone: the line list's drag-to-group works on desktop but not on mobile. Reach: every phone and tablet player who groups lines.
-  - Goal: A touch drag of a line onto another groups them like a mouse drag, checked in an emulated phone.
 - T-4373 [P3] {L:small-fixes} Line panel shows another city's line and won't close
   - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line, then no click closed it. Reach: few, a city filter with a panel open.
   - Goal: Changing the city filter or picking another line always shows that line's stops, and the panel closes.
@@ -1111,13 +1120,13 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-4382 [P3] {L:buses} A bus can stop at linked BRT stations
   - Context: A player (tw-feedback 1795726122-552c98fc, 11-26): when two BRT stations are linked (a walkway, built touching, or close), or a BRT station sits next to a train station, a bus line can stop at only one of them. You, 11-27: yes, allow it.
   - Goal: A bus line can stop at every BRT station it passes, linked or not, shown on the player's shapes.
-- T-4383 [P2] {L:feedback} Read Discord bug reports
+- T-4383 [P2] {L:feedback} Read Discord bug reports (taking, 2026-11-27, agent discordread)
   - Context: You, 11-27: "is there a way i could hook you up to discord so you can read from the bug reports channel directly?" Yes: a read-only bot you add to the server, its token in a file on this PC.
   - Goal: A read-only script lists new messages from the channels you pick, as feedback.py does for the in-game inbox.
 - T-4381 [P3] {L:buses} No cap on buses per hour in a bus lane
   - Context: You, 11-27: drop the 100 buses an hour lane cap, players asked; "its kind of counterintuitive given that you can run infinite buses on a normal road". Not high priority.
   - Goal: Bus lanes take any number of buses an hour, and the line panel shows no cap row for them.
-- T-4374 [P2] {L:stops} Closing a loop refused with "at least two different stations"
+- T-4374 [P2] {L:stops} Closing a loop refused with "at least two different stations" (taking, 2026-11-27, agent loopfix)
   - Context: A player on 0.4.7 (tw-feedback 1795784564-e03329a7, 11-27), 42 lines, couldn't loop a line that had many stops. The message is validate.rs's catch-all LineStops (adjacent equal stops, first or last stop off the path), so the real cause is unknown. Reach: unknown, loops are common.
   - Goal: Closing a loop on a line with several stations works, or the refusal names its real cause; shown on a small case.
 - T-4378 [P3] {L:buses} Bus stop name labels flicker and the last stop is misnamed

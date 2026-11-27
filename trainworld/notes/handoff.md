@@ -1,23 +1,24 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 72757b8d-c220-47a4-ac30-041ad0a7ac39, name maps-3a [8d9b93], since 2026-11-26 14:17 UTC
-Updated: 2026-11-27 14:30 UTC (maps-3a cycling at 500k). Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 6ed48fec-8b16-41be-8883-aad8f899bcb0, name maps-e0 [81f3a0], since 2026-11-27 14:30 UTC
+Updated: 2026-11-27 14:40 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. Running in maps-3a's tab (reports reach the inbox): coreslider2 (Opus, T-3932 P1, tree coreslider2, port 6148:
-   slider + estimates + "takes effect after a reload", 12 languages) and loadreports (Sonnet: reads players' load
-   diagnostics only, her "dont load the same save several ways"; writes notes/load-reports-2026-11-27.md). Gemini batch
-   review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 runs in that tab too: result in
-   artifacts/trainworld/gemini/batch-1127-review.md (findings go to a fix agent, then publish can follow).
+1. Running: coreslider2 (Opus, T-3932 P1, tree coreslider2, port 6148, in maps-3a's tab; its report reaches the inbox);
+   loopfix (Opus, T-4374, tree loopfix, 6150), touchgroup (Sonnet, T-4377, tree touchgroup, 6151), discordread
+   (Sonnet, T-4383, tree discordread; the token file C:\Users\anita\discord-reader-token.txt did not exist at 14:38).
+   Gemini batch review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532: a background command in maps-3a's tab,
+   result only as artifacts/trainworld/gemini/batch-1127-review.md (watch for the file; findings go to a fix agent,
+   then publish can follow). Agent ids handed out: loopfix T-4391/2, touchgroup T-4393, discordread T-4394.
 2. 8800 at 5b1fab73 (region redraws, smoke passed); master has T-4379 since (381db4060): rebuild 8800 after coreslider2
    lands. She is checking the redrawn zones on 8800 today (her main task); undo per country: notes/T-4364.md "The job".
    Backups data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
-3. 0.4.7.1 live (T-4367 hotfix, 11-26). A Twitter "numbers stopped updating" alert posted ~06:30 UTC 11-27, after the
-   hotfix: version unknown; suggested she ask the player to send it via the in-game feedback button.
-4. Queued: T-4382, T-4380, T-4381 (buses, her 11-27 calls); T-4383 Discord reader once she makes the bot (steps sent);
-   T-4374, T-4377 (P2 bugs from triage-2026-11-27); then T-4153 s10, T-4309, T-4314/T-4315, T-3160, T-3838.
-   Gemini is back (her 11-27, a free reset): Gemini first for reading, review, triage.
+3. 0.4.7.1 live (T-4367 hotfix, 11-26).
+4. Queued (4 agents is her week's cap, 11-25): T-4390 (Gemini code agent, everyday.rs panic; the next free slot);
+   T-4395 then T-4396 (her 11-27 "file 3 then 1", proposals not gospel; T-4395 edits demandClient.ts, so after
+   coreslider2 lands); T-4382, T-4380, T-4381 (buses); then T-4153 s10, T-4309, T-4314/T-4315, T-3160, T-3838.
+   Gemini first for reading, review, triage.
 
 ## Her words
 - 11-27 ~10:00: core slider is high leverage now (T-3932, P1); light mode wouldn't help ("drawing is already very

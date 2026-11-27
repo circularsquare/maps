@@ -14,13 +14,6 @@
     "by": "maps-3a"
   },
   {
-    "id": "a-2026-11-27-2",
-    "title": "Discord channels to read",
-    "text": "Once the read-only Discord bot is set up (steps sent 11-27, token in C:\\Users\\anita\\discord-reader-token.txt), which channels besides #bug-reports should it read? Then an agent writes the reader (T-4383).",
-    "since": "2026-11-27",
-    "by": "maps-3a"
-  },
-  {
     "id": "a-2026-11-27-3",
     "title": "Start T-4372",
     "text": "Start T-4372 (smoke plays a second game with phone settings: intercity trips off, one worker, long lines), which would have caught the 0.4.7 crash? About 1-2 hours of agent work. I'd say yes.",

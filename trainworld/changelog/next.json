@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c008",
+      "text": "fixed dragging a line onto another to group it on touch screens (press and hold, then drag)",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4377",
+      "by": "touchgroup",
+      "at": "2026-11-27T14:40:43Z",
+      "rev": 1,
+      "area": "other",
+      "fix": true
+    },
+    {
       "id": "c007",
       "text": "redrew regions in israel, mexico, egypt, taiwan, china, norway, germany, india and around boston and macau",
       "edited": null,
