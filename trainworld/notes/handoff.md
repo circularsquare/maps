@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 72757b8d-c220-47a4-ac30-041ad0a7ac39, name maps-3a [8d9b93], since 2026-11-26 14:17 UTC
-Updated: 2026-11-26 23:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-27 04:35 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
@@ -11,11 +11,9 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    Open asks: crash counts (a-2026-11-26-6); T-4372's start and the 11-25 wind-down unanswered.
 2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
    review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
-3. The redraws3 job (T-4364, T-4365): her yes to all but Poland. Three stops fixed by redraws4 (sih and zhu origins
-   off their land: plan_edit moved_origin; bos's hand steps: hand_run.py heal, extract read). DONE 03:53 UTC 11-27.
-   redrawsafter (Sonnet) reruns IL's join (its seams failed under -I), place names, checks, changelog, lists files;
-   then I commit (data json, pipeline, both kits, specs, hand_run.py, redraws3*.ps1/.cmd, docs), snap8800, smoke,
-   tasks done T-4364/T-4365, delete the ~20 GB pre backups once 8800 looks clean. Macau-Zhuhai: 0.05.
+3. Region redraws done (T-4364, T-4365 archived; 5b1fab73d): all her picks but Poland, IL rejoined for seams, place
+   names refreshed, c007. 8800 at 5b1fab73, smoke passed (12 checks). The undo backups data/work/pre-T4364* (19 GB;
+   49.9 GB free) stay until she has seen the zones on 8800; delete them 11-28 if nothing comes up.
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 
 ## Her words
@@ -41,10 +39,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 - 11-19: player complaints before new features. 11-25: player region requests are leads, not orders ("we gotta judge").
 
 ## Only a person knows
-- The redraws3 job (restarted): cmd 32076, script PID 34084, 8 cores claimed as `redraws3`; log artifacts/trainworld/redraws3-run.log
-  and notes/T-4364/kit/redraws3.state (check every couple of hours); stops at the first `FAILED:` line, which names
-  the undo. Restart, undo and the after steps (changelog item, place names, smoke, snap8800, commit pipeline/
-  world_plan.py, osm_units.py, build_city.py, docs zones.md, data-register.md): notes/T-4364.md "The job".
+- Undoing a redrawn country, if she finds one wrong: notes/T-4364.md "The job" (restore.py T4364<cc> pre).
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
   docs/interface.md, checks/old moves, checks/INDEX.md, tools/checks_index.py. Landings touching them: patch dance
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
