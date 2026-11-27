@@ -9,7 +9,8 @@
 start returns at once and the run goes on detached (one agy process, up to --timeout minutes). Its tree is
 maps/.tw-trees/<tree> (default: the name), made with agent-tree.mjs when --new-tree is given. With --task it marks
 the task on the board (tasks.py start). It claims --cores through cores.py for the run (TW_CORES and CARGO_BUILD_JOBS
-tell checks and cargo inside), released at the end, failure included. The report, the agent's own plus one footer line
+tell checks and cargo inside), reading the granted count from stdout only and releasing at the end, failure included.
+The report, the agent's final answer (the last agent_response step in agy.log, without interim lines) plus one footer line
 (files changed, refused calls, log), lands in the agent report inbox (reports.py, kind "gemini"), so the board watch
 prints "agent report ... (gemini, ...)"; a run that fails or times out reports that too. Everything agy printed is in
 artifacts/trainworld/gemini/agents/<name>-<time>/agy.log (agy's own log beside it; steps.txt lists each tool call).
@@ -178,17 +179,60 @@ def save_json(path, obj):
 
 
 def claim(name, n, say):
-    code, out = sh([str(PY), str(MAPS / "cores.py"), "claim", str(n), "gemini-" + name, "--pid", str(os.getpid()),
-                    "--timeout", "1800", "Gemini agent " + name], timeout=1900)
-    lines = [l for l in out.splitlines() if l.strip()]
-    say("cores.py claim: exit %d, %s" % (code, lines[-1] if lines else ""))
-    if code != 0 or not lines or not lines[-1].strip().isdigit():
+    r = subprocess.run([str(PY), str(MAPS / "cores.py"), "claim", str(n), "gemini-" + name, "--pid", str(os.getpid()),
+                        "--timeout", "1800", "Gemini agent " + name],
+                       cwd=str(MAPS), capture_output=True, text=True, encoding="utf-8", errors="replace",
+                       timeout=1900, **hidden())
+    out_lines = [l.strip() for l in (r.stdout or "").splitlines() if l.strip()]
+    err_lines = [l.strip() for l in (r.stderr or "").splitlines() if l.strip()]
+    say("cores.py claim: exit %d, out=%s%s" % (
+        r.returncode, out_lines[-1] if out_lines else "",
+        (", err=" + err_lines[-1]) if err_lines else ""))
+    if r.returncode != 0 or not out_lines or not out_lines[-1].isdigit():
+        if r.returncode == 0:
+            release(name)
         return 0
-    return int(lines[-1].strip())
+    return int(out_lines[-1])
 
 
 def release(name):
     sh([str(PY), str(MAPS / "cores.py"), "release", "gemini-" + name])
+
+
+def final_reply(log_path, res, marker):
+    """The last agent_response step carrying marker in agy.log, so interim tool-call lines stay out of the report."""
+    steps = []
+    by_idx = {}
+    try:
+        with open(log_path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                if line.startswith("## ") and " user message " in line:
+                    by_idx = {}
+                    continue
+                if not line.startswith("{"):
+                    continue
+                try:
+                    ev = json.loads(line)
+                except ValueError:
+                    continue
+                if ev.get("event") == "step_update":
+                    s = ev.get("step_update") or {}
+                    if s.get("step_type") == "agent_response" and s.get("text_delta"):
+                        idx = s.get("step_index")
+                        if idx not in by_idx:
+                            by_idx[idx] = len(steps)
+                            steps.append([])
+                        steps[by_idx[idx]].append(s["text_delta"])
+                elif ev.get("event") == "result":
+                    by_idx = {}
+    except OSError:
+        pass
+    for chunks in reversed(steps):
+        body = "".join(chunks)
+        i = body.rfind(marker)
+        if i >= 0:
+            return body[:i].rstrip()
+    return agy_session.reply_text(res, marker)
 
 
 def summary(sess, tree, minutes):
@@ -335,7 +379,7 @@ def run(a):
         res, nudges = agy_session.work(sess, prompt, MARK, deadline)
         say("work done: nudges %d, ended %s, conversation %s" % (nudges, sess.ended, sess.conversation))
         if res is not None and MARK in (res.get("response") or ""):
-            text, status = agy_session.reply_text(res, MARK), "done"
+            text, status = final_reply(run_dir / "agy.log", res, MARK), "done"
         elif sess.ended == "timeout":
             text, status = "Timed out after %d min. Its last words: %s" % (a.timeout, sess.partial.strip()[-1500:]), "timeout"
         else:
@@ -346,7 +390,7 @@ def run(a):
         if status == "done" and rounds.get("asked", 0) < ASK_ROUNDS:
             ans, _ = agy_session.work(sess, QUESTION.format(mark=ANS_MARK), ANS_MARK,
                                       min(deadline + 600, time.time() + 600), max_nudges=2)
-            answer = agy_session.reply_text(ans, ANS_MARK) if ans else ""
+            answer = final_reply(run_dir / "agy.log", ans, ANS_MARK) if ans else ""
             text += "\n\nPermissions\n" + (answer or "(no answer)")
             if not a.trial:
                 rounds["asked"] = rounds.get("asked", 0) + 1
