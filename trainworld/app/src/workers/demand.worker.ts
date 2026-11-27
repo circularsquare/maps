@@ -3344,7 +3344,7 @@ async function run() {
         return [all, toWhole(a.commute_loads(q), map)[0] ?? new Float32Array(3 * jobNodes), ...toWhole(a.everyday_loads(q), map)];
       };
       // (T-4220 stage 8: each local stage's touched populations as they held the figures on screen, below)
-      const befores: { fresh: Population[]; part: JobCluster["part"]; win: ReturnType<typeof windowShown.get>; snap: ReturnType<typeof snapPops>; ms: number }[] = [];
+      const befores: { fresh: Population[]; part: JobCluster["part"]; win: ReturnType<typeof windowShown.get>; snap: ReturnType<typeof snapPops>; ms: number; shown?: boolean }[] = [];
       // T-1733: every edited cluster's touched cities first, the zone in view's cluster first
       // (`early`'s order), each sent as a local cluster result; the market part read through its
       // route nodes on this network (`marketOn`) meanwhile
@@ -3356,7 +3356,8 @@ async function run() {
         // T-4220 stage 8: with several solving workers this local result may never be shown (`whole` sent as the plans came
         // in, `wholeEarly`), and the set-up below puts the touched populations on this network: what they hold of the
         // figures on screen is copied first. With one solving worker it is always shown
-        if (job.snap && mine.length < PERIODS.length) befores.push({ fresh: e.fresh, part: c.part, win: c.part ? windowShown.get(c.part) : undefined, snap: snapPops([{ ...c, pops: e.fresh }]), ms: performance.now() - t0 });
+        let before: (typeof befores)[number] | undefined;
+        if (job.snap && mine.length < PERIODS.length) befores.push(before = { fresh: e.fresh, part: c.part, win: c.part ? windowShown.get(c.part) : undefined, snap: snapPops([{ ...c, pops: e.fresh }]), ms: performance.now() - t0 });
         if (c.part && e.market) c.views.set(c.part, { ...whole!, nodeGlobal: e.market, pads: new Uint32Array(0) });
         // T-1735: the market's pairs with an end in a zone a station changed since the market's last
         // whole solve serves, solved with the touched cities on the window's stations alone; the
@@ -3409,6 +3410,7 @@ async function run() {
           // (unless `whole` came first: another worker went straight to the whole solve, so this result is never shown)
           if (wholeGo < job.version) {
             for (const p of e.fresh) shownIntact.set(p, inOf(c));
+            if (before) before.shown = true;
             if (part) { if (deltas.some(Boolean)) windowShown.set(part, { ids: lastNet!, delta: deltas }); else windowShown.delete(part); }
           }
           // i18n-ignore
@@ -3429,13 +3431,21 @@ async function run() {
       }
       // T-4220 stage 8: `whole` came as the plans came in (a worker solves nothing locally, T-1733), so no local result of
       // this solve is shown, though one here may have ended before it came: the touched populations are not the figures on
-      // screen, and what they held of those before the local stage goes to the page in their place
-      if (befores.length && !stale && wholeEarly >= job.version) for (const b of befores) {
+      // screen, and what they held of those before the local stage goes to the page in their place. The same for a
+      // cluster whose local result was never shown (stopped for a `whole` that came after the first cluster's result, or
+      // ended after it). A newer edit already waiting (`stale`): nothing is sent, but what was marked as shown is not
+      for (const b of befores) {
+        const never = wholeEarly >= job.version || (!b.shown && wholeGo >= job.version);
+        if (!never) continue;
         for (const p of b.fresh) shownIntact.delete(p);
+        if (stale) continue;
         if (b.part) { if (b.win) windowShown.set(b.part, b.win); else windowShown.delete(b.part); }
         const s = b.snap, snap: Snapshot = { pops: s.pops, periods: mine.slice(), bytes: s.bytes, ms: b.ms, again: true, ...(s.over ? { over: true } : {}) };
         if (s.pops.length || s.over) sendMessage({ kind: "shown", version: job.version, snap }, s.transfer);
       }
+      // (the copies, sent or not, are not held through the whole solve)
+      if (import.meta.env.DEV && befores.length) console.info(`T4220 v${job.version} copies of the touched populations: ${befores.reduce((t, b) => t + b.ms, 0).toFixed(0)} ms, ${(befores.reduce((t, b) => t + b.snap.bytes, 0) / 1e6).toFixed(1)} MB`); // i18n-ignore
+      befores.length = 0;
       // T-2188: a city edit's solve ends here: each edited cluster holds its local result as solved on this network
       // (`held`, so a question about it is answered), each population its periods solved locally as `LOCAL` (a
       // later local solve takes them as they are, the idle refresh's whole solve solves them again), and the market

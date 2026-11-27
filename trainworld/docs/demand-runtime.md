@@ -514,7 +514,7 @@ network.
 sends what each solving worker holds of the figures on screen (`shown`, each worker its own periods; the page keeps it
 in `ShownStore`, merged by population and period with one copy of each view, until a final). With several solving
 workers a local stage first copies its touched populations, and sends that copy in their place when `whole` came as the
-plans did (one worker solves nothing locally, so no local result shows). An edit made during it, held behind it (`firm`,
+plans did, or came before that cluster's local result was shown (one worker solves nothing locally, so no local result shows); the copies are dropped once that is decided, and a snapshot of one worker's every period is not merged for sharing. An edit made during it, held behind it (`firm`,
 not one taken to go at its local result) or its own network when it shows no local result (after a T-3925 cut, an edit
 solved whole at once, or a worker with no local stage sending all to the whole solve), is solved in a pool of its own
 (`apool`, one worker however many solve in the main pool, up to `ASIDE_MAX_ZONES` 5 zones): its touched zones, every

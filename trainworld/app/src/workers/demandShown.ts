@@ -277,7 +277,8 @@ export class ShownStore {
     // (what is on screen is then not all known: a side job would stand on a hole)
     if (snap.over) return this.lose(version);
     if (this.lostFrom !== null && version >= this.lostFrom) return "ignored";
-    sent.shared = this.share(snap);
+    // (one worker solving every period has one view per population already: nothing to share)
+    sent.shared = snap.periods.length < PERIODS.length ? this.share(snap) : 0;
     let changed = false;
     for (const p of snap.pops) {
       const key = `${p.kind}:${p.key}`, had = this.pops.get(key);
