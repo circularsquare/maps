@@ -194,10 +194,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
   - Other: notes/T-4196.md
-- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save (taking, 2026-11-27, agent editdesign)
-  - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
-  - Goal: A checked design with stages, to you before anything is built.
-  - Other: a repeat (notes/repeats.md); notes/T-4267.md
 - T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-27, agent clickwait)
   - Context: Stage 3 landed 11-25: the panels' `today` with the clock running costs 3-6 ms on your Asia save (was about 107). Click run on Asia: first 46 ms, later 37, 170, 272. Left: which follow-up piece later clicks wait behind (no per-click laps yet); the page's click hold stays (unsafe to drop).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
@@ -414,7 +410,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4238 [P3] {L:timetables} Bus weekend rows run more often than weekdays on the same fleet
   - Context: Seen by the batch checker (11-24): a midtown bus line with 25 buses showed a 1 min headway on its weekend rows and 1.5 min on weekdays. May be right (shorter weekend trips) or a slip near T-4227's weekend share-out; not read yet.
   - Goal: The code says why, and it's fixed if it's a slip.
-- T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times
+- T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times (taking, 2026-11-27, agent nudge)
   - Context: You, 11-21: per-row Offset design approved, "will start later". A player, 11-18: "offset departure times ... (like for example +4 minutes or -5 minutes)". Japanese players keep asking to set the ダイヤ (daiya, Japanese rail's word for the timetable; 11-24). Design done (agent nudgedesign); strings drafted in the note.
   - Goal: Rail lines' rows take an offset from the game's timing that holds through later edits, shown at once on the board, chart and map.
   - Other: notes/T-3742.md
@@ -996,7 +992,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: T-921 deals commute pairs under 1 person a day in chunks (about 7% of New York's calculation); 2 a day gained nothing more. Everyday trips are solved from sampled destinations, so they may lack the same tail of tiny pairs. You, 11-24: file as P3.
   - Goal: Know whether everyday trips have a tail of tiny pairs; if so, chunk them the same tunable way.
   - Other: notes/T-921.md
-- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve
+- T-4220 [P2] {L:solve-speed} Quick figures for edits made during a whole re-solve (taking, 2026-11-27, agent solve9)
   - Context: Design approved 11-24: 9 stages. Stages 1-8 done 11-25: an edit during a whole re-solve gets a quick side calculation for its cities, shown until the whole result replaces it (NYC: an edited line's figures in 17 s instead of 53; with "Use more cores" on, 11 s instead of 27). Left: stage 9, measuring on your Asia save.
   - Goal: Those edits show their lines in about the touched-cities time; edits arriving together share one quick calculation.
   - Other: stage 9 also takes review24's findings on stage 8 (the copy's cost with several workers, the restore's narrow condition): artifacts/trainworld/gemini/batch23/review-T-4220-s8.md; notes/T-4220.md ("For Anita" first)
@@ -1019,7 +1015,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Other: research/late-game-spending.md C.
 - T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows
   - Context: Your pad, 11-25: most players won't care about every mode as niche ones come (cable cars, monorail, maglev, maybe planes). Your design: a gear on the construct panel to hide or show modes; by default it shows today's (bus and ferry), with checkboxes for cable cars and monorail.
-  - Goal: That gear and its setting, kept per player; needed before the next mode ships.
+  - Goal: That gear and its setting, kept per player; a mode switched off and never built shows up nowhere, build menus included (you, 11-27). Needed before the next mode ships.
 - T-4335 [P3] {L:other-modes} Monorail as a mode
   - Context: Your pad, 11-25: a train that can't connect to train track, only at or above grade, a bit dearer at grade and a bit cheaper elevated, steeper slopes allowed, top speed about 80-100 km/h, maybe tighter curve limits. Players ask for it. Not to start yet.
   - Goal: A design to you first (rail facts decided and recorded), then the mode behind T-4334's gear.
