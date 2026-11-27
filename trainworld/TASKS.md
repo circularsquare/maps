@@ -515,6 +515,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4400 [P2] {L:map-look} {after:T-3932} Show modes buttons in Settings
+  - Context: You, 11-27: players asked for a way to hide all trains; "replace the 'buses and ferries' visibility toggle in settings with separate buttons for train track, tram track, hsr track, buses, ferries (we can use the icon buttons) and it kinda parallels the show levels." Waits for coreslider2 (same Settings file).
+  - Goal: A Show modes row of five icon toggles beside Show levels; hidden modes and hidden levels gone from the map, unless a level's fade can be made even.
 - T-4373 [P3] {L:small-fixes} Line panel shows another city's line and won't close
   - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line, then no click closed it. Reach: few, a city filter with a panel open.
   - Goal: Changing the city filter or picking another line always shows that line's stops, and the panel closes.

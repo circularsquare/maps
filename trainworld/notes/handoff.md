@@ -17,7 +17,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    Backups data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 3. 0.4.7.1 live (T-4367 hotfix, 11-26).
 4. Queued: T-4395 then T-4396 (her 11-27 "file 3 then 1", proposals not gospel; T-4395 edits demandClient.ts, so after
-   coreslider2 lands); then T-4314 once netcut10's measuring is done (both bench edit speed); then T-4309, T-4315, T-3160, T-3838. Gemini first for reading, review, triage.
+   coreslider2 lands), and T-4400 (Show modes buttons, Opus, same Settings file; hidden modes and levels removed entirely, DECISIONS); then T-4314 once netcut10's measuring is done (both bench edit speed); then T-4309, T-4315, T-3160, T-3838. Gemini first for reading, review, triage.
 
 ## Her words
 - 11-27 ~09:45: agents 2-8, Gemini agents counted; Gemini 5x plan, Neon as Opus, Hydrogen as Sonnet (DECISIONS). Load

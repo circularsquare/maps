@@ -184,6 +184,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-27 (Anita, T-4400): A hidden mode (Settings, Show modes) is removed from the map entirely. A hidden level is removed too, unless its fade can be made even: today's fade shows a line's bends doubled where it overlaps itself.
 - 2026-11-25 (T-4311): An undo or redo during a track run that is not its own Backspace (Ctrl+Z, the blueprint panel's) ends the run at its send, as the run ended before stage D; it is not treated as Backspace. notes/T-4311.md
 - 2026-11-25 (T-4214): A track run's next segment is sent at its click from the previous one's end as the worker will have it, never after that one's answer; a refused segment refuses those clicked on from it, and the run draws on from its start. notes/T-4214.md
 - 2026-11-25 (T-4214): Track hidden at a click that the drawn network holds only inside a longer edge (a just-split far half) hides that whole edge and redraws what stays from the tools' map. Lie: lines on it vanish until the network. notes/T-4214.md
@@ -256,6 +257,8 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-27 (T-3932): The Cores slider goes to half the browser's threads, at most 5. A pick drops stage A's share but keeps the 8 GB limit, applies at the next load and clears the out of memory cap; old "Use more cores" on became its count. notes/T-3932.md
+- 2026-11-27 (T-3932): The Cores slider shows the Memory row's reading at the count shown, and scales this game's last load and edit by f + (1 - f) x the busiest worker's share (f 0.4 loads, 0.17 edits). Lie: the edit f predates local edit results (T-2188). notes/T-3932.md
 - 2026-11-25 (T-4281): The panels' past 24 hours keep each line's window, moved along as the clock runs; summing riders per stop and timing trains by their leave time moved figures only by rounding (2e-13 at most on her Asia save). notes/T-4281.md
 - 2026-11-25 (T-4359): A city reached during play stops loading once its packs are open if the map already has figures for it; the calculation after shows as calculating trips. A bar's wait ends at a final covering every edit, and a re-solve after it starts from empty. notes/T-4359.md
 - 2026-11-25 (Anita, T-4347): The load card shows a time left from its start, on the solve model scaled by this browser's pace, until the workers' units give one; the bar stays under half meanwhile. Replaces T-4209's blank until known; the cost is a figure that can rise once. notes/T-4347.md
@@ -288,7 +291,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-23 (, T-4072): A game load waits at most 20 s for its zones' water masks, never twice; until a late mask lands its track is priced as on land (the lie, seconds on a slow connection). A Mac Safari load had sat over 10 minutes. notes/T-4071.md
 - 2026-11-23 (, T-4103): On a phone or tablet the one solving worker has no aux worker and opens bare zones between its populations, 35-100 MB lower settled on the Tokyo saves. The lie: a bare zone's figures and bubbles wait behind a population, seconds on a big game. notes/T-4103.md
 - 2026-11-21 (, T-4014): A save from a newer build never opens, replacing T-1826's read-only mode, since Make a copy there wrote a game holding only what the old build read. The server refuses uploads from a lower-level build than the current copy's. notes/T-4014.md
-- 2026-11-19 (Anita, T-3757): The demand pool keeps a game under 8 GB (Anita's target), solving workers sharing 17.5% (reversing T-3072); Use more cores drops the share but counts the page outside workers (about 5 GB at 7,000 stations). Extra idle restarts were dropped. notes/T-3757.md
+- 2026-11-19 (Anita, T-3757): The demand pool keeps a game under 8 GB (Anita's target), solving workers sharing 17.5% (reversing T-3072); a count picked on the Cores slider drops the share but counts the page outside workers (about 5 GB at 7,000 stations). Extra idle restarts were dropped. notes/T-3757.md
 - 2026-11-19 (Anita, T-3773, T-743): No slot is written over by another game (Anita): New game, Load a file and restores get a new slot. A failed open goes to the start menu, holding none ("if we fail, we should end up on the menu"). notes/T-3773.md
 - 2026-11-19 (Anita, T-3789): The server keeps a deleted game 7 days, restorable by an admin under a new id (Anita, 11-19), replacing 10-29's "deleted for good". A game kept only in one browser warns after an hour of play (T-1823). notes/T-3789.md
 - 2026-11-17 (Anita, T-1862, T-1650): An edit re-solves only the populations it touches (run times within 1%, trains an hour within 5%), all else frozen, not cut by region (Anita); a line starting or stopping trains reopens the market. Others lag until the whole solve. notes/T-1650.md
