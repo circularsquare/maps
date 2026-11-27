@@ -1105,6 +1105,15 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your TODO.md, 11-20, from player suggestions: "station logo?? paint it?" Design for you first.
 
 ## Track and trains
+- T-4379 [P2] {L:track-drawing} Flyover refusal says what's missing (taking, 2026-11-27, agent flyovertext)
+  - Context: A player (tw-feedback 1795755139-1f66826d, 11-27) read the refusal as "the heights differ by 1 but it still refused"; the rule works as built (160 m of slope per level). You, 11-27: "yes sure" to rewording it.
+  - Goal: The refusal names the missing slope length, in every language; old and new text listed for you.
+- T-4380 [P3] {L:buses} A bus line's first stop can be removed
+  - Context: You, 11-27: "let bus first stop be removable (but default still there)". Today a new bus line's starting point is always a stop (archive T-2937: a line's two ends are end stops); a player asked (tw-feedback 1795726122-552c98fc).
+  - Goal: A player can remove a bus line's first stop like any other; new lines still start with one.
+- T-4381 [P3] {L:buses} No cap on buses per hour in a bus lane
+  - Context: You, 11-27: drop the 100 buses an hour lane cap, players asked; "its kind of counterintuitive given that you can run infinite buses on a normal road". Not high priority.
+  - Goal: Bus lanes take any number of buses an hour, and the line panel shows no cap row for them.
 - T-4374 [P2] {L:stops} Closing a loop refused with "at least two different stations"
   - Context: A player on 0.4.7 (tw-feedback 1795784564-e03329a7, 11-27), 42 lines, couldn't loop a line that had many stops. The message is validate.rs's catch-all LineStops (adjacent equal stops, first or last stop off the path), so the real cause is unknown. Reach: unknown, loops are common.
   - Goal: Closing a loop on a line with several stations works, or the refusal names its real cause; shown on a small case.
@@ -1142,8 +1151,8 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Stage 6 paused 11-22 for the week's usage, built in tree split6 (not landed): every edit step equal to the bit except all-China's line removal and undo; New York 1.7-3.4x slower until stage 8 (notes/T-3373-B-plan.md). You, 2026-11-16: A (fewer workers; landed), then B (split zones between workers, 25-40 h); C (shared memory, 60-100 h) only if it would help noticeably.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
-- T-3932 [P2] {L:memory} {after:next week's usage} A cores slider with its memory and speed
-  - Context: Paused 11-22 for the week's usage, half built in tree coreslider (not landed; estimate model fitted, UI and checks left; notes/T-3932.md). You, 11-21: "rework 'use more cores' to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss."
+- T-3932 [P1] {L:memory} A cores slider with its memory and speed (taking, 2026-11-27, agent coreslider2)
+  - Context: Half built 11-22 (estimate model fitted, UI and checks left; patches in notes/archive/trees/coreslider-*). You, 11-27: high leverage now, noting it takes effect after a reload. You, 11-21: "rework 'use more cores' to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss."
   - Goal: Settings has a slider for the number of solving workers, with estimated memory and load and edit time below it; the player's pick overrides stage A's memory cap.
 - T-4042 [P3] {L:solve-consistency} Drop the compose-afresh on a replaced worker
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.

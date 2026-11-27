@@ -163,6 +163,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-17 (Anita, T-028, T-631): Removing constructed track refunds nothing (was half) and cars a line stops needing stay in the depot unsold, since a partial refund would reward buying and selling; so the free undo of a removal (T-1649) cannot make money.
 
 ## Buses
+- 2026-11-27 (Anita): "Buses are settled" is dropped as a rule ("its not really helpful"); bus changes go through the usual calls. A bus line's first stop becomes removable (on by default), and the 100 buses an hour lane cap goes, with its row.
 - 2026-11-25 (T-4257): The bus route tool takes the quickest road by the sim's bus speeds at its no-street-grid reference (streets 37.4 km/h, trunk and motorway 52.4, busways 60). Lie: in a dense centre a busway is 2.4x a street, the tool counts 1.6x. notes/T-4257.md
 
 - 2026-11-25 (Anita, T-4257): Bus routes take the quickest road by the sim's own bus speeds, not the shortest ("shouldnt we still make it take the fastest route rather than the shortest?"), replacing length plus turns.

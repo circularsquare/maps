@@ -8,7 +8,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 1. 0.4.7.1 live 11-26 17:07 UTC (her yes): 0.4.7 (058b348af) plus T-4367's fix, app only, data R2 2026-11-25,
    build mwxs0pfz, website fc62297, verify --page all PASS; branch tw/hotfix471 (a71808780) on origin, open-source
    synced; master has its entry (6692949a3). Filed T-4372 (smoke with phone settings, her "should have caught").
-   Open asks: crash counts (a-2026-11-26-6); T-4372's start and the 11-25 wind-down unanswered.
+   11-27 running: coreslider2 (Opus, T-3932, tree coreslider2, 6148), flyovertext (Sonnet, T-4379, 6149). Asked her:
+   load-time investigation, the BRT linked-stations call, Discord read access, crash counts (a-2026-11-26-6), T-4372.
 2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
    review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
 3. Region redraws done (T-4364, T-4365 archived; 5b1fab73d): all her picks but Poland, IL rejoined for seams, place
@@ -17,6 +18,9 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 
 ## Her words
+- 11-27 ~10:00: core slider is high leverage now (T-3932, P1); light mode wouldn't help ("drawing is already very
+  minimal"); T-4370/T-3160 stay high P2 unless an easy clear path; "buses are settled" dropped (DECISIONS); loads felt
+  instant sometimes, 10 min others, 30 min for players: is that expected?
 - 11-26 ~09:10: Skierniewice: "ok i guess we can leave out poland. everything else fine to do." Asked whether Macau
   is part of Zhuhai ("shouldnt it be separate so that there can be a border factor?"): answered as item 3.
 - 11-25 ~17:20: usage at 88%: finish the running tasks and wind down; no new agents. Batch review waits for later.

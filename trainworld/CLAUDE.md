@@ -207,7 +207,6 @@ new standing process.
   test with it off, and with both after a big change to loading or the workers (her 11-25). Her own Asia save
   (`artifacts/trainworld/perfbench/saves/asianita-day568.save`) is a stress test only. `edit_bench`: notes/T-4139.md.
 - **Simple prices**: fares and costs the player reasons about follow a simple rule (a base plus per km).
-- **Buses are settled**; no more bus tuning unless she asks.
 - **Saves are hers**: keeping old ones loading is a nicety, no real migration effort.
 - **UI principles** live in `docs/ui-panels.md` "Look" and "Hover tags".
 
