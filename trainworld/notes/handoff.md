@@ -10,16 +10,16 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    on tree loopfix: ferry port finding in loopfix-review.md, then land T-4374 from tree loopfix, texts acknowledged);
    oomretry (Gemini Neon, T-4396); showblock (Gemini Hydrogen, T-4406, her one Show block: look at
    artifacts/trainworld/review/showblock.png before landing); hidepick (Gemini Neon, T-4407) and reachfill (Gemini
-   Neon, T-4314), both restarted 15:46 after failed core claims (briefs in maps-e0's scratchpad; --tree hidepick or
-   reachfill to restart). gemini_agent's claim returns at once at the cap ("waiting ... exit 0"): worth a small fix.
+   Neon, T-4314), NOT running: their claims failed again 15:47 (briefs in maps-e0's scratchpad; restart with
+   --tree hidepick / reachfill when 2 cores are free each). gemini_agent's claim returns at once at the cap ("waiting ... exit 0"): worth a small fix.
 2. After busstops and loopfix land: rebuild 8800 (Show modes, load card, T-4153 s10 wait for it), smoke, then a Gemini
    batch review of 02a97d401 + those landings. Then T-4408 (after oomretry: batch-1127c findings 3 and 6). perf_bench
    NYC and a quiet edit_bench on Asia (T-4153's ~92-96 ms by parts) are owed when the machine is quiet. Publish waits
    for her word and for T-4407/T-4408.
-3. Then T-4153 stage 11 (train speeds, after reachfill), T-4309, T-4315, T-3160, T-4370, T-3838. New tasks go to Gemini
+3. Her board 11-27: start T-4372 (smoke with phone settings; Claude, since Gemini can't run smoke) and T-4409 (crash
+   counts; game and server, the deploy waits for her yes). Then T-4153 stage 11 (train speeds, after reachfill), T-4309, T-4315, T-3160, T-4370, T-3838. New tasks go to Gemini
    agents (her 11-27), --game for a game run; Claude only for what Gemini can't. Corescheck: slider fixes PASS.
-4. She is checking the redrawn zones on 8800; undo: notes/T-4364.md "The job". Backups data/work/pre-T4364* (19 GB) go
-   11-28 if she finds nothing; disk ~37 GB free.
+4. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
 - 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."

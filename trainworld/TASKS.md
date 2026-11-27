@@ -1271,6 +1271,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You, 11-20: pack rather than drop, "we dont really have to do anything there til we get cloesr to the limit". Measured 11-20: 5.05 GB is 55% backups, 35% current saves, 9.5% pictures; the 16 GB cap fills Dec 5-10 at today's growth. A backup stored as a difference is 6-16% of its size; packing frees about 1.26 GB now.
   - Goal: Packing deployed, with the games cap raised to about 24 GB (safe on the disk), before the store reaches 12 GB.
   - Other: notes/T-3821.md, notes/T-3243.md "Games"
+- T-4409 [P2] {L:accounts-server} Count crashes automatically
+  - Context: Bugs like T-4367 would show within hours of a publish if the game sent the server a count of "Demand stopped" and similar failures (version, the error's first line, phone or computer; nothing about the player), shown on twstats. You, 11-27: "yes we can do that". A server deploy, so its own yes.
+  - Goal: The server counts failures by version and first line, and twstats shows them; the deploy waits for your word.
 - T-3395 [P1] {L:accounts-server} {after:the 11-20 and 11-21 scan reports} Close once the save scan runs clean
   - Context: You, 11-15: damaged saves caught on upload and in a daily scan, their bytes kept, the last intact version pinned with a way to restore it. All three stages are live (server 11-18, game v0.4.0). The 11-19 pass found two damaged games on one account, each a first save never saved again. Still damaged on 11-20 means old damage: close.
   - Goal: The scan has run a day clean.
