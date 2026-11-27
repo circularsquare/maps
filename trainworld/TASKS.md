@@ -254,13 +254,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
-- T-4421 [P2] {L:checks} A brief generator for the orchestrator (taking, 2026-11-27, agent briefgen)
-  - Context: You, 11-27: briefs were hand-written at 3-5k characters, pasting task blocks and restating CLAUDE.md, which docs/orchestrator.md "Briefs" already says not to do.
-  - Goal: brief.py <task id> with the budget row, decisions, files to avoid and ids writes the usual brief of about 15 lines to a file.
-- T-4428 [P2] {L:checks} A guard that keeps the orchestrator from doing agents' work (taking, 2026-11-27, agent guard)
-  - Context: You, 11-27: "almost every claude orchestrator has been doing work themselves"; agreed: a hard block on orchestrator edits to code, a soft reminder after heavy reading.
-  - Goal: An orchestrator session can't edit app/, sim/, pipeline/ or checks/ code, and is reminded past a reading limit; bookkeeping and landings unaffected.
-- T-4427 [P3] {L:cleanup} No other games named in research and notes
+- T-4427 [P3] {L:cleanup} No other games named in research and notes (taking, 2026-11-27, agent gamenames)
   - Context: You, 11-27: "lets just ideally remove all references to other games". Current docs, SPEC, DECISIONS and code comments are done (11-27); research/, notes/ (archive too) and ARCHIVE-to-2026-10-19.md still hold 623 mentions in about 70 .md files.
   - Goal: git grep finds no game name there; three game-named research files renamed, every link updated.
   - Other: notes/T-4427.md

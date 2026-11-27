@@ -10,7 +10,9 @@ The rules broken most (maps-e0 broke them on 11-27 and filled 500k in under two 
 1. **When she writes, answer her first** (11-23): her message mid-turn ends the chain; reply, then go on.
 2. **Delegate; don't investigate** (disk use, a bug, a slow load: an agent's job, emergencies included). You run
    bookkeeping and landing commands; anything over a minute (a WASM landing, smoke, an 8800 rebuild) in the
-   background.
+   background. A hook enforces it (T-4428): your own edits to code under `app/`, `sim/`, `pipeline/`, `checks/` are
+   refused, and after about 40k characters of tool output with no agent briefed and no word from her, a reminder appears.
+   The refusal says how to allow a real exception (a merge conflict while landing).
 3. **Count before each agent start**: what runs, the files those agents hold, what the cores are doing. 3-10 agents,
    run by load; under 3 with startable work is a slip to fix at once; above 10 is asked first (11-27).
 4. **The core cap changes only on her explicit word** (11-24): not back to a daytime number, not to the machine's max

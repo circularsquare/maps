@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4428 [P2] {L:checks} A guard that keeps the orchestrator from doing agents' work (2026-11-27): Hook refuses an orchestrator's edits to app/sim/pipeline/checks code and reminds it past 40k characters of tool output; fails open; notes/T-4428.md.
+- T-4421 [P2] {L:checks} A brief generator for the orchestrator (2026-11-27): trainworld/tools/brief.py writes the usual brief of about 10 lines from the budget table, TASKS.md, the board and TODO.md; one line added to orchestrator.md Briefs. notes/T-4421.md.
 - T-4408 [P2] {L:loading} Edits made during the first load kept when it fails (2026-11-27): load-fail exits save first, with fallbacks; finding 6 fixed; saves review PASS. notes/T-4408.md.
 - T-4422 [P2] {L:cleanup} Trim docs/orchestrator.md (2026-11-27): orchestrator.md 23.8k to 16.3k characters, ten-rule card at the top, history to rule-history.md.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change (2026-11-27): query() answers not ready when the cluster has no view on the current population; tripView retries 3 times. notes/T-4063.md.
