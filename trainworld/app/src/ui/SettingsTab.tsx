@@ -13,7 +13,7 @@ import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
 import { canReloadIntoGame, clockRunning, makeSandbox, reloadIntoGame, saveGuide, saveSlotsState } from "../workers/clockClient";
-import { coresAuto, coresCapped, coresChanged, coresEstimate, coresMax, coresPicked, forgetPoolCap } from "../workers/demandClient";
+import { coresAuto, coresCapped, coresChanged, coresEstimate, coresMax, coresPicked, forgetPoolCap, forgetPoolCapAtLeave } from "../workers/demandClient";
 import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, LevelToggles, ModeToggles, Segmented, ShapePicker, Stepper } from "./widgets";
 import { hiddenLevels, hiddenModes, hideBlueprints, hideBlueprintsView, showAllShown, toggleLevel, toggleMode } from "../game/lineVisibility";
@@ -419,7 +419,7 @@ export function CoresRow() {
   if (max < 2) return null;
   const picked = coresPicked(display.value.cores), auto = picked === null;
   const n = picked ?? coresAuto();
-  const pick = (v: number | null) => { setDisplay("cores", v); if (!clockRunning()) forgetPoolCap(); };
+  const pick = (v: number | null) => { setDisplay("cores", v); if (clockRunning()) forgetPoolCapAtLeave(); else forgetPoolCap(); };
   const est = coresEstimate(n), capped = coresCapped(), changed = coresChanged();
   const gb = est ? est.bytes / 2 ** 30 : null, budget = budgetGB();
   const bad = gb !== null && budgetKind() !== "unknown" && gb > 0.85 * budget;

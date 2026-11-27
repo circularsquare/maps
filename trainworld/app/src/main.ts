@@ -135,7 +135,7 @@ import { choiceFromUrl, showStartMenu, START_LOGO, worldCover } from "./ui/Start
 import { viewStart } from "./ui/locate";
 import { enterGame, fitAhead, startOpenFit } from "./ui/locate";
 import { realmsAhead } from "./game/realms";
-import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onSaveRoom, onStationsAhead, retryGround, saveSlotsState } from "./workers/clockClient";
+import { ClockClient, clockWorkerStatus, manageSaveSlot, onNetAhead, onNetworkSnapshot, onSaveRoom, onStationsAhead, retryGround, saveSlotsState, saveThen } from "./workers/clockClient";
 import { demandStuckSince, netAhead, retryPackDownloads, saveRoom, startDemand, stationsAhead, submitNetwork } from "./workers/demandClient";
 import { startDemandViews, viewStats } from "./map/demandViews";
 import { startTripView } from "./map/tripView";
@@ -230,7 +230,8 @@ map.getContainer().appendChild(demandStoppedRoot);
 // the notices below can fire before the clock client exists (the graphics lost while the game loads): nothing to save then
 let earlyClient: ClockClient | null = null;
 const saveGame = () => earlyClient ? earlyClient.saveBeforeReload() : Promise.resolve();
-retryLoadsInPage(saveGame); // T-3933: a load the page sees run out of memory opens again with fewer workers
+// T-4408: through the slot switch's own save, which waits for the write and says if it failed
+retryLoadsInPage(() => new Promise<void>((done, fail) => (earlyClient ? saveThen(done, fail) : done()))); // T-3933: a load the page sees run out of memory opens again with fewer workers
 render(h(DemandStopped, { save: saveGame }), demandStoppedRoot);
 // T-3582: the browser refused the page graphics mid-game: the game is saved before the player restarts the browser
 onGraphicsGone(() => { void saveGame(); });

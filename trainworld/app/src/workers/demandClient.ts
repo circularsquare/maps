@@ -328,12 +328,21 @@ function rememberedPoolCap(): number {
 }
 /** (T-3933: also a load that took the tab down with it, game/oomRetry.ts) */
 export function rememberPoolCap(n: number) {
+  forgetCapAtLeave = false;
   try { sessionStorage.setItem(POOL_CAP_KEY, String(Math.min(n, rememberedPoolCap()))); } catch { /* storage blocked */ }
 }
 /** T-3932: the player moved the Cores slider: the next load runs their pick, and a load that runs out of memory on it
  * is opened again with fewer as before (T-3933) */
 export function forgetPoolCap() {
+  forgetCapAtLeave = false;
   try { sessionStorage.removeItem(POOL_CAP_KEY); } catch { /* storage blocked */ }
+}
+/** The slider moved while a game runs, whose pool still reads the cap: forget it when the page goes (a refresh or
+ * another slot), unless a load that ran out of memory has set a cap since. */
+let forgetCapAtLeave = false;
+export function forgetPoolCapAtLeave() {
+  if (!forgetCapAtLeave) addEventListener("pagehide", () => { if (forgetCapAtLeave) forgetPoolCap(); });
+  forgetCapAtLeave = true;
 }
 
 /** The service demand reads, with the UI's ids. */
@@ -1209,6 +1218,10 @@ class DemandClient {
     // T-2045: a zone newly in view during a game load is solved first, in the focus pool
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.focusSoon(); });
     const n = (this.computeN = this.poolN = poolSize(this.picked));
+    // the memory floor is recorded by an estimate, which only runs once Settings is open: also when the page goes
+    const noteMem = () => { if (this.computeN > 0) this.coresEstimate(this.computeN); };
+    document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && noteMem());
+    addEventListener("pagehide", noteMem);
     solveWaves = Math.ceil(PERIODS.length / n);
     // i18n-ignore: a stored name or a developer diagnostic
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);

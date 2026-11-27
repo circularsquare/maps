@@ -920,7 +920,7 @@ export function canReloadIntoGame(): boolean {
 /** T-2867, T-3932: save and reload back into the same game through `leave()` (waits for the real write, refuses with
  * the save-failure notice if blocked or failed, and reloads with this game's own `?slot=` rather than `?continue=1`).
  * `before` runs only once the save has succeeded, right before navigating. */
-export function reloadIntoGame(before?: () => void) {
+export function reloadIntoGame(before?: () => void, tolerant = false) {
   const st = saveSlotsState.peek();
   const q = new URLSearchParams(location.search);
   const test = q.get("new") === "1" || q.get("synth") === "1" || q.get("demandTest") === "1";
@@ -932,7 +932,24 @@ export function reloadIntoGame(before?: () => void) {
     if (to === location.href) location.reload();
     else location.replace(to);
   };
-  if (current?.running) current.leave(undefined, go);
+  if (tolerant) saveOrGo(go);
+  else if (current?.running) current.leave(undefined, go);
+  else go();
+}
+/** T-4408: the failure screen's buttons must never do worse than a plain reload: the game is saved through `leave()`
+ * only if the worker can hear it, and `go` runs at once if the save fails (its notice is up) or after 10 s of no answer. */
+const SAVE_WAIT_MS = 10_000;
+function saveOrGo(go: () => void) {
+  if (!current?.canLeave) return go();
+  let gone = false;
+  const once = () => { if (!gone) { gone = true; go(); } };
+  current.leave(undefined, once, undefined, once);
+  setTimeout(once, SAVE_WAIT_MS);
+}
+/** T-4408: `go` runs once the game in hand is saved through `leave()`; `failed` runs instead if it could not be (the
+ * notice is up). With no game running yet, `go` runs at once. */
+export function saveThen(go: () => void, failed?: () => void) {
+  if (current?.running) current.leave(undefined, go, undefined, failed);
   else go();
 }
 /** The page reloads to the start menu; a page already at that address (it came without a game switch) is reloaded, since replacing it with itself would not be (T-1852). */
@@ -943,9 +960,9 @@ function toStartMenu() {
 }
 /** T-988: the page goes to the start menu, the game in hand saved and let go first; `then` runs just
  * before the reload, and only if the game could be saved. */
-export function leaveToMenu(then: () => void) {
+export function leaveToMenu(then: () => void, tolerant = false) {
   const go = () => { then(); toStartMenu(); };
-  if (current) void leaveViewed().then((ok) => { if (ok) current?.leave(undefined, go); });
+  if (current) void leaveViewed().then((ok) => { if (!ok) return; if (tolerant) saveOrGo(go); else current?.leave(undefined, go); });
   else go();
 }
 /** T-1197: whether the save fits in this device's memory; if not the player is told why. `then` runs if it does. */
@@ -1482,8 +1499,16 @@ export class ClockClient {
   get fitPending() { return this.fitNext; }
   /** T-1196: what to do once the worker has saved and let go of the game in hand */
   private onLeft: (() => void) | null = null;
-  leave(pending: PendingLoad | undefined, then: () => void, instead?: ToClock) {
-    if (this.onLeft) return;
+  private onLeftFailed: (() => void) | null = null;
+  leave(pending: PendingLoad | undefined, then: () => void, instead?: ToClock, failed?: () => void) {
+    if (this.onLeft) {
+      // a leave is on its way: this one's end follows it (a slot switch's own then may already navigate)
+      const first = this.onLeft, firstFailed = this.onLeftFailed;
+      this.onLeft = () => { first(); then(); };
+      this.onLeftFailed = () => { firstFailed?.(); failed?.(); };
+      return;
+    }
+    this.onLeftFailed = failed ?? null;
     // a worker that never started has no game to keep
     if (!this.worker) return then();
     this.onLeft = then;
@@ -1493,6 +1518,8 @@ export class ClockClient {
   }
 
   get running() { return !!this.worker; }
+  /** the worker's script is in, so a leave posted now is heard (T-4408) */
+  get canLeave() { return !!this.worker && this.booted; }
 
   private posts = 0;
   private readsOut = new Map<string, { posts: number; p: Promise<Float64Array> }>();
@@ -1996,9 +2023,9 @@ export class ClockClient {
         toStartMenu();
         break;
       case "left": {
-        const then = this.onLeft;
+        const then = this.onLeft, failed = this.onLeftFailed;
         this.onLeft = null;
-        if (msg.error) say(workerText(msg.error), true);
+        if (msg.error) { say(workerText(msg.error), true); failed?.(); }
         else { askBeforeLeaving(false); then?.(); }
         break;
       }

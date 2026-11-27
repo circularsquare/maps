@@ -60,7 +60,8 @@ export function retryDiedLoad(): GameChoice | null {
 }
 
 /** The page's own sight of a load running out of memory (`loadFailed`): save the game, then reload into the retry
- * (the slot is known once the save lands), else the failure screen after all. `save`: main.ts's save before a reload. */
+ * (the slot is known once the save lands), else the failure screen after all, also when the save fails.
+ * `save`: main.ts's save before a reload, which rejects if the game could not be saved. */
 export function retryLoadsInPage(save: () => Promise<void>) {
   let reloading = false;
   handleLoadFail((why, memory) => {
@@ -69,13 +70,12 @@ export function retryLoadsInPage(save: () => Promise<void>) {
     if (!d || !retryPlan(d)) return false;
     reloading = true;
     keepLoadForRetry(true);
-    void save().catch(() => {}).then(() => {
+    const giveUp = () => { reloading = false; keepLoadForRetry(false); loadFailed(why, true); };
+    void save().then(() => {
       if (loadInHand()?.slot) return reloadForRetry();
       no("its game was not in a slot yet");
-      reloading = false;
-      keepLoadForRetry(false);
-      loadFailed(why, true);
-    });
+      giveUp();
+    }, () => { no("its game could not be saved"); giveUp(); });
     return true;
   });
 }

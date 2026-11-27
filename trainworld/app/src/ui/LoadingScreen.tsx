@@ -15,6 +15,7 @@ import { contextsLost, freshContextWorks } from "../map/graphicsInfo";
 import { GL_LOST } from "../map/gl";
 import { leftText, STAGE_TEXT } from "../game/loadBar";
 import { isMemoryFailure, loadFailText } from "../game/loadText";
+import { leaveToMenu, reloadIntoGame } from "../workers/clockClient";
 import { marketOff } from "../game/ui";
 import { playWithoutIntercity } from "./DemandStopped";
 import { FeedbackOpen, feedbackOpen, startFeedbackUi } from "./FeedbackPanel";
@@ -47,10 +48,10 @@ function LoadingScreen() {
       {/* the reason as the failure gave it (also in the console), so a rare one can be told apart */}
       {why && why !== text && <p class="small muted load-why">{why}</p>}
       <div class="loading-actions">
-        <button class="btn" onClick={() => location.reload()}>{t("loadingScreen.tryAgain")}</button>
+        <button class="btn" onClick={() => reloadIntoGame(undefined, true)}>{t("loadingScreen.tryAgain")}</button>
         {/* T-3630: where a failed load leaves the player; the report carries the failure's text */}
         <FeedbackOpen class="btn" />
-        {named && <button class="btn" onClick={() => location.assign(location.pathname)}>{t("loadingScreen.backToStart")}</button>}
+        {named && <button class="btn" onClick={() => leaveToMenu(() => {}, true)}>{t("loadingScreen.backToStart")}</button>}
         {/* T-2867: out of memory, the way on keeps demand and drops intercity trips, while there are any to drop */}
         {!game && (isMemoryFailure(why) && !marketOff()
           ? <button class="btn" onClick={() => playWithoutIntercity()}>{t("loadingScreen.playWithoutIntercity")}</button>
