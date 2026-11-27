@@ -346,6 +346,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-044, T-013): Blocks are spread over their polygon by land area on 50 m pixels, replacing all at the centroid (202k New York cells, recompute 12% slower). Grain matters most in centres; adaptive cells only if performance needs it (Anita). notes/archive/t0001-0499/T-013.md
 
 ## Tooling and process
+- 2026-11-27 (Anita): Run 2-8 agents again (the 11-25 week cap of 1-4 lifted), Gemini code agents counted among them. On her Gemini 5x plan, Gemini 4 Neon stands in for Opus and Hydrogen for Sonnet.
 - 2026-11-25 (Anita, T-4269): The game stays at anita.garden. Google shows one icon per host, so its search result keeps the website's leaf icon; a separate address for the game would leave players' browser saves behind ("it is what it is").
 - 2026-11-25 (Anita, T-4252): Gemini code agents run commands unattended inside their own worktree (tools/gemini_agent.py), limited by agy's allow and deny rules; with no OS sandbox here, an allowed check runs whatever the tree holds. Their first three runs are asked about permissions.
 - 2026-11-25 (Anita): Claude usage runs out before Gemini's, so Gemini takes most reading and review (docs/orchestrator.md "Tools"), and Gemini Neon agents are to make code changes like Claude subagents (T-4252). Replaces 11-24's "Gemini sparingly".
