@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4404 [P2] {L:checks} Gemini's git rules can start a program (2026-11-27): git_option_denies() in backstop_rules: 37 bad strings refused, 21 good allowed, trial refused -Oless, --output and -c. notes/T-4404.md.
+- T-4395 [P2] {L:loading} A game load ends after the first round (2026-11-27): closed without code: her 11-27: a game load should not end at the first round (round 0 has lines up to 68% off the final on NYC; the hold stays) notes/T-4395.md.
+- T-4261 [P2] {L:checks} Gemini agents can run play.mjs games (2026-11-27): gemini_agent.py --game starts and stops a play.mjs game for the run outside agy's job; quoted args allowed in the git read and play.mjs rules; trial passed (0c3dd8b08) notes/T-4261.md.
 - T-4390 [P2] {L:loading} Trips worker crash on a 2 GB phone (2026-11-27): both passes of Columns::pack test v.to_bits() != 0 so they can't disagree; likely cause NEON flushing subnormals in the vectorised count; figures unchanged (3d32ddb43) notes/T-4390.md.
 - T-4403 [P3] {L:solve-speed} Calculate trips on the GPU (2026-11-27): closed without code: scoped 11-27: not worth building (route search 40-82% of a solve suits a GPU badly; no gain for phones or 4 GB laptops); closed on her word. notes/T-4403.md.
 - T-4381 [P3] {L:buses} No cap on buses per hour in a bus lane (2026-11-27): BRT lane cap removed in sim and app, lane row and 5 strings gone, docs and wiki updated. notes/T-4381.md.

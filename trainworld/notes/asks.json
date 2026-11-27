@@ -19,12 +19,5 @@
     "text": "Start T-4372 (smoke plays a second game with phone settings: intercity trips off, one worker, long lines), which would have caught the 0.4.7 crash? About 1-2 hours of agent work. I'd say yes.",
     "since": "2026-11-27",
     "by": "maps-3a"
-  },
-  {
-    "id": "a-2026-11-27-8",
-    "title": "Load ends at round 0",
-    "text": "T-4395: should a game load end at the first round? You set the hold on purpose (T-347, kept in T-2560). On the real NYC save with one worker, ending at round 0 cuts about half the wait (97 of 198 s), but round 0's figures are off: 3% high overall and 18 of 82 big lines over 10% off the final (HBLR +68%, PATH +43%), and fares are paid on them while the clock runs (11% of a day's fares extra at 100x). I'd say no. If yes: the card ends at round 0 and the clock stays at 4x until the final, about 4-6 h.",
-    "since": "2026-11-27",
-    "by": "maps-e0"
   }
 ]

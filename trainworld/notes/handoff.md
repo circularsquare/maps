@@ -1,25 +1,22 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 6ed48fec-8b16-41be-8883-aad8f899bcb0, name maps-e0 [81f3a0], since 2026-11-27 14:30 UTC
-Updated: 2026-11-27 15:21 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-27 15:30 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
 1. Running (7): loopfix (Opus, T-4374, 6150); netcut10 (Opus, T-4153 s10, 6152); busstops (Sonnet, T-4380 + T-4382,
-   6153); showmodes (Opus, T-4400, 6154); gemplay (Sonnet, T-4261: Gemini agents run play.mjs games, 6156; Claude
-   because it changes Gemini's harness); reloadfix (Gemini Neon, no task: T-3932 review findings + her 8800 notes, a
-   pick overrides the 8 GB cap, saved estimates, "Will use/Will load", two strings); loadcard (Gemini Neon, T-4346: x
-   once only trips are left, clock held to the final, build meanwhile). Gemini can't hold a game across calls until
-   T-4261: their game run may be mine at landing. Ids: loopfix T-4391/2, netcut10 T-4397/8, busstops T-4399, showmodes
-   T-4401, gemplay T-4404.
-2. Landed today: T-4377 (c008), T-4383 Discord reader (tools/ops/discord_reader.py, token ~/newDesktop), T-3932 Cores
-   slider (916e0fbff, c009; Gemini review FAILED on Reload: reloadfix; publish waits for it), T-4381 lane cap
-   (b59a6e59c, c010), T-4390 phone panic (3d32ddb43), T-4395 notes only (waits for her). 8800 = 916e0fbf, smoke PASSED;
-   rebuild after reloadfix lands. This batch's perf_bench NYC waits for a quieter machine.
+   6153: resumed for her "it should drive from the first point"; Gemini save review busstops-review.md running; adds
+   save block LAF1, level 42); showmodes (Opus, T-4400, 6154); loadcard (Gemini Neon, T-4346); corescheck (Gemini
+   Hydrogen, --game real NYC: checks the slider fixes, writes notes/T-3932.md "Check 11-27" in its tree, no code).
+   Gemini agents take --game now (T-4261). Ids: loopfix T-4391/2, netcut10 T-4397/8, busstops T-4399, showmodes T-4401.
+2. Landed today: T-4377, T-4383, T-3932 (916e0fbff) and its review fixes (043eb3c71), T-4381 (c010), T-4390,
+   T-4261, T-4404; T-4395 and T-4403 closed on her word. 8800 rebuilding at 1f207a7eb (15:29 UTC); smoke on it next.
+   This batch's perf_bench NYC waits for a quieter machine. Publish waits for her word.
 3. She is checking the redrawn zones on 8800; undo: notes/T-4364.md "The job". Backups data/work/pre-T4364* (19 GB) go
    11-28 if she finds nothing; disk 37.6 GB free now, about 60 after.
-4. Queued: T-4396 (after reloadfix: pool cap code); T-4314 once netcut10's measuring is done; then T-4309, T-4315,
-   T-3160, T-3838. New tasks go to Gemini agents (her 11-27); Claude only for what Gemini can't do. 0.4.7.1 live.
+4. Queued: T-4396 (pool cap code, now free); T-4314 once netcut10's measuring is done; then T-4309, T-4315, T-3160,
+   T-3838. New tasks go to Gemini agents (her 11-27); Claude only for what Gemini can't do. 0.4.7.1 live.
 
 ## Her words
 - 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."

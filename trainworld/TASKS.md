@@ -254,9 +254,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4359: a load adds each zone viewed while it runs and keeps it open until the load ends (Lantian 208 s in your session); a game load's card still does. At a save's load the default zone (New York) kept a "Loading city data" bar for 7 s after the view left it.
   - Goal: A zone viewed during a load opens and closes on its own.
   - Other: notes/T-4359.md
-- T-4261 [P2] {L:checks} Gemini agents can run play.mjs games (taking, 2026-11-27, agent gemplay)
-  - Context: From the second Gemini code run (11-25): play.mjs start's detached server is killed when agy's tool call ends (a Windows job), so play.mjs edits and do find no game; it fell back to a one-process check. Also a "|" inside a quoted git grep pattern is refused.
-  - Goal: A Gemini agent can start a game with play.mjs and drive it across calls; grep with alternatives works or the brief says how.
 - T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
@@ -352,11 +349,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4395 [P2] {L:loading} {waits:Anita} A game load ends after the first round
-  - Need from Anita: End game loads at the first round? It halves a one-worker NYC load (198 to 101 s), but some lines read 17-68% off meanwhile, fares included. Recommended: no.
-  - Context: Your T-347 and T-2560 hold the card and clock to the final round. On the real NYC save round 0 is 2.7% high in all, but 18 of 82 big lines are over 10% off (HBLR +68%, PATH +43%), and fares are paid on them.
-  - Goal: A game load ends at round 0 and the later rounds refine in the background as after an edit; a one-worker load's wait about halved.
-  - Other: notes/load-reports-2026-11-27.md proposal 3, notes/T-4395.md
 - T-4396 [P2] {L:memory} A second try for a one-worker load out of memory
   - Context: From loadreports (11-27): 7 load deaths in 5 days, all phones or 4 GB PCs on one solving worker. The retry halves workers, so below two it can't help (oomRetry.ts) and they reload into the same crash; 3 of 5 died in the first 11 s, on Tokyo. You, 11-27: a proposal, not gospel.
   - Goal: A one-worker load that runs out of memory tries again with less (intercity trips off or coarser zones), saying so on the card; fewer loads end at the out-of-memory screen.
@@ -1304,6 +1296,9 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Your 2026-11-16: "we should do it based on all your recommendations yes", with Central America from Guatemala to Panama and Venezuela first (T-3399).
   - Goal: One ordered list of queued fixes, data gaps and omissions, each with what it needs.
   - Other: Survey of 2026-11-11: notes/T-3245.md
+- T-4405 [P3] {L:world-rebuild} Japan's small inhabited islands and the Kurils
+  - Context: You, 11-27: "for next time we do country adds, we should probably add the izu islands / any other minor japanese islands that have nonzero population", and the Kurils, "mostly cuz japanese people like building to them lol". The Kurils are Russian-run, few people; Russia is held but for three metros.
+  - Goal: At the next country adds, every Japanese island with people in the 2020 census mesh (Izu, Ogasawara) and the inhabited Kurils are in packs.
 Tasks that land only when a pack or country is rebuilt, grouped by that rebuild, so whoever runs it knows what rides along (2026-10-26). The two replan groups are also in notes/T-1189.md "What rides along".
 
 ### Europe's next rebuild (T-1189's Europe replan ran without these, T-2302, 2026-11-05)
