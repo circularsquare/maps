@@ -1,22 +1,22 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session b48f5ab5-f4f4-40bd-8d9d-48e27f778e65, name maps-48 [99e2b4], since 2026-11-27 15:48 UTC
-Updated: 2026-11-27 16:06 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
-diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
+Updated: 2026-11-27 16:22 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
 
 ## Next
-1. Running: hidepick (Gemini Neon, T-4407), reachfill (Gemini Neon, T-4314), modeicons (Gemini Hydrogen, T-4423, her
-   mode icons: look at artifacts/trainworld/review/modeicons.png before landing), phonesmoke (Sonnet, T-4372),
-   crashcount (Sonnet, T-4409; may commit in shonei-server, deploy waits for her), saverev (Sonnet, read-only save
-   review of batch 1127d). Gemini review of batch 1127d running (artifacts/trainworld/gemini/batch-1127d-review.md).
-   8800 rebuild to 2ed96ddf8 running; smoke on master after it.
-2. Batch 1127d: 02a97d401 (T-4153 s10), 6e8ba815d (T-4374), 3add0b644 (T-4396), 2ed96ddf8 (T-4380/82, save level 42).
-   After both reviews: a fix agent for findings; then T-4408 with any T-4396 findings folded in (brief in maps-48's
-   scratchpad briefs/t4408.md, Gemini Neon --game nyc). perf_bench NYC and a quiet edit_bench on Asia owed. Publish
-   waits for her word and T-4407/T-4408. Ask open: T-4396's two notices (a-2026-11-27-13).
-3. Then T-4153 stage 11 (after reachfill), T-4411 (her stations list idea, P3), T-4309, T-4315, T-3160, T-4370,
-   T-3838; maps-e0's T-4420-4422 (tooling). New tasks to Gemini agents; Claude only for what Gemini can't.
-4. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
+1. Running: pagestage5 (Gemini Neon, T-4284 stage 5, her Asia save), busfix (Gemini Neon, tree busfix: batch-1127d
+   findings on T-4380 first_off; report as T-4380), loadsave (Gemini Neon, T-4408 plus Sonnet review findings 4-5 on
+   T-4396: retry notice says where to turn Settings back; strings to her). Gemini agents can't run tools/edit_bench.mjs
+   (allowlist): edit_bench is mine on master.
+2. Batch 1127d reviewed: T-4153 s10, T-4374, T-4396 PASS; T-4380 FAIL (busfix). Gemini finding 2 (putEntries,
+   sampleStroke on empty path) goes into T-4153 stage 11. Smoke PASSED on 6a475fa84. Next batch (1127e): hidepick
+   6c421c790, reachfill e1880608c, crashcount 0988a9a09, then pagestage5, busfix, loadsave: one Gemini review, then
+   1 edit_bench NYC on master. perf_bench NYC and a quiet edit_bench on Asia still owed. Publish waits for her word.
+3. Asks open: T-4396 notices (a-2026-11-27-13); shonei-server deploy 54c6241 + ff4e198 (a-2026-11-27-14; the save
+   check at level 42 must be live before the next publish). _track sits at save level 42 too (LBN1): renumber at sync.
+4. Then T-4153 stage 11, T-4309, T-4315, T-3160, T-4370, T-3838; maps-e0's T-4420-4422 (tooling). Core cap 10.
+5. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
 - 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."

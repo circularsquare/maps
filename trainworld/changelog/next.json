@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c018",
+      "text": "sorted station lines by line group and riders, with a toggle to collapse groups",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4411",
+      "by": "stationgroups",
+      "at": "2026-11-27T16:21:18Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
       "id": "c017",
       "text": "a bus line's first stop can be taken out in Manual mode",
       "edited": null,

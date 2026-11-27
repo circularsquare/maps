@@ -88,7 +88,9 @@ enough") mostly by not following rules already here: it investigated (Her standi
 restated CLAUDE.md and pasted task blocks into briefs (Briefs), rewrote the handoff with live state the status command
 prints (the `handoff` skill), committed bookkeeping a dozen times (Commit at the end of a round) and wrote long
 messages (Final messages are short). Two things not written elsewhere: of a review, report or diff read only the
-verdict lines and pass the path to the agent that acts on it; after a Gemini review, a diff's file list is enough.
+verdict lines and pass the path to the agent that acts on it; after a Gemini review, a diff's file list is enough. And reading any file inside a tree (Read, or the REPL's file()) loads that
+tree's two CLAUDE.md files into context, about 10k tokens a tree (maps-48, 11-27): look at a screenshot's copy in
+`artifacts/trainworld/review/`, and read a tree's code through `git -C <tree> diff` or `show`.
 
 ## Your own cycling
 

@@ -182,14 +182,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-23: "this is the entire issue". Stage 10 landed 11-27: per-line passes redone only for the lines an edit changed (their parts 41 to 31 ms on your Asia save). By its parts a trunk station now builds in about 92-96 ms, not yet timed on a quiet machine. Left: train speeds (14-53 ms), the bands' last whole-line copies.
   - Goal: A station on a line's track on Asia under 100 ms of network build, timed on a quiet machine; train speeds redone only for lines that changed.
   - Other: notes/T-4153.md "Stage 10"
-- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5
+- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5 (taking, 2026-11-27, agent pagestage5)
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
   - Other: notes/T-4150.md "Stage 4" and "Left"
-- T-4314 [P1] {L:edit-speed} Station reach and trains' fill by what changed (taking, 2026-11-27, agent reachfill)
-  - Context: From T-4284: after each edit the renderer compares every station's platform for the delete tool's reach (2-4 ms on your Asia save) and the demand layers copy every line row of the trains' fill (2-4 ms, 30 when trips land). The network patch names neither the stations nor the rows it changed.
-  - Goal: Both cost what the edit changed, under 1 ms each on Asia.
-  - Other: notes/T-4150.md "Left"
 - T-4315 [P2] {L:edit-speed} Upkeep shares worked out by what an edit changed
   - Context: From T-4284: after each edit, in idle time, the page's upkeep shares go over every edge, station and bus route point (3.5-6.3 ms on your Asia save), and the region shares post their whole table.
   - Goal: Under 0.5 ms an edit on Asia.
@@ -317,9 +313,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-4071.md group 3
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
-- T-4411 [P3] {L:small-fixes} Stations list lines by line group
-  - Context: You, 11-27, from a Discord suggestion: each station in the stations list shows every line that stops there. "we could collapse the lines into line groups optionally (maybe with a button on top), and also have the lines sorted by line group and then ridership (not optionally)."
-  - Goal: A station's lines always sort by line group, then riders; a button at the top of the list collapses each group's lines into the group's one bullet.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
   - Context: Found by T-4050 and T-4058: right after a final, explorer questions fail in the demand worker ("reading 'nodeGlobal'") and answer nothing; asked again seconds later they work. The question is about the last network while the worker has reopened the zone at another level (demand.worker.ts query, `viewOf(cl, a)`). Every query kind reading `viewOf(cl, a)` can hit it.
   - Goal: An older version's question answered from that cluster's own population for the zone, or answered as not ready, never an error.
@@ -513,7 +506,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
   - Other: notes/T-4400.md
-- T-4408 [P2] {L:loading} Edits made during the first load kept when it fails
+- T-4408 [P2] {L:loading} Edits made during the first load kept when it fails (taking, 2026-11-27, agent loadsave)
   - Context: Gemini's review of T-4346 (batch-1127c-review.md, finding 3): with the card closed, a failed load's Try again or Back to start reloads without saving, and the out-of-memory retry saves with a 1.5 s cutoff. Also its finding 6, two small Cores slider gaps. Waits for oomretry (same files).
   - Goal: Every reload or exit from a load saves through the slot switch's path first; finding 6 fixed.
 - T-4373 [P4] {L:small-fixes} Line panel shows another city's line and won't close
@@ -1249,9 +1242,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
-- T-4372 [P2] {L:checks} Smoke plays with phone settings too (taking, 2026-11-27, agent phonesmoke)
-  - Context: T-4367's crash shipped in 0.4.7 because it only happens with intercity trips off (the phone and tablet default) on a network big enough; smoke and agents' game runs use computer defaults. You, 11-26: "ideally we should have caught bugs like this."
-  - Goal: Smoke builds long lines on a mid-size network once more with intercity trips off and one worker, and fails on "Demand stopped"; it would have caught T-4367.
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
@@ -1264,9 +1254,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You, 11-20: pack rather than drop, "we dont really have to do anything there til we get cloesr to the limit". Measured 11-20: 5.05 GB is 55% backups, 35% current saves, 9.5% pictures; the 16 GB cap fills Dec 5-10 at today's growth. A backup stored as a difference is 6-16% of its size; packing frees about 1.26 GB now.
   - Goal: Packing deployed, with the games cap raised to about 24 GB (safe on the disk), before the store reaches 12 GB.
   - Other: notes/T-3821.md, notes/T-3243.md "Games"
-- T-4409 [P2] {L:accounts-server} Count crashes automatically (taking, 2026-11-27, agent crashcount)
-  - Context: Bugs like T-4367 would show within hours of a publish if the game sent the server a count of "Demand stopped" and similar failures (version, the error's first line, phone or computer; nothing about the player), shown on twstats. You, 11-27: "yes we can do that". A server deploy, so its own yes.
-  - Goal: The server counts failures by version and first line, and twstats shows them; the deploy waits for your word.
 - T-3395 [P1] {L:accounts-server} {after:the 11-20 and 11-21 scan reports} Close once the save scan runs clean
   - Context: You, 11-15: damaged saves caught on upload and in a daily scan, their bytes kept, the last intact version pinned with a way to restore it. All three stages are live (server 11-18, game v0.4.0). The 11-19 pass found two damaged games on one account, each a first save never saved again. Still damaged on 11-20 means old damage: close.
   - Goal: The scan has run a day clean.

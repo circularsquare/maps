@@ -5,5 +5,12 @@
     "text": "T-4396 (landed 3add0b644) adds two notices: \"This game ran out of memory, so it loaded again without intercity trips.\" and \"This game ran out of memory, so it loaded again in less detail.\" Text acknowledged, or name a line?",
     "since": "2026-11-27",
     "by": "maps-48"
+  },
+  {
+    "id": "a-2026-11-27-14",
+    "title": "Server deploy, crash counts",
+    "text": "Deploy shonei-server with 54c6241 (T-4409 crash counts, twstats Failures table) and ff4e198 (save check at level 42, which the next publish needs because T-4380 raised the save level)? Recommended: yes, now.",
+    "since": "2026-11-27",
+    "by": "maps-48"
   }
 ]

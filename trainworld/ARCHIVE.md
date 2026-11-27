@@ -1,6 +1,10 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4314 [P1] {L:edit-speed} Station reach and trains' fill by what changed (2026-11-27): stationReachStep patches changed stations only; per-row fill map; ?patch=check PASS on add, extend, delete, undo and trips landing; edit_bench owed on master. notes/T-4314.md.
+- T-4409 [P2] {L:accounts-server} Count crashes automatically (2026-11-27): game/crashCount.ts sends POST /trainworld/crash once per kind per page load; server side in shonei-server 54c6241 (counts, twstats Failures table) and ff4e198 (save check level 42), not deployed. notes/T-4409.md.
+- T-4411 [P3] {L:small-fixes} Stations list lines by line group (2026-11-27): stationLineOrder() in the Stations list and the complex Lines column; Collapse line groups toggle beside Show stations separately, off by default. notes/T-4411.md.
+- T-4372 [P2] {L:checks} Smoke plays with phone settings too (2026-11-27): phoneLongLines step in smoke (about 23 s, 13% of smoke); PASS on current code, FAIL with T-4367's fix reverted. notes/T-4372.md.
 - T-4407 [P2] {L:map-look} Hidden modes and levels can still be picked (2026-11-27): Shared hidden predicates used by blueprint box and pick, drags, end markers, edge edit, delete, pick, tools, busway lines and the fare zone tool; lots of hidden stations hidden; stationModes counts backStops. notes/T-4407.md.
 - T-4423 [P2] {L:map-look} Show block mode toggles as station icons (2026-11-27): ModeToggles use Icon.train, highSpeed, tram, bus and ferry in MODE_ICON_COLOURS on white; hidden modes tinted like unlit levels. notes/T-4423.md.
 - T-4382 [P3] {L:buses} A bus can stop at linked BRT stations (2026-11-27): Manual lines keep a first_off flag (LAF1, save level 42); the bus drives the lead-in from the route start; two stops always remain; BRT stations within 100 m no longer merge into one stop. notes/T-4380.md.
