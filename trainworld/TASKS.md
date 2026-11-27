@@ -352,7 +352,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4395 [P2] {L:loading} A game load ends after the first round
+- T-4395 [P2] {L:loading} A game load ends after the first round (taking, 2026-11-27, agent loadround0)
   - Context: From loadreports (11-27): a game load waits for all 4 rounds of the zone in view (HOLD_ROUND in demandClient.ts) though round 0 already has figures; on one worker about 55-60% of the wait comes after it. You, 11-27: file it, a proposal to judge, not gospel.
   - Goal: A game load ends at round 0 and the later rounds refine in the background as after an edit; a one-worker load's wait about halved.
   - Other: notes/load-reports-2026-11-27.md, proposal 3
@@ -515,8 +515,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4400 [P2] {L:map-look} {after:T-3932} Show modes buttons in Settings
-  - Context: You, 11-27: players asked for a way to hide all trains; "replace the 'buses and ferries' visibility toggle in settings with separate buttons for train track, tram track, hsr track, buses, ferries (we can use the icon buttons) and it kinda parallels the show levels." Waits for coreslider2 (same Settings file).
+- T-4400 [P2] {L:map-look} Show modes buttons in Settings (taking, 2026-11-27, agent showmodes)
+  - Context: You, 11-27: players asked for a way to hide all trains; "replace the 'buses and ferries' visibility toggle in settings with separate buttons for train track, tram track, hsr track, buses, ferries (we can use the icon buttons) and it kinda parallels the show levels."
   - Goal: A Show modes row of five icon toggles beside Show levels; hidden modes and hidden levels gone from the map, unless a level's fade can be made even.
 - T-4373 [P3] {L:small-fixes} Line panel shows another city's line and won't close
   - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line, then no click closed it. Reach: few, a city filter with a panel open.
@@ -1163,9 +1163,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: Stage 6 paused 11-22 for the week's usage, built in tree split6 (not landed): every edit step equal to the bit except all-China's line removal and undo; New York 1.7-3.4x slower until stage 8 (notes/T-3373-B-plan.md). You, 2026-11-16: A (fewer workers; landed), then B (split zones between workers, 25-40 h); C (shared memory, 60-100 h) only if it would help noticeably.
   - Goal: B built, with memory and solve time measured before and after on NYC and all-China.
   - Other: notes/pr-survey-2026-11-16.md "T-3373 options"; notes/T-3329.md and notes/T-3071.md.
-- T-3932 [P1] {L:memory} A cores slider with its memory and speed (taking, 2026-11-27, agent coreslider2)
-  - Context: Half built 11-22 (estimate model fitted, UI and checks left; patches in notes/archive/trees/coreslider-*). You, 11-27: high leverage now, noting it takes effect after a reload. You, 11-21: "rework 'use more cores' to have an actual slider where people can select how many cores and it estimates the resulting memory usage right below and the estimated speed gain or loss."
-  - Goal: Settings has a slider for the number of solving workers, with estimated memory and load and edit time below it; the player's pick overrides stage A's memory cap.
 - T-4042 [P3] {L:solve-consistency} Drop the compose-afresh on a replaced worker
   - Context: From T-1354: each worker now rebuilds its corridor book whenever the open market packs change, so T-1174's compose-afresh on a replaced worker is no longer needed.
   - Goal: The compose-afresh removed, with a late-pack load still equal to a normal one.

@@ -1,23 +1,24 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 6ed48fec-8b16-41be-8883-aad8f899bcb0, name maps-e0 [81f3a0], since 2026-11-27 14:30 UTC
-Updated: 2026-11-27 14:50 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-27 15:00 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word, 03:32 UTC).
 
 ## Next
-1. Running (7; her 11-27: 2-8, Gemini agents count): coreslider2 (Opus, T-3932 P1, tree coreslider2, port 6148, in
-   maps-3a's tab; report reaches the inbox); loopfix (Opus, T-4374, 6150); netcut10 (Opus, T-4153 stage 10, 6152);
-   busstops (Sonnet, T-4380 + T-4382, 6153); packfix (Gemini Neon, T-4390); lanecap (Gemini Hydrogen, T-4381);
-   diskclean (Sonnet, no tree: C: was 28 GB free at 14:46, to 60+; pre-T4364 backups left for 11-28).
-   Ids handed out: loopfix T-4391/2, netcut10 T-4397/8, busstops T-4399. Landed today: T-4377 (219012f25, c008), T-4383
-   Discord reader (b96384387; tools/ops/discord_reader.py, token at ~/newDesktop). Gemini batch review of the 1127
-   batch: all five PASS, so publish can follow her word.
-2. 8800 at 5b1fab73 (region redraws, smoke passed); master has T-4379 since (381db4060): rebuild 8800 after coreslider2
-   lands. She is checking the redrawn zones on 8800 today (her main task); undo per country: notes/T-4364.md "The job".
-   Backups data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
-3. 0.4.7.1 live (T-4367 hotfix, 11-26).
-4. Queued: T-4395 then T-4396 (her 11-27 "file 3 then 1", proposals not gospel; T-4395 edits demandClient.ts, so after
-   coreslider2 lands), and T-4400 (Show modes buttons, Opus, same Settings file; hidden modes and levels removed entirely, DECISIONS); then T-4314 once netcut10's measuring is done (both bench edit speed); then T-4309, T-4315, T-3160, T-3838. Gemini first for reading, review, triage.
+1. Running (7; her 11-27: 2-8, Gemini agents count): loopfix (Opus, T-4374, 6150); netcut10 (Opus, T-4153 stage 10,
+   6152); busstops (Sonnet, T-4380 + T-4382, 6153); showmodes (Opus, T-4400, 6154); loadround0 (Opus, T-4395, 6155:
+   judges first, may stop with a trade-off for her); packfix (Gemini Neon, T-4390); lanecap (Gemini Hydrogen, T-4381).
+   Ids handed out: loopfix T-4391/2, netcut10 T-4397/8, busstops T-4399, showmodes T-4401, loadround0 T-4402.
+2. Landed today: T-4377 (219012f25, c008), T-4383 Discord reader (b96384387; tools/ops/discord_reader.py, token at
+   ~/newDesktop), T-3932 Cores slider (916e0fbff, c009; strings sent to her for review). 8800 = 916e0fbf (14:59 UTC);
+   smoke on it running (scratch smoke-916e0fbff.log). Gemini adversarial review of T-3932 running:
+   artifacts/trainworld/gemini/batch-1127b-review.md. The morning batch's review: all five PASS. This batch's perf_bench
+   NYC (it touched the worker pool) waits for a quieter machine. Publish waits for her word.
+3. She is checking the redrawn zones on 8800 today; undo per country: notes/T-4364.md "The job". Backups
+   data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing. Disk 37.6 GB free after diskclean (notes/T-4088.md
+   "2026-11-27"), plus t4194/runs (4.3 GB) deleted; the 11-28 backups take it to about 60.
+4. Queued: T-4396 (after loadround0: same load code); T-4314 once netcut10's measuring is done (both bench edit speed);
+   then T-4309, T-4315, T-3160, T-3838. Gemini first for reading, review, triage. 0.4.7.1 live.
 
 ## Her words
 - 11-27 ~09:45: agents 2-8, Gemini agents counted; Gemini 5x plan, Neon as Opus, Hydrogen as Sonnet (DECISIONS). Load

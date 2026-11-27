@@ -202,9 +202,9 @@ new standing process.
   (total rail trips, the lines that move most) and the network shape that would show it worst. Aim to keep most lines'
   riders within 1% of before; no hard limit. A bigger shift is her call. Report all of `perf_bench`'s numbers from
   the run your budget allows, not only the one you target; worse by more than 10% on any goes to her as a trade-off
-  (the release run on all three saves settles it). How to read it: notes/T-4025.md. She plays with "Use more cores"
-  off on purpose, as the median player with little memory: time big-save waits that way too. Both settings must work:
-  test with it off, and with both after a big change to loading or the workers (her 11-25). Her own Asia save
+  (the release run on all three saves settles it). How to read it: notes/T-4025.md. She plays with Cores on Auto
+  (was "Use more cores" off) on purpose, as the median player with little memory: time big-save waits that way too. Both
+  must work: test on Auto, and with a picked count too after a big change to loading or the workers (her 11-25). Her own Asia save
   (`artifacts/trainworld/perfbench/saves/asianita-day568.save`) is a stress test only. `edit_bench`: notes/T-4139.md.
 - **Simple prices**: fares and costs the player reasons about follow a simple rule (a base plus per km).
 - **Saves are hers**: keeping old ones loading is a nicety, no real migration effort.

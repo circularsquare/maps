@@ -3,6 +3,19 @@
   "line": "",
   "items": [
     {
+      "id": "c009",
+      "text": "use more cores is now a cores slider, with the memory and load time each count gives",
+      "edited": "replaced use more cores with a cores slider showing memory and load time per count",
+      "hidden": false,
+      "task": "T-3932",
+      "by": "coreslider2",
+      "at": "2026-11-27T14:56:09Z",
+      "rev": 2,
+      "area": "performance",
+      "fix": false,
+      "changed": "2026-11-27T14:56:39Z"
+    },
+    {
       "id": "c008",
       "text": "fixed dragging a line onto another to group it on touch screens (press and hold, then drag)",
       "edited": null,
