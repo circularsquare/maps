@@ -2205,7 +2205,7 @@ refused). The alignment being drawn is previewed by the worker as a trial edit, 
 and rolled back, so the preview knows everything an edit would refuse (timings in notes/T-025.md);
 the trial leaves the services alone (`TrackWorld::trial`, T-1779), as no preview shows a train's
 run. An edit that rebuilds, reschedules or re-times no line (a station on track no line runs over), and a blueprint
-route that changes no line for demand, sends no new trips or boarding hour (T-1780, T-4249). The
+route that changes no line for demand, sends no new trips or boarding hour (T-1780, T-4249). A line is rebuilt for the track whose change it reads (`Derived::moved`): track set, re-fitted or with another way, and a node's ends where their side, rank, lane positions or moves changed or where the node's end count or built ends did; the other lines through the nodes a station on or off track splits or joins stay as they were. The
 worker sends the whole network state after an edit, with the renderer's buffers already built;
 the main thread uploads them. Both sides redo only what the edit changed (T-496): the worker keeps
 each edge's, line's and station's piece of the buffers from the last build and reuses any whose

@@ -2470,7 +2470,7 @@ impl TrackWorld {
         Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc }
     }
 
-    /// Lines to rebuild after an edit: set directly, on touched track, stopping at a touched station, and the bus lines and
+    /// Lines to rebuild after an edit: set directly, on track whose change they read (`Derived::moved`), stopping at a touched station, and the bus lines and
     /// ways back it reached. T-4249: a bus line's stops follow the stations near its route and the routes it crosses
     /// (T-1464), the kept stops near it (T-4080), its speed the constructed busways (T-3378): `bus::lines_touched`. A
     /// way back of its own (`back_lines`) is found by a search over the track, not on `lines_on_edge`: rebuilt where a
@@ -2478,7 +2478,7 @@ impl TrackWorld {
     /// `note_lines` notes) takes every one, sparing the search.
     fn lines_touched(&self, t: &super::net::Touch, der: &super::net::Derived, rebuild: bool) -> Vec<u32> {
         let mut lines: Vec<u32> = t.lines.clone();
-        for &e in &der.edges {
+        for &e in &der.moved {
             lines.extend_from_slice(self.net.lines_on_edge(e));
         }
         if !t.stations.is_empty() {
@@ -2526,7 +2526,7 @@ impl TrackWorld {
             None if ls.one_way => (fwd, ls.runs[0].segs.clone()),
             None => return true,
         };
-        at(1) != Some(back_stops) || ls.runs[1].segs != back || back.iter().any(|&p| der.edges.binary_search(&path_edge(p)).is_ok())
+        at(1) != Some(back_stops) || ls.runs[1].segs != back || back.iter().any(|&p| der.moved.binary_search(&path_edge(p)).is_ok())
     }
 
     /// T-1382: what the net was changed under these lines, whether or not their service is rebuilt
@@ -3027,7 +3027,7 @@ impl TrackWorld {
 /// Two problems are the same one, ignoring where exactly a moved crossing now is.
 /// What a second batch inside one edit touched and derived, put with the first's.
 fn merge_derived(t: &mut super::net::Touch, der: &mut super::net::Derived, t2: super::net::Touch, der2: super::net::Derived) {
-    for (v, w) in [(&mut t.nodes, t2.nodes), (&mut t.edges, t2.edges), (&mut t.stations, t2.stations), (&mut t.lines, t2.lines), (&mut t.schedules, t2.schedules), (&mut t.weekend, t2.weekend), (&mut der.edges, der2.edges), (&mut der.nodes, der2.nodes), (&mut der.ways, der2.ways)] {
+    for (v, w) in [(&mut t.nodes, t2.nodes), (&mut t.edges, t2.edges), (&mut t.stations, t2.stations), (&mut t.lines, t2.lines), (&mut t.schedules, t2.schedules), (&mut t.weekend, t2.weekend), (&mut der.edges, der2.edges), (&mut der.nodes, der2.nodes), (&mut der.ways, der2.ways), (&mut der.moved, der2.moved)] {
         v.extend(w);
         v.sort_unstable();
         v.dedup();

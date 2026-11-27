@@ -635,6 +635,9 @@ pub struct Touch {
     /// T-4249: the routes of bus lines set, as they were and as they are, where the route or its stops' rules
     /// changed or the line came or went: the bus lines crossing one place their stops again
     pub bus_routes: Vec<Vec<[f64; 2]>>,
+    /// T-4249: each node's ends as the last `derive` left them, and how many were constructed, kept at the first
+    /// `set_edge` that changes them: what `derive` compares to tell the ends whose lines see a change
+    pub ports_before: std::collections::HashMap<u32, (Ports, usize)>,
 }
 
 /// What `derive` rebuilt.
@@ -646,6 +649,10 @@ pub struct Derived {
     pub crossings: Vec<[f64; 3]>,
     /// Single track whose way (`Network::edge_way`) changed (T-3137); also in `edges`.
     pub ways: Vec<u32>,
+    /// T-4249: of `edges`, those a line on them reads a change of: set (`Touch::edges`), of another shape or time,
+    /// a way changed, or with an end where the ports or moves a line through it reads changed. A station on track no
+    /// line runs over re-derives every edge at that track's ends, and leaves them all as they were.
+    pub moved: Vec<u32>,
 }
 
 pub struct Network {

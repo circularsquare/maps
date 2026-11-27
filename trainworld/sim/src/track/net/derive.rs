@@ -38,12 +38,16 @@ impl Network {
         edges.sort_unstable();
         edges.dedup();
         let mut fresh = vec![];
+        // T-4249: the re-fitted edges whose shape or time came out otherwise
+        let mut refit = vec![];
         for &e in &edges {
             let i = e as usize;
             let old = self.edge_pieces[i];
+            let mut was = None;
             if old.len > 0 {
                 let p = self.pieces.get(old).to_vec();
                 self.grid.remove(e, &p);
+                was = Some((p, self.verts.get(self.edge_vert[i]).to_vec(), self.edge_len[i], self.edge_time[i]));
             }
             if !self.edge_alive[i] {
                 self.pieces.free(old);
@@ -77,6 +81,9 @@ impl Network {
             self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &cross);
             let cap = self.v_cap(e);
             self.edge_time[i] = geom::run_time(&f.pieces, &f.vert, self.edge_ramp[i] == 0, cap).max(1e-3);
+            if was.is_none_or(|(p, v, len, time)| p != f.pieces || v != f.vert || len != f.len || time != self.edge_time[i]) {
+                refit.push(e);
+            }
             self.edge_pieces[i] = self.pieces.replace(old, &f.pieces);
             self.edge_vert[i] = self.verts.replace(self.edge_vert[i], &f.vert);
             self.edge_water[i] = self.water.replace(self.edge_water[i], &wet);
@@ -91,6 +98,17 @@ impl Network {
         }
         nodes.sort_unstable();
         nodes.dedup();
+        // T-4249: each node's ends as lines read them before this derive
+        let mut seen: std::collections::HashMap<u32, (Vec<EndSeen>, usize)> = Default::default();
+        let mut see = |net: &Self, n: u32| {
+            if net.node_ok(n) && !seen.contains_key(&n) {
+                let (p, built) = t.ports_before.get(&n).copied().unwrap_or_else(|| (net.node_ports[n as usize], net.built_ports(n)));
+                seen.insert(n, (ends_seen(&p, &net.node_moves[n as usize]), built));
+            }
+        };
+        for &n in &nodes {
+            see(self, n);
+        }
         for &n in &nodes {
             if self.node_ok(n) {
                 self.derive_node(n);
@@ -107,10 +125,30 @@ impl Network {
         nodes.sort_unstable();
         nodes.dedup();
         for &n in &nodes {
+            see(self, n);
+        }
+        for &n in &nodes {
             if self.node_ok(n) {
                 self.derive_moves(n);
             }
         }
+        let mut moved: Vec<u32> = t.edges.iter().chain(&refit).chain(&d.ways).copied().collect();
+        for (&n, (before, built)) in &seen {
+            if !self.node_ok(n) {
+                continue;
+            }
+            let after = ends_seen(&self.node_ports[n as usize], &self.node_moves[n as usize]);
+            // a stop reads how many ends its node has (`build_line`), and a station touched every one
+            let whole = before.len() != after.len() || *built != self.built_ports(n) || t.stations.binary_search(&n).is_ok();
+            for a in &after {
+                if whole || !before.iter().any(|b| same_end(b, a, before, &after)) {
+                    moved.push(a.0 >> 1);
+                }
+            }
+        }
+        moved.sort_unstable();
+        moved.dedup();
+        d.moved = moved;
         // Crossings of touched edges.
         let before = self.crossings.len();
         let is_touched = |e: u32| edges.binary_search(&e).is_ok();
@@ -311,4 +349,21 @@ impl Network {
     }
 
     // ---------------------------------------------------------------- validity
+}
+
+/// T-4249: what a line through a node reads of one end there: its end code, side and rank, where its lanes arrive and
+/// leave, and the ends its moves reach (`Moves::to`) and link to, as end codes.
+type EndSeen = (u32, u8, u8, f32, f32, Vec<u32>, Vec<u32>);
+
+fn ends_seen(p: &Ports, m: &Moves) -> Vec<EndSeen> {
+    let codes = |mask: u8| ends_in(mask).filter(|&j| j < p.n as usize).map(|j| p.end[j]).collect::<Vec<u32>>();
+    (0..p.n as usize).map(|i| (p.end[i], p.side[i], p.rank[i], m.arrive_at[i], m.leave_at[i], codes(m.to[i]), codes(m.link[i]))).collect()
+}
+
+/// The same end before and after, its moves compared over the ends there both times: an end added or removed is
+/// track set (`Touch::edges`), and moves into it are no line's yet.
+fn same_end(b: &EndSeen, a: &EndSeen, before: &[EndSeen], after: &[EndSeen]) -> bool {
+    let kept = |c: &u32| before.iter().any(|x| x.0 == *c) && after.iter().any(|x| x.0 == *c);
+    let both = |v: &[u32]| v.iter().filter(|c| kept(c)).copied().collect::<Vec<u32>>();
+    b.0 == a.0 && (b.1, b.2, b.3, b.4) == (a.1, a.2, a.3, a.4) && both(&b.5) == both(&a.5) && both(&b.6) == both(&a.6)
 }

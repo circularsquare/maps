@@ -251,3 +251,48 @@ fn a_way_back_is_rebuilt_where_the_edit_reaches_it() {
         assert!(s.2 == f.2, "step {k}: the lines as rebuilding every one leaves them");
     }
 }
+
+
+/// T-4249: a station placed on track no line runs over, and removed again, re-derives the track at that track's ends
+/// (here a station the rail line stops at, the branch's end), and leaves what the line reads there as it was: no line
+/// is rebuilt and no train runs otherwise. One on the line's own track rebuilds it.
+#[test]
+fn a_station_on_track_no_line_runs_rebuilds_no_line() {
+    let mut runs = vec![];
+    for full in [false, true] {
+        let mut a = api(full);
+        let (rl, st) = rail(&mut a, 4, 2000.0);
+        // a blueprint branch north from the line's second station
+        let from = [1.0, st[1] as f64, 2000.0, 0.0, 0.0];
+        let ends: Vec<f64> = from.iter().chain([0.0, 0.0, 2000.0, 1500.0, -1.0].iter()).copied().collect();
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let end = a.route_end();
+        let branch = a.w.net.node_ports[end as usize].ends()[0] >> 1;
+        a.settle_owed();
+        a.take_service_moved();
+        let mut steps = vec![];
+        assert_eq!(a.add_station(0, branch, 2000.0, 700.0, 120, "Branch".into()), 0, "{}", a.issues());
+        a.settle_owed();
+        let n = (0..a.w.net.node_count() as u32).filter(|&k| a.w.net.is_station(k) && !st.contains(&k)).collect::<Vec<u32>>();
+        let net = &a.w.net;
+        assert_eq!(n.len(), 1, "one new station: {:?}", n.iter().map(|&k| (net.node_x[k as usize], net.node_y[k as usize])).collect::<Vec<_>>());
+        let n = n[0];
+        steps.push(step(&mut a));
+        assert_eq!(a.remove_station(n), 0, "{}", a.issues());
+        a.settle_owed();
+        steps.push(step(&mut a));
+        // on the line's own track, between its first two stations
+        let e = crate::track::net::path_edge(a.w.net.line_path(rl)[0]);
+        assert_eq!(a.add_station(0, e, 1000.0, 0.0, 120, "On the line".into()), 0, "{}", a.issues());
+        a.settle_owed();
+        steps.push(step(&mut a));
+        runs.push((rl, steps));
+    }
+    let (rl, scoped) = &runs[0];
+    assert_eq!((scoped[0].0.clone(), scoped[0].1), (vec![], false), "placed on the branch: no line");
+    assert_eq!((scoped[1].0.clone(), scoped[1].1), (vec![], false), "removed from it: no line");
+    assert!(scoped[2].0.contains(rl), "on the line's track: the line");
+    for (k, (s, f)) in scoped.iter().zip(&runs[1].1).enumerate() {
+        assert!(s.2 == f.2, "step {k}: the lines as rebuilding every one leaves them");
+    }
+}

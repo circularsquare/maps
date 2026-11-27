@@ -183,6 +183,12 @@ impl Network {
                 }
             }
         }
+        for n in old.as_ref().map(|o| [o.a, o.b]).into_iter().chain(data.as_ref().map(|d| [d.a, d.b])).flatten() {
+            if !self.touch.ports_before.contains_key(&n) {
+                let seen = (self.node_ports[n as usize], self.built_ports(n));
+                self.touch.ports_before.insert(n, seen);
+            }
+        }
         if let Some(o) = &old {
             self.node_ports[o.a as usize].remove(id << 1);
             self.node_ports[o.b as usize].remove(id << 1 | 1);
