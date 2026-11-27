@@ -258,7 +258,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
-- T-4410 [P2] {L:checks} Gemini agent reports and claims
+- T-4411 [P2] {L:checks} The orchestrator's tools print short by default
+  - Context: You, 11-27, after maps-e0 filled 500k in under two hours, mostly with tool output it didn't need. With T-4410 (Gemini reports) and the 200k notice in the stop hook.
+  - Goal: reports.py show prints a report's first 10 lines (--full for all); verdict.py prints only a review's PASS and FAIL lines; git's line-ending warnings off in the maps repo.
+- T-4412 [P2] {L:checks} A brief generator for the orchestrator
+  - Context: You, 11-27: briefs were hand-written at 3-5k characters, pasting task blocks and restating CLAUDE.md, which docs/orchestrator.md "Briefs" already says not to do.
+  - Goal: brief.py <task id> with the budget row, decisions, files to avoid and ids writes the usual brief of about 15 lines to a file.
+- T-4413 [P2] {L:cleanup} Trim docs/orchestrator.md
+  - Context: You, 11-27: "trimming is almost always helpful". It is about 21,000 characters, read once at takeover; the most-broken rules sit mid-page.
+  - Goal: A card of about ten lines at the top with the rules broken most, and the rest cut to what an orchestrator acts on.
+- T-4410 [P2] {L:checks} Gemini agent reports and claims (taking, 2026-11-27, agent claimfix)
   - Context: 11-27: gemini_agent.py's reports carry every interim "Waiting for ..." line ahead of the answer, which the orchestrator reads in full; and its core claim returns at once when the cap is full ("waiting ... exit 0"), so four runs failed before starting.
   - Goal: A report holds only the agent's final answer and the footer; a claim at the cap waits, as cores.py's --timeout intends.
 - T-4154 [P2] {L:checks} Agent browsers run past their core claim
@@ -311,6 +320,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Other: notes/T-4071.md group 3
 - T-4053 [P3] {L:borders} Common language border factor
   - Context: Your scratch pad, 11-22: "i think bogota-quito travel might be a bit small? relative to number of planes (liek 6 a day, maybe 2000 people a day vs our 800) i wonder if we should do a like 'common language' border multiplier... and maybe also between like switzerland and france". A new demand factor: the design goes to you first.
+- T-4411 [P3] {L:small-fixes} Stations list lines by line group
+  - Context: You, 11-27, from a Discord suggestion: each station in the stations list shows every line that stops there. "we could collapse the lines into line groups optionally (maybe with a button on top), and also have the lines sorted by line group and then ridership (not optionally)."
+  - Goal: A station's lines always sort by line group, then riders; a button at the top of the list collapses each group's lines into the group's one bullet.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change
   - Context: Found by T-4050 and T-4058: right after a final, explorer questions fail in the demand worker ("reading 'nodeGlobal'") and answer nothing; asked again seconds later they work. The question is about the last network while the worker has reopened the zone at another level (demand.worker.ts query, `viewOf(cl, a)`). Every query kind reading `viewOf(cl, a)` can hit it.
   - Goal: An older version's question answered from that cluster's own population for the zone, or answered as not ready, never an error.
@@ -349,10 +361,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4396 [P2] {L:memory} A second try for a one-worker load out of memory (taking, 2026-11-27, agent oomretry)
-  - Context: From loadreports (11-27): 7 load deaths in 5 days, all phones or 4 GB PCs on one solving worker. The retry halves workers, so below two it can't help (oomRetry.ts) and they reload into the same crash; 3 of 5 died in the first 11 s, on Tokyo. You, 11-27: a proposal, not gospel.
-  - Goal: A one-worker load that runs out of memory tries again with less (intercity trips off or coarser zones), saying so on the card; fewer loads end at the out-of-memory screen.
-  - Other: notes/load-reports-2026-11-27.md, proposal 1; T-4370, T-3160
 - T-4370 [P2] {L:memory} iPad games crash on big saves
   - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines (maybe T-4367's "Demand stopped", fixed 11-26, if not a tab reload). Related: T-3160.
   - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
@@ -514,9 +522,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4408 [P2] {L:loading} Edits made during the first load kept when it fails
   - Context: Gemini's review of T-4346 (batch-1127c-review.md, finding 3): with the card closed, a failed load's Try again or Back to start reloads without saving, and the out-of-memory retry saves with a 1.5 s cutoff. Also its finding 6, two small Cores slider gaps. Waits for oomretry (same files).
   - Goal: Every reload or exit from a load saves through the slot switch's path first; finding 6 fixed.
-- T-4406 [P2] {L:map-look} One Show block for levels and modes (taking, 2026-11-27, agent showblock)
-  - Context: You, 11-27, after T-4400: "lets have them have the mode colros tho (blue, purple, etc) and also i'd like to not have the extra 'show modes' row. isntead lets change the 'show levels' row to say just 'show'. the one 'show all' button should apply show all to levels and modes."
-  - Goal: Settings shows "Show" and one "Show all" (levels and modes), then the levels row, the modes row in the modes' colours, then Blueprints.
 - T-4373 [P4] {L:small-fixes} Line panel shows another city's line and won't close
   - Context: A player on 0.4.7.1 (tw-feedback 1795758918-74f19db0, 11-27): with the list filtered to Tokyo, the open panel showed a Gifu to Nagoya line's stops under a Tokyo line. Not reproduced 11-27: the panel keys by line id, and Escape or a map click close it.
   - Goal: Reopen if another player reports it with steps or a diagnostics download.
@@ -1123,9 +1128,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-4382 [P3] {L:buses} A bus can stop at linked BRT stations (taking, 2026-11-27, agent busstops)
   - Context: A player (tw-feedback 1795726122-552c98fc, 11-26): when two BRT stations are linked (a walkway, built touching, or close), or a BRT station sits next to a train station, a bus line can stop at only one of them. You, 11-27: yes, allow it.
   - Goal: A bus line can stop at every BRT station it passes, linked or not, shown on the player's shapes.
-- T-4374 [P2] {L:stops} Closing a loop refused with "at least two different stations" (taking, 2026-11-27, agent loopfix)
-  - Context: A player on 0.4.7 (tw-feedback 1795784564-e03329a7, 11-27), 42 lines, couldn't loop a line that had many stops. The message is validate.rs's catch-all LineStops (adjacent equal stops, first or last stop off the path), so the real cause is unknown. Reach: unknown, loops are common.
-  - Goal: Closing a loop on a line with several stations works, or the refusal names its real cause; shown on a small case.
 - T-4378 [P3] {L:buses} Bus stop name labels flicker and the last stop is misnamed
   - Context: A player on 0.4.7 (tw-feedback 1795764714-6043c5df, 11-27), Paris, 174 lines: with many bus stops named, the map's labels pop in and out and overlap other labels, and a route's last stop shows the wrong name. T-4080's naming landed 11-25. Reach: players who name many stops.
   - Goal: Named stop labels stay put while names are edited and the last stop shows its own name, shown on a small case.

@@ -1,7 +1,8 @@
 """Hooks for orchestrator continuity: the live handoff file each project keeps in notes/handoff.md.
 
     session-start  prints this session's id and where each project's handoff stands
-    stop           warns once per 100k tokens past 500k that it is time for a fresh session
+    stop           once at 200k, a look at what filled the context; then once per 100k tokens past 500k that it is
+                   time for a fresh session
     agent-guard    stops a handed-over orchestrator from starting new agents
     reply-nudge    (PostToolUse) once per message: if her latest message has gone REPLY_AFTER seconds
                    with no reply text from this orchestrator, add a reminder to the tool result
@@ -12,10 +13,12 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 MAPS = Path(__file__).resolve().parents[2]
 CYCLE_AT = 500_000   # Anita 2026-11-17: orchestrators start their successor at ~500k (was 400k)
+EARLY_AT = 200_000   # Anita 2026-11-27: one early look at what fills the context, long before cycling
 BAND = 100_000
 STATE_DIR = Path(os.environ.get("TEMP", MAPS / ".claude")) / "claude-orchestrator"
 
@@ -80,9 +83,30 @@ def context_tokens(transcript):
     return 0
 
 
+def early(data, tokens):
+    """Once a session, at EARLY_AT: how fast the context filled, and where an orchestrator's usually goes."""
+    state = STATE_DIR / f"{data.get('session_id', 'unknown')}-early.txt"
+    if state.exists():
+        return
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    state.write_text("1")
+    try:
+        mins = int((time.time() - os.path.getctime(data.get("transcript_path", ""))) // 60)
+        age = f" after {mins} min"
+    except (OSError, ValueError, TypeError):
+        age = ""
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "Stop", "additionalContext":
+        f"Context is at {tokens // 1000}k tokens{age}. If this session orchestrates, look at what filled it: "
+        "docs/orchestrator.md \"Your own context\" (verdict lines only, short briefs, no investigating, "
+        "bookkeeping once a round, short messages)."}}))
+
+
 def stop(data):
     tokens = context_tokens(data.get("transcript_path", ""))
+    if tokens < EARLY_AT:
+        return
     if tokens < CYCLE_AT:
+        early(data, tokens)
         return
     band = tokens // BAND
     state = STATE_DIR / f"{data.get('session_id', 'unknown')}.txt"
