@@ -1,13 +1,12 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session b9171a67-c849-4831-91d5-3e9c74c64f32, name maps-2c (account 2, claude2), since 2026-11-27 18:53 UTC
-Updated: 2026-11-27 18:25 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session 830e4d8e-dff6-4916-8f8f-7070570d8956, name maps-6c (account 1), since 2026-11-27 21:58 UTC
+Updated: 2026-11-27 22:12 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
 
 ## Next
-0. 11-27 ~14:45 her time: she is upgrading the PC to Windows 11 (BIOS fTPM + Secure Boot first). After the reboot: 8800 (serve.py), the board watch and reserve_cores need starting again; Claude sessions start fresh (/takeover trainworld).
-1. Paused by her (11:26 her time): no new work. Parked: loadsave (T-4408 + Sonnet findings 4-5 on T-4396, tree
-   loadsave empty) and pagestage5 (T-4284 s5, tree has partial work); restart with --tree when she lifts the pause.
+0. Machine rebooted 16:38 her time, still Windows 10; she is waiting on the Windows 11 download. 8800, watch, reserve_cores restarted by maps-6c.
+1. 16:58 her time: pause lifted for "relatively easy tasks, things that we could likely finish in an hour"; 17:11 "lets begin to wrap up. we can resume work after" (Windows 11 restart). Landed: T-4420, T-4063, T-4422, T-4408 (saves review PASS). 8800 not rebuilt for them yet (b5697efe): rebuild after the restart. freestation (T-4249, tree freestation) stopped mid-way: fix and its test in, left the full Rust tests, the NYC figure diff, the Asia probe, a doc line and a changelog item (notes/T-4249.md in the tree): a fresh agent on that tree. Still parked: pagestage5
    Gemini quota was out 16:24 UTC, back ~19:45 UTC. Gemini agents can't run tools/edit_bench.mjs: it's mine on master.
 2. Batch 1127d reviewed; T-4380's findings fixed (b5697efed); smoke PASSED after it. Gemini finding 2 (putEntries,
    sampleStroke on an empty path) goes into T-4153 stage 11. Batch 1127e (hidepick, reachfill, crashcount, busfix,
@@ -20,6 +19,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
+- 11-27 17:08 her time: "lets just ideally remove all references to other games. i think that'd be best"; "its harmless to make this change and probably better to state the game in its own terms". Current docs done (743e8a373); the rest is T-4427.
 - 11-27 ~13:50 her time (to maps-2c, account 2): pushed master on her yes; Windows 11 upgrade coming (machine restarts; agents diskclean and win11guide running for it). Gemini for adversarial review only now that there are two Claude subs (DECISIONS). AWS raise to ~5 vCPU refused, wants usage history: use it now and then, e.g. country adds (docs/aws.md).
 - 11-27 11:26 her time: Gemini quota out; "oki we can move bus fix to sonnet. but mostly just pause starting new work". Core cap 10 "for a while".
 - 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."

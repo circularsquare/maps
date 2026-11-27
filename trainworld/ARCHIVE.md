@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4408 [P2] {L:loading} Edits made during the first load kept when it fails (2026-11-27): load-fail exits save first, with fallbacks; finding 6 fixed; saves review PASS. notes/T-4408.md.
 - T-4422 [P2] {L:cleanup} Trim docs/orchestrator.md (2026-11-27): orchestrator.md 23.8k to 16.3k characters, ten-rule card at the top, history to rule-history.md.
 - T-4063 [P3] {L:small-fixes} Trip explorer fails just after a change (2026-11-27): query() answers not ready when the cluster has no view on the current population; tripView retries 3 times. notes/T-4063.md.
 - T-4420 [P2] {L:checks} The orchestrator's tools print short by default (2026-11-27): reports.py show short by default, verdict.py added, core.safecrlf false. notes/T-4420.md.
