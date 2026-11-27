@@ -53,7 +53,8 @@ The rules broken most (maps-e0 broke them on 11-27 and filled 500k in under two 
   like, files other agents own, task ids it may file, its scratchpad subfolder and Vite port. A TODO.md short-term
   item goes in verbatim, examples and all. End with "Report in at most 15 lines; detail goes in notes/T-xxxx.md" and
   "stop your Vite and any background command before your final report". TaskStop leftover background work once a
-  report is in.
+  report is in. `venv\Scripts\python.exe trainworld/tools/brief.py <task id> --kind <row> --model <m> --tree <name> --port <n>
+  --ids <ids> [--decisions "..."] [--todo "<text>"] [--out <file>]` writes all of this in about 10 lines.
 - **UI briefs** ask the agent to judge its own screenshots (gaps above and below anything added); look at the one
   going to her before saying it is done. A look to change with no numbers: three clearly different versions beside the
   current one, at map size, on one sheet; land your pick, send her the sheet to swap by letter. With numbers, one
