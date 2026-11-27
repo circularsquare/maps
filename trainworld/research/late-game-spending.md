@@ -98,73 +98,70 @@ Tags as in player-voices.md: **[DEV]**, **[PLAYER]**, **[CRITIC]**, **[GUESS]**.
 
 ### Games where the late pile is the known complaint
 
-- **Transport Fever 2.** "There was a tipping point where you were making so much money that money was no
+- **The 3D transport game.** "There was a tipping point where you were making so much money that money was no
   longer an object as such"; "Problems can be solved by throwing money at them" [PLAYER, thread "Running
-  costs are too cheap", 2019]
-  https://steamcommunity.com/app/1066780/discussions/0/1740010344366988160 . The usual fix offered is
+  costs are too cheap", 2019].
+The usual fix offered is
   maintenance that rises each year ("maybe 10% increase every year to everything"), and the replies are
   split: it "only changes how long it takes for your bank balance to take off", and "Why penalise people
-  for putting in the work?" [PLAYER, 2020]
-  https://steamcommunity.com/app/1066780/discussions/0/2872668209264027820 . A critic: "plays as if we
+  for putting in the work?" [PLAYER, 2020].
+A critic: "plays as if we
   just used a cheat for unlimited money" [CRITIC]
-  https://www.gamepressure.com/editorials/reviews/transport-fever-2-review-good-sim-poor-tycoon/z520c
-- **NIMBY Rails.** "this is an easy game if you just want to make money"; "Wait a couple of days and the
+- **The track-drawing rail game.** "this is an easy game if you just want to make money"; "Wait a couple of days and the
   many millions a day will start rolling in"; what players then do with it: "when I made enough to repay
-  the loans and have money left, I built between the cities" [PLAYER, "What's The Secret?", 2021]
-  https://steamcommunity.com/app/1134710/discussions/0/3148556875507046807 . The answer the game itself
-  gives is a no-money mode, a top request [DEV] https://carloscarrasco.com/page/58/ .
-- **Cities: Skylines.** Monuments are its late purchase: six unique buildings unlock each, they cost
-  650k-1.9M with upkeep, and each has a city-wide effect [wiki/guide]
-  https://www.keengamer.com/articles/guides/8-cities-skylines-monuments-and-how-to-unlock-them/ . Players:
+  the loans and have money left, I built between the cities" [PLAYER, "What's The Secret?", 2021].
+The answer the game itself
+  gives is a no-money mode, a top request [DEV].
+- **The city-builder.** Monuments are its late purchase: six unique buildings unlock each, they cost
+  650k-1.9M with upkeep, and each has a city-wide effect [wiki/guide].
+Players:
   "they should generate money, not cost money"; "you will already have a massive income if you done stuff
-  correctly" [PLAYER] https://steamcommunity.com/app/255710/discussions/0/611701999524856515 .
-  Cities: Skylines II's launch economy was too easy; the developer admitted it and reworked it in 2024
+  correctly" [PLAYER].
+  The newer city-builder's launch economy was too easy; the developer admitted it and reworked it in 2024
   (Economy 2.0), while still wanting the game "playable without paying too much attention to where and how
-  money ... flow" [DEV, via press] https://www.pcgamesn.com/cities-skylines-2/broken-economy
-- **Workers & Resources: Soviet Republic.** "Most of the mechanics make early game harder, but late game is
-  always a breeze"; players asked for a space programme as a late project [PLAYER]
-  https://steamcommunity.com/app/784150/discussions/0/4425436537577071474 . Its money is only a trade
+  money... flow" [DEV, via press]
+- **The Soviet-era city sim.** "Most of the mechanics make early game harder, but late game is
+  always a breeze"; players asked for a space programme as a late project [PLAYER].
+Its money is only a trade
   currency; the economy runs on resources [wiki]
   https://wiki.hoodedhorse.com/Workers_Resources_Soviet_Republic/Rubles
-- **Railway Empire 2.** Late game "labor-intensive and repetitive", "tedious track building and
-  reconstruction" [PLAYER, summary] https://gamebrain.co/game/railway-empire-2 ; sandbox has unlimited
+- **The rail tycoon game.** Late game "labor-intensive and repetitive", "tedious track building and
+  reconstruction" [PLAYER, summary]; sandbox has unlimited
   money [DEV] https://blog.kalypsomedia.com/en/?p=2028
-- **Subway Builder.** Bonds and loans help the early game [DEV]
-  https://www.subwaybuilder.com/changelog ; players find it "hard to reach profitability" [PLAYER, summary]
-  https://vaporlens.app/app/4039140/subway_builder.md . No late-game spending found; its answer to long
+- **The subway-building game.** Bonds and loans help the early game [DEV];
+players find it "hard to reach profitability" [PLAYER, summary].
+No late-game spending found; its answer to long
   play is daily challenges with a leaderboard.
 
 ### Ways games give the late money a job
 
-- **Megaprojects as the goal.** Satisfactory's Space Elevator takes deliveries in phases, each unlocking
-  the next tier, and the last launches the ending [wiki] https://satisfactory.wiki.gg/wiki/Project_Assembly .
-  Anno 1800's World's Fair is "the ultimate end-game goal", built in stages from growing production chains
-  [CRITIC, via search; DEV] https://www.ludo.guide/guide/anno-1800/overview/quest-a-monument-to-progress .
-  SimCity (2013)'s **Great Works** (Arcology, International Airport, Space Center) are built by every city
-  of a region together, cost about 1M and serve the whole region [guide]
-  https://primagames.com/eguides/simcity-eguide/essentials/great-works . What players like here is a named,
+- **Megaprojects as the goal.** The 3D factory game's Space Elevator takes deliveries in phases, each unlocking
+  the next tier, and the last launches the ending [wiki].
+  The production-chain city-builder's World's Fair is "the ultimate end-game goal", built in stages from growing production chains
+  [CRITIC, via search; DEV].
+  The classic city-builder (2013)'s **Great Works** (Arcology, International Airport, Space Center) are built by every city
+  of a region together, cost about 1M and serve the whole region [guide].
+What players like here is a named,
   visible thing that took the whole economy to make.
-- **Spending on the towns.** OpenTTD's local authority sells advertising (station ratings up for a while),
+- **Spending on the towns.** The classic transport sim's local authority sells advertising (station ratings up for a while),
   a statue of the owner, funding new buildings (the town grows; no direct return), exclusive transport
-  rights and bribes [wiki] https://wiki.openttd.org/en/Manual/Local%20authority . A-Train lets the company
-  build hotels, offices and resorts by its stations, which grow the town and earn rent [via search]
-  https://forum.quartertothree.com/t/lets-take-the-a-train-an-all-purpose-series-thread/152528/126 .
-  Subway Builder players ask for demand that grows round new stations [PLAYER]
-  https://steamcommunity.com/app/4039140/discussions/0/588433527532489346/
-- **Upkeep that grows with the network.** OpenTTD's infrastructure maintenance grows faster than the
+  rights and bribes [wiki]. The Japanese train-tycoon series lets the company
+  build hotels, offices and resorts by its stations, which grow the town and earn rent [via search].
+  The subway-building game players ask for demand that grows round new stations [PLAYER]
+- **Upkeep that grows with the network.** The classic transport sim's infrastructure maintenance grows faster than the
   network, so short links can lose money, and players are told to remove what they don't need; some find
-  it and inflation harsh enough to switch off [wiki, PLAYER]
-  https://wiki.openttd.org/en/Archive/Community/Infrastructure%20maintenance . trainsworld has flat upkeep
+  it and inflation harsh enough to switch off [wiki, PLAYER].
+trainsworld has flat upkeep
   per km already (T-867).
-- **Markets and rivals.** Railroad Tycoon's late money goes into stocks and taking over rival railroads
-  [guide] https://strategywiki.org/wiki/Railroad_Tycoon_3/Gameplay . trainsworld has no rivals.
-- **No money at all.** Mini Metro has none: every in-game week brings a new train and a pick of upgrades
-  (a carriage, a line, tunnels or bridges, an interchange) [wiki]
-  https://shapes.inc/fandom/mini-metro/upgrades . Scarcity is in the pieces, so there is no pile. Factorio
+- **Markets and rivals.** The classic rail tycoon game's late money goes into stocks and taking over rival railroads
+  [guide]. trainsworld has no rivals.
+- **No money at all.** The minimalist metro game has none: every in-game week brings a new train and a pick of upgrades
+  (a carriage, a line, tunnels or bridges, an interchange) [wiki].
+Scarcity is in the pieces, so there is no pile. The factory game
   has no money either; after the rocket, players set their own goals (megabases, science per minute) and
-  stop "only because they hit performance limits" [PLAYER]
-  https://forums.factorio.com/viewtopic.php?p=572387 ; continuing "can feel empty because the game has no
-  official objective after that point" [PLAYER] https://forums.factorio.com/viewtopic.php?p=362832 .
+  stop "only because they hit performance limits" [PLAYER];
+continuing "can feel empty because the game has no
+  official objective after that point" [PLAYER].
 
 ### What carries over
 
@@ -172,9 +169,9 @@ Tags as in player-voices.md: **[DEV]**, **[PLAYER]**, **[CRITIC]**, **[GUESS]**.
    the most argued against.
 2. The late purchases players remember are **named projects with a visible result**: a space elevator, a
    World's Fair, a Great Work. In a rail game on the real world, that is the real world's own megaprojects.
-3. NIMBY players already do what Anita does: once rich, **build between the cities**. trainsworld's map is
+3. The track-drawing rail game players already do what Anita does: once rich, **build between the cities**. trainsworld's map is
    the whole world, so the next country is always there; that is its biggest sink, and it is free to add.
-4. Spending that is the same click many times (OpenTTD's adverts and statues, TF2's vehicle renewal) is
+4. Spending that is the same click many times (the classic transport sim's adverts and statues, the 3D transport game's vehicle renewal) is
    busywork; one big decision is not.
 
 ---
@@ -189,7 +186,7 @@ where it applies.
 Switch built double track to high speed, or move it to another level (bury a viaduct, lift ground track
 through a centre), keeping its lines, stations and trains. Today it means remove (no refund) and draw again.
 - Why: the real progression for long lines (build cheap, upgrade when it pays), and exactly Anita's sink:
-  a rich player turns a 160 km/h corridor into a 320 one. Subway Builder players list "no track upgrades
+  a rich player turns a 160 km/h corridor into a 320 one. The subway-building game players list "no track upgrades
   without demolishing" as a complaint [PLAYER, summary].
 - Cost: the new track's full price, as if built again (100 km of ground track to high speed: about $5.6B).
   The simplest rule, and as dear as today's remove-and-rebuild.
@@ -266,8 +263,8 @@ drawn on the map as a site.
 - Fit: it adds waiting, not spending; only if she wants big builds to feel like events.
 
 ### H. Grow places round stations
-Pay to grow homes and jobs within 800 m of a station (OpenTTD's "fund new buildings", A-Train's
-subsidiaries, Subway Builder players' request, player-voices idea 15).
+Pay to grow homes and jobs within 800 m of a station (the classic transport sim's "fund new buildings", the Japanese train-tycoon series's
+subsidiaries, the subway-building game players' request, player-voices idea 15).
 - Cost: say $1B a station for +10% people and jobs within 800 m.
 - Needs: demand data edits at run time, a save field, a re-solve. Large, and it changes where demand comes
   from.
@@ -281,12 +278,12 @@ What is missing is only recognition: an achievement for a city at 0 fares with 3
 
 ### J. Faster cars on existing lines
 A newer fleet with better acceleration, replacing a line's cars at full price.
-- Busywork: this is TF2 and OpenTTD's vehicle renewal, one click per line many times, for a few seconds a
+- Busywork: this is the 3D transport game and the classic transport sim's vehicle renewal, one click per line many times, for a few seconds a
   run. Not recommended.
 
 ### K. Rising upkeep or ageing
 Upkeep that grows each year, or trains that wear out.
-- Busywork and a tax, and players split on it (TF2 thread above). trainsworld's flat upkeep a km is
+- Busywork and a tax, and players split on it (the 3D transport game thread above). trainsworld's flat upkeep a km is
   already the useful part. Not recommended.
 
 ### L. Showing off (later, as Anita said)
@@ -299,7 +296,7 @@ Money turned into something to look at or share:
 Pure sinks are fine here, because the result is the point. Needs drawing and share-link work; later.
 
 ### Not taken
-Stock markets and rivals (no rivals), OpenTTD-style adverts, statues and bribes (busywork, no rivals to
+Stock markets and rivals (no rivals), the classic transport sim-style adverts, statues and bribes (busywork, no rivals to
 beat), dearer far cities (breaks one price list worldwide), hyperloop (not sensible), bigger loans (money
 is not short late).
 
@@ -318,8 +315,8 @@ of other games complain about. About one sim session and a UI pass.
 
 ### 2. Named crossings (B)
 A list of the world's straits, base tunnels and great lines, each marked when a running line uses it, with
-its date and name in the achievements and on the map. It gives the late money a goal of the kind Satisfactory,
-Anno and SimCity use, and in trainsworld's own terms: real places, built at the prices the game already
+its date and name in the achievements and on the map. It gives the late money a goal of the kind the 3D factory game,
+The production-chain city-builder and the classic city-builder use, and in trainsworld's own terms: real places, built at the prices the game already
 has, mostly at a loss, as real ones are. It grows from T-2150's Sea crossing and needs only a hand-made data
 file and UI. The list grows with the world (Gibraltar when Morocco comes).
 - **Anita decides**: whether a hand-made list of places is fine here (it is content, not demand data);

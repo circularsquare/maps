@@ -48,7 +48,7 @@ the bottom.
 
 **6. Longer, with the other games**
 
-> subway builder gives you one city at a time, with millions of commuters from census data. nimby
+> The subway-building game gives you one city at a time, with millions of commuters from census data. The track-drawing rail game
 > rails gives you the whole world map with individual passengers. i wanted both: census-style
 > demand everywhere, in one save. so trainsworld counts trips per hour between places, about 13
 > billion a day across 65 countries, and only redoes the parts a new line touches. new york alone is 68 million trip legs a day. the zone you're looking at updates in
@@ -71,13 +71,13 @@ Notes on these:
   "level of detail" or "multi-scale". Transport planners do the same thing by hand: fine zones in the
   study area, coarse "external zones" outside it (Toronto's zone guidance, below).
 - **"Simulates every passenger."** It doesn't. Passengers are flows, trips per period between places
-  (SPEC 2). The trains move, the riders on them are counts. Subway Builder, NIMBY Rails and Cities:
-  Skylines all have individual people you can follow; this can't show one person's day (the trip
+  (SPEC 2). The trains move, the riders on them are counts. The subway-building game, the track-drawing rail game and Cities:
+  The city-builder all have individual people you can follow; this can't show one person's day (the trip
   explorer shows one pair of places instead).
 - **"Realistic" or "accurate".** The spec puts sensible and fun over fitting real cities, and most
   of the world is a low-fidelity first pass. Real networks are a loose check only. Say "from census
   data" where true, "sensible" otherwise.
-- **"First" or "only".** NIMBY Rails already has the whole world. Planning software has done
+- **"First" or "only".** The track-drawing rail game already has the whole world. Planning software has done
   frequency-based assignment since 1989. What is unusual is the combination (whole-world demand of
   this kind in a browser game), and even that I can't prove nobody has done.
 - **"Fast" for whole countries.** The zone in view is seconds; a whole big save is minutes (Japan 21
@@ -87,25 +87,25 @@ Notes on these:
 - **"AI"** in any sense, and "the whole world": Russia, Belarus and Ukraine are held, and much of
   Africa and Latin America is still being built.
 - **Beating other games on performance.** The comparisons below are from store pages, dev blogs and
-  forum posts, and nobody has run them side by side. Cities: Skylines II slowing past ~150k people is
+  forum posts, and nobody has run them side by side. The newer city-builder slowing past ~150k people is
   player reports. Fine to say what trainsworld does; not fine to say it's faster than X.
 
 ## The other games
 
 | Game | Map | Who travels | How they pick a route |
 |---|---|---|---|
-| [Subway Builder](https://www.subwaybuilder.com/) ([wiki](https://en.wikipedia.org/wiki/Subway_Builder)) | 55 real cities, one per map (36 US, 6 Japan, 5 UK, 3 France and a few more), October 2026 | "millions of commuters" from US census (LEHD) and Redistricter, homes to jobs by a gravity model; students and airport trips too | per commuter group, "the same pathfinding algorithms you use on your phone"; wait, transfers, income, delays |
-| [NIMBY Rails](https://store.steampowered.com/app/1134710/NIMBY_Rails/) ([dev blog](https://carloscarrasco.com/page/18/)) | the whole real world, detailed | individual passengers spawned by population density, destinations weighted the same way and by distance | multi-train trips with transfers; pathfinding in worker threads with a cache ([2021 post](https://carloscarrasco.com/page/53/)) |
-| Cities: Skylines I and II ([PC Gamer](https://pcgamer.com/cities-skylines-2-has-no-cap-on-the-number-of-people-it-can-track-and-its-basically-the-matrix), [traffic AI](https://paradoxinteractive.com/games/cities-skylines-ii/features/traffic-ai)) | one city you build | individual citizens with homes, jobs and lives; CS1 capped at 65,536 agents, CS2 has no cap | each agent by path cost; players report CS2 slowing badly past 100k-200k residents |
-| Transport Fever 2 ([forum](https://steamcommunity.com/app/1066780/discussions/0/2639605437882690967)) | generated maps | individual persons, destinations hard-coded | fastest route |
-| [OpenTTD cargodist](https://wiki.openttd.org/en/Manual/Passenger%20and%20cargo%20distribution) | generated maps | passengers with destinations between stations (symmetric demand) | a flow solver over the network's link graph |
-| Railway Empire 2 ([forum](https://steamcommunity.com/app/1644320/discussions/1/6407003396125537537)) | regional maps | passengers between city pairs by the two populations, capped to some pairs | trains between cities; transfers new in 2 |
-| [Mini Metro](https://en.wikipedia.org/wiki/Mini_Metro_(video_game)) | abstract, generated | a shape that wants any station of that shape | any line that gets there |
+| The subway-building game (wiki) | 55 real cities, one per map (36 US, 6 Japan, 5 UK, 3 France and a few more), October 2026 | "millions of commuters" from US census (LEHD) and the subway game's developer, homes to jobs by a gravity model; students and airport trips too | per commuter group, "the same pathfinding algorithms you use on your phone"; wait, transfers, income, delays |
+| The track-drawing rail game (dev blog) | the whole real world, detailed | individual passengers spawned by population density, destinations weighted the same way and by distance | multi-train trips with transfers; pathfinding in worker threads with a cache (2021 post) |
+| The city-builder and II (PC Gamer, traffic AI) | one city you build | individual citizens with homes, jobs and lives; the city-builder capped at 65,536 agents, the newer city-builder has no cap | each agent by path cost; players report the newer city-builder slowing badly past 100k-200k residents |
+| The 3D transport game (forum) | generated maps | individual persons, destinations hard-coded | fastest route |
+| The classic transport sim cargodist | generated maps | passengers with destinations between stations (symmetric demand) | a flow solver over the network's link graph |
+| The rail tycoon game (forum) | regional maps | passengers between city pairs by the two populations, capped to some pairs | trains between cities; transfers new in 2 |
+| The minimalist metro game) | abstract, generated | a shape that wants any station of that shape | any line that gets there |
 | Planning tools ([Spiess and Florian 1989](https://ideas.repec.org/a/eee/transb/v23y1989i2p83-102.html)) | a study area, finer inside ([zone guidance](https://tmg.utoronto.ca/files/Reports/Traffic-Zone-Guidance_March-2021_Final.pdf)) | trip tables between zones | "optimal strategies": riders share lines by frequency; trainsworld's route search is this |
 
-Where the others are better: Subway Builder's cities are hand-finished and its riders are people;
-NIMBY Rails has years of track and signal simulation (trainsworld has no signals, SPEC 2.1) and is a
-finished commercial game; Cities: Skylines simulates lives, not trips.
+Where the others are better: the subway-building game's cities are hand-finished and its riders are people;
+The track-drawing rail game has years of track and signal simulation (trainsworld has no signals, SPEC 2.1) and is a
+finished commercial game; the city-builder simulates lives, not trips.
 
 ## The numbers the framings rest on
 

@@ -4,47 +4,47 @@ Researched 2026-11-03 for t2267. Outward-looking only. "Read" means I opened the
 
 ## 1. Games: where the active tool's options sit
 
-### NIMBY Rails (closest match to trainworld)
-- Read: [How to build track](https://wiki.nimbyrails.com/How_to_build_track). Track tools live in a Tracks menu at the top left (F2). Each tool's extra switches (double track, J) appear as buttons along the bottom of that menu, and further panels open to the side.
+### The track-drawing rail game (closest match to trainworld)
+- Read: How to build track. Track tools live in a Tracks menu at the top left (F2). Each tool's extra switches (double track, J) appear as buttons along the bottom of that menu, and further panels open to the side.
 - The track level menu and track type menu sit to the right of the tool buttons and only appear for tools that need them ("most of the track editing tools enable" them). They apply to new track or to the selected track.
 - Levels: Ground, +1/+2/+3 (viaduct), -1/-2/-3 (tunnel), and unlimited +/-. Level is per control point, so you can start at one level and change before the second point. Track types have a 9-slot favourites hotbar on keys 1 to 9, plus an "All tracks" list hidden by default.
 - Blueprint (planned, unbuilt) track draws blue. Ctrl forces straight, Shift keeps laying, Delete removes control points.
-- The wiki says nothing about an auto-ramp option or how the active tool is highlighted. Dev blog [2021-05](https://carloscarrasco.com/page/51/) (search only) says single-step track laying is what makes snapping possible.
+- The wiki says nothing about an auto-ramp option or how the active tool is highlighted. Dev blog 2021-05 (search only) says single-step track laying is what makes snapping possible.
 - Search only: Steam patch notes say its bulk track panel hides options that cannot apply to the current selection. That is the "show only what applies" rule.
 
-### Cities: Skylines I
-- Search only (guides and a Steam thread, no official page): the road options sit at the bottom left, beside the road type buttons. The leftmost button picks straight, curved or freeform. A separate elevation step button cycles 3, 6 or 12 m. Page Up and Page Down raise and lower the road being placed. Sources: [GG Recon guide](https://www.ggrecon.com/guides/cities-skylines-elevate-roads/), [Steam thread](https://steamcommunity.com/app/255710/discussions/0/610574827757727638).
+### The city-builder
+- Search only (guides and a Steam thread, no official page): the road options sit at the bottom left, beside the road type buttons. The leftmost button picks straight, curved or freeform. A separate elevation step button cycles 3, 6 or 12 m. Page Up and Page Down raise and lower the road being placed. Sources: GG Recon guide, Steam thread.
 - The options are on screen only while a road is being placed (memory, matches the guides).
 
-### Cities: Skylines II
-- Official: [Paradox road tools page](https://paradoxinteractive.com/games/cities-skylines-ii/features/road-tools) and dev diary. Lists parallel mode, grid mode, replace tool, bulldoze, elevation (cut and fill, negative values dig, positive raise), several snapping options and "road guides" that show the slope as a number. Right mouse button cancels each step. It does not say where the panel sits.
+### The newer city-builder
+- Official: the city-builder's publisher road tools page and dev diary. Lists parallel mode, grid mode, replace tool, bulldoze, elevation (cut and fill, negative values dig, positive raise), several snapping options and "road guides" that show the slope as a number. Right mouse button cancels each step. It does not say where the panel sits.
 - Search only ([prodigygamers guide](https://prodigygamers.com/?p=25789), a fan guide; page returned 403 when I opened it): controls are Tool Mode, Elevation, Parallel Mode and Snap Options at the bottom left of the screen. Snap options include a "toggle all snapping" switch and "snap to existing geometry". Elevation moves in 10 m steps and halves with a smaller step.
 - Memory, unconfirmed: II shows these as a small icon bar that floats just above the build menu, appears only with a road tool, and has hover labels with key hints.
 
-### Transport Fever 2
-- I found no official manual page. Search only: the first game's [feature page](https://www.transportfever.com/game-info/features/) says track is built with "click and drag" and that switches, parallel tracks, catenary, bridges and tunnels are options. A [GOG forum post](https://gog.com/forum/transport_fever_2/track_planning_layout_tool) says the preview shows cost and max speed at points and lets you choose bridge and tunnel type and height.
-- Players force bridges and tunnels by raising and lowering the track with the M and N keys ([Steam thread](https://steamcommunity.com/app/1066780/discussions/0/2246679252941425676)). Height is a held-key adjustment, not a panel control.
+### The 3D transport game
+- I found no official manual page. Search only: the first game's feature page says track is built with "click and drag" and that switches, parallel tracks, catenary, bridges and tunnels are options. A GOG forum post says the preview shows cost and max speed at points and lets you choose bridge and tunnel type and height.
+- Players force bridges and tunnels by raising and lowering the track with the M and N keys (Steam thread). Height is a held-key adjustment, not a panel control.
 - Memory: the options are a strip at the bottom of the screen next to the build menu, shown only in construction mode, with the track type and electrification as toggles in it. Unconfirmed.
 
-### Mini Metro and Mini Motorways
-- Mini Metro has no tool panel. Peripheral UI is pushed out to the edges: lines on one side, resources on the other, clock and score top right ([design write-up](https://mechanicsofmagic.com/2023/04/22/visual-design-of-games-mini-metro/)). The line colours along the bottom bar are the controls (search only: click a line colour, press the X, to delete it).
-- You start a line by dragging from a station, and remove a segment by dragging the line's end "T" back (search only, [Steam](https://steamcommunity.com/app/287980/discussions/0/530646080865154289), [Metafilter](https://metafilter.com/164531/A-transit-planner-looks-at-Mini-Metro)). The "mode" is the drag itself, so there is nothing to indicate.
-- Mini Motorways has a small mode step: tap to enter drawing, and an eraser toggle ([MobileSyrup review](https://mobilesyrup.com/2021/08/22/mini-motorways-game-review-traffic-fun/), search only).
+### The minimalist metro and road games
+- The minimalist metro game has no tool panel. Peripheral UI is pushed out to the edges: lines on one side, resources on the other, clock and score top right (design write-up). The line colours along the bottom bar are the controls (search only: click a line colour, press the X, to delete it).
+- You start a line by dragging from a station, and remove a segment by dragging the line's end "T" back (search only, Steam, Metafilter). The "mode" is the drag itself, so there is nothing to indicate.
+- The minimalist road game has a small mode step: tap to enter drawing, and an eraser toggle (MobileSyrup review, search only).
 
-### Subway Builder (2025)
-- Read: [changelog](https://www.subwaybuilder.com/changelog) and [wiki Construction](https://wiki.subwaybuilder.com/index.php/Construction) (the wiki gave a 502 on fetch; only the search summary was seen).
+### The subway-building game (2025)
+- Read: changelog and wiki Construction (the wiki gave a 502 on fetch; only the search summary was seen).
 - Page Up and Page Down change track elevation in build mode (v0.10.0). v1.4.0 added "trenched" and "ramp" classes for -5 to +5 m. G cycles lane count in the construction panel (v1.7.0). Shift while drawing forces straight (v1.2.0). Right-click cancels drawing (v0.5.0).
 - It has a construction panel and a bottom toolbar, with Build, Blueprint and Delete tabs. Selectors are dropdowns and cycle buttons (v1.4.5). Track length and curve radius show while drawing (v1.7.0). A "duplicate mode toggle above the bottom toolbar" was removed in v1.4.5, so they had two mode indicators and cut one. v1.7.0 fixed zoom buttons overlapping the bottom bar on small screens.
 - An early review (search only) complained there are no shortcuts to switch modes and you cannot select laid track. No changelog line mentions touch screens.
 
-### OpenTTD
-- Read: [Railway construction](https://wiki.openttd.org/en/Manual/Railway%20construction). The rail toolbar opens as a floating window from the menu bar. One row of buttons: rail, autorail, dynamite, depot, waypoint, station, signal, bridge, tunnel, remove, convert. Each has a key. Rail type (normal, electric, monorail, maglev) is chosen from a dropdown on the main button.
-- Station, depot and signal tools open a second small window of options (station size and direction, signal type) that appears when you pick the tool ([Building signals](https://wiki.openttd.org/en/Manual/Building%20signals)).
+### The classic transport sim
+- Read: Railway construction. The rail toolbar opens as a floating window from the menu bar. One row of buttons: rail, autorail, dynamite, depot, waypoint, station, signal, bridge, tunnel, remove, convert. Each has a key. Rail type (normal, electric, monorail, maglev) is chosen from a dropdown on the main button.
+- Station, depot and signal tools open a second small window of options (station size and direction, signal type) that appears when you pick the tool (Building signals).
 - Modifier keys change the action in place: Ctrl swaps build and remove, Shift swaps build and a cost-only preview. Remove (R) is a toggle that stays on until clicked again.
 - The wiki does not describe the cursor change. Memory: the selected toolbar button stays pressed down and the mouse cursor becomes a tool icon (dynamite, rail piece), and the bulldozer highlight goes red. The signal page confirms only the bulldozer square turning red.
 
-### Planet Coaster (path tool, height)
-- Read via search: [Building your park](https://planetcoaster.com/player-guides/building-your-park) (403 on fetch). Line builder has "Working height" (sets the height for cutting through terrain or going over water) and "Snap height" (locks to a fixed height for even stairs). U and J raise and lower a path without placing it. Community reports say switching tools sometimes resets the height. Height is a stored option of the tool, and surprise resets annoy people.
+### The theme-park game (path tool, height)
+- Read via search: Building your park (403 on fetch). Line builder has "Working height" (sets the height for cutting through terrain or going over water) and "Snap height" (locks to a fixed height for even stairs). U and J raise and lower a path without placing it. Community reports say switching tools sometimes resets the height. Height is a stored option of the tool, and surprise resets annoy people.
 
 ## 2. Desktop tools: options bar and status line
 
@@ -70,14 +70,14 @@ Researched 2026-11-03 for t2267. Outward-looking only. "Read" means I opened the
 
 ## What this suggests for trainworld
 
-- Options appear only for the active tool, in one fixed spot. Photoshop (under the menu), GIMP (under the toolbox), Blender (strip over the 3D view), NIMBY Rails (beside the tool buttons, shown only for tools that use them). Pick one place, keep the options out of the way of the track being drawn.
-- Keep the option set small and switch-like: type, level, a straight toggle, a snap toggle. NIMBY's favourites hotbar on number keys and Skylines' elevation step button both prefer a few big buttons over menus. NIMBY's bulk panel hides options that cannot apply, which is the rule to copy.
-- Elevation is the option everyone puts on keys (Page Up and Down in Skylines and Subway Builder, M and N in Transport Fever, U and J in Planet Coaster) and also on a visible control. A visible level control is needed for touch. Show the current level on the cursor or the line being drawn as well.
+- Options appear only for the active tool, in one fixed spot. Photoshop (under the menu), GIMP (under the toolbox), Blender (strip over the 3D view), the track-drawing rail game (beside the tool buttons, shown only for tools that use them). Pick one place, keep the options out of the way of the track being drawn.
+- Keep the option set small and switch-like: type, level, a straight toggle, a snap toggle. The track-drawing rail game's favourites hotbar on number keys and the city-builder's elevation step button both prefer a few big buttons over menus. The track-drawing rail game's bulk panel hides options that cannot apply, which is the rule to copy.
+- Elevation is the option everyone puts on keys (Page Up and Down in the city-builder and the subway-building game, M and N in the 3D transport game, U and J in the theme-park game) and also on a visible control. A visible level control is needed for touch. Show the current level on the cursor or the line being drawn as well.
 - Show the mode as a line of text saying what the next click does. Blender's status bar ("what mouse buttons and keys do for each editor, mode and tool") and AutoCAD's "Specify next point" at the crosshair are the two clearest precedents. A phone has no mouse buttons, so say the action instead ("Tap to place the next track point. Double tap to finish").
 - A single colour change on a strip you already have (iPhone bar, VS Code status bar, Google Docs pencil) is cheaper than a full frame and carries less alarm. A thin frame is the strongest signal and fits modes that change what a tap does and are easy to forget (Blender auto key, Zoom share).
 - Colour carries meaning already. Blender's developers argued "red should be reserved for errors" and Apple uses red for recording and green for a call. Red or green frames read as recording or alert. Use a calm per-mode hue, never red, and pair it with text so colour is never the only cue (colour-blind players).
 - The mode indicator must survive hidden UI. Figma users lost edits because the dev mode switch hid with the panels. Put the descriptor in a bar that stays when other chrome is hidden, and keep it out of the way of the map edge on phones.
-- Do not show the mode twice. Subway Builder deleted a duplicate mode toggle. One fixed place for the name, one for the options.
-- Make exit obvious: Esc and right-click on desktop (Skylines, Subway Builder), a Done or tick button on phone (Figma, FireMapper). Show it next to the descriptor.
-- Phones: FireMapper puts a scrolling toolbar at the bottom and a distance readout at the top, and blocks panning while drawing. Subway Builder had to fix overlap between zoom buttons and its bottom bar. Reserve the bottom band for the descriptor and options and keep map buttons out of it.
+- Do not show the mode twice. The subway-building game deleted a duplicate mode toggle. One fixed place for the name, one for the options.
+- Make exit obvious: Esc and right-click on desktop (the city-builder, the subway-building game), a Done or tick button on phone (Figma, FireMapper). Show it next to the descriptor.
+- Phones: FireMapper puts a scrolling toolbar at the bottom and a distance readout at the top, and blocks panning while drawing. The subway-building game had to fix overlap between zoom buttons and its bottom bar. Reserve the bottom band for the descriptor and options and keep map buttons out of it.
 - Warning: a flashing border annoyed people (Blender made it optional, Zoom lets you switch it off). If used, make it static, thin and switchable, and consider showing it only while a tool is mid-gesture, not for plain selecting.

@@ -246,14 +246,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4359: a load adds each zone viewed while it runs and keeps it open until the load ends (Lantian 208 s in your session); a game load's card still does. At a save's load the default zone (New York) kept a "Loading city data" bar for 7 s after the view left it.
   - Goal: A zone viewed during a load opens and closes on its own.
   - Other: notes/T-4359.md
+- T-4438 [P2] {L:trams} Raised or sunk street tram keeps the 60 km/h cap (taking, 2026-11-27, agent tramcap)
+  - Context: A player, 11-27 (via you): tram track snapped to a street but elevated or underground gets the street 60 km/h cap; you: "we are paying full cost for those so they should be 75km/h cap".
+  - Goal: Street-snapped tram track above or below the street takes the 75 km/h tram cap; at-grade street track keeps 60.
 - T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends (taking, 2026-11-27, agent freestation2)
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
-- T-4427 [P3] {L:cleanup} No other games named in research and notes (taking, 2026-11-27, agent gamenames)
-  - Context: You, 11-27: "lets just ideally remove all references to other games". Current docs, SPEC, DECISIONS and code comments are done (11-27); research/, notes/ (archive too) and ARCHIVE-to-2026-10-19.md still hold 623 mentions in about 70 .md files.
-  - Goal: git grep finds no game name there; three game-named research files renamed, every link updated.
-  - Other: notes/T-4427.md
 - T-4424 [P2] {L:checks} Second Claude account (taking, 2026-11-27, agent claude2)
   - Context: You, 11-27: "i think i'll get a second claude subscription." Set up 11-27: the claude2 command, the .claude-2 folder, shared maps memory, tools look in both folders, next_orchestrator.py --account 2. Logged in 11-27; sessions on the two accounts do not see each other (no messages between them). Left: memory check from a claude2 session.
   - Goal: A claude2 session in maps uses the shared memory and your global CLAUDE.md.
@@ -499,6 +498,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
+- T-4440 [P1] {L:loading} The first load's card shrank and can't be moved or closed (taking, 2026-11-27, agent loadcard)
+  - Context: You, 11-27: "we seem to have made it a lot smaller horizontally / less margin, which i dont want. also it doesnt actually seem to be movable or dismissable. theres no x in the corner. and i cant drag it to the side." From T-4346's x and header drag.
+  - Goal: The card has its width and margins from before T-4346, and its x and drag work when the load reaches them.
+  - Other: notes/T-4440.md
 - T-4401 [P3] {L:map-look} Stray stroke joins two lines zoomed out
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
@@ -1013,7 +1016,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
   - Other: research/late-game-spending.md C.
-- T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows
+- T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows (taking, 2026-11-27, agent modesdesign)
   - Context: Your pad, 11-25: most players won't care about every mode as niche ones come (cable cars, monorail, maglev, maybe planes). Your design: a gear on the construct panel to hide or show modes; by default it shows today's (bus and ferry), with checkboxes for cable cars and monorail.
   - Goal: That gear and its setting, kept per player; a mode switched off and never built shows up nowhere, build menus included (you, 11-27). Needed before the next mode ships.
 - T-4335 [P3] {L:other-modes} Monorail as a mode

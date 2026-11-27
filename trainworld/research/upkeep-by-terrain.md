@@ -115,19 +115,18 @@ or judgement. Many primary PDFs would not open (403, 502, binary); those are mar
 
 ## 5. Other games
 
-- **OpenTTD** (infrastructure maintenance setting): rail pieces per tile n², bridges and tunnels 4
+- **The classic transport sim** (infrastructure maintenance setting): rail pieces per tile n², bridges and tunnels 4
   pieces a tile; cost per type = pieces x factor x sqrt(all pieces), so upkeep grows as network size
   to the 1.5. No terrain term; level crossings not covered on the page. [SRC]
-  https://wiki.openttd.org/en/Archive/Community/Infrastructure%20maintenance
-- **Transport Fever 2**: track, station and signal upkeep billed apart from vehicles; players find
+- **The 3D transport game**: track, station and signal upkeep billed apart from vehicles; players find
   track upkeep small next to trains'; bridges dear to build. No terrain or structure multiplier found.
-  [SRC] https://steamcommunity.com/app/1066780/discussions/0/2639605437881762306 ;
-  [SECONDHAND] https://steamcommunity.com/app/1066780/discussions/0/1740010344366988160
-- **Railway Empire 2**: upkeep mostly trains and maintenance buildings; tunnels and bridges are a
+  [SRC];
+  [SECONDHAND]
+- **The rail tycoon game**: upkeep mostly trains and maintenance buildings; tunnels and bridges are a
   construction cost. [SECONDHAND] https://www.gamepressure.com/S013-amp.asp?ID=22334
-- **Subway Builder**: construction = base x depth multiplier (0.3x to 4.5x, cut and cover the
+- **The subway-building game**: construction = base x depth multiplier (0.3x to 4.5x, cut and cover the
   baseline) x track type (single 0.75, double 1, quad 1.5); no maintenance formula found.
-  [SECONDHAND] https://wiki.subwaybuilder.com/index.php/Construction
-- **NIMBY Rails**: no cost page found.
-- None of these charges terrain in upkeep. Where structures cost more to keep (OpenTTD), it is by
+  [SECONDHAND]
+- **The track-drawing rail game**: no cost page found.
+- None of these charges terrain in upkeep. Where structures cost more to keep (the classic transport sim), it is by
   structure, not ground.

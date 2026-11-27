@@ -2,7 +2,7 @@
 
 Background for notes/T-2974.md: how real railways and other games time lines through a shared trunk
 and turn trains at a terminus. Searched 2026-11-09. Related: `passing-tracks.md` (platform choice
-at stations, NIMBY and OpenTTD signals), `nimby-rails.md`, `performance-factorio-nimby.md`.
+at stations, the track-drawing rail game and the classic transport sim signals), `rail-game-study.md`, `performance-big-sims.md`.
 
 ## Real railways
 
@@ -70,35 +70,35 @@ at stations, NIMBY and OpenTTD signals), `nimby-rails.md`, `performance-factorio
 
 ## Other games
 
-- **NIMBY Rails.** Every train is simulated against path signals; a line's timetable is the
+- **The track-drawing rail game.** Every train is simulated against path signals; a line's timetable is the
   arrival and departure times of each train at each stop, built from orders ("depart at", "arrive
   no later than"), repeating weekly, and recalculated on every edit to a line, station or train
-  ([wiki, Timetable](https://wiki.nimbyrails.com/Timetable), [How to manual timetable](https://wiki.nimbyrails.com/How_to_manual_timetable)).
+  (wiki, Timetable, How to manual timetable).
   Trains may share a platform from version 1.9; a run whose last stop matches the next run's first
   (on the main platform "or any secondary platform") turns there without a separate stop
-  ([wiki, sharing a platform](https://wiki.nimbyrails.com/How_to_have_multiple_trains_share_a_platform)).
+  (wiki, sharing a platform).
   Merging and spacing are left to the player's timetable and signals; who waits is decided by path
   reservation, not by priority (`passing-tracks.md`).
-- **Transport Fever 2.** Vanilla has no timetables; trains follow fixed routes and wait for
+- **The 3D transport game.** Vanilla has no timetables; trains follow fixed routes and wait for
   occupied blocks. A later update added **alternative terminals** for a line's stops, so an
-  arriving vehicle can use another platform ([Steam patch notes](https://steamdb.info/patchnotes/8375959), read only
+  arriving vehicle can use another platform (Steam patch notes, read only
   through a search summary, not opened;
-  a player's description on [Reddit](https://lr.psf.lt/r/TransportFever/comments/1gcb1pj/what_are_these_symbols_in_line_manager)).
+  a player's description on Reddit).
   Timetables come from the **Timetables mod** (arrival/departure slots per station, "unbunch"), where
   a line can't run more trains than it has slots ([GitHub, TPF2-Timetables](https://github.com/Gregory365/TPF2-Timetables),
-  [TransportFever.net tutorial](https://www.transportfever.net/thread/17500-advanced-timetabling-tutorial-to-enable-real-local-express-running-using-the-tim/));
+  the 3D transport game's fan site tutorial);
   players report two trains leaving together from alternate platforms with unbunch on
   ([Steam workshop comments](https://steamcommunity.com/sharedfiles/filedetails/comments/2918585390)).
-- **OpenTTD.** Timetables per order list; "autofill" learns the times, and ctrl-clicking the start
+- **The classic transport sim.** Timetables per order list; "autofill" learns the times, and ctrl-clicking the start
   date spreads the vehicles of a shared order list evenly over the cycle
-  ([wiki, Timetable](https://wiki.openttd.org/en/Manual/Timetable)). Spacing that holds itself is a
+  (wiki, Timetable). Spacing that holds itself is a
   patch: timetable auto-separation in JGR's Patch Pack, and its scheduled dispatch (fixed departure
   slots), which forum posters say cannot be on together for one order list
   ([tt-forums, JGR's Patch Pack](https://www.tt-forums.net/viewtopic.php?p=1240659),
   [Scheduling patch thread](https://www.tt-forums.net/viewtopic.php?p=1244109),
-  [FS#1128 auto-separation](https://bugs.openttd.org/task/1128)). At a terminus a path signal lets a
+  FS#1128 auto-separation). At a terminus a path signal lets a
   train in when any platform is free (`passing-tracks.md`).
-- **Subway Builder**, **Mini Metro**: nothing found on how they space lines through shared track
+- **The subway-building game**, **the minimalist metro game**: nothing found on how they space lines through shared track
   or turn trains (searched 2026-11-09; no documentation or guide came up).
 
 ## What this says for the game
@@ -107,7 +107,7 @@ at stations, NIMBY and OpenTTD signals), `nimby-rails.md`, `performance-factorio
   slack at the ends to time each direction. The game can get that without simulating trains one by
   one, because its trains already run from repeating patterns (`Lattice`), as a clock-face timetable
   does.
-- Every game that lets trains interact physically (NIMBY, OpenTTD, TF2) pays for it with per-train
+- Every game that lets trains interact physically (the track-drawing rail game, the classic transport sim, the 3D transport game) pays for it with per-train
   simulation and leaves the spacing to the player. The game's pattern model gives the spacing for
   free, so the thing to copy from them is the terminal: arriving trains take whichever platform is
   free.

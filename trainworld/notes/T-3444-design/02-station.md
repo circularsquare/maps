@@ -25,7 +25,7 @@ Everything that today reads "a station" or "a complex", so a definition can be j
 ### A. A platform is a station
 
 Each platform the player places is its own station.
-- For: the simplest record; NIMBY Rails' smallest unit is close to this.
+- For: the simplest record; the track-drawing rail game's smallest unit is close to this.
 - Against: the default case is wrong. A double-track station has two side platforms, so it would be two stations with
   two names, and a line's stop would have to name one of them. She saw this ("that is weird with side platforms").
   Every quad station would be four.
@@ -40,7 +40,7 @@ new stations unless the player adds them to one.
 
 ### C. Mostly parallel platforms are one station
 
-Platforms whose footprints overlap side by side, at any level, are one station; NIMBY Rails' rule ("a set of one or
+Platforms whose footprints overlap side by side, at any level, are one station; the track-drawing rail game's rule ("a set of one or
 more platforms whose footprints overlap", research/games.md).
 - For: islands, AABB, ABBA, Grand Central's platforms and stacked 125th St Lexington all come out as one station by
   themselves, whenever they were built.

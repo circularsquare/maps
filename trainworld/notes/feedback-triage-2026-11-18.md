@@ -528,13 +528,13 @@ Each block has the question, my recommendation, and a reply for that recommendat
 
 **1794768764-01013111**, leni_v, English
 - Reported: when editing a bus line, right click shouldn't break the line; it should remove stops, like Cities:
-  Skylines.
+  The city-builder.
 - Question: change right click on a bus line's points? It's taken: on a middle point it loops the line back there,
   on the first point it closes the loop, on a ring it opens the ring there, and only on the last point it deletes
   (docs/ui-building.md, the bus tool's table). "Breaks the line" is likely the ring opening.
 - Recommend: no.
 - Reply if no: thanks! right click on a bus line's stops is used for loops: it closes a loop, or opens one at that
-  stop, which is what breaks the line. so it can't remove stops too. sorry, i know the skylines habit is hard to
+  stop, which is what breaks the line. so it can't remove stops too. sorry, i know the city-builder habit is hard to
   break.
 
 **1794744888-2d57c9d9** and **1794744778-ef2051d1**, anon, Japanese (merged, 2 minutes apart)

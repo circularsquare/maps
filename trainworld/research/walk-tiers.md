@@ -71,10 +71,10 @@ small children); that part would be a game number.
 
 ## Other games
 
-- **Subway Builder**: one walk weight for everyone (1.39), spread from each commuter's income
+- **The subway-building game**: one walk weight for everyone (1.39), spread from each commuter's income
   only (research/competitors.md).
-- **Cities: Skylines II**: path cost from time, comfort, behaviour and money, comparing walking,
+- **The newer city-builder**: path cost from time, comfort, behaviour and money, comparing walking,
   driving and transit; age is said to change parking preferences; no walking rule by age found in
-  the dev diaries' summaries. https://www.paradoxinteractive.com/games/cities-skylines-ii/features/traffic-ai
-- Searched and not found: a walk limit by age or disability in Subway Builder's docs (its wiki page
-  on commuters was not opened), Cities: Skylines II, NIMBY Rails.
+  the dev diaries' summaries.
+- Searched and not found: a walk limit by age or disability in the subway-building game's docs (its wiki page
+  on commuters was not opened), the newer city-builder, the track-drawing rail game.

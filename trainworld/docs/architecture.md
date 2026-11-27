@@ -24,7 +24,7 @@ never come in bursts (the evidence: notes/architecture-history.md).
 - **Optional flavour agents**: if the screen wants little people, sample a few from the flows for
   display; they never drive the simulation.
 
-Techniques taken from other simulations (`research/performance-factorio-nimby.md`):
+Techniques taken from other simulations (`research/performance-big-sims.md`):
 
 - Sleep what is idle; wake on timed events, never poll (FFF-148, FFF-421).
 - Cosmetics are a pure function of the clock, evaluated only when drawn (FFF-204, FFF-421).

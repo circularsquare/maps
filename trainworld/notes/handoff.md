@@ -2,7 +2,7 @@
 
 Orchestrator: session bae761ca-c85c-416e-b4e2-0a931ae6b8a6, name maps-dd, since 2026-11-27 23:10 UTC (Windows 11 now; maps-6c gone, nothing in flight)
 Updated: 2026-11-27 23:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
-diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
+diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word 11-27 18:33 her time: "we can rise core cap to 14").
 
 ## Next
 0. Machine rebooted 16:38 her time, still Windows 10; she is waiting on the Windows 11 download. 8800, watch, reserve_cores restarted by maps-6c.
@@ -17,6 +17,8 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    Uncommitted from it: maps .claude/settings.json autoMemoryDirectory, tools/checks_index.py (has others' edits).
 5. Then T-4153 stage 11, T-4309, T-4315, T-3160, T-4370, T-3838; T-4420-4422 (tooling). Core cap 10.
 6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
+
+Queued for the next free slot: editdesign2 (Opus): T-4267 revised against Gemini's review (artifacts/trainworld/gemini/T-4267-design-review.md, 6 HIGH), then its stages filed as T-4441-T-4475.
 
 ## Her words
 - 11-27 18:30 her time: a hidden mode that was never built "dont show up anywhere, like in build menus" (T-4334 Goal); nothing to do for Resend or R2; track rework not started while there is enough other work ("shouldnt spread ourselves too thin").

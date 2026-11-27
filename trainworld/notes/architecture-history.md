@@ -4,12 +4,12 @@ Moved out of docs/architecture.md in the doc tidy (T-940); the doc keeps the rul
 
 ## 2. Why passengers, not trains, are the cost
 
-Subway Builder's changelog points at passenger work: a timetable search per 200-person group,
+The subway-building game's changelog points at passenger work: a timetable search per 200-person group,
 "15 minute lag spikes" from every group re-deciding at once, freezes when drawing track on big
 networks. It is Electron + React + MapLibre, so the map library is not the problem; bursty
 per-group passenger work is.
 
-NIMBY Rails hands the renderer a small motion snapshot each frame and routes passengers over a
+The track-drawing rail game hands the renderer a small motion snapshot each frame and routes passengers over a
 graph of transfer stations only; it simulates individual riders, and overfull queues slow its
 whole sim. The flow model is meant to go far past that.
 

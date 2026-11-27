@@ -31,7 +31,7 @@ Launch day
 The week after
 - [ ] Reddit, one subreddit a day: r/WebGames, r/playmygame, r/indiegames (Promotion flair), r/TransitDiagrams (a diagram image), r/MapPorn (a map image).
 - [ ] r/gamedev only as a comment in its weekly Screenshot Saturday thread.
-- [ ] Stay out of other games' spaces: r/SubwayBuilder, r/NIMBYRails, r/CitiesSkylines and those games' Discords. If players post it there themselves, that is fine.
+- [ ] Stay out of other games' subreddits and Discords. If players post it there themselves, that is fine.
 - [ ] Write to 3-5 people from section 2 with a short note, the link and the clip. Start with Miles in Transit, Alan Fisher, kottke.org, Streetsblog tips and PC Gamer tips.
 - [ ] Fix what people report and reply in the same threads when it is fixed.
 - [ ] If the Show HN got no notice, one repost later is allowed.
@@ -70,22 +70,22 @@ not a verdict.
 | Post | Points | Date |
 |---|---|---|
 | [Trains.fyi, a live map of passenger trains in the US and Canada](https://news.ycombinator.com/item?id=38434574) | 503 | 2023-11 |
-| [Subway Builder: A realistic subway simulation game](https://news.ycombinator.com/item?id=45530744) (not a Show HN; posted the day its beta opened) | 303 | 2025-10 |
+| [the subway-building game: A realistic subway simulation game](https://news.ycombinator.com/item?id=45530744) (not a Show HN; posted the day its beta opened) | 303 | 2025-10 |
 | [Ubähnchen, animated subway map of Berlin](https://news.ycombinator.com/item?id=32647227) | 278 | 2022-08 |
 | [I built a transit travel time map](https://news.ycombinator.com/item?id=36847960) | 255 | 2023-07 |
-| [NYC Subway Simulator and Route Designer](https://news.ycombinator.com/item?id=44490588) (buildmytransit.nyc) | 201 | 2025-07 |
+| [the subway simulator and Route Designer](https://news.ycombinator.com/item?id=44490588) (buildmytransit.nyc) | 201 | 2025-07 |
 
 What the two game threads said:
-- **NYC Subway Simulator** (a weekend project on OSM data): praise for the sandbox; one crash
+- **The subway simulator** (a weekend project on OSM data): praise for the sandbox; one crash
   report; "This is sadly not mobile friendly in an amusing way" (controls covered the map on a
   phone); realism nitpicks ("Your default dwell times are wayyyyy too short", fixed versus moving
   block); requests for colour by line and a time slider.
-- **Subway Builder**: the main complaints were the $30-40 price, US-only cities (its demand comes
+- **The subway-building game**: the main complaints were the $30-40 price, US-only cities (its demand comes
   from the US Census, so non-US readers said they would wait), no free demo, and early-beta UI. Many
   had heard of it on Twitter: "Saw a lot of buzz about this on Twitter". A commenter said Miles in
   Transit had streamed it.
 
-What that means for trainsworld: it answers both of Subway Builder's top HN complaints (free, any
+What that means for trainsworld: it answers both of the subway-building game's top HN complaints (free, any
 city in the world). Say so plainly in the first comment, with the data sources. Expect realism
 questions from people who know rail; answering them well is what keeps a thread going.
 
@@ -117,8 +117,7 @@ source). An account with ordinary history beyond the game is the safe kind.
 
 **Poaching.** Posting in another game's subreddit or Discord reads as advertising to its players, and
 these communities usually have a rule against other games' promotion (the common Discord pattern is
-promotion only in a set channel, if at all). Stay out of r/SubwayBuilder, r/NIMBYRails,
-r/CitiesSkylines, r/MiniMetro, r/OpenTTD, r/TransportFever and those games' Discords. A player
+promotion only in a set channel, if at all). Stay out of other games' subreddits and Discords. A player
 posting it there is fine.
 
 ### 1.3 Bluesky
@@ -145,7 +144,7 @@ Post the same clip and text as on Twitter.
   works. Not tested: whether GitHub Pages allows framing; try it before relying on it.
 - Turn "Mobile friendly" off unless phones work: with it off, itch warns phone visitors the game may
   not work ([docs](https://itch.io/docs/creators/html5)).
-- Worth it? Rail Route ran its free open alpha on itch for two years before Steam (section 3). For a
+- Worth it? The indie rail game ran its free open alpha on itch for two years before Steam (section 3). For a
   free browser game the gain is a listing in itch's browse pages; it is a week-after item.
 
 ### 1.5 Discords and forums
@@ -155,8 +154,8 @@ Post the same clip and text as on Twitter.
   self-promotion channel before posting. **Not read.**
 - **Tildes ~transport** ([tildes.net/~transport](https://tildes.net/~transport)) has railfans
   ([thread](https://tildes.net/~transport/1669/any_tildesian_railfans)); Tildes is invite only.
-- Other games' Discords (NIMBY Rails' official server, where its developer answers players, per its
-  [Steam page](https://store.steampowered.com/app/1134710/NIMBY_Rails/), and Subway Builder's): poaching, see 1.2.
+- Other games' Discords (the track-drawing rail game's official server, where its developer answers players, per its
+  Steam page, and the subway-building game's): poaching, see 1.2.
 - I found no rules pages for transit-game Discords through search (results were generic templates).
 
 ### 1.6 Twitter
@@ -180,41 +179,41 @@ personal note, rather than all of them.
 
 | Who | Why them | Published route | |
 |---|---|---|---|
-| Miles in Transit (Miles Taylor, YouTube and blog) | Plays transit games: wrote about [Mini Metro](https://milesintransit.com/?p=918), and an HN commenter says he streamed Subway Builder | Form at [milesintransit.com/contact](https://milesintransit.com/contact/): "Just have some cool transit thing to tell me about?" | read |
+| Miles in Transit (Miles Taylor, YouTube and blog) | Plays transit games: wrote about [the minimalist metro game](https://milesintransit.com/?p=918), and an HN commenter says he streamed the subway-building game | Form at [milesintransit.com/contact](https://milesintransit.com/contact/): "Just have some cool transit thing to tell me about?" | read |
 | Alan Fisher, Armchair Urbanist (YouTube) | Big urbanist channel; on collaboration he says it "cross-pollinates" ([Streetsblog](https://sf.streetsblog.org/2026/04/24/train-tubers-a-talk-with-the-youtubes-transit-warriors)) | Email listed as "My Email" on [linktr.ee/alanthefisher](https://linktr.ee/alanthefisher) | read |
 | kottke.org | Links to small web projects | [kottke.org/about](https://kottke.org/about/): "If you have a project or video you're proud of, send it along" (an email link) | read |
 | Streetsblog | Runs transit videos and wrote about transit YouTubers | tips@streetsblog.org, [contact page](https://nyc.streetsblog.org/contact) | read |
-| PC Gamer | Covered Slow Roads, a free browser game ([article](https://www.pcgamer.com/explore-endless-roads-in-this-beautiful-driving-game-that-runs-in-your-browser)), and Subway Builder | tips@pcgamer.com, [pcgamer.com/tips](https://www.pcgamer.com/tips) | from search of its own pages |
-| Maps Mania (Keir Clarke) | Daily posts about web maps; covered [Metro Memory](https://googlemapsmania.blogspot.com/2023/10/the-london-tube-memory-game.html) and a [New York subway quiz](https://googlemapsmania.blogspot.com/2023/12/how-well-do-you-know-new-yorks-subway.html) | No tip address on the blog, only post comments ([blog](https://googlemapsmania.blogspot.com/)) | read |
-| Planetizen | Covered Subway Builder ([Oct 2025](https://www.planetizen.com/news/2025/10/136214-nerd-alert-subway-builder-video-game-lets-you-build-your-dream-transit-system)) | [planetizen.com/contact](https://www.planetizen.com/contact) | not read |
-| Greater Greater Washington | Covered Subway Builder players ([article](https://ggwash.org/view/101667/subway-builder-turns-metro-enthusiasts-into-transit-designers)) | [ggwash.org/contact](https://ggwash.org/contact) | not read |
+| PC Gamer | Covered the browser driving game, a free browser game ([article](https://www.pcgamer.com/explore-endless-roads-in-this-beautiful-driving-game-that-runs-in-your-browser)), and the subway-building game | tips@pcgamer.com, [pcgamer.com/tips](https://www.pcgamer.com/tips) | from search of its own pages |
+| Maps Mania (Keir Clarke) | Daily posts about web maps; covered [the metro station quiz game](https://googlemapsmania.blogspot.com/2023/10/the-london-tube-memory-game.html) and a [New York subway quiz](https://googlemapsmania.blogspot.com/2023/12/how-well-do-you-know-new-yorks-subway.html) | No tip address on the blog, only post comments ([blog](https://googlemapsmania.blogspot.com/)) | read |
+| Planetizen | Covered the subway-building game (Oct 2025) | [planetizen.com/contact](https://www.planetizen.com/contact) | not read |
+| Greater Greater Washington | Covered the subway-building game players (article) | [ggwash.org/contact](https://ggwash.org/contact) | not read |
 | Not Just Bikes (YouTube) | The biggest channel in the space, "about a million subscribers" ([Streetsblog](https://sf.streetsblog.org/2026/04/24/train-tubers-a-talk-with-the-youtubes-transit-warriors)) | About tab of [youtube.com/notjustbikes](https://www.youtube.com/notjustbikes) | not read |
 | CityNerd (Ray Delahanty, YouTube) | Former planner, ranks cities and transit | About tab of [youtube.com/CityNerd](https://www.youtube.com/CityNerd) | not read |
 | Trains Are Awesome (Thom de Boo) | Transit YouTuber, @Thom-TRA ([Streetsblog](https://sf.streetsblog.org/2026/04/24/train-tubers-a-talk-with-the-youtubes-transit-warriors)) | About tab of [youtube.com/@Thom-TRA](https://www.youtube.com/@Thom-TRA) | not read |
 | Car Free Keith (Keith Davis) | Transit YouTuber, @CarFreeKeith (same article) | About tab of [youtube.com/@CarFreeKeith](https://www.youtube.com/@CarFreeKeith) | not read |
 | City Planner Plays (YouTube) | A planner who plays city builders ([wiki](https://youtube.fandom.com/wiki/City_Planner_Plays)) | Channel About tab | not read |
-| Rock Paper Shotgun | Reviewed NIMBY Rails, "NIMBY Rails has made me a train person" (per [Wikipedia](https://en.wikipedia.org/wiki/NIMBY_Rails)) | Contact page on rockpapershotgun.com | not read |
+| Rock Paper Shotgun | Reviewed the track-drawing rail game, "[another game] has made me a train person" (per Wikipedia) | Contact page on rockpapershotgun.com | not read |
 | The Overhead Wire (newsletter) | Daily urbanism links | [theoverheadwire.com](https://www.theoverheadwire.com/) | not read (403) |
 | Next City | Covered a free NYC subway design browser game in 2016 ([article](https://nextcity.org/daily/entry/nyc-subway-design-game-robert-moses)) | [nextcity.org/pitch](https://nextcity.org/pitch) takes freelance pitches and op-eds only, not tips, and says it does not accept pitches from AI agents | read; not a tip route |
 
-City press picks up "your city as a game" stories: Metro Memory got Time Out, LBC, Londonist and
-The Week ([Time Out](https://www.timeout.com/london/news/how-to-play-londons-viral-tube-metro-memory-game-102423),
-[The Week](https://www.theweek.com/tech/why-the-metro-memory-game-is-so-addictive)); Brand New Subway
+City press picks up "your city as a game" stories: the metro station quiz game got Time Out, LBC, Londonist and
+The Week (Time Out,
+The Week); the subway-redesign game
 got Next City, NBC New York, 6sqft and Viewing NYC. Their tip routes were not read.
 
 ## 3. How similar games launched
 
 | Game | Where it first got noticed | What to copy |
 |---|---|---|
-| **Mini Metro** (2013-15) | Made at Ludum Dare 26 (April 2013), partly in Unity because a browser entry would draw more attention; the free web alpha (Sept 2013) had the web player "front and center" on the site and the team credits its "virality" to how easy it was to get into; then Greenlight, Early Access (Aug 2014), and "a good chunk" of free alpha players moved to the paid beta. They doubt the studio "would be operating now" without the web build. Its subway-map idea read at a glance from one screenshot ([postmortem](https://gamedeveloper.com/audio/postmortem-dinosaur-polo-club-s-i-mini-metro-i-)) | Play with no barrier, and a picture that explains the game without words |
-| **Subway Builder** (2025-26) | Colin Miller posted on 10 Jan 2025 that he was making "a game where you can build a subway network"; a video of the early demo drew enough attention that he made it a full game ([Wikipedia](https://en.wikipedia.org/wiki/Subway_Builder), [The Banner](https://www.thebanner.com/community/transportation/subway-builder-baltimore-transit-system-VPYKWAWVZZGZ7BSAQ6H6J6ZFVQ)). Before the 9 Oct 2025 beta, hype ran on X: players' and the developer's screenshots of their cities ("rush hour in Boston") ([Punished Backlog](https://punishedbacklog.com/subway-builder-internet-hype/)). HN 303 points on beta day. Press: NY1, Fast Company, PC Gamer, GGWash, Planetizen | Short clips of real cities while it is being made; players posting their own cities did the rest |
-| **NIMBY Rails** (2020-21) | Revealed mid-March 2020 in a development retrospective on the developer's [devblog](https://carloscarrasco.com/); Steam Early Access 26 Jan 2021 with a VICE article the same day; Rock Paper Shotgun review July 2021 ([Wikipedia](https://en.wikipedia.org/wiki/NIMBY_Rails)). The developer answers players on Discord and the Steam forums ([Steam](https://store.steampowered.com/app/1134710/NIMBY_Rails/)) | A regular devblog, and being there to answer |
-| **Rail Route** (2019-21) | Free open alpha on itch.io from Aug 2019 (v0.6), Steam Early Access 23 June 2021 ([devlog](https://bitrich.itch.io/railroute/devlog/94582/rail-route-06-now-available-on-itchio), [EA launch](https://bitrich.itch.io/railroute/devlog/266656/rail-route-officially-launched-on-steam)); over 500 reviews, 94% positive, about half a year in ([interview](https://intoindiegames.com/reviews/previews/rail-route-interview-build-a-rail-network-and-become-a-train-dispatcher/)) | A free build gathers players early |
-| **NYC Subway Simulator** (buildmytransit.nyc, 2025) | Show HN, 201 points, a long-weekend project on OSM data ([thread](https://news.ycombinator.com/item?id=44490588)) | Show HN works for a transit sim; phones and realism come up first |
-| **Metro Memory** (2023) | Launched 20 Oct 2023 (London); over half a million players within weeks; then Paris, Berlin, Munich, Hamburg and Mexico City editions, each with local press ([Ilford Recorder](https://ilfordrecorder.co.uk/news/23879238.london-metro-memory-game-play), [The Week](https://www.theweek.com/tech/why-the-metro-memory-game-is-so-addictive), [Sopitas](https://www.sopitas.com/noticias/metro-memory-juego-nombres-estaciones-metro-cdmx/)) | Each city is its own story for that city's press and subreddit |
-| **Slow Roads** (2022) | The developer posted a video of it on Twitter; PC Gamer and Jalopnik wrote it up within days; the publisher says over a million players in two weeks ([Jalopnik](https://www.jalopnik.com/slow-roads-best-browser-driving-game-1850304751/), [G2A](https://www.g2a.com/news/game-spotlights/slow-roads-the-viral-browser-game-where-you-just-drive-forever-launches-on-steam-today/), a publisher claim) | One good video on Twitter plus a free browser game is enough for games press |
-| **Brand New Subway** (2016) | A free browser NYC subway designer from a game design contest; Next City, NBC New York, 6sqft, Viewing NYC ([Next City](https://nextcity.org/daily/entry/nyc-subway-design-game-robert-moses)) | NYC local press covers NYC transit toys |
-| **Metro Dreamin'** | I found no account of its launch; search only turned up user maps on [metrodreamin.com](https://metrodreamin.com) | |
+| **The minimalist metro game** (2013-15) | Made at Ludum Dare 26 (April 2013), partly in Unity because a browser entry would draw more attention; the free web alpha (Sept 2013) had the web player "front and center" on the site and the team credits its "virality" to how easy it was to get into; then Greenlight, Early Access (Aug 2014), and "a good chunk" of free alpha players moved to the paid beta. They doubt the studio "would be operating now" without the web build. Its subway-map idea read at a glance from one screenshot (postmortem) | Play with no barrier, and a picture that explains the game without words |
+| **The subway-building game** (2025-26) | the subway game's developer posted on 10 Jan 2025 that he was making "a game where you can build a subway network"; a video of the early demo drew enough attention that he made it a full game (Wikipedia, The Banner). Before the 9 Oct 2025 beta, hype ran on X: players' and the developer's screenshots of their cities ("rush hour in Boston") (Punished Backlog). HN 303 points on beta day. Press: NY1, Fast Company, PC Gamer, GGWash, Planetizen | Short clips of real cities while it is being made; players posting their own cities did the rest |
+| **The track-drawing rail game** (2020-21) | Revealed mid-March 2020 in a development retrospective on the developer's devblog; Steam Early Access 26 Jan 2021 with a VICE article the same day; Rock Paper Shotgun review July 2021 (Wikipedia). The developer answers players on Discord and the Steam forums (Steam) | A regular devblog, and being there to answer |
+| **The indie rail game** (2019-21) | Free open alpha on itch.io from Aug 2019 (v0.6), Steam Early Access 23 June 2021 (devlog, EA launch); over 500 reviews, 94% positive, about half a year in (interview) | A free build gathers players early |
+| **The subway simulator** (buildmytransit.nyc, 2025) | Show HN, 201 points, a long-weekend project on OSM data ([thread](https://news.ycombinator.com/item?id=44490588)) | Show HN works for a transit sim; phones and realism come up first |
+| **The metro station quiz game** (2023) | Launched 20 Oct 2023 (London); over half a million players within weeks; then Paris, Berlin, Munich, Hamburg and Mexico City editions, each with local press (Ilford Recorder, The Week, Sopitas) | Each city is its own story for that city's press and subreddit |
+| **The browser driving game** (2022) | The developer posted a video of it on Twitter; PC Gamer and Jalopnik wrote it up within days; the publisher says over a million players in two weeks ([Jalopnik](https://www.jalopnik.com/slow-roads-best-browser-driving-game-1850304751/), [G2A](https://www.g2a.com/news/game-spotlights/slow-roads-the-viral-browser-game-where-you-just-drive-forever-launches-on-steam-today/), a publisher claim) | One good video on Twitter plus a free browser game is enough for games press |
+| **The subway-redesign game** (2016) | A free browser NYC subway designer from a game design contest; Next City, NBC New York, 6sqft, Viewing NYC ([Next City](https://nextcity.org/daily/entry/nyc-subway-design-game-robert-moses)) | NYC local press covers NYC transit toys |
+| **The metro-map sharing site** | I found no account of its launch; search only turned up user maps on metrodreamin.com | |
 
 The pattern: every one of these got noticed through a short video or a screenshot of a real place
 that explains itself, and the free ones spread because playing took one click.
@@ -282,14 +281,14 @@ picture of a real place. For the clip: start on trains already running on a netw
 people know, no title card, no slow zoom; show one track being drawn and the riders count moving;
 end on the auto-drawn network diagram, which no other transit game has. 20-40 s, recorded at full
 quality (Zukowski: no blur, stutter or odd compression). Stills: one city map, one diagram export,
-one non-US city (it answers HN's main Subway Builder complaint).
+one non-US city (it answers HN's main the subway-building game complaint).
 
 ### 4.5 Feedback
 
 The in-game form exists (T-1673): it posts to `market.anita.garden/trainworld/feedback`, which mails
 it to her, at most 10 an hour per IP; `python tools/feedback.py` in shonei-server lists reports. The
 live config answers `"trainworldFeedback":true`, so it is on. Send one test from the live site. A
-public place to talk (a Discord, a subreddit) is optional; NIMBY Rails and Mini Metro both grew one,
+public place to talk (a Discord, a subreddit) is optional; the track-drawing rail game and the minimalist metro game both grew one,
 but the launch threads themselves will carry the first week.
 
 ## 5. Hosting cost in a spike

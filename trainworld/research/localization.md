@@ -171,8 +171,8 @@ runs a translation batch before each deploy.
 
 `app/src/i18n/glossary.json`: each game term with what it means in the game, one fixed rendering per language,
 and notes; the translator follows it, the check script enforces it. A starting draft, to be settled by the
-first translation agent (who should also look at how Japanese and Chinese players of NIMBY Rails, Mini Metro and
-Cities: Skylines name these):
+first translation agent (who should also look at how Japanese and Chinese players of the track-drawing rail game, the minimalist metro game and
+The city-builder name these):
 
 | English | Meaning in the game | ja | zh-Hans | zh-Hant (Taiwan) |
 |---|---|---|---|---|

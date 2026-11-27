@@ -293,4 +293,4 @@ player is looking.
 ### Precision and long searches
 
 How another game's published choices compare (single global save, Float32 on the GPU, rebuilding
-geometry on load, route search caps): research/nimby-rails.md.
+geometry on load, route search caps): research/rail-game-study.md.
