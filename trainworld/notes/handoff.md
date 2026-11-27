@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session b48f5ab5-f4f4-40bd-8d9d-48e27f778e65, name maps-48 [99e2b4], since 2026-11-27 15:48 UTC
-Updated: 2026-11-27 16:22 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-27 16:57 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
 
 ## Next
@@ -15,10 +15,14 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    1 edit_bench NYC on master. perf_bench NYC and a quiet edit_bench on Asia still owed. Publish waits for her word.
 3. Asks open: T-4396 notices (a-2026-11-27-13); shonei-server deploy 54c6241 + ff4e198 (a-2026-11-27-14; the save
    check at level 42 must be live before the next publish). _track sits at save level 42 too (LBN1): renumber at sync.
-4. Then T-4153 stage 11, T-4309, T-4315, T-3160, T-4370, T-3838; maps-e0's T-4420-4422 (tooling). Core cap 10.
-5. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
+4. Gemini quota ran out 16:24 UTC (resets ~19:45 UTC); loadsave failed at start (tree loadsave empty), pagestage5 and busfix
+   failed. busfix landed via Sonnet (b5697efed), smoke PASSED after it (31 checks). loadsave and pagestage5 restart
+   (--tree) only when she lifts the pause on new work (her 11:26).
+5. Then T-4153 stage 11, T-4309, T-4315, T-3160, T-4370, T-3838; maps-e0's T-4420-4422 (tooling). Core cap 10.
+6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
+- 11-27 11:26 her time: Gemini quota out; "oki we can move bus fix to sonnet. but mostly just pause starting new work". Core cap 10 "for a while".
 - 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."
 - 11-27 ~09:45: agents 2-8, Gemini agents counted; Gemini 5x plan, Neon as Opus, Hydrogen as Sonnet (DECISIONS). Load
   proposals "3 then 1", "just proposals so no need to treat them as gospel"; Discord 30-minute loads: assume low memory or big saves.
