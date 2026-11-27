@@ -1,0 +1,128 @@
+{
+ "task": "T-4364",
+ "iso": "EGY",
+ "label": "Mansoura back to Dakahlia (with Samannud into El Mahalla)",
+ "view": [
+  30.8,
+  30.3,
+  32.1,
+  31.55
+ ],
+ "new": {
+  "skm": {
+   "name": "Shibin al-Kum",
+   "like": "tlx",
+   "origin": [
+    31.011,
+    30.555
+   ]
+  }
+ },
+ "retire": {
+  "aad": "elm",
+  "smd": "elr"
+ },
+ "set": {
+  "brt": {
+   "name": "Zifta",
+   "origin": [
+    31.244,
+    30.714
+   ]
+  }
+ },
+ "names": {
+  "drop": [
+   "aad",
+   "smd"
+  ],
+  "aliases": {
+   "elm": [
+    "Aga"
+   ],
+   "brt": [
+    "Santa",
+    "Birkat Al-Sab"
+   ],
+   "skm": [
+    "Shebin El Kom",
+    "Quwisna"
+   ]
+  }
+ },
+ "why": "Mansoura's metro (elm, 9.6M plan people in 25 units over five governorates) ran in a curve from Shibin al-Kum in Monufia through Gharbia's Santa and Zifta, Mit Ghamr and Mansoura to New Damietta, and wrapped the Aga (aad) and Birkat Al-Sab (brt) zones. It keeps Dakahlia's part (Mansoura, Talkha, Sinbillawin, Mit Ghamr, Shirbin, Dikirnis) with Dyarb Nigm, and takes Aga (aad retired into it). Damietta's four markaz go to Damietta's zone (dut), Gharbia's Zifta and Santa join Birkat Al-Sab as a zone shown as Zifta, and Monufia's Shibin al-Kum and Quwisna become a new zone (skm); Monufia's Al-Bagur, Minuf City and Sirs Al-Layyana City (enclaves in Minuf's zone) join Minuf (mif). Includes the approved 11-25 delta edit (Samannud, smd, retired into El Mahalla, elr; t4364-egy-delta.json), so this spec replaces it when applied.",
+ "moves": [
+  [
+   "37247803B5447548481781",
+   "Kafr Sad",
+   "elm",
+   "dut"
+  ],
+  [
+   "37247803B71323814972136",
+   "Fariskur",
+   "elm",
+   "dut"
+  ],
+  [
+   "37247803B96389835129643",
+   "Zarqa",
+   "elm",
+   "dut"
+  ],
+  [
+   "37247803B6997097478011",
+   "Dumyat Al-Gadida",
+   "elm",
+   "dut"
+  ],
+  [
+   "37247803B22072181231059",
+   "Zifta",
+   "elm",
+   "brt"
+  ],
+  [
+   "37247803B92664797200587",
+   "Santa",
+   "elm",
+   "brt"
+  ],
+  [
+   "37247803B55746965305944",
+   "Minuf City",
+   "elm",
+   "mif"
+  ],
+  [
+   "37247803B52946313788554",
+   "Sirs Al-Layyana City",
+   "elm",
+   "mif"
+  ],
+  [
+   "37247803B46685873859675",
+   "Al-Bagur",
+   "elm",
+   "mif"
+  ],
+  [
+   "37247803B46387157880741",
+   "Shibin al-Kum",
+   "elm",
+   "skm"
+  ],
+  [
+   "37247803B79022336260348",
+   "Shibin al-Kum",
+   "elm",
+   "skm"
+  ],
+  [
+   "37247803B73326223517768",
+   "Quwisna",
+   "elm",
+   "skm"
+  ]
+ ]
+}

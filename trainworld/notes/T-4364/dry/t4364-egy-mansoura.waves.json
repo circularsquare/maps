@@ -1,0 +1,26 @@
+{
+ "waves": [
+  [
+   "elm",
+   "elr"
+  ],
+  [
+   "brt",
+   "dut",
+   "mif",
+   "skm"
+  ]
+ ],
+ "retire": [
+  "aad",
+  "smd"
+ ],
+ "rows": [
+  "brt",
+  "dut",
+  "elm",
+  "elr",
+  "mif",
+  "skm"
+ ]
+}

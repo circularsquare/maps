@@ -1,0 +1,17 @@
+{
+ "task": "T-4364",
+ "iso": "EGY",
+ "label": "Mansoura back to Dakahlia (with Samannud into El Mahalla)",
+ "view": [30.8, 30.3, 32.1, 31.55],
+ "new": {"skm": {"name": "Shibin al-Kum", "like": "tlx", "origin": [31.011, 30.555]}},
+ "assign": {
+  "dut": ["Kafr Sad", "Fariskur", "Zarqa", "Dumyat Al-Gadida"],
+  "brt": ["Zifta", "Santa"],
+  "mif": ["Minuf City", "Sirs Al-Layyana City", "Al-Bagur"],
+  "skm": ["Shibin al-Kum@31.000,30.554", "Shibin al-Kum@30.954,30.561", "Quwisna"]
+ },
+ "retire": {"aad": "elm", "smd": "elr"},
+ "set": {"brt": {"name": "Zifta", "origin": [31.244, 30.714]}},
+ "names": {"drop": ["aad", "smd"], "aliases": {"elm": ["Aga"], "brt": ["Santa", "Birkat Al-Sab"], "skm": ["Shebin El Kom", "Quwisna"]}},
+ "why": "Mansoura's metro (elm, 9.6M plan people in 25 units over five governorates) ran in a curve from Shibin al-Kum in Monufia through Gharbia's Santa and Zifta, Mit Ghamr and Mansoura to New Damietta, and wrapped the Aga (aad) and Birkat Al-Sab (brt) zones. It keeps Dakahlia's part (Mansoura, Talkha, Sinbillawin, Mit Ghamr, Shirbin, Dikirnis) with Dyarb Nigm, and takes Aga (aad retired into it). Damietta's four markaz go to Damietta's zone (dut), Gharbia's Zifta and Santa join Birkat Al-Sab as a zone shown as Zifta, and Monufia's Shibin al-Kum and Quwisna become a new zone (skm); Monufia's Al-Bagur, Minuf City and Sirs Al-Layyana City (enclaves in Minuf's zone) join Minuf (mif). Includes the approved 11-25 delta edit (Samannud, smd, retired into El Mahalla, elr; t4364-egy-delta.json), so this spec replaces it when applied."
+}

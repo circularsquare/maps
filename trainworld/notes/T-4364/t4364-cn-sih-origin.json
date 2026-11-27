@@ -1,0 +1,3 @@
+{"task": "T-4364", "iso": "CHN",
+ "replan": ["sih"],
+ "why": "sih's origin stayed in Qingxin when the Guangdong spec gave Qingxin to qnc: the pack was drawn round a point outside it and the gate's jump there focused another zone (cn.w1, 11-26). plan_edit's moved_origin gives it world_plan's zone origin, in Sihui."}

@@ -1,0 +1,120 @@
+{
+ "task": "T-4364",
+ "iso": "TWN",
+ "label": "Taiwan: Chiayi and Tainan as two zones (with Taitung's approved change)",
+ "view": [
+  119.95,
+  22.75,
+  121.05,
+  23.8
+ ],
+ "assign": {
+  "kao": [
+   "Jiasian",
+   "Liouguei",
+   "Maolin",
+   "Meinong",
+   "Namasia",
+   "Neimen",
+   "Qishan",
+   "Shanlin",
+   "Taoyuan",
+   "Tianliao",
+   "Gaoshu",
+   "Ligang",
+   "Yanpu",
+   "Sandimen",
+   "Wutai",
+   "Majia",
+   "Neipu",
+   "Taiwu",
+   "Laiyi",
+   "Wanluan",
+   "Zhutian",
+   "Chaozhou",
+   "Kanding",
+   "Nanzhou",
+   "Xinpi",
+   "Linbian",
+   "Jiadong",
+   "Fangliao",
+   "Chunri",
+   "Fangshan",
+   "Shizi",
+   "Mudan",
+   "Checheng",
+   "Manzhou",
+   "Hengchun"
+  ],
+  "tac": [
+   "Chushang",
+   "Guoxing Township",
+   "Jiji Town",
+   "Lugu Town",
+   "Mingjian Town",
+   "Puli Town",
+   "Ren'ai Township",
+   "Shueli Town",
+   "Xinyi Township",
+   "Yuchi Town",
+   "Zhongliao Township",
+   "二水鄉"
+  ],
+  "huw": [
+   "Citong",
+   "Douliu",
+   "Dounan",
+   "Gukeng",
+   "Linnei",
+   "大埤鄉 (Dapi)"
+  ],
+  "taa": [
+   "Beimen",
+   "Houbi",
+   "Jiali",
+   "Jiangjun",
+   "Liouying",
+   "Madou",
+   "Qigu",
+   "Siaying",
+   "Xiaying",
+   "Xuejia",
+   "Yanshuei",
+   "Baihe",
+   "Danei",
+   "Dongshan@120.458,23.281",
+   "Guantian",
+   "Liujia",
+   "Longqi",
+   "Nanhua",
+   "Nanxi",
+   "Yujing",
+   "Zuozhen"
+  ]
+ },
+ "retire": {
+  "mig": "eai"
+ },
+ "set": {
+  "eai": {
+   "name": "Chiayi"
+  }
+ },
+ "names": {
+  "drop": [
+   "mig"
+  ],
+  "aliases": {
+   "eai": [
+    "Minxiong",
+    "Taibao",
+    "Puzi"
+   ],
+   "taa": [
+    "Xinying",
+    "Madou"
+   ]
+  }
+ },
+ "why": "Taitung's zone (tig, 1.29M) was the Central Range with both foothills, joined by shape across counties because the mountain townships fill the hull (T-2300). It keeps the east coast, Hualien and Taitung counties (0.45M). The west foothills go to the zone each mostly travels with (the merge rule's gravity) and its own county: Kaohsiung's hill districts and Pingtung's plain to Kaohsiung (which holds Pingtung City), Nantou's eleven townships (Puli, Zhushan) to Taichung (which holds Nantou City and Caotun), and Changhua's Ershui with them; Yunlin's east (Douliu, Dounan, Gukeng) to Huwei, making Yunlin one zone. Minxiong (mig) and Chiayi (eai, plan name East District) were two north-south strips over two first-level units: mig the coastal plain of Chiayi County with northern Tainan (Xinying, Madou, Jiali), eai Chiayi City with the hills of Chiayi County and Tainan's inland districts down to Longqi, 20 km from Tainan's centre. After: Chiayi (eai) is Chiayi City and Chiayi County whole (mig retired into it); Tainan's 21 districts from both go to Tainan's metro (taa), which makes it Tainan City whole but for its two Kaohsiung districts as before."
+}

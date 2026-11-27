@@ -1,0 +1,7 @@
+{
+ "task": "T-4364",
+ "iso": "MAC",
+ "label": "Macau: its current land",
+ "replan": ["mcu"],
+ "why": "Natural Earth's Macau predates the reclamations, so NAPE, east Taipa and Cotai (about 12 km2) were in Zhuhai's zone. world_plan.NE_REPLACE takes OSM's Macau relation's land (35 km2) as Macau's unit and cuts it out of China's units, so mcu is rebuilt after zhu (the Guangdong spec rebuilds zhu)."
+}

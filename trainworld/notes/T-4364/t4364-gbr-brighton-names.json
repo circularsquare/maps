@@ -1,0 +1,7 @@
+{
+ "task": "T-4364",
+ "iso": "GBR",
+ "label": "Brighton: the name only",
+ "names": {"set": {"eae": {"name": "Brighton", "aliases": ["Hastings", "Eastbourne", "East Sussex"]}}},
+ "why": "Anita's 11-26 yes to the rename alone (t4364-gbr-brighton.json also sets the plan name and origin for eae's next rebuild): no row changes, so the plan is written as it was and only zone-names.json changes."
+}

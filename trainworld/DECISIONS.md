@@ -308,6 +308,8 @@ artifacts/trainworld/T-4120/.
 - 2026-10-09 (Anita, T-051): Simulate flows, not agents: trains are functions of time, no signals for now, tangles discouraged by capacity; 10k trains is a simulation target, not a rendering one (Anita). Rust to WebAssembly at opt-level 3, since CPU outranks download size. notes/T-051.md
 
 ## World data and zones
+- 2026-11-26 (Anita, T-4364): Skierniewice stays in Warsaw's and Łódź's zones ("ok i guess we can leave out poland"); its split spec is ready in notes/T-4364 if she reopens it.
+- 2026-11-26 (T-4364): A zone whose centre point ends up off its own land after a redraw gets a new one, the densest cell of the unit it is named after; the gate jumps to that point (plan_edit moved_origin).
 - 2026-11-25 (Anita, T-4364): Zones lean slightly towards respecting first-level boundaries (provinces, voivodeships, prefectures) where there is a choice; not strictly, above all where a city itself crosses one.
 
 - 2026-11-24 (Anita, T-4203): Hokkaido's four zones are named after their main city (Sapporo, Asahikawa, Obihiro, Hakodate), as every other zone is, not their region; Obihiro over Kushiro by 1,459 people. notes/T-4203.md

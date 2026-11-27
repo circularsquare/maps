@@ -1,0 +1,7 @@
+{
+ "task": "T-4364",
+ "iso": "NOR",
+ "label": "Norway: Hvaler's and Faerder's islets back with Ostfold and Vestfold",
+ "replan": ["osl", "tlk", "stf", "vef"],
+ "why": "GISCO's NUTS 1:3M file draws Hvaler's islets (Ostfold's) into Buskerud and Faerder's (Vestfold's) into Telemark, so Oslo's metro (osl) and Telemark's zone (tlk) held them. world_plan.NUTS_STRAY gives them to their own fylke's unit when the packs are built; the unit lists stay as they are, so these four rows are only rebuilt: osl and tlk first (they give), then stf and vef."
+}

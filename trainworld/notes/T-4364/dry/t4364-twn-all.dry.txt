@@ -1,0 +1,122 @@
+move Jiasian (3,827) tig -> kao
+move Liouguei (8,495) tig -> kao
+move Maolin (1,161) tig -> kao
+move Meinong (31,000) tig -> kao
+move Namasia (1,652) tig -> kao
+move Neimen (11,783) tig -> kao
+move Qishan (37,276) tig -> kao
+move Shanlin (8,278) tig -> kao
+move Taoyuan (2,358) tig -> kao
+move Tianliao (5,414) tig -> kao
+move Gaoshu (16,513) tig -> kao
+move Ligang (17,574) tig -> kao
+move Yanpu (22,556) tig -> kao
+move Sandimen (3,548) tig -> kao
+move Wutai (1,184) tig -> kao
+move Majia (4,857) tig -> kao
+move Neipu (50,379) tig -> kao
+move Taiwu (1,536) tig -> kao
+move Laiyi (4,271) tig -> kao
+move Wanluan (19,947) tig -> kao
+move Zhutian (16,625) tig -> kao
+move Chaozhou (42,320) tig -> kao
+move Kanding (6,594) tig -> kao
+move Nanzhou (9,748) tig -> kao
+move Xinpi (8,226) tig -> kao
+move Linbian (17,203) tig -> kao
+move Jiadong (15,709) tig -> kao
+move Fangliao (24,073) tig -> kao
+move Chunri (2,687) tig -> kao
+move Fangshan (2,951) tig -> kao
+move Shizi (2,053) tig -> kao
+move Mudan (2,403) tig -> kao
+move Checheng (5,522) tig -> kao
+move Manzhou (4,343) tig -> kao
+move Hengchun (20,437) tig -> kao
+move Chushang (42,391) tig -> tac
+move Guoxing Township (11,167) tig -> tac
+move Jiji Town (8,137) tig -> tac
+move Lugu Town (10,746) tig -> tac
+move Mingjian Town (33,439) tig -> tac
+move Puli Town (65,668) tig -> tac
+move Ren'ai Township (10,375) tig -> tac
+move Shueli Town (11,246) tig -> tac
+move Xinyi Township (11,868) tig -> tac
+move Yuchi Town (11,118) tig -> tac
+move Zhongliao Township (7,664) tig -> tac
+move 二水鄉 (11,073) tig -> tac
+move Citong (17,318) tig -> huw
+move Douliu (84,296) tig -> huw
+move Dounan (35,243) tig -> huw
+move Gukeng (18,520) tig -> huw
+move Linnei (10,498) tig -> huw
+move 大埤鄉 (Dapi) (11,668) tig -> huw
+move Beimen (7,497) mig -> taa
+move Houbi (21,859) mig -> taa
+move Jiali (49,100) mig -> taa
+move Jiangjun (12,383) mig -> taa
+move Liouying (20,744) mig -> taa
+move Madou (39,618) mig -> taa
+move Qigu (14,496) mig -> taa
+move Siaying (20,925) mig -> taa
+move Xiaying (70,120) mig -> taa
+move Xuejia (19,790) mig -> taa
+move Yanshuei (15,294) mig -> taa
+move Baihe (24,683) eai -> taa
+move Danei (8,548) eai -> taa
+move Dongshan (14,754) eai -> taa
+move Guantian (21,992) eai -> taa
+move Liujia (16,830) eai -> taa
+move Longqi (2,494) eai -> taa
+move Nanhua (4,834) eai -> taa
+move Nanxi (6,246) eai -> taa
+move Yujing (11,057) eai -> taa
+move Zuozhen (3,372) eai -> taa
+retire mig: Minxiong (73,205) -> eai
+retire mig: Shuishang (45,406) -> eai
+retire mig: Dalin (33,975) -> eai
+retire mig: Puzi City (33,139) -> eai
+retire mig: Taibao (28,577) -> eai
+retire mig: Xingang (24,450) -> eai
+retire mig: Budai (18,958) -> eai
+retire mig: Liujiao (16,019) -> eai
+retire mig: Lucao (12,661) -> eai
+retire mig: Dongshi (11,843) -> eai
+retire mig: Yizhu (10,858) -> eai
+retire mig: Xikou (10,345) -> eai
+set eai: {'name': 'Chiayi'}
+kao: bbox [116.711, 20.697, 120.612, 22.905] -> [116.711, 20.697, 121.049, 23.472]
+tig: bbox [120.342, 21.897, 121.774, 24.371] -> [120.74, 22.23, 121.774, 24.371]
+tac: bbox [120.375, 23.793, 120.838, 24.363] -> [120.375, 23.435, 121.349, 24.363]
+huw: bbox [120.133, 23.504, 120.513, 24.158] -> [120.133, 23.504, 120.736, 24.158]
+taa: bbox [120.065, 22.848, 120.419, 23.176] -> [120.034, 22.848, 120.656, 23.414]
+eai: bbox [120.284, 22.905, 120.958, 23.615] -> [120.117, 23.215, 120.958, 23.636]
+eai Chiayi: people 610,540 -> 815,164; units 18 -> 20; pieces 1 -> 1; hull 0.73 -> 0.69
+   neighbours before {'tig': 0.49, 'mig': 0.4, 'taa': 0.18}
+   neighbours after  {'taa': 0.31, 'huw': 0.28, 'kao': 0.17, 'tac': 0.12}
+huw Huwei: people 382,970 -> 560,513; units 18 -> 24; pieces 1 -> 1; hull 0.83 -> 0.71
+   neighbours before {'tac': 0.24, 'tig': 0.19, 'mig': 0.18}
+   neighbours after  {'tac': 0.37, 'eai': 0.34}
+kao Kaohsiung: people 2,879,851 -> 3,314,359; units 33 -> 68; pieces 1 -> 1; hull 0.07 -> 0.15
+   neighbours before {'tig': 0.42, 'taa': 0.11}
+   neighbours after  {'tig': 0.32, 'taa': 0.14, 'eai': 0.09, 'tac': 0.02}
+taa Tainan: people 1,306,700 -> 1,713,335; units 18 -> 39; pieces 1 -> 1; hull 0.76 -> 0.86
+   neighbours before {'eai': 0.4, 'mig': 0.23, 'kao': 0.16, 'tig': 0.04}
+   neighbours after  {'eai': 0.37, 'kao': 0.31}
+tac Taichung: people 4,036,336 -> 4,271,229; units 46 -> 58; pieces 1 -> 1; hull 0.85 -> 0.80
+   neighbours before {'tig': 0.3, 'zhn': 0.29, 'huw': 0.16, '(no row)': 0.01}
+   neighbours after  {'zhn': 0.31, 'tig': 0.25, 'huw': 0.2, 'eai': 0.08, 'kao': 0.02, '(no row)': 0.01}
+tig Taitung City: people 1,294,698 -> 447,754; units 80 -> 27; pieces 1 -> 1; hull 0.75 -> 0.78
+   neighbours before {'eai': 0.18, 'kao': 0.12, 'zhn': 0.09, 'tac': 0.09, 'yil': 0.06, 'huw': 0.04, 'mig': 0.03, 'taa': 0.01}
+   neighbours after  {'kao': 0.31, 'tac': 0.19, 'yil': 0.08, 'zhn': 0.03}
+
+checks (T-4364 dry.py):
+eai Chiayi: plan people 815,458, game about 836,022, 2,015 km2, hull 0.69 (before 0.73, main piece 0.69) pass (no worse than before less 0.05); floor 1,000,000 UNDER; cap 2,500,000 within; ring none
+huw Huwei: plan people 559,270, game about 610,335, 1,625 km2, hull 0.71 (before 0.83, main piece 0.71) BELOW 0.75; floor 1,000,000 UNDER; cap 2,500,000 within; ring none
+kao Kaohsiung: plan people 3,308,720, game about 3,409,071, 5,738 km2, hull 0.15 (before 0.07, main piece 0.64) pass (no worse than before less 0.05); pop_vs_fua about 1.16 (3,409,071 over 2,934,154 in Kaohsiung) pass; ring none
+taa Tainan: plan people 1,711,909, game about 1,750,486, 2,289 km2, hull 0.86 (before 0.76, main piece 0.86) pass; pop_vs_fua about 1.31 (1,750,486 over 1,339,958 in Tainan) warn; ring none
+tac Taichung: plan people 4,271,071, game about 4,319,637, 5,873 km2, hull 0.80 (before 0.85, main piece 0.80) pass; pop_vs_fua about 1.07 (4,319,637 over 4,020,321 in Taichung) pass; ring none
+tig Taitung City: plan people 446,301, game about 480,961, 8,151 km2, hull 0.78 (before 0.75, main piece 0.78) pass; floor 1,000,000 UNDER; cap 2,500,000 within; ring none
+mig Minxiong: retired into eai; zone_successors mig -> eai
+waves: eai,tig | huw,kao,taa,tac
+build: 6 rows, recorded steps 11 core-min (eai 0.9, huw 0.7, kao 1.2, taa 1.0, tac 1.6, tig 5.7); retired ['mig']; then the TWN join (see notes/T-4364/joins.txt)

@@ -529,8 +529,8 @@ def foreign_land(own, bounds):
     import world_plan as wp
     if not _NE_COUNTRIES:
         df = pyogrio.read_dataframe(f"zip://{wp.NE}!ne_10m_admin_0_countries.shp", columns=["ISO_A3_EH", "ADM0_A3"])
-        _NE_COUNTRIES.extend((wp.NE_FIX.get(adm, wp.NE_FIX.get(code, code)), make_valid(g)) for code, adm, g in
-                             zip(df["ISO_A3_EH"], df["ADM0_A3"], df.geometry))
+        _NE_COUNTRIES.extend(wp.ne_replace([(wp.NE_FIX.get(adm, wp.NE_FIX.get(code, code)), make_valid(g)) for code, adm, g in
+                                            zip(df["ISO_A3_EH"], df["ADM0_A3"], df.geometry)]))  # Macau's newer outline (T-4364)
     own = set(own) | {wp.NE_INSIDE[c][0] for c in own if c in wp.NE_INSIDE}  # Guadeloupe's land is France's there (T-3762)
     box = shapely.box(*bounds)
     parts = [shapely.clip_by_rect(g, *bounds) for cc, g in _NE_COUNTRIES if cc not in own and g.intersects(box)]

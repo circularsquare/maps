@@ -170,7 +170,12 @@ whole si, gun and gu less what a metro or Seoul's pack holds. Ulleung and Ongjin
 with no zone within 10 km, are dead space. **Malaysia** (T-1738) zones its mukim the same way, by
 district, with the floor, cap and no-exclaves rule but the usual density floor (the interiors of Pahang,
 Sabah and Sarawak dead space); its geoBoundaries ADM3 joins same-named mukim of different states into one
-feature, so `world_plan.GB_SPLIT_FAR` makes each part over 50 km away a unit of its own. **Indonesia**
+feature, so `world_plan.GB_SPLIT_FAR` makes each part over 50 km away a unit of its own. **Norway** (T-4364):
+GISCO's NUTS file draws Hvaler's islets into Buskerud and Færder's into Telemark, so `world_plan.NUTS_STRAY` gives a
+listed unit's parts over 20 km from its biggest part to the unit named (Østfold, Vestfold); a distance rule alone would
+also move Trøndelag's Frøya skerries. **Macau** (T-4364): Natural Earth's outline predates the reclamations (NAPE, east
+Taipa, Cotai), so `world_plan.NE_REPLACE` takes OSM's Macau relation's land as Macau's and cuts it out of every other
+country's, China's units and Zhuhai's zone included. **Indonesia**
 (T-1738) zones its kabupaten with the floor, cap and no-exclaves rule and a density floor of **10** a km2
 (Kalimantan's river towns are zones; its far interior and Papua's southern swamps dead space). **Canada zones its cities and the corridors
 between**: a census subdivision whose own centre has fewer than **100,000** people within **150 km**

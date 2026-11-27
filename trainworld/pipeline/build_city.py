@@ -161,11 +161,11 @@ CITIES = {
         "lodes_years": (2023, 2022),
         "water": {"cell_m": 25.0, "min_width_px": 2},
         "boundary_notes": "notes/archive/t0001-0499/T-134-packs.md",
-        # Broad Boston-Cambridge-Newton county metro extent, including southern NH.
+        # Boston-Cambridge-Newton's Massachusetts counties; Rockingham and Strafford NH are in New
+        # Hampshire's zone (T-4364: 22% and 3% of their workers work in these counties).
         "counties": {
             "25009": "Essex MA", "25017": "Middlesex MA", "25021": "Norfolk",
             "25023": "Plymouth", "25025": "Suffolk MA",
-            "33015": "Rockingham NH", "33017": "Strafford",
         },
     },
     "wdc": {

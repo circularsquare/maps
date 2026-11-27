@@ -1,0 +1,49 @@
+move Beimen (7,497) mig -> taa
+move Houbi (21,859) mig -> taa
+move Jiali (49,100) mig -> taa
+move Jiangjun (12,383) mig -> taa
+move Liouying (20,744) mig -> taa
+move Madou (39,618) mig -> taa
+move Qigu (14,496) mig -> taa
+move Siaying (20,925) mig -> taa
+move Xiaying (70,120) mig -> taa
+move Xuejia (19,790) mig -> taa
+move Yanshuei (15,294) mig -> taa
+move Baihe (24,683) eai -> taa
+move Danei (8,548) eai -> taa
+move Dongshan (14,754) eai -> taa
+move Guantian (21,992) eai -> taa
+move Liujia (16,830) eai -> taa
+move Longqi (2,494) eai -> taa
+move Nanhua (4,834) eai -> taa
+move Nanxi (6,246) eai -> taa
+move Yujing (11,057) eai -> taa
+move Zuozhen (3,372) eai -> taa
+retire mig: Minxiong (73,205) -> eai
+retire mig: Shuishang (45,406) -> eai
+retire mig: Dalin (33,975) -> eai
+retire mig: Puzi City (33,139) -> eai
+retire mig: Taibao (28,577) -> eai
+retire mig: Xingang (24,450) -> eai
+retire mig: Budai (18,958) -> eai
+retire mig: Liujiao (16,019) -> eai
+retire mig: Lucao (12,661) -> eai
+retire mig: Dongshi (11,843) -> eai
+retire mig: Yizhu (10,858) -> eai
+retire mig: Xikou (10,345) -> eai
+set eai: {'name': 'Chiayi'}
+taa: bbox [120.065, 22.848, 120.419, 23.176] -> [120.034, 22.848, 120.656, 23.414]
+eai: bbox [120.284, 22.905, 120.958, 23.615] -> [120.117, 23.215, 120.958, 23.636]
+eai Chiayi: people 610,540 -> 815,164; units 18 -> 20; pieces 1 -> 1; hull 0.73 -> 0.69
+   neighbours before {'tig': 0.49, 'mig': 0.4, 'taa': 0.18}
+   neighbours after  {'tig': 0.46, 'taa': 0.31, 'huw': 0.11}
+taa Tainan: people 1,306,700 -> 1,713,335; units 18 -> 39; pieces 1 -> 1; hull 0.76 -> 0.86
+   neighbours before {'eai': 0.4, 'mig': 0.23, 'kao': 0.16, 'tig': 0.04}
+   neighbours after  {'eai': 0.37, 'tig': 0.21, 'kao': 0.1}
+
+checks (T-4364 dry.py):
+eai Chiayi: plan people 815,458, game about 836,022, 2,015 km2, hull 0.69 (before 0.73, main piece 0.69) pass (no worse than before less 0.05); floor 1,000,000 UNDER; cap 2,500,000 within; ring: wrapped by tig (hull 0.75, border 0.53)
+taa Tainan: plan people 1,711,909, game about 1,750,486, 2,289 km2, hull 0.86 (before 0.76, main piece 0.86) pass; pop_vs_fua about 1.31 (1,750,486 over 1,339,958 in Tainan) warn; ring none
+mig Minxiong: retired into eai; zone_successors mig -> eai
+waves: eai | taa
+build: 2 rows, recorded steps 2 core-min (eai 0.9, taa 1.0); retired ['mig']; then the TWN join (see notes/T-4364/joins.txt)

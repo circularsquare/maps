@@ -459,6 +459,10 @@ NE_INSIDE = {"GLP": ("FRA", "GP"), "MTQ": ("FRA", "MQ"), "GUF": ("FRA", "GF"), "
 # T-3762: such a territory with no geoBoundaries units below ADM0 (geoBoundaries' BES ADM0 is Bonaire alone): that
 # country's Natural Earth land inside the box, lon/lat
 NE_PART = {"BES": (-69.0, 11.5, -62.5, 18.0)}
+# T-4364: a country's Natural Earth land replaced by a newer outline (lon/lat), which is also cut out of every other
+# country's. Natural Earth's Macau predates its reclamations, so NAPE, east Taipa and Cotai fell in Zhuhai's zone: OSM's
+# Macau relation's land (notes/T-4364/scripts/macau_outline.py writes the file)
+NE_REPLACE = {"MAC": RAW / "osm_macau.geojson"}
 
 FWD = Transformer.from_crs("EPSG:4326", "ESRI:54009", always_xy=True)
 INV = Transformer.from_crs("ESRI:54009", "EPSG:4326", always_xy=True)
@@ -645,7 +649,31 @@ def countries():
     for iso, adm, g in zip(df.ISO_A3, df.ADM0_A3, df.geometry):
         code = iso if iso != "-99" else adm
         out.append((NE_FIX.get(adm, NE_FIX.get(code, code)), polygonal(to_moll(g))))
-    return out
+    return ne_replace(out, to_moll)
+
+
+def ne_replace(rows, proj=None):
+    """[(code, geometry)] of Natural Earth's countries with NE_REPLACE's outlines in place of their own (`proj` takes
+    the file's lon/lat to the rows' projection) and cut out of every other country's."""
+    new = {}
+    for c, path in NE_REPLACE.items():
+        if not path.exists():
+            raise SystemExit(f"{path} missing (NE_REPLACE {c}): notes/T-4364/scripts/macau_outline.py --write makes it")
+        gj = json.loads(path.read_text(encoding="utf-8"))
+        g = polygonal(union_all([shapely.make_valid(shape(f["geometry"])) for f in gj["features"] if f["geometry"]]))
+        new[c] = polygonal(proj(g)) if proj else g
+    cut = union_all(list(new.values()))
+    out, done = [], set()
+    for c, g in rows:
+        if c in new:
+            if c not in done:
+                out.append((c, new[c]))
+                done.add(c)
+        elif g.intersects(cut):
+            out.append((c, polygonal(shapely.make_valid(g).difference(cut))))
+        else:
+            out.append((c, g))
+    return out + [(c, g) for c, g in new.items() if c not in done]
 
 
 def territory_whole(iso):
@@ -1016,7 +1044,10 @@ def gb_units(meta, iso, adm):
     r = gb_level(meta, iso, adm)
     path = fetch(f"{iso}_{adm}.geojson", r["simplifiedGeometryGeoJSON"], "geoboundaries")
     cache = path.with_suffix(f".{GB_CACHE}{'s2' if iso in GB_SPLIT_FAR else ''}.pkl")
-    if cache.exists() and cache.stat().st_mtime >= path.stat().st_mtime:
+    # a newer NE_REPLACE outline on one of its de facto sides (or its own) redraws its units' lines too (T-4364)
+    stamp = max([p.stat().st_mtime for c, p in NE_REPLACE.items() if p.exists() and (c == iso or c in DE_FACTO.get(iso, {}))],
+                default=0.0)
+    if cache.exists() and cache.stat().st_mtime >= max(path.stat().st_mtime, stamp):
         return absorb(iso, pickle.loads(cache.read_bytes()))
     gj = json.loads(path.read_text(encoding="utf-8"))
     out = []
@@ -1339,6 +1370,14 @@ def country_units(iso, meta, nuts, pop, need, whole=None):
     return units, src
 
 
+# T-4364: GISCO's NUTS 2024 1:3M file draws other fylker's islets into Buskerud (Hvaler's, 28-71 km off: Østfold's)
+# and Telemark (Færder's, 29-44 km off: Vestfold's), so Oslo's metro and Telemark's zone held them: a listed unit's
+# parts over NUTS_STRAY_KM from its biggest part go to the unit named. A distance rule alone would also move real islands
+# (Frøya and Hitra, Trøndelag's, lie nearer Møre og Romsdal's land than their own)
+NUTS_STRAY = {"NO085": "NO083", "NO094": "NO093"}
+NUTS_STRAY_KM = 20.0
+
+
 def load_nuts(europe):
     gj = json.loads(fetch(*NUTS).read_text(encoding="utf-8"))
     out = collections.defaultdict(list)
@@ -1347,6 +1386,16 @@ def load_nuts(europe):
         iso = {"XK": "XKX"}.get(pr["ISO3_CODE"], pr["ISO3_CODE"])  # GISCO gives Kosovo no ISO3
         if iso in europe and iso != "GBR":
             out[iso].append((pr["NUTS_ID"], pr["NAME_LATN"], polygonal(to_moll(shape(f["geometry"])))))
+    for iso, us in out.items():
+        geo = {uid: g for uid, _, g in us}
+        for a, b in NUTS_STRAY.items():
+            if a in geo and b in geo:
+                parts = sorted(shapely.get_parts(geo[a]), key=lambda p: -p.area)
+                far = [p for p in parts[1:] if p.distance(parts[0]) > NUTS_STRAY_KM * 1e3]
+                if far:
+                    geo[a] = polygonal(union_all([p for p in parts if not any(p is q for q in far)]))
+                    geo[b] = polygonal(union_all([geo[b]] + far))
+        out[iso] = [(uid, name, geo[uid]) for uid, name, _ in us]
     return dict(out)
 
 

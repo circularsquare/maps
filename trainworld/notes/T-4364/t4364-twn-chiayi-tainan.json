@@ -1,0 +1,164 @@
+{
+ "task": "T-4364",
+ "iso": "TWN",
+ "label": "Taiwan: Chiayi and Tainan as two zones",
+ "view": [
+  119.95,
+  22.85,
+  121.0,
+  23.75
+ ],
+ "retire": {
+  "mig": "eai"
+ },
+ "set": {
+  "eai": {
+   "name": "Chiayi"
+  }
+ },
+ "names": {
+  "drop": [
+   "mig"
+  ],
+  "aliases": {
+   "eai": [
+    "Minxiong",
+    "Taibao",
+    "Puzi"
+   ],
+   "taa": [
+    "Xinying",
+    "Madou"
+   ]
+  }
+ },
+ "why": "Minxiong (mig) and Chiayi (eai, plan name East District) were two north-south strips over two first-level units: mig the coastal plain of Chiayi County with northern Tainan (Xinying, Madou, Jiali), eai Chiayi City with the hills of Chiayi County and Tainan's inland districts down to Longqi, 20 km from Tainan's centre. After: Chiayi (eai) is Chiayi City and Chiayi County whole (mig retired into it); Tainan's 21 districts from both go to Tainan's metro (taa), which makes it Tainan City whole but for its two Kaohsiung districts as before.",
+ "moves": [
+  [
+   "52511910B93975188491166",
+   "Beimen",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B86463604693023",
+   "Houbi",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B43412485397625",
+   "Jiali",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B80613047181881",
+   "Jiangjun",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B95098417504855",
+   "Liouying",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B41349980343036",
+   "Madou",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B14944460308189",
+   "Qigu",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B67622492960002",
+   "Siaying",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B15727969780764",
+   "Xiaying",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B13500089926277",
+   "Xuejia",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B3549258104854",
+   "Yanshuei",
+   "mig",
+   "taa"
+  ],
+  [
+   "52511910B83755823779571",
+   "Baihe",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B21548483035565",
+   "Danei",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B26605642536320",
+   "Dongshan",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B66393591343605",
+   "Guantian",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B9639721186799",
+   "Liujia",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B87738681480797",
+   "Longqi",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B59203276225690",
+   "Nanhua",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B12166681712059",
+   "Nanxi",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B65003852157868",
+   "Yujing",
+   "eai",
+   "taa"
+  ],
+  [
+   "52511910B71538284073489",
+   "Zuozhen",
+   "eai",
+   "taa"
+  ]
+ ]
+}

@@ -1,0 +1,14 @@
+{
+ "task": "T-4364",
+ "iso": "TWN",
+ "label": "Taiwan: Chiayi and Tainan as two zones",
+ "view": [119.95, 22.85, 121.0, 23.75],
+ "assign": {
+  "taa": ["Beimen", "Houbi", "Jiali", "Jiangjun", "Liouying", "Madou", "Qigu", "Siaying", "Xiaying", "Xuejia", "Yanshuei",
+          "Baihe", "Danei", "Dongshan@120.458,23.281", "Guantian", "Liujia", "Longqi", "Nanhua", "Nanxi", "Yujing", "Zuozhen"]
+ },
+ "retire": {"mig": "eai"},
+ "set": {"eai": {"name": "Chiayi"}},
+ "names": {"drop": ["mig"], "aliases": {"eai": ["Minxiong", "Taibao", "Puzi"], "taa": ["Xinying", "Madou"]}},
+ "why": "Minxiong (mig) and Chiayi (eai, plan name East District) were two north-south strips over two first-level units: mig the coastal plain of Chiayi County with northern Tainan (Xinying, Madou, Jiali), eai Chiayi City with the hills of Chiayi County and Tainan's inland districts down to Longqi, 20 km from Tainan's centre. After: Chiayi (eai) is Chiayi City and Chiayi County whole (mig retired into it); Tainan's 21 districts from both go to Tainan's metro (taa), which makes it Tainan City whole but for its two Kaohsiung districts as before."
+}

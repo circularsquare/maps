@@ -19,7 +19,9 @@ planned, and zone-names.json entries. One JSON spec a task:
 Waves: a row that takes units from another row is built after it (a build cuts every pack outline on disk out
 of its own, osm_units.cut_packs, so a taker built first would lose the moved units to the giver's old outline);
 retired rows give nothing, since their files leave data/packs before the builds. People are the plan state's
-unit people (data/work/worldplan/state.pkl), bbox and extracts as world_plan's own joined rows (T-3287).
+unit people (data/work/worldplan/state.pkl), bbox and extracts as world_plan's own joined rows (T-3287). A touched
+row whose origin lies off its land and on another country's or nearer another row's units gets a new one
+(moved_origin; "set" may give it).
 """
 import collections
 import glob
@@ -56,6 +58,21 @@ def load_units(iso):
         u = world_plan.Unit(uid, name, iso, g, [])
         u.pop = float(pop.inside(g)[2].sum())
         by[uid] = u
+    # T-4365: a row may hold a unit of another level than the state's (zhu holds geoBoundaries' Macau SAR ADM1
+    # feature beside CHN's ADM2 units, T-897); the build reads every level in the plan's unit_sources
+    # (osm_units.plan_units), so the same here
+    doc = shared_lock.read_json(PLAN)
+    held = {u for r in doc["metros"] for u in (r.get("units") or {}).get(iso, [])}
+    missing = held - set(by)
+    src = (doc.get("unit_sources") or {}).get(iso, {})
+    if missing and src.get("kind") == "geoBoundaries":
+        import osm_units
+        for uid, name, g in osm_units.gb_source(iso, doc["unit_sources"]):
+            if uid in missing and uid not in by:
+                u = world_plan.Unit(uid, name, iso, g, [])
+                u.pop = float(pop.inside(g)[2].sum())
+                by[uid] = u
+                print(f"  {iso}: {name} ({uid}) from the build's own levels, not the plan state's (T-4365)")
     return by
 
 
@@ -103,6 +120,39 @@ def neighbours(ids, by, owner):
             continue
         share[owner.get(u.id, "(no row)")] += edge.intersection(u.geom.buffer(TOUCH_M)).length / L
     return {k: round(v, 2) for k, v in share.most_common()}
+
+
+def moved_origin(k, r, by, owner, iso, pop, sources):
+    """T-4364: a new origin when the row's lies off its own land and on another country's or nearer another row's
+    units, else None. The build draws the pack round its origin and the gate jumps there (sih's stayed in Qingxin,
+    given to qnc; zhu's is on Macau's newer outline). Own land is the units as the build reads them
+    (osm_units.plan_units: other countries' newer outlines cut out), not the plan state's, which keep the shapes of
+    their last replan. world_plan's zone rule (T-1762): the densest GHS-POP cell of the unit the row is named after,
+    else of its most populous unit, on that land."""
+    import numpy as np
+    import osm_units
+    import shapely
+    import world_plan as wp
+    us = r["units"][iso]
+    q = shapely.Point(r["origin"])
+    land = shapely.union_all([g for _, _, g, _ in osm_units.plan_units(r, sources)])
+    if land.covers(q):
+        return None
+    p = shapely.Point(wp.FWD.transform(*r["origin"]))
+    own = wp.to_moll(land)
+    d = own.distance(p)
+    abroad = osm_units.foreign_land(r["units"], q.buffer(0.01).bounds).covers(q)
+    if not abroad and not any(owner.get(u.id) not in (None, k) and u.geom.distance(p) < d for u in by.values()):
+        return None
+    named = [by[u] for u in us if wp.zone_name(by[u].name, iso) == r["name"]]
+    lead = named[0] if named else max((by[u] for u in us), key=lambda u: u.pop)
+    x, y, ps = pop().inside(lead.geom.intersection(own))
+    if len(ps):
+        i = int(np.argmax(ps))
+        x, y = x[i], y[i]
+    else:
+        x, y = (lead.geom.intersection(own) or own).representative_point().coords[0]
+    return [round(v, 4) for v in wp.INV.transform(x, y)]
 
 
 def plan_change(spec, doc, by):
@@ -172,6 +222,17 @@ def plan_change(spec, doc, by):
     import world_plan as wp
     ex, kids = wp.geofabrik()
     others = {}
+    owner2 = dict(owner)
+    for k, r in new.items():
+        if k not in gone:
+            for u in r["units"][iso]:
+                owner2[u] = k
+    grid = {}
+
+    def pop():  # the GHS-POP grid, opened only when an origin moves
+        if "p" not in grid:
+            grid["p"] = wp.Pop()
+        return grid["p"]
     for k, r in new.items():
         if k in gone:
             continue
@@ -200,12 +261,15 @@ def plan_change(spec, doc, by):
                 src["unit_names"] = names
             src["hand_edit"] = {"task": spec["task"], "why": spec.get("why", "")}
             others[k] = shapely.set_precision(ll, 1e-5)
+        o = None if "origin" in spec.get("set", {}).get(k, {}) else moved_origin(k, r, by, owner2, iso, pop,
+                                                                                    doc["unit_sources"])
+        if o:
+            from timezonefinder import TimezoneFinder
+            tf = TimezoneFinder()
+            tz = wp.COUNTRY_TZ.get(iso) or tf.timezone_at(lng=o[0], lat=o[1]) or tf.closest_timezone_at(lng=o[0], lat=o[1])
+            lines.append(f"{k}: origin {r['origin']} -> {o} (off its own land), tz {tz}")
+            r["origin"], r["tz"], r["utc_offset"] = o, tz, wp.std_offset(tz)
         r["status"] = "planned"
-    owner2 = dict(owner)
-    for k, r in new.items():
-        if k not in gone:
-            for u in r["units"][iso]:
-                owner2[u] = k
     for k, r in sorted(new.items()):
         if k in gone:
             continue
