@@ -1,7 +1,7 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session 830e4d8e-dff6-4916-8f8f-7070570d8956, name maps-6c (account 1), since 2026-11-27 21:58 UTC
-Updated: 2026-11-27 22:12 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Orchestrator: session bae761ca-c85c-416e-b4e2-0a931ae6b8a6, name maps-dd, since 2026-11-27 23:10 UTC (Windows 11 now; maps-6c gone, nothing in flight)
+Updated: 2026-11-27 23:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word, 16:16 UTC: "lets drop core cap to 10 for a while").
 
 ## Next
@@ -19,6 +19,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
+- 11-27 18:10 her time: Windows 11 done, "can resume work as normal"; 3-10 agents at once; "stay lean as an orchestrator... try to not do that [work yourself]"; a code guard for it, yes (T-4428).
 - 11-27 17:08 her time: "lets just ideally remove all references to other games. i think that'd be best"; "its harmless to make this change and probably better to state the game in its own terms". Current docs done (743e8a373); the rest is T-4427.
 - 11-27 ~13:50 her time (to maps-2c, account 2): pushed master on her yes; Windows 11 upgrade coming (machine restarts; agents diskclean and win11guide running for it). Gemini for adversarial review only now that there are two Claude subs (DECISIONS). AWS raise to ~5 vCPU refused, wants usage history: use it now and then, e.g. country adds (docs/aws.md).
 - 11-27 11:26 her time: Gemini quota out; "oki we can move bus fix to sonnet. but mostly just pause starting new work". Core cap 10 "for a while".

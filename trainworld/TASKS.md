@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-27, agent stage11)
   - Context: You, 11-23: "this is the entire issue". Stage 10 landed 11-27: per-line passes redone only for the lines an edit changed (their parts 41 to 31 ms on your Asia save). By its parts a trunk station now builds in about 92-96 ms, not yet timed on a quiet machine. Left: train speeds (14-53 ms), the bands' last whole-line copies.
   - Goal: A station on a line's track on Asia under 100 ms of network build, timed on a quiet machine; train speeds redone only for lines that changed.
   - Other: notes/T-4153.md "Stage 10"
@@ -194,11 +194,11 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
   - Other: notes/T-4196.md
-- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save
+- T-4267 [P1] {L:edit-speed} One design so no step of an edit scales with the save (taking, 2026-11-27, agent editdesign)
   - Context: You, 11-25: "partition where we're currently editing from the rest of the network so that nothing scales with the save size". T-4144 (11-23) planned showing edits at the click; each stage since cut one step. Gemini's end-to-end read: artifacts/trainworld/gemini/ask-0226/editscale.md, unchecked.
   - Goal: A checked design with stages, to you before anything is built.
   - Other: a repeat (notes/repeats.md); notes/T-4267.md
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-27, agent clickwait)
   - Context: Stage 3 landed 11-25: the panels' `today` with the clock running costs 3-6 ms on your Asia save (was about 107). Click run on Asia: first 46 ms, later 37, 170, 272. Left: which follow-up piece later clicks wait behind (no per-click laps yet); the page's click hold stays (unsafe to drop).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
@@ -250,13 +250,16 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4359: a load adds each zone viewed while it runs and keeps it open until the load ends (Lantian 208 s in your session); a game load's card still does. At a save's load the default zone (New York) kept a "Loading city data" bar for 7 s after the view left it.
   - Goal: A zone viewed during a load opens and closes on its own.
   - Other: notes/T-4359.md
-- T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends (taking, 2026-11-27, agent freestation)
+- T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends (taking, 2026-11-27, agent freestation2)
   - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
   - Goal: A station on track no line runs over rebuilds no line and sends no trips.
   - Other: notes/T-4249.md
-- T-4421 [P2] {L:checks} A brief generator for the orchestrator
+- T-4421 [P2] {L:checks} A brief generator for the orchestrator (taking, 2026-11-27, agent briefgen)
   - Context: You, 11-27: briefs were hand-written at 3-5k characters, pasting task blocks and restating CLAUDE.md, which docs/orchestrator.md "Briefs" already says not to do.
   - Goal: brief.py <task id> with the budget row, decisions, files to avoid and ids writes the usual brief of about 15 lines to a file.
+- T-4428 [P2] {L:checks} A guard that keeps the orchestrator from doing agents' work (taking, 2026-11-27, agent guard)
+  - Context: You, 11-27: "almost every claude orchestrator has been doing work themselves"; agreed: a hard block on orchestrator edits to code, a soft reminder after heavy reading.
+  - Goal: An orchestrator session can't edit app/, sim/, pipeline/ or checks/ code, and is reminded past a reading limit; bookkeeping and landings unaffected.
 - T-4427 [P3] {L:cleanup} No other games named in research and notes
   - Context: You, 11-27: "lets just ideally remove all references to other games". Current docs, SPEC, DECISIONS and code comments are done (11-27); research/, notes/ (archive too) and ARCHIVE-to-2026-10-19.md still hold 623 mentions in about 70 .md files.
   - Goal: git grep finds no game name there; three game-named research files renamed, every link updated.
@@ -349,7 +352,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4370 [P2] {L:memory} iPad games crash on big saves
+- T-4370 [P2] {L:memory} iPad games crash on big saves (taking, 2026-11-27, agent ipadmem)
   - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines (maybe T-4367's "Demand stopped", fixed 11-26, if not a tab reload). Related: T-3160.
   - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
 - T-3708 [P3] {L:memory} Place rows lost in a worker restart wait

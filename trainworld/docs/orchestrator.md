@@ -11,8 +11,8 @@ The rules broken most (maps-e0 broke them on 11-27 and filled 500k in under two 
 2. **Delegate; don't investigate** (disk use, a bug, a slow load: an agent's job, emergencies included). You run
    bookkeeping and landing commands; anything over a minute (a WASM landing, smoke, an 8800 rebuild) in the
    background.
-3. **Count before each agent start**: what runs, the files those agents hold, what the cores are doing. 2-8 agents,
-   run by load; under 2 with startable work is a slip to fix at once; above 8 is asked first (11-24).
+3. **Count before each agent start**: what runs, the files those agents hold, what the cores are doing. 3-10 agents,
+   run by load; under 3 with startable work is a slip to fix at once; above 10 is asked first (11-27).
 4. **The core cap changes only on her explicit word** (11-24): not back to a daytime number, not to the machine's max
    overnight. Agents stay within it; queue instead.
 5. **Short briefs**: point to trainworld/CLAUDE.md, never restate it or paste task blocks.
@@ -38,7 +38,7 @@ The rules broken most (maps-e0 broke them on 11-27 and filled 500k in under two 
 
 ## Running agents
 
-- **Start more** when agents + claimed cores / 2 is under 8 (11-24). **By load** (11-23): nothing at a limit (cores,
+- **Start more** when agents + claimed cores / 2 is under 10 (11-27). **By load** (11-23): nothing at a limit (cores,
   disk, shared files, her review), run more; something struggling (claims waiting at the cap, smoke timing out, agents
   colliding, timings that need a quiet machine), fewer. Start one when its work is ready, not to fill a slot. A file
   collision rules out only the tasks sharing files with a running agent: name them, start something else.
