@@ -21,7 +21,7 @@ import { designSpeed, selection, selectMode, tool } from "../game/ui";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { touchInput } from "./touch";
-import { edit, say, world } from "../game/world";
+import { edit, say, stationsByNum, world } from "../game/world";
 import { dragAhead } from "../game/pieceAhead";
 import type { ClockClient } from "../workers/clockClient";
 import { effect } from "@preact/signals";
@@ -35,7 +35,7 @@ import { packToLngLat } from "../game/coords";
 import type { PreviewAnswer } from "../workers/clockClient";
 import { MARKS_ZOOM, NODE_HIT_PX } from "./dragHandles";
 import { marksLayer, onScreen, placeAt } from "./screenPlace";
-import { hidden, onBlueprintsHidden } from "./visibility";
+import { edgeOff, hidden, nodeOff, onBlueprintsHidden, stationOff } from "./visibility";
 import { curveLabels, CurveLabelPool, slowestFirst } from "./trackTagRows";
 
 /** A click, not a drag: the pointer moved less than this (px). */
@@ -172,7 +172,7 @@ export class BlueprintBox {
     return e;
   }
 
-  private movableOf: { pick: BpPicked | null; version: number; nodes: number[] } = { pick: null, version: -1, nodes: [] };
+  private movableOf: { pick: BpPicked | null; version: number; visV: number; nodes: number[] } = { pick: null, version: -1, visV: -1, nodes: [] };
   /** The pick's nodes that can move: every edge there blueprint, no crossover, station not
    * constructed (of `dragNodes`: those a box held, or the ends of picked track and picked stations). */
   private movable(): number[] {
@@ -180,18 +180,20 @@ export class BlueprintBox {
     if (hidden.blueprints) return [];
     if (!w || (!p.edges.length && !p.stations.length)) return [];
     const was = this.movableOf;
-    if (was.pick === p && was.version === w.version) return was.nodes;
+    if (was.pick === p && was.version === w.version && was.visV === hidden.v) return was.nodes;
     const ids = dragNodes(p);
     const fixed = new Set<number>();
     for (const e of w.edges) if (e.crossover) fixed.add(e.a), fixed.add(e.b);
-    const built = new Set(w.save.stations.filter((s) => s.built).map((s) => s.num));
+    const stByNum = stationsByNum(w);
     const nodes: number[] = [];
     for (const id of ids) {
       const n = w.nodes.get(id);
-      if (!n || n.builtPorts > 0 || fixed.has(id) || built.has(id)) continue;
+      if (!n || n.builtPorts > 0 || fixed.has(id)) continue;
+      const st = stByNum.get(id);
+      if (st?.built || (st ? stationOff(st.id, st.built) : nodeOff(id, n.builtPorts))) continue;
       nodes.push(id);
     }
-    this.movableOf = { pick: p, version: w.version, nodes };
+    this.movableOf = { pick: p, version: w.version, visV: hidden.v, nodes };
     return nodes;
   }
 
@@ -525,6 +527,7 @@ export class BlueprintBox {
     const p = new Float64Array(4);
     if (this.map.getZoom() >= STATIONS_ZOOM) {
       for (let i = 0; i < n.stationCount; i++) {
+        if (this.overlay.renderer.stationHidden(i)) continue;
         this.overlay.toScreenInto(n.stations[i * 3], n.stations[i * 3 + 1], p, 0);
         if (p[0] >= r[0] && p[0] <= r[2] && p[1] >= r[1] && p[1] <= r[3]) out.stations.push(Number(n.stationIds[i]));
       }
@@ -545,7 +548,7 @@ export class BlueprintBox {
       return v;
     };
     for (const e of w.edges) {
-      if (!holds(e.a) || !holds(e.b) || !n.edgePts.has(e.id)) continue;
+      if (edgeOff(e) || !holds(e.a) || !holds(e.b) || !n.edgePts.has(e.id)) continue;
       out.edges.push(e.id);
       inside.add(e.a);
       inside.add(e.b);

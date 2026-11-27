@@ -39,6 +39,7 @@ import { loadRealStationsAt } from "./realStations";
 import { pointerLocal } from "./pick";
 import { edgesNear, nodesNear } from "./snapIndex";
 import { clickNet, clickWorld, patchFresh } from "./clickMap";
+import { edgeOf } from "../game/worldDiff";
 import { edgeOff, hidden, nodeOff } from "./visibility";
 import { afterStopEdits, edit, queueStopEdit, say, sendStopEdit, stopsQueued, world } from "../game/world";
 import { hideBusy, showBusy } from "../game/busy";
@@ -415,7 +416,7 @@ export class Tools {
     const nearEdges = at ? edgesNear(n, at[0], at[1], laneReach * at[2]) : null;
     for (const node of nodes ? nearNodes ?? w.nodes.values() : []) {
       if (node.bus || node.port || node.brtStation) continue; // a bus stop, a port (T-2194) or a BRT station (T-3378) is no track to build on (T-1464)
-      if ((hidden.levels || hidden.modes) && nodeOff(node.id)) continue; // T-3560, T-4400
+      if (nodeOff(node.id, node.builtPorts)) continue; // T-3560, T-4400, T-4407
       const [lx, ly] = toLocal(node.lng, node.lat);
       const [x, y] = this.screen(lx, ly);
       const d = (x - px) ** 2 + (y - py) ** 2;
@@ -429,7 +430,7 @@ export class Tools {
     if (!hit && doubleIds && nodes) {
       for (const [node, { edge, fromA }] of this.doubleEnds(w).loose) {
         const pts = n.edgePts.get(edge), nd = w.nodes.get(node);
-        if (!pts || !nd || pts.length < 6 || ((hidden.levels || hidden.modes) && nodeOff(node))) continue;
+        if (!pts || !nd || pts.length < 6 || nodeOff(node, nd.builtPorts)) continue;
         const [lx, ly] = toLocal(nd.lng, nd.lat), [x, y] = this.screen(lx, ly);
         const k = fromA ? 3 : pts.length - 6;
         const [x1, y1] = this.screen(pts[k], pts[k + 1]);
@@ -445,8 +446,8 @@ export class Tools {
       }
     }
     if (hit) return this.withJoin(hit, fx, fy);
-    // T-3560, T-4400: hidden track (wholly on hidden levels, or of a hidden kind) is no snap target
-    const offEdges = hidden.levels || hidden.modes ? new Set(w.edges.filter(edgeOff).map((e) => e.id)) : null;
+    // T-3560, T-4400, T-4407: hidden track (blueprint hidden, wholly on hidden levels, or of a hidden kind) is no snap target
+    const offEdges = hidden.levels || hidden.modes || hidden.blueprints ? new Set(w.edges.filter(edgeOff).map((e) => e.id)) : null;
     // each edge's nearest point within reach, px squared
     const near: { d: number; hit: Snap }[] = [];
     const tramOnly = station && !this.autoProbe ? stationOnTram.peek() : null, tramOf = station ? this.tramEdgeSet(w) : null, buswayOf = station ? this.buswayEdgeSet(w) : null;
@@ -616,6 +617,8 @@ export class Tools {
     let best = BESIDE_PX * BESIDE_PX, hit: { edge: number; lx: number; ly: number } | null = null;
     const w = clickWorld(), tramOf = w ? this.tramEdgeSet(w) : null, fam = tramTrack.peek();
     for (const { edge, pts, ks } of edgesNear(n, at[0], at[1], BESIDE_PX * at[2]) ?? []) {
+      const ed = w ? edgeOf(w, edge) : undefined;
+      if (ed && edgeOff(ed)) continue;
       if (tramOf && tramOf.has(edge) !== fam) continue;
       for (let j = 0, k = ks ? ks[0] : 0; ks ? j < ks.length : k + 5 < pts.length; j++, k = ks ? ks[j] : k + 3) {
         const [x0, y0] = this.screen(pts[k], pts[k + 1]);

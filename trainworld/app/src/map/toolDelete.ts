@@ -18,6 +18,7 @@ import { BuildingFloors } from "./buildingFloors";
 import { type Snap, trimPolyline } from "./toolParts";
 import { touchStop } from "./toolTouch";
 import type { Tools } from "./tools";
+import { edgeOff, nodeOff, stationOff } from "./visibility";
 
 /** What a click with the delete tool would remove: a station, a flyover, else a stretch of
  * track, else a bus line (train lines are removed from the Lines tab). */
@@ -46,14 +47,14 @@ export function deletePick(tk: Tools, px: number, py: number): (Removable & { lx
   const picks = (at && nodesNear(w, at[0], at[1], 12 * at[2], "pick")) ?? [...w.nodes.values()];
   // T-4214: a station placed since the drawn network was built has no box yet; the patched world has its node
   for (const node of picks) {
-    if (!(node.platform > 0) || node.bus || node.port || tk.overlay.renderer.stationStyle.hidden) continue; // (hidden stations are never picked, T-205, T-4260)
+    if (!(node.platform > 0) || node.bus || node.port || tk.overlay.renderer.stationStyle.hidden || stationOff(String(node.id))) continue; // (hidden stations are never picked, T-205, T-4260, T-4407)
     const [lx, ly] = toLocal(node.lng, node.lat);
     const d = near(lx, ly, 12);
     if (d < best && !n.stationIds.some((id) => Number(id) === node.id)) [best, hit] = [d, { kind: "station", node: node.id, lx, ly }];
   }
   if (hit) return hit;
   for (const node of picks) {
-    if (!node.flying || node.ports < 3) continue;
+    if (!node.flying || node.ports < 3 || nodeOff(node.id, node.builtPorts)) continue;
     const [lx, ly] = toLocal(node.lng, node.lat);
     const d = near(lx, ly, 10);
     if (d < best) [best, hit] = [d, { kind: "flyover", node: node.id, lx, ly }];
@@ -67,6 +68,8 @@ export function deletePick(tk: Tools, px: number, py: number): (Removable & { lx
     // a plain node (track end, junction): the stretch nearest to the pointer there
     let e = -1, bd = Infinity;
     const tryPoint = (edge: number, pts: Float32Array, k: number) => {
+      const ed = edgeOf(w, edge);
+      if (ed && edgeOff(ed)) return;
       const d = near(pts[k], pts[k + 1], 14);
       if (d < bd) [bd, e] = [d, edge];
     };
@@ -103,7 +106,7 @@ export function stationUnder(tk: Tools, s: Snap): (Removable & { lx: number; ly:
   if (!w || !n || tk.overlay.renderer.stationStyle.hidden || (s.kind !== "node" && s.kind !== "edge")) return null;
   const station = (id: number) => {
     const node = w.nodes.get(id);
-    return node && node.platform > 0 && !node.bus && !node.port ? node : null;
+    return node && node.platform > 0 && !node.bus && !node.port && !stationOff(String(id)) ? node : null;
   };
   const hit = (id: number) => {
     const node = w.nodes.get(id)!, [lx, ly] = toLocal(node.lng, node.lat);

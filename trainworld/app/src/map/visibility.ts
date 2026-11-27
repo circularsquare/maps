@@ -23,6 +23,8 @@ export const hidden = {
   stationModes: (_id: string): number => 0,
   nodeModes: (_id: number): number => 0,
   edgeModes: (_id: number): number => 0,
+  stationBuilt: (_id: string): boolean | undefined => undefined,
+  nodeBuiltPorts: (_id: number): number | undefined => undefined,
   /** Settings' Show blueprints is off: every blueprint piece (track, lines, stations, BRT lanes) is not drawn or picked */
   blueprints: false,
   v: 0,
@@ -35,6 +37,8 @@ export interface HiddenLookups {
   stationModes: (id: string) => number;
   nodeModes: (id: number) => number;
   edgeModes: (id: number) => number;
+  stationBuilt: (id: string) => boolean | undefined;
+  nodeBuiltPorts: (id: number) => number | undefined;
 }
 
 const blueprintHooks = new Set<() => void>();
@@ -80,19 +84,23 @@ export const strokeMode = (flags: number) => ((flags & F_BUSWAY) !== 0 ? MODE_BI
 /** A track edge's kind as its `MODE_BIT` (`TrackEdge.kind` 4 a busway, 2 and 3 tram track) */
 export const edgeMode = (e: { hsr?: boolean; kind?: number }) => (e.kind === 4 ? MODE_BIT.bus : e.kind ? MODE_BIT.tram : e.hsr ? MODE_BIT.hsr : MODE_BIT.train);
 
-/** Whether station `id` is hidden: on a hidden level, or every kind of line and track at it hidden. */
-export function stationOff(id: string): boolean {
+/** Whether station `id` is hidden: blueprint hidden, on a hidden level, or every kind of line and track at it hidden. */
+export function stationOff(id: string, built?: boolean): boolean {
+  if (hidden.blueprints && (built ?? hidden.stationBuilt(id)) === false) return true;
   if (hidden.levels) { const l = hidden.stationLevel(id); if (l !== undefined && levelHidden(l)) return true; }
   return !!hidden.modes && modesHidden(hidden.stationModes(id));
 }
-/** Whether node `id` (a junction, a track end) is hidden: on a hidden level, or all its track of hidden kinds. */
-export function nodeOff(id: number): boolean {
+/** Whether node `id` (a junction, a track end, a flyover) is hidden: blueprint-only while blueprints are hidden, on a hidden level, or all its track of hidden kinds. */
+export function nodeOff(id: number, builtPorts?: number): boolean {
+  if (hidden.blueprints && (builtPorts ?? hidden.nodeBuiltPorts(id)) === 0) return true;
   if (hidden.levels) { const l = hidden.nodeLevel(id); if (l !== undefined && levelHidden(l)) return true; }
   return !!hidden.modes && modesHidden(hidden.nodeModes(id));
 }
-/** Whether track edge `e` is hidden: wholly on hidden levels, or of a hidden kind. */
-export const edgeOff = (e: { hsr?: boolean; kind?: number; levelMin: number; levelMax: number }) =>
-  (!!hidden.levels && levelHidden(e.levelMin) && levelHidden(e.levelMax)) || (hidden.modes & edgeMode(e)) !== 0;
+/** Whether track edge `e` is hidden: blueprint hidden, wholly on hidden levels, or of a hidden kind. */
+export const edgeOff = (e: { hsr?: boolean; kind?: number; levelMin: number; levelMax: number; built?: boolean }) =>
+  (hidden.blueprints && e.built === false) || (!!hidden.levels && levelHidden(e.levelMin) && levelHidden(e.levelMax)) || (hidden.modes & edgeMode(e)) !== 0;
+/** Whether a Park and Ride lot (named for station `stationId`) is hidden. */
+export const lotOff = (stationId: string, built?: boolean): boolean => stationOff(stationId, built);
 
 /** Whether a stroke segment with `levelCode` `code` (map/network.ts) is hidden: both its ends past half faded. */
 export function codeHidden(code: number): boolean {

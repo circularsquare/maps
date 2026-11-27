@@ -35,6 +35,7 @@ export function stationEnds(overlay: Overlay): { node: number; x: number; y: num
   if (!ok.size) return out;
   const project = (x: number, y: number) => overlay.toScreen(x, y);
   for (let i = 0; i < n.stationCount; i++) {
+    if (r.stationHidden(i)) continue;
     const node = Number(n.stationIds[i]);
     if (!ok.has(node)) continue;
     const s = r.stationShapeOf(i, project);

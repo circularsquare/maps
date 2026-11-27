@@ -19,7 +19,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { lngLatToPack } from "../game/coords";
 import { describeIssues } from "../game/issues";
 import { designSpeed, selection, tool } from "../game/ui";
-import { edit, say, world } from "../game/world";
+import { edit, say, stationsByNum, world } from "../game/world";
 import { dragAhead } from "../game/pieceAhead";
 import type { ClockClient, PreviewAnswer } from "../workers/clockClient";
 import { MARKS_ZOOM, NODE_HIT_PX, stationEnds } from "./dragHandles";
@@ -29,6 +29,7 @@ import { live } from "./live";
 import { previewStrokes } from "./network";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
+import { nodeOff, stationOff } from "./visibility";
 import { curveLabels, CurveLabelPool, slowestFirst } from "./trackTagRows";
 
 /** a press becomes a drag once the pointer has moved this far, px (MapLibre's click tolerance) */
@@ -97,13 +98,15 @@ export class NodeDrag {
     const t = tool.peek();
     if (!w || (t !== "select" && t !== "track")) return null;
     let best = NODE_HIT_PX * NODE_HIT_PX, hit: Hit | null = null;
+    const stByNum = stationsByNum(w);
     for (const n of w.nodes.values()) {
       if (n.bus || n.port || n.brtStation) continue; // a bus stop, a port (T-2194) or a BRT station (T-3378) is no node of the track (T-1464)
+      const st = n.platform > 0 ? stByNum.get(n.id) : undefined;
+      if (st ? stationOff(st.id, st.built) : nodeOff(n.id, n.builtPorts)) continue;
       const [x, y] = this.overlay.toScreen(...toLocal(n.lng, n.lat));
       const d = (x - px) ** 2 + (y - py) ** 2;
       if (d < best) {
         best = d;
-        const st = n.platform > 0 ? w.save.stations.find((s) => s.num === n.id) : undefined;
         hit = { node: n.id, movable: n.builtPorts === 0 && !st?.built };
       }
     }

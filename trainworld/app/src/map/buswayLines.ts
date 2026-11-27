@@ -11,8 +11,8 @@ let buswayMemo: { edges: unknown; net: unknown; mask: number; out: { key: string
 export function buswaysOf(overlay: Overlay, visibleOnly = false): { key: string; lines: number[][] } {
   const w = world.peek(), n = overlay.renderer.net;
   if (!w || !n) return { key: "", lines: [] };
-  // (the memo's key: the hidden levels' bits, plus 128 while buses are hidden)
-  const mask = visibleOnly ? hidden.levels + ((hidden.modes & MODE_BIT.bus) !== 0 ? 128 : 0) : 0;
+  // (the memo's key: the hidden levels' bits, plus 128 while buses are hidden and 256 while blueprints are)
+  const mask = visibleOnly ? hidden.levels + ((hidden.modes & MODE_BIT.bus) !== 0 ? 128 : 0) + (hidden.blueprints ? 256 : 0) : 0;
   if (buswayMemo && buswayMemo.edges === w.edges && buswayMemo.net === n && buswayMemo.mask === mask) return buswayMemo.out;
   const lines: number[][] = [], keys: string[] = [];
   for (const e of w.edges) {

@@ -116,6 +116,7 @@ export function stationModes(w: WorldView): Map<string, number> {
     if (!st) continue;
     const b = MODE_BIT[modeOf(st)];
     for (const id of l.stops) { const v = m.get(id); if (v !== undefined) m.set(id, v | b); }
+    if (st.backStops) for (const id of st.backStops) { const v = m.get(id); if (v !== undefined) m.set(id, v | b); }
   }
   stationModeMemo.set(w, m);
   return m;

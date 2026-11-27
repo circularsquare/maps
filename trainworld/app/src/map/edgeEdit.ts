@@ -28,7 +28,7 @@ import type { Overlay } from "./overlay";
 import { trackAt } from "./pick";
 import { marksLayer, placeAt } from "./screenPlace";
 import { touchInput } from "./touch";
-import { hidden, onBlueprintsHidden } from "./visibility";
+import { edgeOff, onBlueprintsHidden } from "./visibility";
 import { curveLabelled, curveLabels, CurveLabelPool, rampLabels, slowestFirst, type CurveLabel } from "./trackTagRows";
 
 /** A PI of a stretch, pack metres. */
@@ -209,7 +209,8 @@ export class EdgeEditor {
   /** Squares and curve labels to the camera. */
   place() {
     // hidden while a node of the stretch is being dragged (map/nodeDrag.ts): they would be stale
-    const on = !this.loading && this.edge >= 0 && this.target() === this.edge && !live.nodeDrag?.dragging && !(hidden.blueprints && world.peek()?.edges.find((x) => x.id === this.edge)?.built === false);
+    const ed = this.edge >= 0 ? world.peek()?.edges.find((x) => x.id === this.edge) : undefined;
+    const on = !this.loading && !!ed && this.target() === this.edge && !live.nodeDrag?.dragging && !edgeOff(ed);
     const pis = on ? this.shape.pis : [];
     for (let i = 0; i < pis.length; i++) {
       const [x, y] = this.overlay.toScreen(...this.local(pis[i]));

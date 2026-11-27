@@ -13,6 +13,7 @@ import type { Level, TrackEdge, WorldView } from "./types";
 import { checkPatches, sameBuilt, worldDiff } from "./worldDiff";
 import { ask, buildLevel, selection, selectMode, setTrackType, tool } from "./ui";
 import { edit, say, stationsByNum, world } from "./world";
+import { edgeOff, stationOff } from "../map/visibility";
 import { t, tList } from "../i18n";
 
 export interface BpPicked {
@@ -62,12 +63,14 @@ const builtOnly = () => tool.peek() === "blueprint" && selectMode.peek() === "tr
 export function onlyOneKind(p: BpPicked): BpPicked {
   const w = world.peek();
   if (!w) return p;
-  const builtEdge = new Set(w.edges.filter((e) => e.built).map((e) => e.id));
-  const builtStation = new Set(w.save.stations.filter((s) => s.built).map((s) => s.num));
-  const bp = !builtOnly() && (p.edges.some((e) => !builtEdge.has(e)) || p.stations.some((s) => !builtStation.has(s)));
+  const edgeById = new Map(w.edges.map((e) => [e.id, e]));
+  const stByNum = stationsByNum(w);
+  const visEdges = p.edges.filter((id) => { const e = edgeById.get(id); return !!e && !edgeOff(e); });
+  const visStations = p.stations.filter((num) => { const s = stByNum.get(num); return !!s && !stationOff(s.id, s.built); });
+  const bp = !builtOnly() && (visEdges.some((id) => !edgeById.get(id)!.built) || visStations.some((num) => !stByNum.get(num)!.built));
   const nodes = p.nodes ? { nodes: p.nodes } : {};
-  if (bp) return trimNodes({ edges: p.edges.filter((e) => !builtEdge.has(e)), stations: p.stations.filter((s) => !builtStation.has(s)), ...nodes });
-  const edges = p.edges.filter((e) => builtEdge.has(e)), stations = p.stations.filter((s) => builtStation.has(s));
+  if (bp) return trimNodes({ edges: visEdges.filter((id) => !edgeById.get(id)!.built), stations: visStations.filter((num) => !stByNum.get(num)!.built), ...nodes });
+  const edges = visEdges.filter((id) => edgeById.get(id)!.built), stations = visStations.filter((num) => stByNum.get(num)!.built);
   return trimNodes({ edges, stations, built: edges.length + stations.length > 0, ...nodes });
 }
 
@@ -97,7 +100,7 @@ function adjacency(edges: TrackEdge[]): Adj {
 export function runOf(edge: number): number[] {
   const w = world.peek();
   const start = w?.edges.find((e) => e.id === edge);
-  if (!w || !start) return [];
+  if (!w || !start || edgeOff(start)) return [];
   const adj = adjacency(w.edges);
   const out = new Set([edge]);
   for (let node of [start.a, start.b]) {
@@ -105,7 +108,7 @@ export function runOf(edge: number): number[] {
     for (;;) {
       const at = adj.get(node) ?? [];
       const next = at.length === 2 ? at.find((e) => e !== cur) : undefined;
-      if (!next || next.built !== start.built || out.has(next.id)) break;
+      if (!next || next.built !== start.built || edgeOff(next) || out.has(next.id)) break;
       out.add(next.id);
       cur = next;
       node = next.a === node ? next.b : next.a;
@@ -134,9 +137,9 @@ function nodeDist(w: NonNullable<ReturnType<typeof world.peek>>, a: number, b: n
 export function pathTo(p: BpPicked, edge: number): number[] {
   const w = world.peek();
   const target = w?.edges.find((e) => e.id === edge);
-  if (!w || !target || !p.edges.length || target.crossover) return [edge];
+  if (!w || !target || !p.edges.length || target.crossover || edgeOff(target)) return [edge];
   const built = p.built ?? target.built;
-  const usable = w.edges.filter((e) => e.built === built && !e.crossover);
+  const usable = w.edges.filter((e) => e.built === built && !e.crossover && !edgeOff(e));
   const adj = adjacency(usable);
   const goal = new Set<number>();
   const picked = new Set(p.edges);

@@ -30,7 +30,7 @@ import { perfOff } from "../perfFlags";
 import { ParkingLots } from "./parkingLots";
 import { BuildingFloors } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
-import { LOT_STRIDE } from "./facilityPlace";
+import { LOT_BLUEPRINT, LOT_STRIDE } from "./facilityPlace";
 import { backBaseOf, F_BLUEPRINT, platformShapeAt, sampleValue, stationIndexOf, type NetPatch, type NetworkBuffers, type Strokes } from "./network";
 import { BEND_LIMIT, PHASE_ROOM, bendRows, blankSlots, checkSlots, phaseRows, phasesFromFirst, planSlots, putSlots, sampleRows, slottedLineTable, slottedMeta, trainNamesTest, type SlotLayout, type SlotNames, type SlotSrc, type SlotTex } from "./trainSlots";
 import type { EditTouched } from "../workers/protocol";
@@ -38,7 +38,7 @@ import { aheadChevrons, aheadEmpty, aheadParts, joinStations, noAhead, standInSt
 import { BAY_STRIDE } from "./terminalBays";
 import { BAND_RANGE, TRAFFIC_PICK_DIV, type TrafficBands } from "./lineBands";
 import { BRIDGE_VS, HOT_STATIONS, LINES_W, PROBE_FS, PROBE_VS, SEL_FS, SEL_MAX, SEL_STRIDE, SEL_VS, STATION_FS, STATION_VS, STROKE_FS, STROKE_VS, TEX_W, TRAIN_FS, TRAIN_VS } from "./rendererShaders";
-import { codeHidden, hidden as vis, levelShown, modesHidden, pickSkip, stationOff, strokeMode } from "./visibility";
+import { codeHidden, hidden as vis, levelShown, lotOff, modesHidden, pickSkip, stationOff, strokeMode } from "./visibility";
 import { edgesNear } from "./snapIndex";
 import { MARK_STRIDE } from "./markData";
 import { EPOCH_S, STAGE_WAIT_MS, TripArgs, LINE_PX, noBays, BAYS, StationGroups, DrawOptions, StrokeVao, TexName, plainWmul, fullAttr, STROKE_ATTRIBS, STILL_MAX_MS, StrokeLodState, NetworkLayers, TRAIN_MAX_MPS, CROWD_STEP_S, type StrokeBand } from "./rendererParts";
@@ -368,12 +368,13 @@ export class NetworkRenderer {
   /** The car park drawn under a point (T-1528), its index in `lots.lots`, or -1: drawn from
    * STATION_BOX_ZOOM in. */
   lotAt(px: number, py: number, project: Project): number {
-    return this.stationStyle.boxes && !this.stationsOff ? this.lots.at(px, py, project) : -1;
+    return this.stationStyle.boxes && !this.stationsOff ? this.lots.at(px, py, project, (k) => this.lotHidden(k)) : -1;
   }
   /** A selected station drawn at a point, or -1 (picking: it is above the demand bubbles). */
   selectedStationAt(px: number, py: number, project: Project, padding = 2): number {
     if (this.stationsOff) return -1;
     for (const i of this.selectedDrawn()) {
+      if (this.stationHidden(i)) continue;
       const s = this.drawnShapeOf(i, project);
       if (s && insideStation(s, px, py, padding)) return i;
     }
@@ -1009,12 +1010,14 @@ export class NetworkRenderer {
    * the network (T-4145) */
   private hideStations(n: NetworkBuffers) {
     this.stationHid = new Uint8Array(n.stationCount);
-    if (vis.levels || vis.modes) for (let i = 0; i < n.stationCount; i++) if (stationOff(n.stationIds[i])) this.stationHid[i] = 1;
-    if (vis.blueprints) for (let i = 0; i < n.stationCount; i++) if ((n.stations[i * 3 + 2] & 2) !== 0) this.stationHid[i] = 1;
+    if (vis.levels || vis.modes || vis.blueprints) {
+      for (let i = 0; i < n.stationCount; i++) if (stationOff(n.stationIds[i], (n.stations[i * 3 + 2] & 2) === 0)) this.stationHid[i] = 1;
+    }
     for (const id of this.ahead.hideStations) {
       const i = stationIndexOf(n, String(id));
       if (i >= 0) this.stationHid[i] = 1;
     }
+    this.lots.setShown(vis.levels || vis.modes || vis.blueprints || this.ahead.hideStations.size ? (k) => this.lotHidden(k) : null);
     this.selDrawnKey = "";
   }
 
@@ -1249,9 +1252,20 @@ export class NetworkRenderer {
     for (const l of [...vis.lines, ...gone]) if (l * 4 + 3 < c.length) c[l * 4 + 3] = 0;
     return c;
   }
-  /** Whether station `i` is hidden (T-3420). */
+  /** Whether station `i` is hidden (T-3420, T-4407). */
   stationHidden(i: number): boolean {
+    const n = this.net;
+    if (n && (this.hiddenFor !== n || this.hiddenV !== vis.v)) {
+      return stationOff(n.stationIds[i], (n.stations[i * 3 + 2] & 2) === 0) || this.ahead.hideStations.has(Number(n.stationIds[i]));
+    }
     return this.stationHid[i] === 1;
+  }
+  /** Whether Park and Ride lot `k` is hidden (T-4407). */
+  lotHidden(k: number): boolean {
+    const n = this.net, l = this.lots.lots, o = k * LOT_STRIDE;
+    if (!n || o + 8 >= l.length) return false;
+    const s = l[o + 8];
+    return this.stationHidden(s) || lotOff(n.stationIds[s], (l[o + 7] & LOT_BLUEPRINT) === 0);
   }
   sampleLv: Float32Array | null = null;
   /** T-3560: whether a train (as `tripAt` places it) is on a hidden level, not drawn or pickable */

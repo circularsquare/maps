@@ -77,6 +77,7 @@ export class ParkingLots {
   private vao: WebGLVertexArrayObject | null = null;
   private buf: WebGLBuffer | null = null;
   private count = 0;
+  private drawCount = 0;
   /** the network's lots, for hit tests (kept without the program too) */
   lots: Float32Array = new Float32Array(0);
 
@@ -84,7 +85,7 @@ export class ParkingLots {
     this.gl = gl;
     // again after a lost context (T-953): the old buffers are gone, the renderer uploads anew
     this.vao = this.buf = null;
-    this.count = 0;
+    this.count = this.drawCount = 0;
     this.prog = compileOptional(gl, VS, FS, "car parks");
     if (this.prog) this.u = uniforms(gl, this.prog, [...PROJECT_UNIFORMS, "u_viewport", "u_fill", "u_line", "u_dpr"]);
   }
@@ -95,7 +96,7 @@ export class ParkingLots {
     if (this.vao) gl.deleteVertexArray(this.vao);
     if (this.buf) gl.deleteBuffer(this.buf);
     this.vao = this.buf = null;
-    this.count = this.lots.length / LOT_STRIDE;
+    this.count = this.drawCount = this.lots.length / LOT_STRIDE;
     if (!this.count || !this.prog) return;
     this.vao = gl.createVertexArray()!;
     this.buf = gl.createBuffer()!;
@@ -112,8 +113,24 @@ export class ParkingLots {
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
 
+  /** T-4407: upload only the lots not hidden, keeping `this.lots` intact so hit indices stay aligned. */
+  setShown(skip: ((i: number) => boolean) | null) {
+    if (!this.count || !this.buf) { this.drawCount = 0; return; }
+    let shown = this.lots;
+    if (skip) {
+      const kept: number[] = [];
+      for (let i = 0; i < this.count; i++) if (!skip(i)) for (let k = 0; k < LOT_STRIDE; k++) kept.push(this.lots[i * LOT_STRIDE + k]);
+      if (kept.length !== this.lots.length) shown = new Float32Array(kept);
+    }
+    this.drawCount = shown.length / LOT_STRIDE;
+    const gl = this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
+    gl.bufferData(gl.ARRAY_BUFFER, shown, gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
+
   draw(lc: LocalCamera, vp: readonly [number, number], dpr: number) {
-    if (!this.count || !this.vao) return;
+    if (!this.drawCount || !this.vao) return;
     const gl = this.gl, u = this.u, sh = shadeColours();
     gl.useProgram(this.prog);
     setCamera(gl, u, lc);
@@ -122,13 +139,14 @@ export class ParkingLots {
     gl.uniform3fv(u.u_line, rgbf(sh.lotLine));
     gl.uniform1f(u.u_dpr, dpr);
     gl.bindVertexArray(this.vao);
-    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.count);
+    gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, this.drawCount);
     gl.bindVertexArray(null);
   }
 
   /** The lot drawn under a screen point (CSS px), its index (LOT_STRIDE numbers each), or -1. */
-  at(px: number, py: number, project: Project): number {
+  at(px: number, py: number, project: Project, skip?: (i: number) => boolean): number {
     for (let i = this.count - 1; i >= 0; i--) {
+      if (skip?.(i)) continue;
       const o = i * LOT_STRIDE, l = this.lots;
       const [cx, cy] = project(l[o], l[o + 1]), [ex, ey] = project(l[o] + l[o + 2], l[o + 1] + l[o + 3]);
       const [nx, ny] = project(l[o] - l[o + 3] * l[o + 5] / l[o + 4], l[o + 1] + l[o + 2] * l[o + 5] / l[o + 4]);

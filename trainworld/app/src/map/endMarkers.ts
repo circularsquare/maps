@@ -200,8 +200,8 @@ export class EndMarkers {
   /** A node's point, if it has one: only where the network draws its track, so a mark is never left on its own (T-1485) */
   private ptAt(kind: Kind, n: TrackNode, net: NetworkBuffers | null): Pt | null {
     if (n.platform > 0 || n.bus) return null;
-    // T-4400: none at a node the player hid (all its track on hidden levels or of hidden kinds)
-    if ((hidden.levels || hidden.modes) && nodeOff(n.id)) return null;
+    // T-4400, T-4407: none at a node the player hid (blueprint hidden, hidden levels or hidden kinds)
+    if (nodeOff(n.id, n.builtPorts)) return null;
     // (the last drawn edge in the network's order, as a pass over the edges would leave it)
     let e: TrackEdge | undefined;
     for (const id of this.incident.get(n.id) ?? []) if (net?.edgePts.has(id) && (!e || id > e.id)) e = this.edgeBy.get(id);

@@ -25,6 +25,7 @@ import { EARTH_C, kAtLat, toLocal, toMerc01 } from "./geo";
 import { BoxGrid } from "./labelLayout";
 import type { Overlay } from "./overlay";
 import { STATIONS_ZOOM } from "./stationGeometry";
+import { stationOff } from "./visibility";
 
 /** ground reach of a station's tint, m */
 const REACH_M = 650;
@@ -157,6 +158,7 @@ export class FareZoneTool {
     if (!w) return out;
     const at: [number, number] = [NaN, NaN];
     for (const s of w.save.stations) {
+      if (stationOff(s.id, s.built)) continue;
       this.overlay.toScreenInto(...toLocal(s.lng, s.lat), at);
       if (Number.isNaN(at[0])) continue;
       out.push({ num: s.num, x: at[0], y: at[1] });

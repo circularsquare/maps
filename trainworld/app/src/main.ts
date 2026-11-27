@@ -538,6 +538,8 @@ effect(() => {
     stationModes: (id) => (w ? stationModes(w).get(id) ?? 0 : 0),
     nodeModes: (id) => (w ? trackModes(w).nodes.get(id) ?? 0 : 0),
     edgeModes: (id) => (w ? trackModes(w).edges.get(id) ?? 0 : 0),
+    stationBuilt: (id) => (w ? stationsById(w).get(id)?.built : undefined),
+    nodeBuiltPorts: (id) => w?.nodes.get(id)?.builtPorts,
   });
   // (a MapLibre frame too: the station names, capacity gauges and reversal signs are placed on its frames)
   if (changed) overlay.invalidate(), map.triggerRepaint();
