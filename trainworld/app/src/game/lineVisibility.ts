@@ -78,6 +78,9 @@ export function toggleMode(m: TransitMode) {
 /** Show every kind. */
 export function showAllModes() { if (hiddenModes.peek().size) hiddenModes.value = new Set(); }
 
+/** Show every level and kind of line. */
+export function showAllShown() { showAllLevels(); showAllModes(); }
+
 /** `hiddenModes` as `MODE_BIT` bits. */
 export const modeBits = (s: ReadonlySet<TransitMode>) => [...s].reduce<number>((m, x) => m | MODE_BIT[x], 0);
 

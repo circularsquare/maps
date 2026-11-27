@@ -20,7 +20,6 @@ const ALIASES: [MessageKey, MessageKey][] = [
   ["settingsTab.colors", "settingsSearch.aliasColors"],
   ["settingsTab.mapLabels", "settingsSearch.aliasMapLabels"],
   ["settingsTab.terrain", "settingsSearch.aliasTerrain"],
-  ["settingsTab.showLevels", "settingsSearch.aliasLevels"],
   ["settingsTab.game", "settingsSearch.aliasGame"],
   ["settingsTab.realNetwork", "settingsSearch.aliasRealNetwork"],
   ["settingsTab.sound", "settingsSearch.aliasSound"],
@@ -75,7 +74,12 @@ export function filterSettings(list: HTMLElement, query: string): boolean {
       const a = e.getAttribute("aria-label");
       if (a) labels.add(norm(a));
     }
-    return [norm(shownText(el)), ...aliases.filter(([label]) => labels.has(label)).map(([, words]) => words)].join(" ");
+    const aliasKey = el.getAttribute("data-search-alias") as MessageKey | null;
+    return [
+      norm(shownText(el)),
+      aliasKey ? norm(`${t(aliasKey)} ${en[aliasKey]}`) : "",
+      ...aliases.filter(([label]) => labels.has(label)).map(([, words]) => words),
+    ].join(" ");
   };
   const found = (text: string) => words.every((w) => text.includes(w));
   /** Filters one run of rows under a heading's text; says whether any is shown. A `data-search-follow` row

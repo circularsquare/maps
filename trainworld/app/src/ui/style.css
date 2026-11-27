@@ -471,8 +471,8 @@ body.resizing, body.resizing * { user-select: none; }
 .lines-box.vis-on .rows > li.in-group { padding-left: 6px; }
 .lines-box.vis-on .rows > li.in-group > .vis-check { margin-right: calc(18px * var(--depth, 1) - 2px); }
 .lines-box.vis-on .sort-head > :is(.sort-btn, .sort-lead):first-child { padding-left: calc(11 * var(--px) + 8px); }
-/* T-3420: Settings' Show levels, the label over the level buttons */
-:is(:root, :root[data-shade="dark"]) .level-toggles .btn.lv.on { border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); box-shadow: none; }
+/* T-3420, T-4406: Settings' Show, the label over the level and mode buttons */
+:is(:root, :root[data-shade="dark"]) :is(.level-toggles .btn.lv, .mode-toggles .btn).on { border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); box-shadow: none; }
 .level-head { display: flex; align-items: center; gap: 10px; height: 24px; }
 .level-head .btn.text.mini { height: 22px; padding: 0 7px; font-size: 12px; }
 .level-show { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -1623,10 +1623,10 @@ button.save-add:hover { color: var(--text); }
 /* T-1837: the three toggles after the track type share one line, wrapping together */
 .build-toggles { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; }
 /* T-478: each level button carries its level's track colour (--lc, palette.ts), the chosen one in full */
-.btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums;
-          background: color-mix(in srgb, var(--lc) 30%, var(--bg)); border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); }
-.btn.lv:hover { background: color-mix(in srgb, var(--lc) 48%, var(--bg)); }
-.btn.lv.on { background: var(--lc); color: var(--lk); border-color: var(--net-ink); box-shadow: inset 0 0 0 1px var(--net-ink); }
+.btn.lv, .mode-toggles .btn { background: color-mix(in srgb, var(--lc) 30%, var(--bg)); border-color: color-mix(in srgb, var(--lc) 60%, var(--bg)); }
+.btn.lv { min-width: 32px; padding: 0 4px; font-variant-numeric: tabular-nums; }
+.btn.lv:hover, .mode-toggles .btn:hover { background: color-mix(in srgb, var(--lc) 48%, var(--bg)); }
+.btn.lv.on, .mode-toggles .btn.on { background: var(--lc); color: var(--lk); border-color: var(--net-ink); box-shadow: inset 0 0 0 1px var(--net-ink); }
 :root[data-shade="dark"] .btn.lv.on { border-color: var(--text); box-shadow: inset 0 0 0 1px var(--text); }
 /* the four tools, two by two (T-1128) */
 .tool-pick { display: grid; grid-template-columns: 1fr 1fr; }

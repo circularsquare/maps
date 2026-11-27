@@ -16,7 +16,7 @@ import { canReloadIntoGame, clockRunning, makeSandbox, reloadIntoGame, saveGuide
 import { coresAuto, coresCapped, coresChanged, coresEstimate, coresMax, coresPicked, forgetPoolCap } from "../workers/demandClient";
 import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, LevelToggles, ModeToggles, Segmented, ShapePicker, Stepper } from "./widgets";
-import { hiddenLevels, hiddenModes, hideBlueprints, hideBlueprintsView, showAllLevels, showAllModes, toggleLevel, toggleMode } from "../game/lineVisibility";
+import { hiddenLevels, hiddenModes, hideBlueprints, hideBlueprintsView, showAllShown, toggleLevel, toggleMode } from "../game/lineVisibility";
 import { SHAPE_MODES } from "../game/lineShape";
 import type { Vehicle } from "../game/vehicle";
 import { Credits } from "./Credits";
@@ -60,6 +60,7 @@ export function SettingsTab() {
   if (rush && wOut) days.push(["out", <span class="day-away" data-tip={t("settingsTab.dayOf", { holiday: wOut })} aria-label={wOut}><Icon.goOut /></span>]);
   if (away && wAway) days.push(["away", <span class="day-away" data-tip={t("settingsTab.dayOf", { holiday: wAway })} aria-label={wAway}><Icon.calendar /></span>]);
   if (rush && wBack) days.push(["back", <span class="day-away" data-tip={t("settingsTab.dayOf", { holiday: wBack })} aria-label={wBack}><Icon.goBack /></span>]);
+  const anyHidden = !!(hiddenLevels.value.size || hiddenModes.value.size);
   return (
     <>
       <SettingsSearch list={list} />
@@ -152,23 +153,15 @@ export function SettingsTab() {
           <span data-tip={t("settingsTab.terrainTip")}>{t("settingsTab.terrain")}</span>
         </Check>
       </div>
-      {/* T-3420: every level lit; a click hides that level's track, lines, stations and trains while the page is open */}
-      <div class="level-show">
+      {/* T-3420, T-4400, T-4406: every level and kind of line lit; a click hides its track, lines, stations and trains while the page is open */}
+      <div class="level-show" data-search-alias="settingsSearch.aliasLevels">
         <div class="level-head">
-          <span>{t("settingsTab.showLevels")}</span>
+          <span>{t("settingsTab.show")}</span>
           {/* the space is kept while nothing is hidden, so the row below does not move */}
-          <button class="btn text mini" style={{ visibility: hiddenLevels.value.size ? undefined : "hidden" }} tabIndex={hiddenLevels.value.size ? undefined : -1}
-            aria-hidden={!hiddenLevels.value.size} onClick={showAllLevels}>{t("settingsTab.showAllLevels")}</button>
+          <button class="btn text mini" style={{ visibility: anyHidden ? undefined : "hidden" }} tabIndex={anyHidden ? undefined : -1}
+            aria-hidden={!anyHidden} onClick={showAllShown}>{t("settingsTab.showAll")}</button>
         </div>
         <LevelToggles hidden={hiddenLevels.value} onToggle={toggleLevel} />
-      </div>
-      {/* T-4400: the same for each kind of line, with its track and the stations no shown kind uses */}
-      <div class="level-show mode-show">
-        <div class="level-head">
-          <span>{t("settingsTab.showModes")}</span>
-          <button class="btn text mini" style={{ visibility: hiddenModes.value.size ? undefined : "hidden" }} tabIndex={hiddenModes.value.size ? undefined : -1}
-            aria-hidden={!hiddenModes.value.size} onClick={showAllModes}>{t("settingsTab.showAllModes")}</button>
-        </div>
         <ModeToggles hidden={hiddenModes.value} onToggle={toggleMode} />
       </div>
       <div class="checks">
