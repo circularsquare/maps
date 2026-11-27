@@ -307,7 +307,7 @@ export class ShownStore {
    * T-4220 stage 8: each solving worker sends its own copy of a population's view and of the market's route nodes and
    * network ids, though it holds only its own periods. Where the store already holds the same to the bit for that
    * population, the snapshot's periods take the one held, so the page, and the side pool that gets a copy of the store,
-   * hold one per zone however many workers solved its periods ("Use more cores": up to 5). Returns the bytes not kept.
+   * hold one per zone however many workers solved its periods (up to 5, Settings' Cores). Returns the bytes not kept.
    */
   private share(snap: Snapshot): number {
     const canon = new Map<object, object>();

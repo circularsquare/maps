@@ -93,8 +93,9 @@ export interface DisplaySettings {
   usUnits: boolean;
   /** T-2798: the currency money is shown in (game/currency.ts); the game itself counts US$ */
   currency: Currency;
-  /** T-381: demand workers by the old rule (half the threads less one, up to 5); read at the next load */
-  moreCores: boolean;
+  /** T-3932: the solving workers Settings' Cores slider picked (workers/demandClient.ts `coresPicked`), null for Auto
+   * (the device's rule, fewer on a big game); read when the demand pool starts */
+  cores: number | null;
   /** T-826: the clock keeps running while the page is hidden (game/clock.ts) */
   runInBackground: boolean;
   /** T-3427: edits made while the game is paused start a demand solve; off, one solve covers them once
@@ -173,7 +174,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   dayShown: "average",
   usUnits: false,
   currency: defaultCurrency(),
-  moreCores: false,
+  cores: null,
   runInBackground: false,
   recalcWhilePaused: true,
   projection: "flat",
@@ -223,12 +224,12 @@ const saved = load();
 function playedBefore(): boolean {
   try { return !!localStorage.getItem("anitabuilder-save-slot"); } catch { return false; }
 }
-const oldDisplay = saved.display as (Partial<DisplaySettings> & { mobileIntercity?: boolean; lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown; trainLoad?: boolean; platformCrowds?: string }) | undefined;
+const oldDisplay = saved.display as (Partial<DisplaySettings> & { mobileIntercity?: boolean; lineLoad?: boolean; intercity?: boolean; stationRiders?: boolean; unbuiltColour?: string; trainLoadBasis?: string; complexView?: boolean; font?: unknown; trainLoad?: boolean; platformCrowds?: string; moreCores?: boolean }) | undefined;
 // `lineLoad` (the old width checkbox) and `intercity` (hide the longer-trip bubbles) are no longer settings (T-222), nor `stationRiders`
 // (the demand circles, T-482), nor `unbuiltColour` (T-1120), nor `trainLoadBasis` (T-164), nor
 // `complexView` (one ridership circle per station complex is the only way since T-1449), nor `font`
 // (Nunito is the only font, T-1524), nor `trainLoad` and `platformCrowds` (train and platform fullness are always drawn, T-3579): dropped from storage
-const { mobileIntercity: _mobileIntercity, lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, font: _font, trainLoad: _trainLoad, platformCrowds: _platformCrowds, ...migratedDisplay } = oldDisplay ?? {};
+const { mobileIntercity: _mobileIntercity, lineLoad: _lineLoad, intercity: _intercity, stationRiders: _stationRiders, unbuiltColour: _unbuiltColour, trainLoadBasis: _trainLoadBasis, complexView: _complexView, font: _font, trainLoad: _trainLoad, platformCrowds: _platformCrowds, moreCores: _moreCores, ...migratedDisplay } = oldDisplay ?? {};
 // T-703: the size default changed, and settings stored before had saved the old one with
 // everything else, so it is dropped once
 if ((saved.v ?? 1) < 3) delete migratedDisplay.uiScale;
@@ -264,6 +265,9 @@ if (migratedDisplay.legacyTime === undefined && !Object.keys(saved).length && !p
 // T-3630: the phones-only toggle became a setting on every device; every computer had the old off stored, so only a
 // phone's choice carries over
 if (migratedDisplay.intercityTrips === undefined && mobileDevice() && _mobileIntercity !== undefined) migratedDisplay.intercityTrips = _mobileIntercity;
+// T-3932: "Use more cores" ticked became the count it gave on the Cores slider (half the threads less one, 1 to 5), a
+// pick as it was (stage A's share off); unticked is Auto
+if (_moreCores && migratedDisplay.cores === undefined) migratedDisplay.cores = Math.max(1, Math.min(5, Math.floor((navigator.hardwareConcurrency || 4) / 2) - 1));
 // T-1244: Traffic, the default until T-1101, was stored with everything else; Elevation and Max speed stay
 const trackColour = (saved.v ?? 1) < 10
   ? oldDisplay?.trackColour === "height" || oldDisplay?.trackColour === "speed" ? oldDisplay.trackColour : DEFAULT_DISPLAY.trackColour

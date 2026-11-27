@@ -4,19 +4,14 @@
 
 import { t } from "../i18n";
 import { demandStopped, loadFailure } from "../game/loading";
-import { CHOICE_PARAMS } from "../workers/clockClient";
+import { reloadIntoGame } from "../workers/clockClient";
 import { dropMarket, marketOff } from "../game/ui";
 
-/** T-2867: intercity trips off for this tab and the page back in the same game (a page with no game switch
- * in its address would come back to the start menu), after `save` where there is a game to save. */
+/** T-2867: intercity trips off for this tab and the page back in the same game, after `save` where there is a game
+ * to save. */
 export function playWithoutIntercity(save: () => Promise<void> = () => Promise.resolve()) {
   dropMarket();
-  void save().finally(() => {
-    const u = new URL(location.href);
-    if (!CHOICE_PARAMS.some((k) => u.searchParams.has(k))) u.searchParams.set("continue", "1");
-    if (u.href === location.href) location.reload();
-    else location.replace(u.href);
-  });
+  reloadIntoGame(save);
 }
 
 /** `save` writes the autosave and resolves when it is safe to leave the page. */

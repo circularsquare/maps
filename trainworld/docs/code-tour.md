@@ -62,7 +62,7 @@ About 123,000 lines across about 460 files. Built by Vite into the page; the Rus
 **Workers** (`workers/`, about 42 files, 23,500 lines). The glue between the page and the Rust code:
 
 - **Clock worker** (`clock.worker.ts`, 1,300 lines, and its parts `clock*.ts` beside it, with the track model inside): owns the network, applies edits, answers the track tool's previews, keeps the money and the clock, and builds the save and its picture. Its save slot is `slots.ts` (700 lines): which slot the game is in and whether it may write there, autosave, the saves panel's actions, and the account's copy for cloud saves.
-- **Demand pool** (`demandClient.ts`, 5,400 lines, which runs on the main thread, and `demand.worker.ts`, 2,800, inside each worker): decides how many workers a device gets (`poolSize`: usually 1 to 3, up to 5 if the player turns on more cores), which zone packs each opens, splits the network into parts that share no rider, and collects the answers.
+- **Demand pool** (`demandClient.ts`, 5,400 lines, which runs on the main thread, and `demand.worker.ts`, 2,800, inside each worker): decides how many workers a device gets (`poolSize`: usually 1 to 3, up to 5 as the player picks on Settings' Cores slider), which zone packs each opens, splits the network into parts that share no rider, and collects the answers.
 - **Smaller workers**: the real-rail route finder for the track tool (`realRoute.worker.ts`), the schematic's layout (`diagram.worker.ts`), ferry water, demand sums, map shading, gzip for saves.
 - **Saves** (`saveFile.ts`, 1,000 lines): the save format and the browser's own storage (IndexedDB): save slots, backups, and the last demand result kept beside each save.
 

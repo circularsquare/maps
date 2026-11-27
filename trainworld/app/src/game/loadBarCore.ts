@@ -50,7 +50,8 @@ export function stageInHand(done: StageMs): Stage {
  * 12), with the network's stops: each stage's time while it was the one in hand */
 // (T-3881: "-v2", the records of before it may hold a demand stage of seconds, which gave a cold load's solve a sliver of the bar)
 const LAST_WAIT = "anitabuilder-load-wait-v2";
-export interface WaitRecord { ms: number; stops: number; stages?: StageMs }
+/** `workers`: the solving workers the load ended on (T-3932: Settings' Cores slider scales the wait by them) */
+export interface WaitRecord { ms: number; stops: number; stages?: StageMs; workers?: number }
 export function lastWait(key: string): WaitRecord | null {
   try {
     const r = JSON.parse(localStorage.getItem(LAST_WAIT) || "null")?.[key];

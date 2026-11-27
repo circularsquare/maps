@@ -12,7 +12,8 @@ import { ask, display, setDisplay, shade, SHADE_NAMES, theme, THEMES, UI_SCALES,
 import { moneyState } from "../game/money";
 import type { BubbleScheme } from "../game/palette";
 import { DETAIL_RANGE } from "../map/demandOverlay";
-import { makeSandbox, saveGuide, saveSlotsState } from "../workers/clockClient";
+import { makeSandbox, reloadIntoGame, saveGuide, saveSlotsState } from "../workers/clockClient";
+import { coresAuto, coresChanged, coresEstimate, coresMax, coresRunning, forgetPoolCap } from "../workers/demandClient";
 import { mobileDevice } from "../workers/deviceMemory";
 import { Check, Icon, LevelToggles, Segmented, ShapePicker, Stepper } from "./widgets";
 import { hiddenLevels, hideBlueprints, hideBlueprintsView, hideBuses, showAllLevels, toggleLevel } from "../game/lineVisibility";
@@ -26,7 +27,7 @@ import { AccountButton, AccountSection, loginText } from "./AccountPanel";
 import { CommunityButton } from "./Community";
 import { PurposeSelect } from "./DemandSelector";
 import { FeedbackButton } from "./FeedbackPanel";
-import { t, tNumber, type MessageKey } from "../i18n";
+import { t, tDuration, tNumber, type MessageKey } from "../i18n";
 import { LanguageSelect } from "./LanguageSelect";
 import { SideRow } from "./SideSwitch";
 import { SettingsSearch } from "./SettingsSearch";
@@ -224,8 +225,8 @@ export function SettingsTab() {
       </div>
       <CurrencyRow />
       <div class="h">{t("settingsTab.performance")}</div>
+      <CoresRow />
       <div class="checks">
-        <MoreCoresCheck />
         <Check checked={d.runInBackground} onChange={(v) => setDisplay("runInBackground", v)}>
           {t("settingsTab.runInBackground")}
         </Check>
@@ -401,12 +402,46 @@ export function UiScaleStepper() {
   return <Stepper wide label={t("settingsTab.uiScaleLabel")} value={<span>{percent(s)}</span>} onStep={step} />;
 }
 
-/** T-381: more demand workers, read when a game loads; here and in the start menu's settings (T-3630). */
-export function MoreCoresCheck() {
+/** a wait as the Cores lines say it: to 5 s under a minute, to 10 s under ten minutes, else to the minute */
+const waitText = (ms: number) => {
+  const s = ms / 1000;
+  return tDuration(s < 60 ? Math.max(5, Math.round(s / 5) * 5) : s < 600 ? Math.round(s / 10) * 10 : Math.round(s / 60) * 60);
+};
+
+/** T-3932 (replacing T-381's "Use more cores"): the solving workers a game loads with, Auto (lit) for the game's own
+ * pick. Under it, in a game, its memory and waits on the count shown (red as the Memory row, past 85% of the limit),
+ * then once the pick differs from the one the game loaded with a note with Reload (none while viewing a shared
+ * network, which a reload would leave), else the count running where memory keeps it under the pick. Here and in the
+ * start menu's settings (T-3630), where no game runs yet; none where there is only one to have. */
+export function CoresRow() {
+  const [, tick] = useState(0);
+  useEffect(() => { const id = setInterval(() => tick((k) => k + 1), 2000); return () => clearInterval(id); }, []);
+  const max = coresMax();
+  if (max < 2) return null;
+  const picked = display.value.cores, auto = picked === null;
+  const n = Math.max(1, Math.min(max, picked ?? coresAuto()));
+  const pick = (v: number | null) => { setDisplay("cores", v); forgetPoolCap(); };
+  const est = coresEstimate(n), running = coresRunning(), changed = coresChanged();
+  const gb = est ? est.bytes / 2 ** 30 : null, budget = budgetGB();
+  const bad = gb !== null && budgetKind() !== "unknown" && gb > 0.85 * budget;
   return (
-    <Check checked={display.value.moreCores} onChange={(v) => setDisplay("moreCores", v)}>
-      <span data-tip={t("settingsTab.moreCoresTip")}>{t("settingsTab.moreCores")}</span>
-    </Check>
+    <div class="cores">
+      <div class="slider">
+        <span>{t("settingsTab.cores")}</span>
+        <input type="range" min={1} max={max} step={1} value={n} aria-label={t("settingsTab.cores")} onInput={(e) => pick(Number((e.target as HTMLInputElement).value))} />
+        <span class="slider-pct">{tNumber(n)}</span>
+        <button class={"btn text mini" + (auto ? " on" : "")} aria-pressed={auto} data-tip={t("settingsTab.coresAutoTip")} onClick={() => pick(auto ? n : null)}>{t("settingsTab.coresAuto")}</button>
+      </div>
+      {gb !== null && <div class={bad ? "memory-bad" : "muted"} data-tip={bad ? t("settingsTab.coresMemoryTip", { gb: gbText(budget) }) : undefined}>{t("settingsTab.coresMemory", { gb: gbText(gb) })}</div>}
+      {est?.loadMs != null && <div class="muted">{t("settingsTab.coresLoad", { time: waitText(est.loadMs) })}</div>}
+      {est?.editMs != null && <div class="muted">{t("settingsTab.coresEdit", { time: waitText(est.editMs) })}</div>}
+      {changed
+        ? <div class="cores-reload">
+            <span class="muted">{t("settingsTab.coresReload")}</span>
+            {!saveSlotsState.value.viewing && <button class="btn text mini" onClick={() => reloadIntoGame()}>{t("settingsTab.coresReloadButton")}</button>}
+          </div>
+        : running !== null && running < n && <div class="muted">{t("settingsTab.coresRunning", { count: running })}</div>}
+    </div>
   );
 }
 

@@ -903,6 +903,16 @@ export function switchGame(params: Record<string, string>, pending?: PendingLoad
 function switchNow(params: Record<string, string>, pending?: PendingLoad) {
   current?.leave(pending, () => location.replace(pageWith(params)));
 }
+/** T-2867, T-3932: the page back in the same game after `save` (the autosave by default): a page with no game switch in
+ * its address would come back to the start menu, so it gets `?continue=1` */
+export function reloadIntoGame(save: () => Promise<void> = () => current?.saveBeforeReload() ?? Promise.resolve()) {
+  void save().finally(() => {
+    const u = new URL(location.href);
+    if (!CHOICE_PARAMS.some((k) => u.searchParams.has(k))) u.searchParams.set("continue", "1");
+    if (u.href === location.href) location.reload();
+    else location.replace(u.href);
+  });
+}
 /** The page reloads to the start menu; a page already at that address (it came without a game switch) is reloaded, since replacing it with itself would not be (T-1852). */
 function toStartMenu() {
   const to = pageWith({});

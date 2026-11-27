@@ -6,7 +6,7 @@
 // seg/board/alight must match within 1e-6. Covers C as a one-level train edit (kept periods) and C as a stop edit
 // (all periods solved, route nodes remapped), both with Boston and Philadelphia as two clusters (frozen market) and
 // joined in one cluster via `oneMarket` (frozen city + frozen market); the joined one again with two main workers
-// ("Use more cores", stage 8), each solving its periods and sending its own snapshot, merged in `ShownStore` by period
+// (a count picked on Settings' Cores slider, stage 8), each solving its periods and sending its own snapshot, merged in `ShownStore` by period
 // with one copy of each view kept. Stage 4 refuses intercity edits, so C during an
 // intercity edit's whole solve is omitted here; the T-3925 cut and edit-batching cases belong to stage 6.
 // Run from the maps root: node trainworld/checks/t4220-aside-equal.mjs

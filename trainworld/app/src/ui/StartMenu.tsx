@@ -10,7 +10,7 @@ import { HOME_CITY, isCity } from "../game/cities";
 import { choosing, diedSlot } from "../game/loading";
 import { display, dropMarket } from "../game/ui";
 import { FeedbackOpen } from "./FeedbackPanel";
-import { CoarseDemandCheck, IntercityCheck, MoreCoresCheck, UiScaleStepper } from "./SettingsTab";
+import { CoarseDemandCheck, CoresRow, IntercityCheck, UiScaleStepper } from "./SettingsTab";
 import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
 import { backupChoice, CHOICE_PARAMS, exportSlot, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
@@ -118,8 +118,8 @@ function StartSettings() {
     <div class="checks">
       <IntercityCheck />
       <CoarseDemandCheck />
-      <MoreCoresCheck />
     </div>
+    <CoresRow />
     <div class="slider start-scale"><span>{t("settingsTab.uiScale")}</span><UiScaleStepper /></div>
   </div>;
 }

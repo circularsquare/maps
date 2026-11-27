@@ -84,7 +84,7 @@ import { ASIDE_MAX_ZONES, SNAP_MAX_BYTES, ShownStore, type AsideAnswer, type Asi
 import { tracing } from "../game/freezeTrace";
 import { demandNote, startDemandTrace } from "./demandTrace";
 import { addressLimited, deviceGB, heapStep, memBudget, mobileDevice, phoneLoad, smallDevice } from "./deviceMemory";
-import { outsideWasmBytes } from "./liveMemory";
+import { liveBytes, outsideWasmBytes } from "./liveMemory";
 import { isMemoryFailure } from "../game/loadText";
 import { makeFrame } from "../game/frame";
 import { editLeftOf, editPrior, noteEditSolve } from "../game/editLeft";
@@ -220,28 +220,40 @@ export function marketsOfWorkers(n: number): number[][] {
   }
   return cities.map((_, i) => PERIODS.map((_, q) => q).filter((q) => best[q] === i));
 }
+/** T-3932: of `n` solving workers, the busiest one's share of a solve's work by `PERIOD_COST`: its periods' cities, and
+ * in a solve with the barrier (`barrier`) the markets `marketsOfWorkers` deals it, else its own periods' */
+function busiestShare(n: number, barrier: boolean): number {
+  if (n <= 1) return 1;
+  const markets = barrier ? marketsOfWorkers(n) : null, all = PERIOD_COST.reduce((a, b) => a + b, 0);
+  const load = (i: number) => {
+    const own = periodsOfWorker(i, n);
+    const cost = (qs: number[], share: number) => qs.reduce((a, q) => a + PERIOD_COST[q] * share, 0);
+    return cost(own, 1 - MARKET_SHARE) + cost(markets?.[i] ?? own, MARKET_SHARE);
+  };
+  return Math.max(...Array.from({ length: n }, (_, i) => load(i))) / all;
+}
 
 /**
  * Workers in the pool (T-361, T-381). By threads: 12 or more get 3, 6 to 11 get 2, fewer 1; then
  * by memory (each worker's WASM is a few hundred MB, notes/T-361.md): a phone or tablet, or 4 GB or less
- * (`smallDevice`), gets 1, and where memory is not reported (desktop Firefox, Safari) at most 2. The "Use more
- * cores" setting restores the older rule, half the threads minus one, 1 to 5 (one per period).
+ * (`smallDevice`), gets 1, and where memory is not reported (desktop Firefox, Safari) at most 2 (`coresByRule`).
+ * T-3932: a count picked on Settings' Cores slider (`picked`, `coresPicked`) is the count instead.
  * `?demandWorkers=N` (1-5) overrides everything. The pool is built once, so the setting counts at
  * the next load. T-2867: a 32-bit browser gets 1 whatever the setting (in 32-bit Firefox New York
  * reaches its final with 1 and runs out of memory with 2, notes/T-2867.md). T-3072: a pool that lost workers
  * to running out of memory stays that size for the tab's session (`rememberedPoolCap`).
  */
-export function poolSize(): number {
+export function poolSize(picked = coresPicked()): number {
   const q = workersAsked();
   if (q !== null) return q;
   if (addressLimited()) return 1;
-  return Math.min(poolBySetup(), rememberedPoolCap());
+  return Math.min(picked ?? coresByRule(), rememberedPoolCap());
 }
 /** T-3373: the solving workers a game whose workers each need `perWorker` bytes (WASM and JS) runs here: the
  * pool, less any past `SOLVING_SHARE` of the budget (`capPool`'s rule) */
-export function workersFor(perWorker: number): number {
-  const n = poolSize();
-  if (!shareCapped()) return n;
+export function workersFor(perWorker: number, picked = coresPicked()): number {
+  const n = poolSize(picked);
+  if (!shareCapped(picked)) return n;
   return poolIn(perWorker, n, solvingShare() * memBudget());
 }
 /** the most solving workers, 1 to `max`, whose WASM and JS together (`poolBytes`) fit `room` */
@@ -258,19 +270,32 @@ export function poolBytes(perWorker: number, n: number): number {
 /** `SOLVING_SHARE`, or SPLIT_SHARE under `?split=1` */
 const solvingShare = () => (SPLIT === "plan" ? SPLIT_SHARE : SOLVING_SHARE);
 
-const shareCapped = () => workersAsked() === null && !display.peek().moreCores;
+/** stage A's share of the budget applies (T-3373): not once the player has picked a count (T-3932) */
+const shareCapped = (picked: number | null) => workersAsked() === null && picked === null;
 
 /** `?demandWorkers=N` (1-5), else null */
 function workersAsked(): number | null {
   const q = Number(new URLSearchParams(location.search).get("demandWorkers"));
   return Number.isInteger(q) && q >= 1 && q <= PERIODS.length ? q : null;
 }
-function poolBySetup(): number {
+/** the solving workers Auto starts here, before a big game's cut */
+function coresByRule(): number {
   const hc = navigator.hardwareConcurrency || 4;
-  if (display.peek().moreCores) return Math.max(1, Math.min(PERIODS.length, Math.floor(hc / 2) - 1));
   if (smallDevice()) return 1;
   const byThreads = hc >= 12 ? 3 : hc >= 6 ? 2 : 1;
   return deviceGB() === undefined ? Math.min(byThreads, 2) : byThreads;
+}
+/** T-3932: the Cores slider's most: one solving worker a core (browsers count each core's two threads), at most one a
+ * period; 1 in a 32-bit browser (`poolSize`), where the slider is not shown. "Use more cores" (half the threads less
+ * one) and Auto's rule are always within it. */
+export function coresMax(): number {
+  if (addressLimited()) return 1;
+  return Math.max(1, Math.min(PERIODS.length, Math.floor((navigator.hardwareConcurrency || 4) / 2)));
+}
+/** T-3932: the count picked on the Cores slider (`display.cores`), within `coresMax`; null for Auto */
+function coresPicked(): number | null {
+  const c = display.peek().cores;
+  return typeof c === "number" && Number.isInteger(c) && c >= 1 ? Math.min(c, coresMax()) : null;
 }
 
 /** T-3072: the solving workers a worker's running out of memory left this tab with. Kept for the tab's
@@ -283,6 +308,11 @@ function rememberedPoolCap(): number {
 /** (T-3933: also a load that took the tab down with it, game/oomRetry.ts) */
 export function rememberPoolCap(n: number) {
   try { sessionStorage.setItem(POOL_CAP_KEY, String(Math.min(n, rememberedPoolCap()))); } catch { /* storage blocked */ }
+}
+/** T-3932: the player moved the Cores slider: the next load runs their pick, and a load that runs out of memory on it
+ * is opened again with fewer as before (T-3933) */
+export function forgetPoolCap() {
+  try { sessionStorage.removeItem(POOL_CAP_KEY); } catch { /* storage blocked */ }
 }
 
 /** The service demand reads, with the UI's ids. */
@@ -663,8 +693,14 @@ const MEM_OTHER = 0.6 * 2 ** 30;
 const MEM_WORKER = 0.15 * 2 ** 30; // (T-3472: 110-150 MB a solving worker on all-China)
 /** T-3373: the share of the game's budget (`memBudget`) the solving workers may take together. Each holds
  * every open zone and the market, so a big save runs fewer: on a reported 8 GB, New York 2, all of China 1.
- * Not with "Use more cores" on (`shareCapped`): the player chose speed */
+ * Not once the player has picked a count on the Cores slider (`shareCapped`): the player chose speed */
 const SOLVING_SHARE = 0.175;
+/** T-3932: the share of a wait more solving workers do not shorten, the rest going as the busiest worker's share of
+ * the work (`busiestShare`), fitted on measured loads to the final (New York and all-China on 1 to 3 workers,
+ * notes/T-3373.md) and on one edit's whole solve (North America, 296 s on 1 worker and 188 on 2, T-3868); notes/T-3932.md */
+const LOAD_SERIAL = 0.4, EDIT_SERIAL = 0.17;
+/** T-4103: what a phone's one solving worker saves by being the aux worker too, which a second one ends */
+const SHARED_AUX_BYTES = 80 * 2 ** 20;
 /** T-3373 B (`?split=1`): the solving workers' share once each zone and the market have one holder (Anita, 11-21: the
  * limit rises with B; 2 GB on a reported 8 GB), and what a further solving worker then adds: its WASM floor and room
  * grown ahead (all-China: 33 MB more WASM at 2 workers than at 1, notes/T-3373-B-plan.md stage 4), and its JS (`MEM_WORKER`) */
@@ -957,6 +993,9 @@ class DemandClient {
   /** The pool's workers that solve periods, then one more with none (`aux`, demand.worker.ts), except on a phone. */
   private workers: Worker[] = [];
   private computeN = 0;
+  /** T-3932: the Cores slider's pick when the pool started (`coresPicked`): what this pool goes by until the next load,
+   * whatever the slider says meanwhile */
+  readonly picked = coresPicked();
   /** T-4103: a phone's pool of one solving worker has no aux worker: worker 0 holds the zones open bare and answers
    * the aux worker's questions between its populations (65-80 MB less; never with `?split=1`) */
   private auxShared = false;
@@ -1148,7 +1187,7 @@ class DemandClient {
     effect(() => { activeCity.value; worldFrameEpoch.value; this.syncFocus(); });
     // T-2045: a zone newly in view during a game load is solved first, in the focus pool
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.focusSoon(); });
-    const n = (this.computeN = this.poolN = poolSize());
+    const n = (this.computeN = this.poolN = poolSize(this.picked));
     solveWaves = Math.ceil(PERIODS.length / n);
     // i18n-ignore: a stored name or a developer diagnostic
     if (new URLSearchParams(location.search).has("debug")) console.info(`demand workers: ${n} (threads ${navigator.hardwareConcurrency}, memory ${(navigator as { deviceMemory?: number }).deviceMemory ?? "not reported"})`);
@@ -2742,7 +2781,7 @@ class DemandClient {
       // one) would give its solve that small a share of the bar and sit at the end of it for minutes.
       if (job.wait === w.seq && s && job.solveRounds) {
         const net = job.netAt ?? job.since, data = Math.max(net, job.dataAt ?? end);
-        rememberWait(w.key, { ms: Math.round(end - job.since), stops: stopCount(s.svc), stages: { game: Math.round(net - job.since), data: Math.round(data - net), demand: Math.round(end - data) } });
+        rememberWait(w.key, { ms: Math.round(end - job.since), stops: stopCount(s.svc), stages: { game: Math.round(net - job.since), data: Math.round(data - net), demand: Math.round(end - data) }, workers: this.computeN });
         const pace = job.pace ?? loadPace();
         const r = job.solveRounds;
         rememberPace({
@@ -4178,7 +4217,7 @@ class DemandClient {
   private memCheck() {
     this.memTimer = 0;
     if (this.failed) return;
-    // T-3757: the budget's cut once quiet after a final too, so a big save opened with more cores does not hold
+    // T-3757: the budget's cut once quiet after a final too, so a big save opened on a picked count does not hold
     // every worker until the next solve; the workers left hold periods they never solved, so the network is solved
     // again as after a growth
     if (this.computeN > 1) {
@@ -4216,7 +4255,7 @@ class DemandClient {
   private growPer = 0;
   /** what the solving workers may take together: `SOLVING_SHARE` of the budget, or all of it with the share off */
   private solvingRoom(): number {
-    return shareCapped() ? solvingShare() * memBudget() : memBudget();
+    return shareCapped(this.picked) ? solvingShare() * memBudget() : memBudget();
   }
 
   /** T-1366: the solving workers the pool may have now, `computeN` or more, up to its size at the start
@@ -4224,7 +4263,7 @@ class DemandClient {
    * or needs, a new worker opening all they hold; `restarting`, about to restart, as its need. Room: GROW_ROOM
    * of `capPool`'s two limits, so a pool grown is a step away from being cut again. */
   private growTo(restarting: Set<number>): number {
-    const n0 = this.computeN, max = Math.min(this.poolN, poolSize());
+    const n0 = this.computeN, max = Math.min(this.poolN, poolSize(this.picked));
     // (T-3373 B: under `?split=1` a grown worker would hold nothing; dealing to it is stage 7's)
     if (n0 >= max || this.respawn.size || perfOff("cap") || perfOff("grow") || workersAsked() !== null || this.holding) return n0;
     const held = (i: number) => { const need = this.needOf(i); return need === null ? null : restarting.has(i) ? need : Math.max(need, this.mem[i]?.wasm ?? 0); };
@@ -4233,7 +4272,7 @@ class DemandClient {
     this.growPer = per;
     const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? this.otherGuess();
     const aux = (held(n0) ?? 0) + js, budget = memBudget();
-    const share = shareCapped() ? solvingShare() * budget : Infinity;
+    const share = shareCapped(this.picked) ? solvingShare() * budget : Infinity;
     let n = n0;
     while (n < max && other + (n + 1) * (per + js) + aux <= GROW_ROOM * budget && (n + 1) * (per + MEM_WORKER) <= GROW_ROOM * share) n++;
     return n;
@@ -4277,7 +4316,7 @@ class DemandClient {
     const js = this.pageOther === null ? MEM_WORKER : 0, other = this.pageOther ?? this.otherGuess();
     const aux = (this.needOf(this.computeN) ?? 0) + js, budget = memBudget();
     let n = this.computeN;
-    const share = shareCapped() ? solvingShare() * budget : Infinity;
+    const share = shareCapped(this.picked) ? solvingShare() * budget : Infinity;
     // (T-3373 B, `?split=1`: a cut moves the stopped workers' units to the rest, which then hold what all held: a
     // worker less saves only its JS heap)
     const pool = (k: number, perJs: number) => (this.holding ? sum + k * perJs : k * (per + perJs));
@@ -4295,7 +4334,7 @@ class DemandClient {
     if (this.computeN <= 1 || this.respawn.size || perfOff("cap") || workersAsked() !== null || this.solving()) return;
     const aux = auxWasm * MEM_NEED[0] + MEM_BASE + MEM_WORKER;
     const byBudget = poolIn(perWorker, this.computeN, memBudget() - Math.max(MEM_OTHER, outsideWasmBytes(perWorker - MEM_WORKER, auxWasm)) - aux);
-    const n = Math.min(this.computeN, byBudget, shareCapped() ? workersFor(perWorker) : Infinity);
+    const n = Math.min(this.computeN, byBudget, shareCapped(this.picked) ? workersFor(perWorker, this.picked) : Infinity);
     if (n < this.computeN) { this.shrink(n, `about ${mb(perWorker)} MB a solving worker by the save's zones`); noteLoadWorkers(n); } // i18n-ignore (T-3933: a planned cut is what the load runs)
   }
 
@@ -4354,6 +4393,48 @@ class DemandClient {
   /** Each worker's memory as last reported, MB (`twDemand.client.memory()`, checks). */
   memory() {
     return this.mem.map((m, i) => ({ worker: i, aux: i === this.computeN, wasm: mb(m?.wasm ?? 0), heap: mb(m?.heap?.[0] ?? 0), peakNow: mb(m?.heap?.[1] ?? 0), solvePeak: mb(m?.solvePeak ?? 0), need: mb(this.needOf(i) ?? 0) }));
+  }
+
+  // --- T-3932: Settings' Cores slider ---
+
+  /** the solving workers now */
+  running = () => this.computeN;
+  /** the last edit's wait to its final, ms, and the solving workers it ran on */
+  private editTimed: { ms: number; workers: number } | null = null;
+
+  /** What Auto gives this game: the pool's own count while it started on Auto, else stage A's rule for solving
+   * workers the size of its own (`workersFor`, as a load's `capAhead` judges them). */
+  autoCores(): number {
+    if (this.picked === null) return this.computeN;
+    let per = 0;
+    for (let i = 0; i < this.computeN; i++) per = Math.max(per, this.needOf(i) ?? 0);
+    return per ? workersFor(per + MEM_WORKER, null) : poolSize(null);
+  }
+
+  /** The game's memory and waits on `n` solving workers, from its own on the workers it runs (null before they have
+   * said their memory; T-3373 B's split, `?split=1`, has none). Memory: the Memory row's reading (`liveBytes`) with `n`
+   * solving workers, the largest standing in for any added. A wait: this game's last cold load (`lastWait`, the network
+   * no more than a fifth bigger or smaller since) and this page's last edit, each times r(n) / r(the workers it ran
+   * on), r(k) = f + (1 - f) x the busiest of k workers' share of the work (f: LOAD_SERIAL, EDIT_SERIAL); a wait under
+   * PACE_SOLVE_MS as it was, being mostly what workers do not share. */
+  coresEstimate(n: number): CoresEstimate | null {
+    if (this.holding) return null;
+    const n0 = this.computeN;
+    const solving = this.mem.slice(0, n0).map((m) => m?.wasm ?? 0).sort((a, b) => b - a);
+    if (solving.length < n0 || !solving[n0 - 1]) return null;
+    const at = Array.from({ length: n }, (_, k) => solving[k < n0 ? k : 0]);
+    const bytes = this.auxShared
+      ? liveBytes(at, 0) + (n > 1 ? SHARED_AUX_BYTES : 0)
+      : liveBytes(at, this.mem[n0]?.wasm ?? 0);
+    const r = (k: number, f: number, barrier: boolean) => f + (1 - f) * busiestShare(k, barrier);
+    const scale = (ms: number, k: number, f: number, barrier: boolean) => (ms < PACE_SOLVE_MS ? ms : (ms * r(n, f, barrier)) / r(k, f, barrier));
+    const svc = this.latest(), rec = lastWait(gameWait().key);
+    const load = rec && svc && sameSize(rec, stopCount(svc)) ? rec : null;
+    return {
+      bytes,
+      loadMs: load ? scale(load.ms, load.workers ?? n0, LOAD_SERIAL, true) : null,
+      editMs: this.editTimed ? scale(this.editTimed.ms, this.editTimed.workers, EDIT_SERIAL, false) : null,
+    };
   }
 
   /** A question's answer (from either pool): true if `msg` is one. */
@@ -6475,6 +6556,8 @@ class DemandClient {
         s.refinedAt = performance.now();
         // T-3599: the next edit's time left starts from this one's pace and tail
         if (!s.barrier && !s.refresh && s.work && s.lastUnitAt !== undefined) noteEditSolve(s.work, s.refinedAt - s.lastUnitAt, s.localEndAt !== undefined && s.wholeAt !== undefined && s.wholeAt > s.localEndAt ? s.wholeAt - s.localEndAt : null);
+        // T-3932: the edit's wait, from the first edit this solve's chain of restarts follows on from (T-3925)
+        if (!s.barrier && !s.refresh && s === this.cur) this.editTimed = { ms: s.refinedAt - (s.restartFrom ?? s.sentAt), workers: this.computeN };
         const k = this.uncovered.findIndex((u) => u.svc === s.svc);
         if (k >= 0) {
           this.uncovered.splice(0, k + 1);
@@ -6904,6 +6987,16 @@ export function demandWorkersWasmMB(): { solving: number[]; aux: number } | null
   const m = client.memory();
   return { solving: m.filter((x) => !x.aux).map((x) => x.wasm), aux: m.filter((x) => x.aux).reduce((a, x) => a + x.wasm, 0) };
 }
+/** T-3932: the Cores slider's estimates for `n` solving workers in the game in hand (`DemandClient.coresEstimate`):
+ * `bytes` the whole game's memory, and its cold load's and last edit's waits, ms, null before it has had one */
+export interface CoresEstimate { bytes: number; loadMs: number | null; editMs: number | null }
+export const coresEstimate = (n: number): CoresEstimate | null => client?.coresEstimate(n) ?? null;
+/** the solving workers running now, null before the pool starts */
+export const coresRunning = (): number | null => client?.running() ?? null;
+/** the solving workers Auto gives: the game in hand's (`autoCores`), before one the device's */
+export const coresAuto = (): number => client?.autoCores() ?? poolSize(null);
+/** the slider's pick differs from the one the pool started with: it applies from the next load */
+export const coresChanged = (): boolean => !!client && client.picked !== coresPicked();
 
 const TEST = new URLSearchParams(location.search).get("demandTest") === "1";
 const DEBUG_LOD = new URLSearchParams(location.search).get("debug") === "1";
@@ -6929,7 +7022,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (tracing()) startDemandTrace(c); // T-4206
-  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { addressLimited, poolSize, marketOff, client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
+  if (new URLSearchParams(location.search).get("debug") === "1") (window as any).twDemand = { addressLimited, poolSize, marketOff, cores: { max: coresMax, auto: coresAuto, running: coresRunning, changed: coresChanged, estimate: coresEstimate }, client: c, log: c.log, days: () => demandByDay.peek(), start: c.start, resubmit: () => c.resubmit(), view: () => demandView.peek(), cities: () => cityDemandViews.peek(), nearby: () => nearbyZones.peek(), intercity: () => intercityDemand.peek(), activeCity, cellModes: () => c.cellModes(), stationRiders: (id: string) => c.stationRiders(id), cityCells: () => c.cityCells(), flows: (end: "home" | "work", cells: Uint32Array) => c.flows(end, cells), intercitySelection: (end: "home" | "work", cells: Uint32Array) => c.intercitySelection(end, cells), intercityStation: (id: string) => c.intercityStation(id), transfers: (members: string[]) => c.transfers(members), trip: (from: [number, number], to: [number, number], purpose?: number) => c.trip(from, to, purpose), tripLengths: (zone?: CityId) => c.tripLengths(zone) };
   return c;
 }
 

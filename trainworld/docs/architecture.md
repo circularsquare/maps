@@ -483,8 +483,9 @@ Web first, so it can be shared as a link.
   of 4 GB or less, gets 1 (T-2794 adds the same check's lean ways: pixel ratio at most 2, coarse outlines held only near the view; notes/T-2794.md; T-2802: the WASM memories grow 8 MB at a time, not 32, notes/T-2802.md; a phone or tablet by user agent, not a 4 GB desktop, also has no demand cache; no device opens market packs (trips between zones) while "Calculate intercity trips" is off, which is its default on a phone or tablet only, T-2833, T-2838, T-3630; a device reporting 4 GB or less gets a note at the bottom of the map, T-2839, `ui/DeviceNote.tsx`) (`workers/deviceMemory.ts` `smallDevice`, T-2122: a phone's tab holds far
   less than the phone, an iPhone's killed near 2 GB), and unreported memory (desktop Firefox, Safari)
   at most 2; a big game may then drop some by memory [T-1205, below]. Such a small device runs no
-  focus pool ([demand-runtime.md](demand-runtime.md) "The focus pool"). The Settings "Use more cores" restores half the threads less one, 1 to 5
-  (one per period), at the next load; `?demandWorkers=N` overrides both. A 32-bit browser gets 1 whatever the setting, and no focus pool (`addressLimited`, T-2867: a resizable ArrayBuffer's 4 GB maximum refused; its user agent cannot tell). A worker that cannot get memory halves the solving workers, `memoryShort`, and the rest solve again; with one left it is replaced as after a panic (a load that ran more than one first opens again in a fresh page with half, T-3933, ui-panels.md "Loading"), and the failure offers "Play without intercity trips" (`dropMarket`, which unticks that setting, game/ui.ts; T-3630; notes/T-2867.md). Plus one auxiliary worker with no periods
+  focus pool ([demand-runtime.md](demand-runtime.md) "The focus pool"). A count picked on Settings' Cores slider (T-3932: 1 to half the threads,
+  at most 5, one per period) replaces that rule at the next load, the pool keeping the pick it started with until then;
+  `?demandWorkers=N` overrides both. A 32-bit browser gets 1 whatever the setting, and no focus pool (`addressLimited`, T-2867: a resizable ArrayBuffer's 4 GB maximum refused; its user agent cannot tell). A worker that cannot get memory halves the solving workers, `memoryShort`, and the rest solve again; with one left it is replaced as after a panic (a load that ran more than one first opens again in a fresh page with half, T-3933, ui-panels.md "Loading"), and the failure offers "Play without intercity trips" (`dropMarket`, which unticks that setting, game/ui.ts; T-3630; notes/T-2867.md). Plus one auxiliary worker with no periods
   that answers at once what needs no period's result (a city's cells, each bubble's commuters by
   mode). Worker i owns periods i, i + n, .... Every worker opens only the packs the game needs, each
   its own copy: the viewed zone first (only above zoom 7.5, docs/zones.md, T-871), and every zone with a built station inside its footprint or
@@ -637,8 +638,8 @@ Web first, so it can be shared as a link.
   everything outside the WASM) would pass `memBudget`: 8 GB (Anita's target, T-1199), the device's
   memory (`deviceGB`) x 0.75 under 8, 6 GB where it is not reported; or while the solving workers
   together (need plus 0.15 GB each) would pass 17.5% of that budget (`SOLVING_SHARE`, T-3373: 1.4 GB on a
-  reported 8, so New York's real save runs 2 and all of China 1; memory over speed, Anita 2026-11-16; not with
-  Settings' "Use more cores" on, whose player chose speed). The
+  reported 8, so New York's real save runs 2 and all of China 1; memory over speed, Anita 2026-11-16; not with a
+  count picked on Settings' Cores slider, whose player chose speed). The
   same test runs whenever a zone opens in a solving worker while no solve is out and once the pool is quiet after a
   final (T-3757), and a loading save's pool is cut before its packs open by the same test on `memoryCheck`'s
   estimates of a solving worker and of the aux worker for the zones its stations reach (`capAhead`; with the aux
