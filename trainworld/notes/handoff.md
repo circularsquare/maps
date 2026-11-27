@@ -11,14 +11,11 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
    Open asks: crash counts (a-2026-11-26-6); T-4372's start and the 11-25 wind-down unanswered.
 2. Landed 11-25 (8800 98aedf0d0, smoke passed): T-4348 .. T-4281 s3 (ARCHIVE). Before the next publish: a Claude batch
    review of d441fb19f, 914f564e6, b6aa1b90f, 67426dfa8, 6a0cab532 (Gemini out until about 11-30).
-3. The redraws3 job (T-4364, T-4365, report r-b2d0784b): her yes to all but Poland, Mansoura and Chiayi/Tainan
-   included (notes/T-4364/answer-1126.txt). IL, DE, IN, MX, NO joined. China stopped twice on gates (sih, zhu: origins
-   off their land); redraws4 fixed plan_edit's moved_origin; CN+MO joined. Stopped 00:58 UTC at us.w1 (bos: the hand
-   steps skipped the extract read, market heal, entry save); redraws4 fixed the kit. DONE 03:53 UTC 11-27, all
-   passed. redrawsafter (Sonnet) reruns IL's join, place names, checks, changelog; then I commit, snap8800, smoke,
-   tasks done, delete the ~20 GB pre backups once 8800 looks clean. Also commit hand_run.py, redraws3.ps1. Commit after: both kits' plan_edit.py, t4364-cn-{sih,zhu}-
-   origin.json, redraws3-cnw*.cmd. It owns data/packs and app/src/game json: 8800 and smoke wait (freeze 11-22 too
-   old). After the job, rerun IL's join (its seams step failed under -I; fixed 4a02b06d4). Macau-Zhuhai: 0.05.
+3. The redraws3 job (T-4364, T-4365): her yes to all but Poland. Three stops fixed by redraws4 (sih and zhu origins
+   off their land: plan_edit moved_origin; bos's hand steps: hand_run.py heal, extract read). DONE 03:53 UTC 11-27.
+   redrawsafter (Sonnet) reruns IL's join (its seams failed under -I), place names, checks, changelog, lists files;
+   then I commit (data json, pipeline, both kits, specs, hand_run.py, redraws3*.ps1/.cmd, docs), snap8800, smoke,
+   tasks done T-4364/T-4365, delete the ~20 GB pre backups once 8800 looks clean. Macau-Zhuhai: 0.05.
 4. Then T-4153 s10, T-4309, T-4314/T-4315. Up next: T-3160, T-3838.
 
 ## Her words
