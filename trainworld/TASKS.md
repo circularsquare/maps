@@ -505,7 +505,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
   - Other: notes/T-4400.md
-- T-4407 [P2] {L:map-look} Hidden modes and levels can still be picked
+- T-4407 [P2] {L:map-look} Hidden modes and levels can still be picked (taking, 2026-11-27, agent hidepick)
   - Context: Gemini's review of T-4400 (artifacts/trainworld/gemini/batch-1127c-review.md, findings 1, 2, 4, 5): box select, dragging blueprint nodes and platform ends, the Delete tool and Park and Ride lots still act on hidden things; a split platform's way back ignores the hide. Unpublished.
   - Goal: Nothing hidden can be selected, dragged or deleted, by one hidden test every tool shares.
 - T-4408 [P2] {L:loading} Edits made during the first load kept when it fails
