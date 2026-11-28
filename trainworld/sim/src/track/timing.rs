@@ -46,7 +46,7 @@ const STEP_S: f64 = 2.0;
 const DAY: f64 = 86400.0;
 /// The weekday the variants are worked out on (local day number; any day, every day around it
 /// taken as a weekday).
-const DAY_REF: i64 = 10;
+pub(crate) const DAY_REF: i64 = 10;
 /// How far around the reference day the other line's trains are worked out (s): a run, a stand
 /// and a headway either side.
 const AROUND_S: f64 = 10.0 * 3600.0;
@@ -517,7 +517,7 @@ fn train_lost(net: &Network, svc: &Service, lat: &Lattice, mv: &[Move], l: usize
         let mut out = vec![vec![]; SLOTS];
         for (d, l, hw, place) in buf {
             let lev = l as usize;
-            let m = moves::secs(mv, r, d - lat.shift, hw);
+            let m = moves::secs(mv, r, d - lat.shift, hw, lat.shift + lat.lead);
             if lev >= SLOTS || place == NO_PLACE || !(d + m >= a && d + m < b) || !seen[lev].insert(place) {
                 continue;
             }

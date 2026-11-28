@@ -699,6 +699,24 @@ pub(crate) fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Ve
     out.truncate(k);
 }
 
+/// T-4547: the departure (as `lattice_deps` gives it, unmoved) that move `m` takes on weekday `day`: the one of its run whose
+/// key is nearest, within half its headway. None: the move waits.
+pub(crate) fn move_dep(lat: &Lattice, m: &Move, day: i64, buf: &mut Vec<Dep>) -> Option<Dep> {
+    let lat = Lattice { cal: Cal::all(day, WEEKDAYS), ..*lat };
+    let ofs = lat.shift + lat.lead;
+    let g = day as f64 * DAY_S + m.at - ofs;
+    buf.clear();
+    // (a headway is at most two hours)
+    lattice_deps(&lat, m.run as usize, g - 7200.0, g + 7200.0, buf);
+    buf.iter()
+        .filter_map(|d| {
+            let dist = moves::apart(m.at, moves::key_of(d.0, ofs));
+            (dist < 0.5 * d.2).then_some((dist, *d))
+        })
+        .min_by(|a, b| a.0.total_cmp(&b.0))
+        .map(|x| x.1)
+}
+
 /// `lattice_deps` with the line's moves applied (T-4544): each departure's time moved, those moved out of `[a, b)`
 /// left out and those moved into it put in. No moves: `lattice_deps` to the bit.
 pub(crate) fn lattice_deps_moved(lat: &Lattice, mv: &[Move], r: usize, a: f64, b: f64, out: &mut Vec<Dep>) {
@@ -707,7 +725,7 @@ pub(crate) fn lattice_deps_moved(lat: &Lattice, mv: &[Move], r: usize, a: f64, b
     }
     let start = out.len();
     lattice_deps(lat, r, a - moves::MAX_MOVE_S, b + moves::MAX_MOVE_S, out);
-    keep_moved(mv, r, 0.0, a, b, start, out);
+    keep_moved(mv, r, 0.0, lat.shift + lat.lead, a, b, start, out);
 }
 
 /// `lattice_deps_local` with the moves applied: the departures in the line's local time (a move's `at` is game time).
@@ -717,14 +735,15 @@ pub(crate) fn lattice_deps_local_moved(lat: &Lattice, mv: &[Move], r: usize, a: 
     }
     let start = out.len();
     lattice_deps_local(lat, r, a - moves::MAX_MOVE_S, b + moves::MAX_MOVE_S, out);
-    keep_moved(mv, r, lat.shift, a, b, start, out);
+    keep_moved(mv, r, lat.shift, lat.shift + lat.lead, a, b, start, out);
 }
 
-fn keep_moved(mv: &[Move], r: usize, shift: f64, a: f64, b: f64, start: usize, out: &mut Vec<Dep>) {
+#[allow(clippy::too_many_arguments)]
+fn keep_moved(mv: &[Move], r: usize, shift: f64, ofs: f64, a: f64, b: f64, start: usize, out: &mut Vec<Dep>) {
     let mut k = start;
     for i in start..out.len() {
         let (d, lev, hw, place) = out[i];
-        let d2 = d + moves::secs(mv, r, d - shift, hw);
+        let d2 = d + moves::secs(mv, r, d - shift, hw, ofs);
         if d2 >= a && d2 < b {
             out[k] = (d2, lev, hw, place);
             k += 1;
@@ -812,8 +831,13 @@ pub struct Service {
     /// Per line, trains running when an edit changed their profile: (run, departure, seconds
     /// their drawing is moved by), so each carries on from where it was (T-206). Pruned with eras.
     pub shifts: Vec<Vec<(u8, f64, f64)>>,
-    /// T-4544: per line, its moved departures (`moves`); empty for most. Not saved yet.
+    /// T-4544: per line, its moved departures (`moves`) as they run now, each clamped to its range (T-4547); empty for most.
+    /// Not saved yet.
     pub moves: Vec<Moves>,
+    /// T-4547: per line, the moves as the player made them (or a partner's): what an edit keeps and an undo gives back.
+    /// `moves` is this clamped to the room each train has now (`TrackWorld::clamp_moves`), so a train that has lost its
+    /// room runs less, and runs the stored seconds again when the room comes back.
+    pub stored: Vec<Moves>,
     /// T-1382: the lines whose service was rebuilt, rescheduled or had its profiles recomputed, or
     /// that the net was changed under (`note_changed`), since `take_changed`, and whether to take
     /// them all (a world just made or reloaded).
@@ -2178,8 +2202,37 @@ impl Service {
         if self.moves.len() <= l {
             self.moves.resize(l + 1, Moves::default());
         }
+        if self.stored.len() <= l {
+            self.stored.resize(l + 1, Moves::default());
+        }
+        self.stored[l] = moves::sorted(v);
+        self.moves[l] = self.stored[l].clone();
+        self.note_changed(&[l as u32]);
+    }
+
+    /// T-4547: line `l`'s moves as the player made them (`stored`).
+    pub fn stored_of(&self, l: usize) -> Moves {
+        self.stored.get(l).cloned().unwrap_or_default()
+    }
+
+    /// T-4547: the moves line `l` runs, whatever it stores (`TrackWorld::clamp_moves`).
+    pub fn set_eff(&mut self, l: usize, v: Vec<Move>) {
+        if self.moves.len() <= l {
+            self.moves.resize(l + 1, Moves::default());
+        }
         self.moves[l] = moves::sorted(v);
         self.note_changed(&[l as u32]);
+    }
+
+    /// T-4547: a weekday on which line `l` runs its current pattern (after its last era), where a move's departure is
+    /// looked for.
+    pub fn ref_day(&self, l: usize) -> i64 {
+        let after = self.eras_of(l).last().map_or(0, |e| (e.until / DAY_S).ceil() as i64 + 1);
+        let mut day = super::timing::DAY_REF.max(after);
+        while row_of_day(day) != WEEKDAYS {
+            day += 1;
+        }
+        day
     }
 
     /// T-4545: the slots of line `l` whose weekday departures carry a move the player made (own or with another train): the
@@ -2192,16 +2245,24 @@ impl Service {
         }
         let Some(lat) = self.lattice(net, l) else { return held };
         let mut buf: Vec<Dep> = vec![];
-        for m in mv.iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With)) {
-            buf.clear();
-            lattice_deps(&lat, m.run as usize, m.at - 1.0, m.at + 1.0, &mut buf);
-            if let Some(&(_, lev, _, _)) = buf.iter().find(|x| (x.0 - m.at).abs() < 1.0) {
+        let day = self.ref_day(l);
+        for m in self.stored_of(l).iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With)) {
+            if let Some((_, lev, _, _)) = move_dep(&lat, m, day, &mut buf) {
                 if (lev as usize) < SLOTS {
                     held[lev as usize] = true;
                 }
             }
         }
         held
+    }
+
+    /// T-4547: how many of line `l`'s own and partner moves match no departure now (they wait, kept and saved, and
+    /// come back with their train).
+    pub fn moves_waiting(&self, net: &Network, l: usize) -> usize {
+        let st = self.stored_of(l);
+        let Some(lat) = self.lattice(net, l) else { return st.iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With)).count() };
+        let (day, mut buf) = (self.ref_day(l), vec![]);
+        st.iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With) && move_dep(&lat, m, day, &mut buf).is_none()).count()
     }
 
     /// A line's eras (empty for most).
@@ -2303,7 +2364,7 @@ impl Service {
                 }
                 last = Some(d);
                 if d >= a && d < b {
-                    let moved = moves::secs(mv, r, d, hw);
+                    let moved = moves::secs(mv, r, d, hw, lat.shift + lat.lead);
                     let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2) + moved;
                     let var = if i < eras.len() {
                         era_var(&eras[i], &ls.runs[r], r, d, lev)

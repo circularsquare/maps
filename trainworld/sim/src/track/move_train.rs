@@ -12,7 +12,8 @@
 //! `hand_over` pairs trains by the unmoved times (`Trip::ready`), so a move in range never brings a train into service
 //! or sends one away.
 
-use super::moves::{Move, MoveKind, MAX_MOVE_S};
+use super::moves::{self, Move, MoveKind, MAX_MOVE_S};
+use super::service::move_dep;
 use super::timing::TURN_MIN_S;
 use super::net::LoopKind;
 use super::world::{Op, TrackWorld};
@@ -47,6 +48,10 @@ pub struct Range {
     pub hi: f64,
     pub lo_why: Why,
     pub hi_why: Why,
+    /// the ends before a train past a limit (its neighbours moved since) is let stay where it is: where the stored seconds
+    /// are clamped to (`clamp_moves`)
+    pub raw_lo: f64,
+    pub raw_hi: f64,
 }
 
 /// A move refused: the total it could go to that way instead (`limit`), and why it can't go further.
@@ -118,6 +123,7 @@ impl TrackWorld {
                 (hi, hi_why) = (room, Why::Close { at: n.draw });
             }
         }
+        let (raw_lo, raw_hi) = (lo, hi);
         // a train already past a limit (its neighbours moved since) stays where it is and moves back only
         if lo > cur {
             (lo, lo_why) = (cur, lo_why);
@@ -125,7 +131,7 @@ impl TrackWorld {
         if hi < cur {
             (hi, hi_why) = (cur, hi_why);
         }
-        Ok(Range { now: cur, lo, hi, lo_why, hi_why })
+        Ok(Range { now: cur, lo, hi, lo_why, hi_why, raw_lo, raw_hi })
     }
 
     /// The edit that moves that train `by` seconds later (earlier when negative) than it runs now, as far as its range
@@ -142,11 +148,48 @@ impl TrackWorld {
         let to = if to.abs() < MIN_STEP_S { 0.0 } else { to };
         // the headway of that departure: the moves of its run within half of it are its own
         let hw = self.svc.line_trips(&self.net, line as usize, dep - 1.0, dep + 1.0).iter().find(|t| t.run == run && (t.dep - dep).abs() < 0.5).map_or(0.0, |t| t.hw);
-        let mut list: Vec<Move> = self.svc.moves_of(line as usize).iter().copied().filter(|m| !(m.run == run && (m.at - dep).abs() < 0.5 * hw.max(1.0))).collect();
+        let Some(lat) = self.svc.lattice(&self.net, line as usize) else { return Err(none(Why::NoTimetable)) };
+        let key = moves::key_of(dep, lat.shift + lat.lead);
+        let mut list: Vec<Move> = self.svc.stored_of(line as usize).iter().copied().filter(|m| !(m.run == run && moves::apart(m.at, key) < 0.5 * hw.max(1.0))).collect();
         if to != 0.0 {
-            list.push(Move { run, at: dep, secs: to as f32, kind: MoveKind::Own });
+            list.push(Move { run, at: key, secs: to as f32, kind: MoveKind::Own });
         }
         Ok(Some(Op::MoveTrain { line, moves: list }))
+    }
+}
+
+impl TrackWorld {
+    /// T-4547: each line's stored moves clamped to the room its trains have now (`Range::raw_lo`, `raw_hi`; a train is always
+    /// let stay unmoved), as they run (`Service::moves`). A move with no departure to take it, or on a line that runs no
+    /// timetable, runs as stored. Run before `retime`, which reads what runs; a train's room depends on its neighbours'
+    /// moves, so it goes round until they stop changing (three times at most, the next edit goes on from there).
+    pub(super) fn clamp_moves(&mut self) {
+        if self.svc.stored.iter().all(|s| s.is_empty()) {
+            return;
+        }
+        for l in 0..self.svc.stored.len() {
+            let st = self.svc.stored_of(l);
+            if st.is_empty() {
+                continue;
+            }
+            for _ in 0..3 {
+                let eff: Vec<Move> = st.iter().map(|m| Move { secs: self.clamped(l as u32, m), ..*m }).collect();
+                if *moves::sorted(eff.clone()) == *self.svc.moves_of(l) {
+                    break;
+                }
+                self.svc.set_eff(l, eff);
+            }
+        }
+    }
+
+    fn clamped(&self, line: u32, m: &Move) -> f32 {
+        let l = line as usize;
+        let Some(lat) = self.svc.lattice(&self.net, l) else { return m.secs };
+        let Some((d, ..)) = move_dep(&lat, m, self.svc.ref_day(l), &mut vec![]) else { return m.secs };
+        match self.move_range(line, m.run, d) {
+            Ok(r) => (m.secs as f64).max(r.raw_lo.min(0.0)).min(r.raw_hi.max(0.0)) as f32,
+            Err(_) => m.secs,
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 //! T-4544 (T-4511 stage 2): a line's moved departures, applied wherever its timetable is read.
 
 use super::hours_tests::corridor;
-use super::moves::{Move, MoveKind};
+use super::moves::{self, Move, MoveKind};
 use super::params::*;
 use super::service::{lattice_deps, lattice_deps_moved, Trip};
 use super::world::{Op, TrackWorld};
@@ -30,14 +30,17 @@ fn t4544_one_departure_moves_and_nothing_else() {
     let k = base[0].len() / 2;
     let target = base[0][k].dep;
 
-    // a move for a day outside the window moves no trip in it, to the bit
-    w.svc.set_moves(c, vec![own(0, a - 5.0 * DAY, 60.0)]);
+    // the key of a departure: its time of day plus the line's lead (T-4547), so the move holds on every day
+    let lat0 = w.svc.lattice(&w.net, c).unwrap();
+    let key = |d: f64| moves::key_of(d, lat0.shift + lat0.lead);
+    // a move whose key no departure is within half a headway of waits: it moves no trip, to the bit
+    w.svc.set_moves(c, vec![own(0, key(target + 0.5 * base[0][k].hw), 60.0)]);
     for r in 0..2 {
         assert_eq!(format!("{:?}", trips(&w, c, r, a, b)), format!("{:?}", base[r]), "a waiting move moves no one");
     }
 
     // (two moves for one departure leave the nearer)
-    w.svc.set_moves(c, vec![own(0, target + 10.0, 500.0), own(0, target, 120.0)]);
+    w.svc.set_moves(c, vec![own(0, key(target + 10.0), 500.0), own(0, key(target), 120.0)]);
     let got = trips(&w, c, 0, a, b);
     assert_eq!(got.len(), base[0].len());
     for (i, (g, o)) in got.iter().zip(&base[0]).enumerate() {
@@ -84,7 +87,7 @@ fn t4544_one_departure_moves_and_nothing_else() {
 #[test]
 fn t4544_eras_keep_their_moves() {
     let (mut w, _, c) = corridor(3);
-    w.svc.set_moves(c, vec![own(0, 2.0 * DAY + 9.0 * 3600.0, 90.0)]);
+    w.svc.set_moves(c, vec![own(0, 9.0 * 3600.0, 90.0)]);
     let now = 2.0 * DAY + 8.0 * 3600.0;
     let before = w.svc.before_edit(&w.net, now);
     let tph = slots_to_rows(w.net.line_tph[c]);
@@ -93,6 +96,7 @@ fn t4544_eras_keep_their_moves() {
     w.svc.note_changes(&w.net, &before, now);
     let eras = w.svc.eras_of(c);
     assert_eq!(eras.len(), 1);
-    assert_eq!(&*eras[0].moves, &*w.svc.moves_of(c));
-    assert_eq!(eras[0].moves.len(), 1);
+    // (the era holds what ran before the edit; the line's own are clamped to the room it leaves)
+    assert_eq!((eras[0].moves.len(), eras[0].moves[0].secs), (1, 90.0));
+    assert_eq!(&*w.svc.stored_of(c), &*eras[0].moves);
 }

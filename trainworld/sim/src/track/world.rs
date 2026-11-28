@@ -4,6 +4,7 @@
 
 use super::capacity::ResKind;
 use super::net::{path_edge, EdgeData, Extra, Issue, LineData, Network, NodeData, StationData, Weekend};
+use super::moves::Move;
 use super::params::*;
 use super::service::{Service, ServiceDirty};
 use super::twin::Twin;
@@ -608,6 +609,7 @@ impl TrackWorld {
     /// T-3346 stage 2: each train's own timetable worked out again (`timing::retime`), once the
     /// service has settled and the departures are placed.
     pub fn retime(&mut self) {
+        self.clamp_moves();
         super::timing::retime(&self.net, &mut self.svc);
     }
 
@@ -2708,6 +2710,52 @@ impl TrackWorld {
         ops
     }
 
+    /// T-4547: per line a nudge moves the phase of (or whose parent's it does, for a twin), its stored moves before and as they
+    /// stand once the nudge has moved their departures: a move of a departure in a slot whose phase moves by `d` has its key
+    /// moved by `d` (the 7:32 stays the 7:32 the row now runs). Moves of a departure no slot of the nudge sets, and moves
+    /// waiting, stay. Weekend rows follow with the weekend moves (T-4549).
+    fn shift_moves(&self, set: &[super::nudge::NudgeSet]) -> Vec<(u32, Vec<Move>, Vec<Move>)> {
+        let mut out: Vec<(u32, Vec<Move>, Vec<Move>)> = vec![];
+        for x in set.iter().filter(|x| !x.weekend && self.net.line_ok(x.line)) {
+            let Some(p) = x.phase else { continue };
+            let d = (p - self.net.line_phase_of(x.line)[x.slot as usize]) as f64;
+            if d.abs() < 1e-6 {
+                continue;
+            }
+            let twins = (0..self.net.line_count() as u32).filter(|&t| self.net.line_ok(t) && self.net.line_twin_of(t) == Twin::Of(x.line));
+            for t in std::iter::once(x.line).chain(twins) {
+                let l = t as usize;
+                let i = match out.iter().position(|o| o.0 == t) {
+                    Some(i) => i,
+                    None => {
+                        let st = self.svc.stored_of(l).to_vec();
+                        if st.is_empty() {
+                            continue;
+                        }
+                        out.push((t, st.clone(), st));
+                        out.len() - 1
+                    }
+                };
+                let Some(lat) = self.svc.lattice(&self.net, l) else { continue };
+                let day = self.svc.ref_day(l);
+                let mut buf = vec![];
+                // matched on the list as it was, so a move shifted for one slot is not tried against the next
+                let was = out[i].1.clone();
+                for (k, m) in was.iter().enumerate() {
+                    if !matches!(m.kind, super::moves::MoveKind::Own | super::moves::MoveKind::With) {
+                        continue;
+                    }
+                    if super::service::move_dep(&lat, m, day, &mut buf).is_some_and(|dep| dep.1 == x.slot) {
+                        let now = &mut out[i].2[k];
+                        now.at = (now.at + d).rem_euclid(86400.0);
+                    }
+                }
+            }
+        }
+        out.retain(|o| o.1 != o.2);
+        out
+    }
+
     /// T-3333: each twin's departures half a headway after its parent's, level by level, so the two
     /// pairs' trains take even turns (the spacing places them as separate lines, which share nothing).
     fn pin_twin_phases(&mut self) {
@@ -2897,17 +2945,51 @@ impl TrackWorld {
             Op::Apart { pair, on } => Op::Apart { pair, on: n.set_pair(true, pair, on) },
             Op::Line { id, data } => {
                 let gone = data.is_none();
-                let inv = Op::Line { id, data: n.set_line(id, data)? };
+                // T-4547: a line removed takes its moved trains with it, one turned round (its first and last stops swapped)
+                // keeps each in the other direction; the undo gives them back
+                let was_moves = self.svc.stored_of(id as usize);
+                let new_moves: Option<Vec<Move>> = if was_moves.is_empty() {
+                    None
+                } else if gone {
+                    Some(vec![])
+                } else {
+                    let new = data.as_ref().map_or(&[][..], |d| &d.stops[..]);
+                    let old = if self.net.line_ok(id) { self.net.line_stops(id) } else { &[] };
+                    (old.len() >= 2 && old.iter().eq(new.iter().rev())).then(|| was_moves.iter().map(|m| Move { run: 1 - m.run.min(1), ..*m }).collect())
+                };
+                let inv = Op::Line { id, data: self.net.set_line(id, data)? };
                 // T-3742: a line removed holds none of its rows; its undo holds them again
-                let held = if gone { super::nudge::release(n, id) } else { vec![] };
-                if held.is_empty() { inv } else { Op::Batch(vec![inv, Op::Nudge(held)]) }
+                let held = if gone { super::nudge::release(&mut self.net, id) } else { vec![] };
+                let mut back = vec![inv];
+                if !held.is_empty() {
+                    back.push(Op::Nudge(held));
+                }
+                if let Some(list) = new_moves {
+                    self.svc.set_moves(id as usize, list);
+                    back.push(Op::MoveTrain { line: id, moves: was_moves.to_vec() });
+                }
+                if back.len() == 1 { back.pop().unwrap() } else { Op::Batch(back) }
             }
-            Op::Nudge(set) => super::nudge::apply(n, set)?,
+            Op::Nudge(set) => {
+                // T-4547: the moves of the lines whose phase this sets (and their twins') go with their trains
+                let shifted = self.shift_moves(&set);
+                let inv = super::nudge::apply(&mut self.net, set)?;
+                if shifted.is_empty() {
+                    inv
+                } else {
+                    let mut back = vec![inv];
+                    for (line, was, now) in shifted {
+                        self.svc.set_moves(line as usize, now);
+                        back.push(Op::MoveTrain { line, moves: was });
+                    }
+                    Op::Batch(back)
+                }
+            }
             Op::MoveTrain { line, moves } => {
                 if !self.net.line_ok(line) {
                     return Err(Issue::NoSuchLine { line });
                 }
-                let was = self.svc.moves_of(line as usize).to_vec();
+                let was = self.svc.stored_of(line as usize).to_vec();
                 self.svc.set_moves(line as usize, moves);
                 Op::MoveTrain { line, moves: was }
             }
