@@ -101,6 +101,9 @@ for (const e of restarts) console.log(`  ${rel(e.at)}  worker ${e.detail.worker}
 
 const zones = events.filter((e) => e.event === 'dm-zone' && e.detail.ev === 'open');
 console.log(`\nZONES  ${zones.length} opened (${zones.filter((e) => e.detail.bare).length} bare), ${events.filter((e) => e.event === 'dm-level').length} level changes, ${events.filter((e) => e.event === 'dm-zone' && e.detail.ev === 'closed').length} closed`);
+// T-4585: each demand cache read (why it missed, or when it showed) and each write (or why none was made)
+const cache = events.filter((e) => e.event === 'dm-cache');
+if (cache.length) { console.log('\nKEPT TRIPS (demand cache reads and writes)'); for (const e of cache.slice(-20)) { const { t: _t, ...d } = e.detail ?? {}; console.log(`  ${rel(e.at)}  ${JSON.stringify(d).slice(0, 200)}`); } }
 const gaps = events.filter((e) => /heartbeat-gap|slow-phase|slow-receive|slow-query|page-error|clock-error|error/.test(e.event));
 if (gaps.length) { console.log('\nSTALLS AND ERRORS'); for (const e of gaps.slice(-20)) console.log(`  ${rel(e.at)}  ${e.source} ${e.event} ${JSON.stringify(e.detail).slice(0, 160)}`); }
 // T-4359: the load in hand (waitsFor: the solve it waits on, against the newest; packsIn: its packs all open) and what the

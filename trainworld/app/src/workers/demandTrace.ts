@@ -1,7 +1,7 @@
 // Opt-in diagnostics (?diagnostics=1, game/freezeTrace.ts, notes/T-4206.md): the demand side of an edit's wait.
 // A sampler reads the pool's own bookkeeping four times a second and logs boundaries only (a pass sent, its local
 // stage ended, shown, its whole solve began, its final, a zone's pack asked, downloaded, open, closed, a level change,
-// a change of the "calculating trips" state). Times are epoch ms, the clock every recorder entry uses. The pool's
+// a change of the "calculating trips" state, a demand cache read or write). Times are epoch ms, the clock every recorder entry uses. The pool's
 // code carries two one-line calls (startDemand, workerDied); nothing here changes what it does.
 import { demandHeld, demandScope, demandStep, demandUpdating, demandView, editHeld, editsSettling } from "../game/demand";
 import { setDemandSnapshot, trace } from "../game/freezeTrace";
@@ -57,6 +57,7 @@ export function startDemandTrace(client: any) {
   const solves = new WeakMap<object, Set<string>>();
   const loads = new WeakMap<object, number>();
   let levels = new Map<string, number>();
+  const cacheSeen = new WeakMap<object, string>();
   let waiting: unknown = null, state = "", load = "", tag = "";
   const sample = () => {
     const now = performance.now();
@@ -95,6 +96,15 @@ export function startDemandTrace(client: any) {
     const lv = client.levelPosted as Map<string, number>;
     for (const [zone, level] of lv) if (levels.get(zone) !== level) trace("dm-level", { t: epoch(now), zone, level: level === 0 ? "fine" : "coarse", from: levels.has(zone) ? (levels.get(zone) === 0 ? "fine" : "coarse") : undefined });
     levels = new Map(lv);
+    // T-4585: each demand cache read once settled (why it missed, or when it showed) and each write (or why none was made)
+    for (const c of [...(client.cacheLogs ?? []), client.cacheLog].filter(Boolean)) {
+      if (!c.miss && c.shownAt === undefined && !c.skip && !c.wrote) continue;
+      const k = JSON.stringify([c.miss, c.standIn, c.shownAt, c.skip, c.wrote?.at]);
+      if (cacheSeen.get(c) === k) continue;
+      cacheSeen.set(c, k);
+      trace("dm-cache", { t: epoch(c.at), ahead: c.ahead ? 1 : undefined, readMs: c.readMs === undefined ? undefined : Math.round(c.readMs), miss: c.miss, standIn: c.standIn, shown: epoch(c.shownAt), skip: c.skip,
+        wrote: c.wrote && { t: epoch(c.wrote.at), ok: c.wrote.ok, MB: Math.round(c.wrote.bytes / 104857.6) / 10, ahead: c.wrote.ahead ? 1 : undefined } });
+    }
     const view = demandView.peek();
     const st = { calculating: demandUpdating.peek(), step: demandStep.peek().done + "/" + demandStep.peek().of, scope: demandScope.peek(),
       heldBehindFinal: !!editHeld.peek(), editsSettling: editsSettling.peek(), pausedHold: demandHeld.peek(), networkWaiting: !!w,
