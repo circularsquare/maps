@@ -2,12 +2,14 @@
 
     session-start  prints this session's id and where each project's handoff stands
     stop           once at 200k, a look at what filled the context; then once per 100k tokens past 500k that it is
-                   time for a fresh session
-    agent-guard    stops a handed-over orchestrator from starting new agents; starting one also resets
-                   the intake count below
+                   time for a fresh session. Neither note is printed at Stop (a Stop note makes the session reply
+                   again, and that reply buries its last message to Anita): it is held in the state dir and given
+                   at the next PostToolUse or UserPromptSubmit (T-4563)
+    prompt         (UserPromptSubmit) gives a held note, if any
+    agent-guard    stops a handed-over orchestrator from starting new agents
     reply-nudge    (PostToolUse) once per message: if her latest message has gone REPLY_AFTER seconds
                    with no reply text from this orchestrator, add a reminder to the tool result;
-                   also the intake reminder (post is the same command)
+                   also the intake reminder and the read-code reminder (post is the same command)
     code-guard     (PreToolUse on edits and shell) refuses an orchestrator's edits to code under
                    app/, sim/, pipeline/, checks/ of trainworld and isochrone: brief an agent instead.
                    Anything else (notes, docs, tasks, tools) stays open. Subagents are never affected
@@ -47,9 +49,25 @@ def handoffs():
     return out
 
 
+def account_note():
+    """", account 2, ~/.claude-2" from CLAUDE_CONFIG_DIR (unset is account 1); empty on any error."""
+    try:
+        env = os.environ.get("CLAUDE_CONFIG_DIR")
+        if not env:
+            return ", account 1, ~/.claude"
+        norm = lambda p: os.path.normcase(os.path.abspath(os.path.expanduser(p)))
+        if norm(env) == norm("~/.claude-2"):
+            return ", account 2, ~/.claude-2"
+        if norm(env) == norm("~/.claude"):
+            return ", account 1, ~/.claude"
+        return f", config {env}"
+    except Exception:
+        return ""
+
+
 def session_start(data):
     sid = data.get("session_id", "")
-    msg = [f"Session id: {sid}."]
+    msg = [f"Session id: {sid}{account_note()}."]
     found = handoffs()
     if found:
         parts = []
@@ -90,6 +108,38 @@ def context_tokens(transcript):
     return 0
 
 
+def hold(data, text, replace=False):
+    """Keep a Stop-time note for the session's next tool result or prompt. A later cycling note replaces a held one."""
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    path = STATE_DIR / f"{data.get('session_id', 'unknown')}.pending.json"
+    try:
+        notes = [] if replace else json.loads(path.read_text())
+    except (OSError, ValueError):
+        notes = []
+    notes.append(text)
+    path.write_text(json.dumps(notes))
+
+
+def take_held(data):
+    """The held notes as one text (and forget them), or None. Never for a subagent's call."""
+    if data.get("agent_id"):
+        return None
+    path = STATE_DIR / f"{data.get('session_id', 'unknown')}.pending.json"
+    try:
+        notes = json.loads(path.read_text())
+        path.unlink()
+    except (OSError, ValueError):
+        return None
+    return " ".join(n for n in notes if isinstance(n, str)) or None
+
+
+def prompt(data):
+    """UserPromptSubmit: the held Stop notes."""
+    text = take_held(data)
+    if text:
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": text}}))
+
+
 def early(data, tokens):
     """Once a session, at EARLY_AT: how fast the context filled, and where an orchestrator's usually goes."""
     state = STATE_DIR / f"{data.get('session_id', 'unknown')}-early.txt"
@@ -102,10 +152,9 @@ def early(data, tokens):
         age = f" after {mins} min"
     except (OSError, ValueError, TypeError):
         age = ""
-    print(json.dumps({"hookSpecificOutput": {"hookEventName": "Stop", "additionalContext":
-        f"Context is at {tokens // 1000}k tokens{age}. If this session orchestrates, look at what filled it: "
+    hold(data, f"Context is at {tokens // 1000}k tokens{age}. If this session orchestrates, look at what filled it: "
         "docs/orchestrator.md \"Your own context\" (verdict lines only, short briefs, no investigating, "
-        "bookkeeping once a round, short messages)."}}))
+        "bookkeeping once a round, short messages).")
 
 
 def stop(data):
@@ -126,19 +175,15 @@ def stop(data):
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     state.write_text(str(band))
     k = tokens // 1000
-    print(json.dumps({
-        "systemMessage": f"Context is at {k}k tokens. If this session orchestrates, it starts its successor now.",
-        "hookSpecificOutput": {
-            "hookEventName": "Stop",
-            "additionalContext": f"Context is at {k}k tokens, past the ~500k cycling point. If you are "
+    # systemMessage goes to Anita's screen only (no new turn); the instruction itself is held for the session.
+    print(json.dumps({"systemMessage": f"Context is at {k}k tokens. If this session orchestrates, it starts its successor now."}))
+    hold(data, f"Context is at {k}k tokens, past the ~500k cycling point. If you are "
                                  "orchestrating: finish anything mid-landing, bring notes/handoff.md current "
                                  "(/handoff), then start your successor as your project's orchestrator doc "
                                  "describes (trainworld: docs/orchestrator.md, \"Your own cycling\": standby "
                                  "session first, else next_orchestrator.py with its flags), and wind down per "
                                  "/handoff once it messages you (Anita 2026-11-16). After handing over, send her "
-                                 "one line, 'talk to <new name> now', and nothing more.",
-        },
-    }))
+                                 "one line, 'talk to <new name> now', and nothing more.", replace=True)
 
 
 REPLY_AFTER = 180   # Anita 2026-11-23: she should get a reply within a couple of minutes
@@ -269,8 +314,8 @@ def intake_reset(sid, prompt_id=""):
 
 
 def intake(data):
-    """Reminder text once an orchestrator has taken in INTAKE_LIMIT chars since its last agent start or since
-    Anita last wrote (a new prompt_id), else None. Never blocks."""
+    """Reminder text once an orchestrator has taken in INTAKE_LIMIT chars since Anita last wrote (a new
+    prompt_id; starting an agent does not reset it, her 11-28), else None. Never blocks."""
     sid = data.get("session_id", "")
     if data.get("agent_id") or not sid:
         return None
@@ -291,18 +336,86 @@ def intake(data):
     msg = None
     if st["chars"] >= INTAKE_LIMIT and st["since"] >= INTAKE_LIMIT and now - st.get("at", 0) >= INTAKE_GAP:
         st["at"], st["since"] = now, 0
-        msg = (f"You have read about {st['chars'] // 1000}k characters of tool output since you last briefed an "
-               "agent or Anita wrote. Delegate, don't investigate: brief an agent with the question "
+        msg = (f"You have read about {st['chars'] // 1000}k characters of tool output since Anita last "
+               "wrote. Delegate, don't investigate: brief an agent with the question "
                "(docs/orchestrator.md, rule 2).")
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(st))
     return msg
 
 
+READ_GAP = 300            # seconds between two read-code reminders (T-4596, her 11-28: reminders, never blocks)
+CODE_PATH = re.compile(r"(?:trainworld|isochrone)[/\\](?:app|sim|pipeline|checks|tools)(?:[/\\]|$)|\.claude[/\\]hooks(?:[/\\]|$)", re.I)
+CODE_TOKEN = re.compile(r"[^\s'\"|;&<>]*(?:(?:trainworld|isochrone)[/\\](?:app|sim|pipeline|checks|tools)(?:[/\\]|$)|\.claude[/\\]hooks(?:[/\\]|$))[^\s'\"|;&<>]*", re.I)
+SHELL_READS = re.compile(r"\b(?:cat|head|tail|rg|grep|egrep|less|more|bat|type|Get-Content|Select-String|gc)\b|\bsed\s+-n", re.I)
+REPL_READS = re.compile(r"\bfile\(|\bRead\(|\bGrep\(|\.text\(\)|\.lines\(\)|\bcat\b|\bsed\s+-n|\bhead\b|\btail\b|\brg\b|\bgrep\b", re.I)
+REPL_QUIET = re.compile(r"git\s+(?:-C\s+\S+\s+)?(?:diff|show)\b", re.I)
+
+
+def _is_code_file(path):
+    p = str(path or "").replace("\\", "/")
+    return bool(CODE_PATH.search(p)) and not p.lower().endswith(OPEN_SUFFIXES)
+
+
+def _reads_code(data):
+    """Does this call read source code (not notes or docs)? git diff and git show never count: reviewing an
+    agent's diff is the orchestrator's job. Calls inside a REPL script are skipped; the REPL call is judged by
+    its code, since only what it returns reaches the context."""
+    name = data.get("tool_name", "")
+    ti = data.get("tool_input") or {}
+    if not isinstance(ti, dict) or str(data.get("tool_use_id", "")).startswith("repl_"):
+        return False
+    if name == "Read":
+        return _is_code_file(ti.get("file_path"))
+    if name in ("Grep", "Glob"):
+        return any(_is_code_file(ti.get(k)) or (CODE_PATH.search(str(ti.get(k) or "").replace("\\", "/"))
+                   and not str(ti.get(k)).lower().endswith(OPEN_SUFFIXES))
+                   for k in ("path", "glob", "pattern") if k != "pattern" or name == "Glob")
+    if name in ("Bash", "PowerShell"):
+        cmd = ti.get("command") or ""
+        if not CODE_PATH.search(cmd.replace("\\", "/")):
+            return False
+        masked = _mask_quotes(cmd)
+        start = 0
+        for m in list(re.finditer(r"&&|\|\||;|\||\n", masked)) + [None]:
+            end = m.start() if m else len(masked)
+            seg_m, seg = masked[start:end], cmd[start:end]
+            start = m.end() if m else end
+            if re.match(r"\s*git\b", seg_m) or not SHELL_READS.search(seg_m):
+                continue
+            if any(_is_code_file(t) for t in CODE_TOKEN.findall(seg)):
+                return True
+        return False
+    if name == "REPL":
+        code = ti.get("code") or ""
+        return bool(CODE_PATH.search(code.replace("\\", "/")) and REPL_READS.search(code)
+                    and not REPL_QUIET.search(code) and any(_is_code_file(t) for t in CODE_TOKEN.findall(code)))
+    return False
+
+
+def read_nudge(data):
+    """Reminder text when an orchestrator reads code, at most once per READ_GAP, else None. Never blocks."""
+    sid = data.get("session_id", "")
+    if data.get("agent_id") or not sid or not _reads_code(data):
+        return None
+    if not any(sid in orch for _, _, orch, _, _ in handoffs()):
+        return None
+    state = STATE_DIR / f"{sid}.readnudge"
+    try:
+        if time.time() - state.stat().st_mtime < READ_GAP:
+            return None
+    except OSError:
+        pass
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    state.write_text("1")
+    return ("You are reading code. Brief an agent with the question instead (docs/orchestrator.md, rule 2); "
+            "reviewing a diff is yours.")
+
+
 def post(data):
     """PostToolUse: every reminder that is due, as one additionalContext."""
     parts = []
-    for fn in (reply_nudge, intake):
+    for fn in (take_held, reply_nudge, intake, read_nudge):
         try:
             text = fn(data)
         except Exception:
@@ -402,11 +515,6 @@ def agent_guard(data):
     desc = ((data.get("tool_input") or {}).get("description") or "").strip().lower()
     if not sid or desc.startswith("in-flight"):
         return
-    if not data.get("agent_id"):          # the orchestrator briefing an agent: intake starts again from zero
-        try:
-            intake_reset(sid)
-        except Exception:
-            pass
     for project, path, orch, prev, _ in handoffs():
         if sid in prev and sid not in orch:
             print(json.dumps({"hookSpecificOutput": {
@@ -429,7 +537,7 @@ def main():
     if not isinstance(data, dict):
         data = {}
     cmds = {"session-start": session_start, "stop": stop, "agent-guard": agent_guard,
-            "reply-nudge": post, "post": post, "code-guard": code_guard}
+            "reply-nudge": post, "post": post, "prompt": prompt, "code-guard": code_guard}
     try:
         cmds[sys.argv[1]](data)
     except Exception:

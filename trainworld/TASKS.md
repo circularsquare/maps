@@ -121,7 +121,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia and beyond (taking, 2026-11-28, agent countrykz)
+- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia and beyond (taking, 2026-11-28, agent countryrun)
   - Context: You, 11-22: "maybe we can try doing georgia/armenia/azerbaijan and afghanistan". Done: Pakistan, Bangladesh, Georgia, Armenia, Azerbaijan, Afghanistan. Still missing, in notes: Central Asia with Mongolia (77M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, Papua New Guinea and the Pacific.
   - Goal: Each batch built and joined, next Central Asia.
   - Other: notes/T-3764.md
@@ -157,9 +157,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
   - Other: notes/T-3623.md
-- T-3659 [P3] {L:solve-speed} Contributors' speed-up pull requests (taking, 2026-11-28, agent pr23)
-  - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance". PR 24 ported 11-20 (layout about twice as fast); its reply is drafted in notes/T-3659.md, to post after the next sync. Left: caelum418's 23 (intercity assignment), a hand port.
-  - Goal: PR 23 measured on our saves, then ported with credit or closed with a reply you've seen; PR 24's reply posted.
+- T-3659 [P3] {L:solve-speed} Contributors' speed-up pull requests
+  - Context: You, 2026-11-18: "PRs from caelum418 that have to do with speedups that we should look at". Both ported by hand with credit: 24 (layout about twice as fast), and 23's stations-only fares and once-a-zone logs (tree pr23, same figures to the bit, no saving visible on NYC). Its deferred walking times were left out.
+  - Goal: Both replies posted after the sync that carries the ports; drafts in notes/T-3659.md.
   - Other: notes/T-3659.md
 
 ## Demand
@@ -169,10 +169,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
-- T-4542 [P2] {L:edit-speed} Double up's price holds the game seconds per run (taking, 2026-11-28, agent doubleup)
-  - Context: Found in T-4541: on your 3,090-station save each run's Double up price is up to five trial edits, 0.2-4.8 s, asked whenever a pick holds double track and again after every edit. Edits and previews wait behind the run being priced.
-  - Goal: A pick with 20 runs of double track adds under 1 s to an edit's wait on your save.
-  - Other: notes/T-4541.md
 - T-4134 [P3] {L:edit-speed} A line's time zone and fleet kind looked up once
   - Context: From T-4131: `utc_offset_at` per line costs 75-120 ms an edit and `cars_needed` 95 ms once on the Asia save.
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
@@ -188,15 +184,19 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 11 (tree stage11) redid train speeds only along a cut line's changed stretch; the bands' last step (profile, records and tables copied whole per cut line, 10-15 ms on Asia) was not started.
   - Goal: Copies in the bands' last step cover only the cut stretch; figures unchanged.
   - Other: notes/T-4153.md "Stage 11"
-- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5
-  - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
-  - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
-  - Other: notes/T-4150.md "Stage 4" and "Left"
+- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 6 (taking, 2026-11-28, agent pagestage5b)
+  - Context: Stage 5 (tree pagestage5b, 11-28): a state's signals set in one go, the world's lookups kept per list, the busiest station and the pick grids by what changed. Not measured on your Asia save. Left: whole map copies each state (nodes, stops, edge points), the demand figures' built zones, fare income's pass over every line (the base pool's rule).
+  - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia, measured there.
+  - Other: notes/T-4284.md "Left"; stages 1-4 in notes/T-4150.md
+- T-4576 [P3] {L:edit-speed} Snap grid laid over by each edit's own edges
+  - Context: From T-4284 stage 5: the track tools' snap grid keeps one grid of every edge touched since its last whole build and makes it again at each edit (map/snapIndex.ts `layEdges`), so it costs more with each edit since. The pick grids did the same; they now keep a small grid per edit.
+  - Goal: An edit's snap grid costs that edit's edges.
+  - Other: notes/T-4284.md "Left"
 - T-4315 [P4] {L:edit-speed} Upkeep shares worked out by what an edit changed
   - Context: Paused: already under 50 ms (her 11-27). From T-4284: after each edit, in idle time, the page's upkeep shares go over every edge, station and bus route point (3.5-6.3 ms on your Asia save), and the region shares post their whole table.
   - Goal: Under 0.5 ms an edit on Asia.
   - Other: notes/T-4150.md "Left"
-- T-4431 [P1] {L:edit-speed} A station's owed settle costs its lines' whole length
+- T-4431 [P1] {L:edit-speed} A station's owed settle costs its lines' whole length (taking, 2026-11-28, agent settle)
   - Context: From T-4281: a later click on your Asia save waits behind the click before's owed settle, 105-200 ms natively for a station on a three-line, 1,000 km trunk: capacity rebuilt along the whole lines (weekdays and weekends), their timetables (about 40 ms), passing plans worked out again from empty memos.
   - Goal: A station's owed settle costs the stretch around it; under 40 ms natively on the click run's trunk.
   - Other: notes/T-4281.md "Stage 4"
@@ -216,10 +216,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 landed 11-25: stations and deletes on running lines' track are answered at the click, their trains bought right after (your yes). Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest waits on the worker's other pieces (T-4281).
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
-- T-4363 [P3] {L:edit-speed} Patched rows differ from the state's in a Boston game (taking, 2026-11-28, agent patchrows)
-  - Context: The dev check "T-4214 check: the patched rows differ from the state's" fired in Boston game runs: "edges 0: cost" after building lines (seen since T-4153 stage 5; guessed as ground repricing between patch and state) and, new on 11-25, "nodes 4: line" after stations; 11-26 "edges 6: cost" in a New York line build (T-4367).
-  - Goal: The cause of each found; a real mismatch fixed, a harmless one no longer flagged.
-  - Other: notes/T-4153.md "Stage 9"; notes/T-4214.md
 - T-4360 [P3] {L:edit-speed} The worker's rows step, what's left
   - Context: T-4149 met its goal (11-25): rows 11-53 ms for any edit on your Asia save in Node. Left: edges compared (3-20 ms), line stamps (1-13), phase tables (2-10), bus rows read 25 times on some station edits (3-5), `take_moved_spans` 5-14 ms on the first edit after a load.
   - Goal: Each by what the edit touched, when edit speed's bigger costs are gone.
@@ -320,6 +316,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-27: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core." Changed (tree cityload): during a game load the second worker takes the selected city after the city in view. New York save, one worker: New Haven 23 s after the click, was 53 s.
   - Goal: You say on 8800 that a selected city loads fast enough; else stage 2 in the notes.
   - Other: notes/T-4501.md
+- T-4585 [P2] {L:loading} Reloads stopped feeling instant (taking, 2026-11-28, agent reloadcache)
+  - Context: You, 11-28: "why does reload cache no longer feel like its instant? what conditions need to be satisfied for reload cache to work?"
+  - Goal: Say what a reload needs to come back at once, and fix anything that makes it miss when it should not.
+  - Other: notes/T-4585.md
 - T-4533 [P3] {L:loading} A city picked zoomed out before any station gets no trips to other places
   - Context: Found in T-4502 (from the code): with no station and the map zoomed out too far for zones to load, nothing is needed, so no market pack opens and no calculation runs. The city view shows "To other places 0" and "No intercity trips are modeled here yet."
   - Goal: A city selected there opens its market pack and shows its trips to other places.
@@ -454,9 +454,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Goal: Build it only when you ask.
 - T-3866 [P4] {L:small-fixes} What stationsworld is
   - Context: Your TODO.md, 11-20, from player suggestions: "stationsworld ??" Not understood; find out what is meant (a mod, a game, a feature) and report to you.
-- T-4426 [P2] {L:checks} Occasional test under non-default settings
-  - Context: You 11-27: "an occasional test of various non-default settings (at most daily, on average probably ~weekly, we should alert if we're doing it more than weekly)" after cpu or memory changes. Repeatable. Settings to cover: Cores slider (1-5), low device memory, phone or tablet, Calculate intercity trips off, coarse demand; find more in ui.ts and workers/deviceMemory.ts.
-  - Goal: One check runs those settings, writes each run's date where the orchestrator sees it, and warns when it ran more than once in 7 days.
 - T-4425 [P3] {L:checks} Store perfbench builds more compactly
   - Context: perf_bench.mjs leaves a whole built game per run in perfbench/dist (7.9 GB for a full copy) and rebuilds it next run anyway; 57 GB had piled up (cleared 11-27). You 11-27: find a more efficient way to store them.
   - Goal: A run leaves at most a few hundred MB behind, with reruns as fast as now.
@@ -525,10 +522,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-27, agent phonemem)
-  - Context: Stage 7: the commutes' station pairs at 16 bits; natively the Tokyo real-network start's solving worker peaks 20 MB lower, rail trips identical; not yet measured on a phone. Left: shared period graphs (up to 22 MB), clock timetables once for all kinds of day (7), the page. You, 11-16: "lots of people are unable to really play properly"
-  - Goal: Stage 7 measured on an emulated iPhone, and the next biggest of those cut, rail trips unchanged, on a production build.
-  - Other: notes/T-3160.md, stages 6-7.
+- T-3160 [P2] {L:memory} Phone memory on real-network starts
+  - Context: Stages 7-8: station pairs at 16 bits, every graph array held once per worker; natively the Tokyo real-network start's solving worker peaks 41 MB lower (333 to 292), rail trips identical; not measured on a phone. Left: clock timetables once for all kinds of day (7 MB), the page. You, 11-16: "lots of people are unable to really play properly"
+  - Goal: Stages 7-8 measured on an emulated iPhone, and the next biggest of those cut, rail trips unchanged, on a production build.
+  - Other: notes/T-3160.md, stages 6-8.
 - T-4310 [P3] {L:memory} The bands' kept work as typed columns
   - Context: After T-4187 the bands' memo is the biggest drawing holder left in the clock worker on t9gksxmu: 27 MB in Node, about half that on a phone, mostly JS objects (each line's sample memo 5.8, recipes with their text keys 5.4, each edge's ribbons 3.6).
   - Goal: Those as typed columns, the drawn map identical, measured on t9gksxmu on an emulated iPhone.
@@ -628,7 +625,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7. T-3965 rebuilds them with station records first.
   - Goal: At the merge, in an empty `REALNET_OUT`, `realnet.py resave` exits 0 with 41 lines, then `realnet.py ship` (never ship without it: stale October files). Steps in notes/T-3958.md.
   - Other: notes/T-3958.md (on tw/track).
-- T-4067 [P2] {L:track-rework} {after:the tw/track sync} Connect an added track manually
+- T-4067 [P2] {L:track-rework} {after:the tw/track sync} Connect an added track manually (taking, 2026-11-28, agent addconn)
   - Context: Add a track leaves the new track loose (your 11-21 call), and no tool yet joins one track of a 3+ track piece, so a line can't use an added track. Your picture: a single track drawn between two tracks. Plan: a join naming one track across a node. In release 1, so Add a track ships usable.
   - Goal: A double made 4 tracks, a single drawn from each new track's end to the track beyond, then a line set on the new tracks runs.
   - Other: About 2-3 h. Sim tracks.rs (the join), wasm/draw.rs (the track tool's joins), the app's track snapping. notes/T-4024.md
@@ -640,7 +637,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4038: a single joined to a double whose tracks run ways of their own still takes its way from the running side (`join_away`, `join_for`), not from the joined track. Only meets a flip whose segment ends at a junction with a joined single. Reach: few players until they flip tracks.
   - Goal: The single reads the joined track's real way, with `way_lines` checking lines in the same edit.
   - Other: notes/T-4038.md
-- T-4037 [P2] {L:track-rework} Stations placed without splitting track
+- T-4037 [P2] {L:track-rework} Stations placed without splitting track (taking, 2026-11-28, agent g3b)
   - Context: Your (b), 11-23: routes written on the track as stations cut it. Built on tw/track: g1, g2, and g3's edits that keep stations off the track right. Left: g3b's six groups of failing tests with that switched on, the branch review's station bugs, then the station tool switched (after T-4518's answer), and g4, the drawing.
   - Goal: The station tool places stations without cutting track on single, double and 4 tracks; figures equal to a split on the reference saves; undo exact.
   - Other: About 5-7.5 h. Design notes/T-4037-design.md; progress notes/T-4037.md (on tw/track); notes/T-3444-design/10-build-plan.md
@@ -648,9 +645,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4035: a station holds at most two platforms, each on one track (ids 2s and 2s+1 from its node), so an island serving two tracks or a station on 4 tracks can't be placed. T-4043 keeps platform ids tied to the node, so it doesn't cover this.
   - Goal: A station of two islands on 4 tracks saved, loaded and undone with every platform kept.
   - Other: About 1.5-3 h, before T-3963. notes/T-3444-design/10-build-plan.md
-- T-4563 [P2] {L:checks} A stop hook hides the message meant for Anita
-  - Context: You, 11-28: "when you send a message and then a stop hook happens, i can't read the message / it gets hidden, though i think its meant for me." The hook's note makes the orchestrator reply again, and focus view shows only that last reply.
-  - Goal: A stop hook's note never buries the orchestrator's last message to you (the note waits for the next turn, or the reply repeats what it said).
 - T-4568 [P3] {L:timetables} Headways from train count disagree between periods
   - Context: A French player, 11-27 (g183): on some lines the headway worked out from the train count differs between periods; "did not do this before". One report, maybe T-4238.
   - Other: notes/requests-sort-2026-11-28.md
@@ -658,10 +652,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-27: yes, a click still picks between two stations. From T-4037 g3b: with stations off the track, a click picks the whole stretch from junction to junction, so making the part between two stations single, raised or one way would need a joint first. Today players pick between stations.
   - Goal: The stretch between two stations made single, raised or one way in one edit and one undo.
   - Other: About 1.5-2.5 h, before the station tool switches (T-4037). notes/T-4037.md "For Anita" (on tw/track)
-- T-4520 [P2] {L:track-rework} Branch fixes from Gemini's read (taking, 2026-11-28, agent trackfix)
-  - Context: Gemini's read of tw/track, checked: Add a track on built two-way single puts its lines' way back on blueprint track, so they stop; a line left on a removed track saves bytes the game then refuses as newer; a flip's charge and undo against the per-track price; stations off the track in a frame conversion and on a removed piece.
-  - Goal: Each with a cargo test; lines keep running until Construct; every save the branch writes opens.
-  - Other: About 2-4 h. artifacts/trainworld/gemini/T-3444-branch-review.md findings 1-3, 11, 12; notes/T-3444-design/10-build-plan.md "Review 11-28"
 - T-3961 [P2] {L:track-rework} {after:T-4037} Old station nodes merged into anchors
   - Context: Stage 4b. Under your (b) the converter renumbers line paths into parts, exactly; lengths merge within 1 mm (to the bit merged 22 of 4,581 reference stations, within 1 mm 2,790). Every field keyed by an old station node moves with it: fare zones, BRT, links, separated pairs, kept bus stops' connections, lines' stops and picks.
   - Goal: Old saves' station nodes become stations on anchors, figures equal to before within the tolerance.
@@ -1086,14 +1076,6 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your 11-27: single-train moves, a 90 s minimum gap between lines at shared stops and an auto-space option per line land in one release with the real-gap waits (T-4514). Design updated 11-28: about 29 h in 18 stages, T-4543 to T-4560, each landing switched off until T-4559.
   - Goal: All 18 stages landed and switched on; closes with T-4560.
   - Other: notes/T-4511.md
-- T-4546 [P2] {L:timetables} Retime room and floor for moved trains (taking, 2026-11-28, agent shift4)
-  - Context: Stage 4 of 18 (T-4511). Trains timed train by train (passing stations) lose the room a move used, and a moved train short of its 60 s stand runs its slot's timetable.
-  - Goal: On the 180 km passing-track line a local moved later keeps its run's other timings and makes its next departure. 1-1.5 h.
-  - Other: notes/T-4511.md "Stages"
-- T-4547 [P2] {L:timetables} {after:T-4546} Moved trains kept through later edits
-  - Context: Stage 5 of 18 (T-4511). A move follows the departure nearest its time through rate changes, stops added, reroutes and row Offsets; one with no train waits and comes back.
-  - Goal: A count step, a stop at the first end and an Offset step all keep the 7:32's move; undo restores each. 1.5-2 h.
-  - Other: notes/T-4511.md "Stages"
 - T-4548 [P2] {L:timetables} {after:T-4547} Timed partners move with a moved train
   - Context: Stage 6 of 18 (T-4511). A train timed with another (an express behind a local) moves with it, one step only, so a move never spreads through the day.
   - Goal: A local's move moves its express by the same seconds; an express passing two locals moves only with the one moved. 1.5-2.5 h.

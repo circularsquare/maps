@@ -43,6 +43,8 @@ user `bench` (EC2 and S3 full access). Setup she followed: notes/aws-own-account
    `artifacts/trainworld/awsbench/<run>/`, never in notes/perf-ledger.jsonl or edit-ledger.jsonl. Compare two
    builds within one run (`--base`), never against a home line.
 
+**Timing runs go here by default** (her 11-28): perf_bench and edit_bench run on AWS, not after a quiet moment at home, and the account is used on purpose to build the usage history AWS asked for. Every machine gets one line in `notes/aws-usage.md` (date, purpose, type, vCPU, minutes, cost); tell her when the history looks long enough to ask for the raise again. As of 11-28 the account still allows 1 vCPU on-demand and no spot, so a 4-vCPU launch fails with VcpuLimitExceeded or MaxSpotInstanceCountExceeded.
+
 The flow, from the maps root with `venv\Scripts\python.exe`:
 
 - `trainworld\tools\aws\bench.py run --commit <rev> [--base <rev>] --perf nyc --edit nyc [--smoke] [--dry]` does all of

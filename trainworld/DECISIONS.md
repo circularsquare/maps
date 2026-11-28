@@ -10,6 +10,8 @@ artifacts/trainworld/T-4120/.
 
 ## Track
 
+- 2026-11-28 (T-4520): A way set on built track is free (trains still bought). Lie: the per-track price values a same-way pair above a double, so a flip raises the built value with no charge; charging it made flip and undo a cash drain, since nothing refunds. notes/T-4520.md (on tw/track)
+- 2026-11-28 (T-4542): Double up's price on the selection bar comes from no trial edit: each run's pair on the side the edit tries first, priced as the edit prices it. Lie: a run the edit's checks refuse is still priced, and the pair's flat crossings are its run's. notes/T-4542.md
 - 2026-11-28 (T-1447): Track copied into another game loses an imported real network's grade separation (`sep`) and crosses by the usual rule. Lie: a real network copied out of a sandbox gets flat crossings where its levels did not keep its lines apart. notes/T-1447.md
 - 2026-11-27 (Anita, T-3444): The track rework comes before new modes (monorail, cable cars), "since track rework is kinda more promised".
 
@@ -276,6 +278,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-28 (T-3659): Of caelum418's PR 23 we took stations-only fare columns and each far station's weight log taken once a zone in the pass. Stored f64 logs would double the access lists in WASM (98 MB on all China); its deferred walking times clash with T-4179's dropped waits. notes/T-3659.md
 - 2026-11-28 (T-3160): The commutes' station pairs, read only by the station and place views, are kept as 16-bit half floats under one power-of-two scale: Tokyo's real-network start solves in 20 MB less (40 to 20). Lie: each pair within 1 part in 2,048; rail figures untouched. notes/T-3160.md
 - 2026-11-28 (T-1447): A copied selection waits in this browser and is pasted at the target game's next load, in the tab that saves it; the copying page never writes the target's slot, since only a loaded game has its network, water masks and undo. notes/T-1447.md
 - 2026-11-27 (T-4449): Retime plans a run's holds once and lays held hops from their start, offset by when the train takes them. Lie: last-bit differences in timetables (Asia: 12 of 5,253 rows move up to 0.024 s); NYC to the bit. notes/T-4449.md
@@ -376,6 +379,8 @@ artifacts/trainworld/T-4120/.
 
 ## Tooling and process
 
+- 2026-11-28 (Anita): Timing runs (perf_bench, edit_bench) go to AWS by default, "since our AWS request got rejected because we didnt use it enough"; usage kept in notes/aws-usage.md and told to her. While AWS allows only 1 vCPU, see notes/aws-usage.md.
+- 2026-11-28 (Anita, T-4596): Orchestrators get reminders, not blocks, when they read code ("i dont want to make future orchestrators feel jailed"); the code edit refusal (T-4428) stays.
 - 2026-11-27 (Anita): Development is the default: changes land on their own tests, only save, slot and cash diffs get a review, and only save, lost-edit, crash or wrong-money findings are fixed. One Gemini review at release prep covers the rest.
 - 2026-11-25 (Anita, T-4269): The game stays at anita.garden. Google shows one icon per host, so its search result keeps the website's leaf icon; a separate address for the game would leave players' browser saves behind ("it is what it is").
 - 2026-11-25 (Anita, T-4252): Gemini code agents run commands unattended inside their own worktree (tools/gemini_agent.py), limited by agy's allow and deny rules; with no OS sandbox here, an allowed check runs whatever the tree holds. Their first three runs are asked about permissions.

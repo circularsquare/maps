@@ -7,3 +7,5 @@
 - T-1447: slots.ts pastedClips is one list for the worker, not per slot: a paste whose autosave never ran (slot taken by another tab, writeBlock) is deleted by the next game's autosave, so that game loses its waiting blueprint; key the list by slot or empty it on leave.
 - T-1447: slots.ts autosave deletes the clip after the write with a fire-and-forget deleteClips; a page closed in that gap re-pastes at next load (overlap refuses it unless the player removed the pasted pieces meanwhile, then they come back).
 - T-4214 check (seen in T-4564): after building a route on a new India game the dev page logged "the patched rows differ from the state's: edges 2: cost".
+- T-4583: packs after the first state landed unmeasured (its one perf_bench was noisy; neither harness loads a slot as the page's first state). The release perf_bench must show the map sooner and trips no more than a few seconds later, else revert.
+- T-4284 stage 5: its one edit_bench (NOISY) had station off built 81 -> 203 ms and end line here 342 -> 553 ms, one sample each; the release's quiet edit_bench must show these back near their old values.

@@ -4,7 +4,8 @@ at ~500k tokens; she works in Windows Terminal).
     venv\Scripts\python.exe trainworld/tools/ops/next_orchestrator.py <project> [--model opus] [--advisor fable] [--account 1|2] [--dry-run]
 
 Opens a tab in her most recent Terminal window, in the maps root, running `claude --model <model> "/takeover <project>"`.
---account 2 starts the tab on the second Claude login (CLAUDE_CONFIG_DIR=~/.claude-2, see claude2.py).
+Without --account the tab starts on the account of the session running this script (its CLAUDE_CONFIG_DIR; unset
+is account 1). --account 1|2 overrides, e.g. to move to the other login when this one runs low (see claude2.py).
 Run it only after notes/handoff.md is current; the new session claims the file and messages the old one.
 """
 import argparse
@@ -19,6 +20,18 @@ sys.path.insert(0, str(MAPS))
 import claude2  # noqa: E402
 
 
+def own_account():
+    """(account number, why) for the session running this script, from CLAUDE_CONFIG_DIR as it was inherited."""
+    env = os.environ.get("CLAUDE_CONFIG_DIR")
+    if not env:
+        return 1, "CLAUDE_CONFIG_DIR is unset in this session"
+    norm = lambda p: os.path.normcase(os.path.abspath(os.path.expanduser(p)))
+    for i, d in enumerate(claude2.ACCOUNTS):
+        if norm(env) == norm(d):
+            return i + 1, f"this session runs with CLAUDE_CONFIG_DIR={env}"
+    return 1, f"CLAUDE_CONFIG_DIR={env} matches no known account"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("project")
@@ -30,10 +43,15 @@ def main():
                     help="start without Code Mode (on by default, Anita 2026-11-23: 'that is usual procedure now')")
     ap.add_argument("--new-window", action="store_true",
                     help="open it in a new Terminal window instead of a tab in the latest one (her 11-24: a frozen window)")
-    ap.add_argument("--account", type=int, choices=(1, 2), default=1,
-                    help="which Claude login the new session runs on (default 1: ~/.claude; 2: ~/.claude-2)")
+    ap.add_argument("--account", type=int, choices=(1, 2),
+                    help="which Claude login the new session runs on (1: ~/.claude; 2: ~/.claude-2); default: this session's")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
+    if a.account:
+        why = "--account given"
+    else:
+        a.account, why = own_account()
+    print(f"account {a.account} ({why})")
     prompt = f"/takeover {a.project}"
     if a.standby:
         prompt = (f"You are a standby {a.project} orchestrator. Run ListAgents to learn your own name, append one line "

@@ -22,10 +22,10 @@ wrong for the situation, do the sensible thing and say why in your first message
    the file claims before trusting it (each long run's liveness check, and that the commit it names for 8800 or
    master matches `git log`). Note anything stale.
 3. **Claim the file.** Your session id is in the session-start context ("Session id: ..."); your
-   name for messages is what `ListAgents` reports as "This session is <name>". Edit the top of
+   name for messages is what `ListAgents` reports as "This session is <name>"; the same line names your account. Edit the top of
    `notes/handoff.md`:
 
-       Orchestrator: session <your id>, name <your name>, since <YYYY-MM-DD HH:MM>
+       Orchestrator: session <your id>, name <your name>, account <1 or 2 (claude2)>, since <YYYY-MM-DD HH:MM>
        Previous: session <old id>, name <old name>, handed over <YYYY-MM-DD HH:MM>, finishing in-flight work
        Updated: <YYYY-MM-DD HH:MM>
 
@@ -55,7 +55,7 @@ wrong for the situation, do the sensible thing and say why in your first message
 6. **The wait ends** when the old session messages you, or its `Previous:` line is gone. If
    neither happens within a couple of hours, look at it in `ListAgents` and the file: if it is idle
    or gone with lines still in flight, check that work directly (the task's notes, the working
-   tree, `git log`), adopt it, delete the `Previous:` line and carry on.
+   tree, `git log`), adopt it, delete the `Previous:` line and carry on. A `Stalled:` line under the Orchestrator line (written by the hourly watchdog) means the old session cannot act: adopt its work at once without waiting, and delete the line once adopted.
 7. **Tell Anita in a few lines** what you picked up, anything stale from step 2, and what you will
    start on. Then work from "Next".
 

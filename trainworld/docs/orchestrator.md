@@ -10,8 +10,9 @@ The rules broken most (maps-e0 broke them on 11-27 and filled 500k in under two 
 1. **When she writes, answer her first** (11-23): her message mid-turn ends the chain; reply, then go on.
 2. **Delegate; don't investigate** (disk use, a bug, a slow load: an agent's job, emergencies included). You run
    bookkeeping and landing commands; anything over a minute (a WASM landing, smoke, an 8800 rebuild) in the
-   background. A hook enforces it (T-4428): your own edits to code under `app/`, `sim/`, `pipeline/`, `checks/` are
-   refused, and after about 40k characters of tool output with no agent briefed and no word from her, a reminder appears.
+   background. A hook backs it (T-4428, T-4596): your own edits to code under `app/`, `sim/`, `pipeline/`, `checks/` are
+   refused; reading code there (or in `tools/`, the hooks) gets a reminder to brief an agent, never a block (git diff
+   and git show stay quiet); and after about 40k characters of tool output since she last wrote, another reminder appears.
    The refusal says how to allow a real exception (a merge conflict while landing).
 3. **Count before each agent start**: what runs, the files those agents hold, what the cores are doing. 3-10 agents,
    run by load; under 3 with startable work is a slip to fix at once; above 10 is asked first (11-27).
@@ -86,8 +87,10 @@ and tell people: the `handoff` skill. Successor: if `notes/standby.txt` lists a 
 with remote control), check it in `ListAgents`, SendMessage it "Please run /takeover trainworld now (Skill takeover,
 args trainworld).", and delete its line once it answers. Otherwise `venv\Scripts\python.exe
 trainworld/tools/ops/next_orchestrator.py trainworld --advisor fable` (a Windows Terminal tab in Code Mode). The same
-when she asks for a handover: she wants it in Windows Terminal, not the VS Code panel. `--account 1|2` starts it on
-the other Claude login when this one runs low (notes/T-4424.md).
+when she asks for a handover: she wants it in Windows Terminal, not the VS Code panel. The successor starts on this session's
+account by default; `--account 1|2` picks the other login when this one runs low (notes/T-4424.md, T-4581.md).
+An hourly Windows task (`tools/ops/orch_watchdog.py`, notes/T-4582.md) starts a successor when the orchestrator hit a usage limit (other account) or its transcripts and its agents' were quiet 60 minutes with agents on the board (same account), and writes a `Stalled:` line in handoff.md.
+Switch it off with `schtasks /Change /TN "trainworld orchestrator watchdog" /DISABLE` (`/ENABLE` turns it on); its last run is in `%TEMP%\claude-orchestrator\watchdog.json`.
 
 ## Bookkeeping, asks and the board
 
@@ -100,7 +103,8 @@ the other Claude login when this one runs low (notes/T-4424.md).
   question (a feature, numbers, what can be built) goes to her, however many asked; something few players would meet
   is filed, usually P3, not started while the list is long. Put the reach guess in the task line. For a confusing
   complaint, rebuilding the player's own case can help.
-- **Asks**: each open ask through `tools/asks.py add`, a few-word title, the whole question as text. When she answers
+- **Asks**: each open ask through `tools/asks.py add`, a few-word title, the whole question as text; wording she is to
+  review (a PR reply, a string) is quoted in the ask and the message, never left in a notes file to find (her 11-28). When she answers
   (chat, or `ask-answer` in the inbox, maybe a dismissal): act on it, `asks.py answer <id> --note "<her words>"`, mark
   the inbox item handled. Asked to be caught up: read `asks.py list --full` back in full, plus anything in flight that
   needs her. Agents' in-game strings go to her as trainworld/CLAUDE.md "Player text" (Review) says.
