@@ -443,3 +443,50 @@ fn a_line_timed_otherwise_is_noted_changed() {
     w.retime();
     assert!(w.svc.take_changed().is_empty());
 }
+
+/// T-4546: on the 180 km passing-track line a local moved later as far as it goes keeps every other departure's own
+/// timetable, and still makes its next departure (its own waits fitted into the stand its move leaves, `floor`).
+#[test]
+fn a_local_moved_later_keeps_its_runs_other_timetables() {
+    const DAY: f64 = 86400.0;
+    for (hl, hx) in [(30.0f32, 10.0f32), (20.0, 10.0), (30.0, 30.0)] {
+        let (mut w, n, local, express) = shinkansen();
+        for (id, h) in [(local, hl), (express, hx)] {
+            set_headway(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
+        }
+        set_passing(&mut w, &n[1..6], true);
+        // (a move is of one day's departure until T-4547 keys it by the time of day: `retime` times the reference day)
+        let day = DAY_REF as f64 * DAY;
+        let (a, b) = (day + 6.0 * 3600.0, day + 14.0 * 3600.0);
+        // each departure's timetable by what it holds (the variants' numbers may be dealt again)
+        let vars = |w: &TrackWorld| -> Vec<(u8, u64, Vec<u64>)> {
+            let ls = &w.svc.lines[local as usize];
+            let tr = w.svc.line_trips(&w.net, local as usize, a, b);
+            let own = |t: &Trip| ls.prof_of(t.run as usize, t.level as usize, t.var).phases.iter().map(|p| p.t.to_bits()).collect::<Vec<u64>>();
+            tr.iter().map(|t| (t.run, t.dep.to_bits(), own(t))).collect::<std::collections::BTreeSet<_>>().into_iter().collect()
+        };
+        let before = vars(&w);
+        let ts = w.svc.line_trips(&w.net, local as usize, a + 3.0 * 3600.0, a + 5.0 * 3600.0);
+        // the train on its own timetable that can move furthest later
+        let room = |w: &TrackWorld, t: &Trip| w.move_range(local, t.run, t.dep).map_or(0.0, |r| r.hi);
+        let t = *ts.iter().filter(|t| t.run == 0 && t.var > 0).max_by(|x, y| room(&w, x).total_cmp(&room(&w, y))).expect("a local with its own timetable");
+        let mut moved_by = 0.0;
+        for _ in 0..60 {
+            match w.move_op(local, t.run, t.dep, 30.0) {
+                Ok(Some(op)) => {
+                    w.apply(op).unwrap();
+                    moved_by += 30.0;
+                }
+                _ => break,
+            }
+        }
+        let moved_by = w.move_range(local, t.run, t.dep).unwrap().now.max(moved_by * 0.0);
+        eprintln!("{hl}/{hx}: local moved {moved_by:.0} s later; own timetable {}", t.var);
+        assert!(moved_by > 0.0, "{hl}/{hx}: the local can move");
+        let after = vars(&w);
+        let diff: Vec<_> = before.iter().zip(&after).filter(|(x, y)| x != y).collect();
+        assert!(diff.len() <= 1 && diff.iter().all(|(x, _)| x.1 == t.dep.to_bits()), "{hl}/{hx}: only the moved train's timetable may change: {diff:?}");
+        let now = *w.svc.line_trips(&w.net, local as usize, t.draw - 600.0, t.draw + 3.0 * 3600.0).iter().find(|x| x.run == t.run && x.dep == t.dep).unwrap();
+        assert!(now.next.is_some_and(|nx| now.end <= nx + 1e-3), "{hl}/{hx}: it makes its next departure ({:?} < {:?})", now.end, now.next);
+    }
+}
