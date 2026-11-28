@@ -182,6 +182,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-23: "this is the entire issue". Stage 10 landed 11-27: per-line passes redone only for the lines an edit changed (their parts 41 to 31 ms on your Asia save). By its parts a trunk station now builds in about 92-96 ms, not yet timed on a quiet machine. Left: train speeds (14-53 ms), the bands' last whole-line copies.
   - Goal: A station on a line's track on Asia under 100 ms of network build, timed on a quiet machine; train speeds redone only for lines that changed.
   - Other: notes/T-4153.md "Stage 10"
+- T-4429 [P2] {L:edit-speed} Bands' last whole-line copies after a cut {after:T-4153}
+  - Context: Stage 11 (tree stage11) redid train speeds only along a cut line's changed stretch; the bands' last step (profile, records and tables copied whole per cut line, 10-15 ms on Asia) was not started.
+  - Goal: Copies in the bands' last step cover only the cut stretch; figures unchanged.
+  - Other: notes/T-4153.md "Stage 11"
 - T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5 (taking, 2026-11-27, agent pagestage5)
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
@@ -210,9 +214,9 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 1 in tree rowsdelta (11-25): the rows read and post only the records an edit touched. Your Asia save, Node: rows 120 to 45 ms, post 24 to 15. Left: the drawn network's arrays compared and copied whole in the post (about 12 ms) and the phase tables laid out whole; the model's passes are T-4299, the complexes T-4300.
   - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
   - Other: notes/T-4291.md
-- T-4309 [P1] {L:edit-speed} Track limits worked out by the lines an edit moved (taking, 2026-11-27, agent tracklimits)
-  - Context: From T-4299: a state's money and lists are kept per record now, 24 to about 5.5 ms a state on your Asia save. Still whole: the track limits, with the fleet needs, markers and turn limits built on them (about 2 ms), and profile_meta's copy (0.4 ms). The capacity has no index from a line to the track it shares.
-  - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
+- T-4309 [P1] {L:edit-speed} A state's model calls under 3 ms on Asia
+  - Context: The track limits are kept per line behind a line-to-track index now (about 0.5 ms a state saved on your Asia save). A state's model calls still take 3.3-4.1 ms there, 2.2-2.7 of it the moved lines' stamps and every line's money key.
+  - Goal: Model calls under 3 ms a state on Asia: stamps and money keys by moved line, markers and full track by touched resource.
   - Other: notes/T-4299.md
 - T-4272 [P1] {L:edit-speed} A click confirmed from what it touches
   - Context: Stage 2 landed 11-25: stations and deletes on running lines' track are answered at the click, their trains bought right after (your yes). Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest waits on the worker's other pieces (T-4281).
@@ -243,23 +247,19 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: Autosave waits for a quiet moment or gzips off the clock worker (about 1-2 h); smaller ledgers later.
   - Other: notes/T-4348.md
 - T-4442 [P1] {L:edit-speed} Clicks on running track share their train work
-  - Context: T-4267 stage A1, your 11-27 yes. A later click on running track first works out the click before's train work, most of its wait on your Asia save (60-80 ms in Node). Overlaps T-4281 (clickwait): read its notes first.
-  - Goal: A quick run settles its trains once, after the answers; later clicks under 100 ms once T-4443 to T-4446 land.
+  - Context: T-4267 stage A1, your 11-27 yes. A later click on running track first works out the click before's train work, most of its wait on your Asia save (about 150 ms in Node, T-4441). Overlaps T-4281 (clickwait): read its notes first.
+  - Goal: A quick run settles its trains once, after the answers; later clicks under 100 ms once T-4444 to T-4446 and T-4449 land.
   - Other: notes/T-4267.md
-- T-4443 [P1] {L:edit-speed} {after:T-4309} Train work goes over only lines sharing track
-  - Context: T-4267 stage C1. The settle after an edit steps only the lines sharing track with it, but each round still goes over all 239 lines with trains and every track resource on your Asia save; a few passes also move far lines an earlier settle left unfinished.
-  - Goal: The rounds cost the lines sharing track, with the same rates to the bit as now; the settle under 15 ms in Node on the trunk.
-  - Other: notes/T-4267.md "The train work by scope"
-- T-4444 [P2] {L:edit-speed} {after:T-4309} Track capacity updated by what an edit touched
-  - Context: T-4267 stage C2. After each edit the track capacity update goes over every edge, node and resource on your Asia save to find what the edit changed.
-  - Goal: It finds them by index; the service update under 5 ms in Node on the trunk.
-  - Other: notes/T-4267.md
-- T-4445 [P2] {L:edit-speed} {after:T-4309} Weekend copy and departures by changed lines
-  - Context: T-4267 stage C3. After each edit's train work the weekend service is copied and the departures placed again over every line and track resource.
-  - Goal: Only the lines whose values changed copied and placed, with the same timetables to the bit.
-  - Other: notes/T-4267.md
+- T-4444 [P1] {L:edit-speed} {after:T-4309} Track capacity updated by what an edit touched
+  - Context: T-4267 stage C2. After a click the track capacity is worked out again twice, for weekdays and for the weekend service: 62 of the 152 ms train work on your Asia trunk (T-4441), 40 of it going over every edge, node and track resource.
+  - Goal: Both updates find what the edit changed by index; together under 25 ms in T-4441's run (62 there).
+  - Other: notes/T-4267.md; notes/T-4441.md
+- T-4445 [P2] {L:edit-speed} {after:T-4444} The weekend work costs only the edited lines
+  - Context: T-4267 stage C3. After a click the weekend service copy and its departures take 49 of the 152 ms train work on your Asia trunk (T-4441), for 3 lines; most of it goes over every line, some of it three times.
+  - Goal: Under 10 ms in T-4441's run (49 there), the same weekend timetables to the bit.
+  - Other: notes/T-4267.md section 4 Part C; notes/T-4441.md
 - T-4446 [P2] {L:edit-speed} {after:T-4442} Trains noted only for lines an edit reaches
-  - Context: T-4267 stage C4. Around each edit's train work, every line's pattern and every running train on your Asia save are noted, so trains keep their places.
+  - Context: T-4267 stage C4. Around each edit's train work, every line's pattern and every running train on your Asia save are noted, so trains keep their places: 7 + 5 of a trunk click's 152 ms (T-4441).
   - Goal: Only the lines sharing track with the edit noted, checked against the whole walk; both under 1 ms in Node.
   - Other: notes/T-4267.md
 - T-4447 [P2] {L:edit-speed} A click's own checks without whole-save walks
@@ -270,27 +270,23 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage A8, from Gemini's review. Every edit searches the track again for each line with a way back of its own, and on saves with quad-track twins plans every twin again.
   - Goal: Only the lines whose searched track or twin route the edit touched; both under 1 ms in Node on Asia.
   - Other: notes/T-4267.md
-- T-4449 [P2] {L:edit-speed} Retime only the clusters an edit reached
-  - Context: T-4267 stage C5. After each edit's train work, every cluster's timing keys are worked out again.
-  - Goal: Keys kept per cluster; retime under 2 ms in Node.
-  - Other: notes/T-4267.md
-- T-4450 [P2] {L:edit-speed} {after:T-4309} The train work's before and after reads by scope
-  - Context: T-4267 stage C6. The train work reads every line's rates, keys and demand figures before and after an edit; T-4134 keeps the time zone and fleet kind per line.
-  - Goal: Only the scope's lines read; the train work after a click under 20 ms in Node on the trunk (60-80 now).
-  - Other: notes/T-4267.md
-- T-4451 [P2] {L:edit-speed} {after:T-4450} Delete line and breaking deletes answered at once
+- T-4449 [P1] {L:edit-speed} Retime costs less for each line it redoes
+  - Context: T-4267 stage C5. After a click the timetables of the lines sharing waits with it are worked out again: 48 of the 152 ms train work on your Asia trunk (T-4441), 35 of it the waits at passing stations, about 12 ms a line.
+  - Goal: Retime under 15 ms in T-4441's run (48 there), with the same timetables or the shift said.
+  - Other: notes/T-4267.md section 4 Part C; notes/T-4441.md
+- T-4451 [P2] {L:edit-speed} {after:T-4444 to T-4446 and T-4449} Delete line and breaking deletes answered at once
   - Context: T-4267 stage A2. On your Asia save Delete line is answered in 526-703 ms and a delete that breaks a line in 2.2-2.6 s: neither gets a map patch, so both wait for the whole state.
   - Goal: Both answered under 100 ms on Asia.
   - Other: notes/T-4267.md
-- T-4452 [P2] {L:edit-speed} {after:T-4450} Removing a passageway answered at once
+- T-4452 [P2] {L:edit-speed} {after:T-4444 to T-4446 and T-4449} Removing a passageway answered at once
   - Context: T-4267 stage A3. Removing a passageway is not sent as a click, so its answer waits for the whole state: 661 ms on your Asia save.
   - Goal: Answered under 100 ms on Asia.
   - Other: notes/T-4267.md
-- T-4453 [P2] {L:edit-speed} {after:T-4450} Construct answered at once
+- T-4453 [P2] {L:edit-speed} {after:T-4444 to T-4446 and T-4449} Construct answered at once
   - Context: T-4267 stage A4. Construct is answered only with the whole state, since the page splits its cost by region from that state. It stays refused when the cash is short for its trains.
   - Goal: Answered under 100 ms on Asia, its cost split from the edit's own records.
   - Other: notes/T-4267.md
-- T-4454 [P2] {L:edit-speed} {after:T-4450} New line as one edit, answered at once
+- T-4454 [P2] {L:edit-speed} {after:T-4444 to T-4446 and T-4449} New line as one edit, answered at once
   - Context: T-4267 stage A5. New line on the Lines tab is three edits (the line, its headways, its weekend share), answered in 226-242 ms on your Asia save.
   - Goal: One edit and one undo step, answered under 100 ms on Asia.
   - Other: notes/T-4267.md
@@ -331,7 +327,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Goal: A standing check of every layer against a whole build after random edits; then every later click under 100 ms and a station built under 200 ms on Asia.
   - Other: notes/T-4267.md
 - T-4464 [P2] {L:edit-speed} Far lines on shared track settle a moment later
-  - Context: T-4267 stage C7, your 11-27 yes (it can leave a far line a train up or down until an edit reaches it). Built only if T-4443 to T-4450 leave the trunk's train work over about 30 ms in the page.
+  - Context: T-4267 stage C7, your 11-27 yes (it can leave a far line a train up or down until an edit reaches it). Built only if T-4444 to T-4446 and T-4449 leave a click on edge 1818 (150 lines in reach; T-4441 measured 1482, 3 lines) over about 30 ms of train work in the page.
   - Goal: Later clicks on the trunk under 100 ms with the far lines settled in the next piece.
   - Other: notes/T-4267.md
 - T-4501 [P1] {L:loading} A clicked city takes over a minute on one core (taking, 2026-11-27, agent cityload)
@@ -438,9 +434,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4370 [P2] {L:memory} iPad games crash on big saves (taking, 2026-11-27, agent ipadmem)
-  - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines (maybe T-4367's "Demand stopped", fixed 11-26, if not a tab reload). Related: T-3160.
-  - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
 - T-4433 [P2] {L:memory} Phone solving worker keeps 100 MB after a load
   - Context: On an emulated iPad (NYC save, one solving worker that is the aux worker too, T-4103) a job just after the load's final takes its heap in use from 66 to 166 MB; the solve itself peaks at 66. A WASM memory keeps its highest size, so that stays all game. Which job was not traced.
   - Goal: That job named and its peak brought near the solve's, rail trips unchanged.

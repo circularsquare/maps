@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c022",
+      "text": "added nudging a rail line's departures earlier or later in the schedule window",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3742",
+      "by": "nudge",
+      "at": "2026-11-28T00:24:20Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
       "id": "c021",
       "text": "fixed street-snapped tram track above or below the street being capped at 60 km/h",
       "edited": null,

@@ -1,6 +1,9 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4450 [P2] {L:edit-speed} The train work's before and after reads by scope (2026-11-27): closed without code: T-4267 stage C6 dropped: T-4441 found every read it named under 1 ms on her Asia save (demand_view 0.7, cars_needed 0.8, the rest under 1 together); cars_needed and line_shift stay in T-4134. notes/T-4441.md.
+- T-4443 [P1] {L:edit-speed} Train work goes over only lines sharing track (2026-11-27): closed without code: T-4267 stage C1 dropped: T-4441 timed the settle's rounds at 4 ms of a trunk click's 152 ms train work on her Asia save; what scoping them would need is kept in notes/T-4267.md section 3. notes/T-4441.md.
+- T-4370 [P2] {L:memory} iPad games crash on big saves (2026-11-27): the peak is an edit's solve, garbage Safari collects late (emulated iPad in WebKit, NYC save): packDays and the train guard allocate far less, edit peak 2,432 -> 2,225 MB, rail trips unchanged; T-4433, T-4434 left.
 - T-4441 [P1] {L:edit-speed} Measure where a click's train work goes (2026-11-27): Measured the train work after a click on her Asia save in Node: retime 48 ms, capacity update twice 62, weekend placing 20, settle rounds 4 of 152; bundle on edge 1482 is 3 lines. notes/T-4441.md.
 - T-3742 [P2] {L:timetables} Nudge a line's departure times (2026-11-27): Stage 1 built in tree nudge: a per-row Offset in a rail line's schedule window, held through later edits, timed pairs moving together, weekends following; LOF1 at save level 43. Server save check filed as T-4435.
 - T-4477 [P2] {L:map-look} Mode visibility toggles read the opposite way to the level ones (2026-11-27): mode toggles now share the level toggles' lit and pale styles; hidden is pale for both.
