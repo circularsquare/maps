@@ -217,15 +217,21 @@ export function BlueprintPick() {
   );
 }
 
+/** T-4541: how long the pick stays as it is before Double up is priced, ms: a drag box changes it every frame, and each
+ * run's price is trial edits holding the clock worker 0.2-5 s on a big network */
+const DOUBLE_UP_REST_MS = 300;
+
 /** T-1680: Double up for every run of double track in the pick; the hover gives the summed price,
  * or why not. */
 function PickDoubleUp() {
   const p = bpPicked.value, w = world.value;
   const pieces = useMemo(() => doubleUpPieces(p), [p, w]);
   const key = pieces.join(",");
-  const answer = useLatestAnswer(pieces.length ? async () => {
+  const answer = useLatestAnswer(pieces.length ? async (live) => {
+    await new Promise((r) => setTimeout(r, DOUBLE_UP_REST_MS));
     let price = 0, why = "";
     for (const edge of pieces) {
+      if (!live()) return null;
       const d = await queryClock({ what: "doubleUp", edge });
       if (!d) return null;
       if (d[0] >= 0) price += d[0];

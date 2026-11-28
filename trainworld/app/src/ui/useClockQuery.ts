@@ -21,13 +21,15 @@ export function useClockQuery<T>(req: ClockQuery | null, deps: unknown[], parse:
 }
 
 /** The latest answer of `ask`, asked again when `deps` change; null until one comes. A null answer
- * (a worker busy with something newer) keeps the last one, and `ask` null asks nothing. */
-export function useLatestAnswer<T>(ask: (() => Promise<T | null>) | null, deps: unknown[]): T | null {
+ * (a worker busy with something newer) keeps the last one, and `ask` null asks nothing. `live` turns false once the
+ * answer is no longer wanted (`deps` changed, the panel gone): an ask of several questions checks it before each, as
+ * every question sent waits in the clock worker's one queue ahead of edits, previews and save switches (T-4541). */
+export function useLatestAnswer<T>(ask: ((live: () => boolean) => Promise<T | null>) | null, deps: unknown[]): T | null {
   const [value, set] = useState<T | null>(null);
   useEffect(() => {
     if (!ask) return;
     let on = true;
-    void ask().then((r) => { if (on && r) set(r); });
+    void ask(() => on).then((r) => { if (on && r) set(r); });
     return () => { on = false; };
   }, deps);
   return value;
