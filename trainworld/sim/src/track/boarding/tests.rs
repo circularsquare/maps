@@ -154,6 +154,52 @@ fn arriving(h: &[f32]) -> f32 {
     (0..nq).map(|k| h[q0 + k * QUEUE_STRIDE + 7]).sum::<f32>()
 }
 
+/// T-3160: the kinds of day that run the same trains hold one copy of them, each the one an account made alone would
+/// have to the bit; a line that runs its own weekend keeps its weekdays' apart, its Saturday and Sunday shared.
+#[test]
+fn kinds_of_day_running_the_same_trains_hold_them_once() {
+    use crate::track::net::Weekend;
+    use crate::track::world::Op;
+    let (mut w, l) = setup(10.0);
+    let li = l as usize;
+    let mut b = Boarding::default();
+    b.set_riders_day(&riders(l, [500.0, 200.0, 500.0, 200.0, 50.0]), 0);
+    let mut one = b.clone();
+    one.ensure(&w.net, &w.svc);
+    b.set_riders_day(&riders(l, [100.0, 300.0, 200.0, 200.0, 50.0]), 1);
+    b.set_riders_day(&riders(l, [50.0, 250.0, 150.0, 150.0, 40.0]), 2);
+    b.ensure(&w.net, &w.svc);
+    let trains = |b: &Boarding, d: usize, r: usize| b.accounts[d][li].as_ref().unwrap().runs[r].trains.clone();
+    let alone = |b: &Boarding, w: &crate::track::world::TrackWorld, d: usize, r: usize| {
+        let (lr, masks) = (b.riders[d][li].as_ref().unwrap(), line_masks(&w.net, &w.svc, li, r));
+        let a = simulate_with(&w.net, &w.svc, li, r, lr, &b.peak, false, masks.as_deref(), Some(Boarding::kind_row(d)));
+        if a.leftover > 0.5 { simulate_with(&w.net, &w.svc, li, r, lr, &b.peak, true, masks.as_deref(), Some(Boarding::kind_row(d))) } else { a }
+    };
+    for r in 0..2 {
+        assert!(Arc::ptr_eq(&trains(&b, 0, r), &trains(&b, 1, r)) && Arc::ptr_eq(&trains(&b, 0, r), &trains(&b, 2, r)), "run {r}");
+        for d in 0..3 {
+            assert!(alone(&b, &w, d, r).trains.same(&trains(&b, d, r)), "kind {d} run {r}");
+        }
+    }
+    // counted once: three kinds of day hold the trains one does
+    let bytes = |b: &Boarding| b.mem_bytes().into_iter().filter(|x| x.0 == "order, dep0" || x.0 == "deps, levels, stop_dep").map(|x| x.1).sum::<usize>();
+    assert_eq!(bytes(&b), bytes(&one));
+    assert_ne!(b.line_summary_day(&w.svc, li, 1), b.line_summary_day(&w.svc, li, 0), "each kind its own riders");
+    // a weekend of its own: half the trains
+    w.apply(Op::Weekend { id: l, weekend: Weekend { share: 50, ..Weekend::default() } }).unwrap();
+    assert!(w.net.runs_own_weekend(li));
+    b.ensure(&w.net, &w.svc);
+    for r in 0..2 {
+        assert!(!Arc::ptr_eq(&trains(&b, 0, r), &trains(&b, 1, r)), "run {r}");
+        assert!(Arc::ptr_eq(&trains(&b, 1, r), &trains(&b, 2, r)), "run {r}");
+        assert!(trains(&b, 1, r).deps.len() < trains(&b, 0, r).deps.len());
+        for d in 0..3 {
+            assert!(alone(&b, &w, d, r).trains.same(&trains(&b, d, r)), "own weekend: kind {d} run {r}");
+        }
+    }
+    assert!(bytes(&b) > bytes(&one));
+}
+
 #[test]
 fn a_holiday_hour_reads_the_sunday_account_on_its_line_only() {
     // T-872, T-262: Monday, game day 8, is a holiday for line `l` only, run as a Sunday
@@ -248,7 +294,7 @@ fn a_circle_carries_its_riders_round_through_the_first_stop() {
     b.ensure(&w.net, &w.svc);
     let acc = b.accounts[0][l as usize].as_ref().unwrap();
     let ra = &acc.runs[0];
-    let i = ra.deps.iter().position(|&d| d > 8.0 * 3600.0).unwrap();
+    let i = ra.trains.deps.iter().position(|&d| d > 8.0 * 3600.0).unwrap();
     // ten an hour at 100 an hour: about ten aboard from 4 round to 1
     for k in [4, 5, 0] {
         assert!((ra.load[i * n + k] - 10.0).abs() < 1.5, "stop {k}: {}", ra.load[i * n + k]);
@@ -279,7 +325,7 @@ fn a_line_with_room_carries_demands_load_and_leaves_no_one() {
     }
     // a morning-peak train carries a headway's riders: 500 an hour, 10 trains an hour
     let ra = &acc.runs[0];
-    let i = ra.find(8.0 * 3600.0 + 60.0).or_else(|| ra.deps.iter().position(|&d| d > 8.0 * 3600.0)).unwrap();
+    let i = ra.find(8.0 * 3600.0 + 60.0).or_else(|| ra.trains.deps.iter().position(|&d| d > 8.0 * 3600.0)).unwrap();
     assert!((ra.load[i * 3] - 50.0).abs() < 1.0, "{}", ra.load[i * 3]);
     assert_eq!(ra.load[i * 3 + 1], ra.load[i * 3]);
     assert_eq!(ra.load[i * 3 + 2], 0.0);
@@ -442,7 +488,7 @@ fn period_totals_match_demand_with_the_busiest_hour_shapes() {
     b.ensure(&w.net, &w.svc);
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
     let mut by_period = [0.0f64; PERIODS];
-    for (i, &d) in ra.deps.iter().enumerate() {
+    for (i, &d) in ra.trains.deps.iter().enumerate() {
         by_period[period_at(d)] += ra.load[i * 3] as f64;
     }
     for p in 0..PERIODS {
@@ -454,7 +500,7 @@ fn period_totals_match_demand_with_the_busiest_hour_shapes() {
     }
     // and the morning peak's busiest train carries about 1.4 times the mean train
     let mean = per_hour[0] as f64 / 12.0;
-    let peak = ra.deps.iter().enumerate().filter(|(_, &d)| d >= 6.0 * 3600.0 && d < 10.0 * 3600.0).map(|(i, _)| ra.load[i * 3] as f64).fold(0.0, f64::max);
+    let peak = ra.trains.deps.iter().enumerate().filter(|(_, &d)| d >= 6.0 * 3600.0 && d < 10.0 * 3600.0).map(|(i, _)| ra.load[i * 3] as f64).fold(0.0, f64::max);
     assert!(peak > 1.45 * mean && peak < 1.85 * mean, "{peak} against a mean of {mean}");
 }
 
@@ -469,9 +515,9 @@ fn an_overloaded_line_leaves_people_behind_and_the_queue_clears() {
     b.set_riders(&riders(l, [20000.0 * X, 2000.0 * X, 2000.0 * X, 2000.0 * X, 100.0 * X]));
     b.ensure(&w.net, &w.svc);
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
-    let m = ra.deps.len();
+    let m = ra.trains.deps.len();
     // the queue at A, train by train through the day
-    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.stop_times(0).at(j), ra.queues.q_after(ra.order.get(j) * 3), ra.load[ra.order.get(j) * 3])).collect();
+    let q: Vec<(f64, f32, f32)> = (0..m).map(|j| (ra.stop_times(0).at(j), ra.queues.q_after(ra.trains.order.get(j) * 3), ra.load[ra.trains.order.get(j) * 3])).collect();
     let at = |h: f64| q.iter().filter(|e| e.0 < h * 3600.0).next_back().unwrap().1;
     assert!(at(7.0) > 0.0 && at(9.0) >= at(7.0), "{} {}", at(7.0), at(9.0));
     // T-1067: 600 more a train than it takes, until the platform holds WAITING_CAP as a train
@@ -508,12 +554,12 @@ fn riders_left_behind_too_long_go_another_way() {
     b.set_riders(&riders(l, [4000.0 * X, 4000.0 * X, 500.0 * X, 500.0 * X, 50.0 * X]));
     b.ensure(&w.net, &w.svc);
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
-    let m = ra.deps.len();
+    let m = ra.trains.deps.len();
     // the queue grows 600 a train through the morning and fills the platform before noon
     let most = (0..m).map(|j| ra.queues.q_after(j * 3)).fold(0.0f32, f32::max) as f64;
     assert!(most <= WAITING_CAP - cap + 1e-3, "{most}");
-    let gave_by_noon: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) < 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order.get(j) * 3) as f64).sum();
-    let gave_after: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) > 12.5 * 3600.0).map(|j| ra.queues.gone(ra.order.get(j) * 3) as f64).sum();
+    let gave_by_noon: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) < 12.5 * 3600.0).map(|j| ra.queues.gone(ra.trains.order.get(j) * 3) as f64).sum();
+    let gave_after: f64 = (0..m).filter(|&j| ra.stop_times(0).at(j) > 12.5 * 3600.0).map(|j| ra.queues.gone(ra.trains.order.get(j) * 3) as f64).sum();
     assert!(gave_by_noon > 0.0 && gave_after > 0.0, "{gave_by_noon} {gave_after}");
     // whoever is left waits at most GIVE_UP_S past their first train (T-1255: on a train every 30
     // minutes or rarer, a rider joins only for a train with room)
@@ -547,9 +593,9 @@ fn riders_come_and_wait_only_for_a_train_with_room_soon() {
     b.set_arrivals_day(&come, 0);
     b.ensure(&w.net, &w.svc);
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
-    let m = ra.deps.len();
+    let m = ra.trains.deps.len();
     // every peak train leaves full and the platform holds at most the next 30 minutes' trains
-    let peak: Vec<usize> = (0..m).filter(|&j| ra.stop_times(0).at(j) > 7.0 * 3600.0 && ra.stop_times(0).at(j) < 9.5 * 3600.0).map(|j| ra.order.get(j)).collect();
+    let peak: Vec<usize> = (0..m).filter(|&j| ra.stop_times(0).at(j) > 7.0 * 3600.0 && ra.stop_times(0).at(j) < 9.5 * 3600.0).map(|j| ra.trains.order.get(j)).collect();
     assert!(peak.iter().all(|&i| (ra.load[i * 3] as f64 - cap).abs() < 1e-3));
     let most = (0..m).map(|i| ra.queues.q_after(i * 3)).fold(0.0f32, f32::max) as f64;
     assert!(most <= 5.0 * cap + 1e-3, "{most}");
@@ -640,14 +686,14 @@ fn a_queue_that_lasts_the_night_carries_round_the_day() {
     let quick = simulate(&w.net, &w.svc, l as usize, 0, b.riders[0][l as usize].as_ref().unwrap(), &b.peak, false);
     assert!(quick.leftover > 1000.0, "{}", quick.leftover);
     // the kept account is the warm one: the first train after 03:00 already finds a queue
-    let i = ra.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
+    let i = ra.trains.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
     assert!(ra.queues.q_after(i * 3) > 1000.0, "{}", ra.queues.q_after(i * 3));
-    let j = quick.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
+    let j = quick.trains.deps.iter().position(|&d| d >= START_HOUR * 3600.0).unwrap();
     // (T-1255: a train's worth more, the platform holding only the next 30 minutes' trains)
     assert!(ra.queues.q_after(i * 3) > quick.queues.q_after(j * 3) + 500.0, "{} {}", ra.queues.q_after(i * 3), quick.queues.q_after(j * 3));
     // and every departure of the day is in it once, in time order
-    assert_eq!(ra.deps.len(), quick.deps.len());
-    assert!(ra.deps.windows(2).all(|p| p[0] < p[1]));
+    assert_eq!(ra.trains.deps.len(), quick.trains.deps.len());
+    assert!(ra.trains.deps.windows(2).all(|p| p[0] < p[1]));
 }
 
 #[test]
@@ -678,7 +724,7 @@ fn a_change_mid_peak_keeps_the_account_on_the_drawn_trains() {
     }
     // fewer trains: riders now wait, on the drawn departures
     let ra = &b.accounts[0][l as usize].as_ref().unwrap().runs[0];
-    let late = ra.deps.iter().enumerate().filter(|(_, &d)| d > (now + 600.0).rem_euclid(DAY) && d < (now + 3000.0).rem_euclid(DAY)).count();
+    let late = ra.trains.deps.iter().enumerate().filter(|(_, &d)| d > (now + 600.0).rem_euclid(DAY) && d < (now + 3000.0).rem_euclid(DAY)).count();
     assert!(late <= 5, "{late} departures in 40 minutes at 4 an hour");
 }
 
@@ -915,7 +961,7 @@ fn riders_changing_lines_arrive_with_their_train() {
         // each a 65 s walk (60 m x 1.3 at 1.2 m/s) after a line 2 train reaches G
         let g_t: Vec<f64> = {
             let ra = &b.accounts[0][l2 as usize].as_ref().unwrap().runs[0];
-            let m = ra.deps.len();
+            let m = ra.trains.deps.len();
             let ts = ra.stop_times(2);
             (0..m).map(|j| ts.at(j)).collect::<Vec<f64>>()
         };
@@ -1142,7 +1188,7 @@ fn old_window(b: &Boarding, svc: &Service, t: f64, past: bool) -> Vec<f64> {
         let cap = ls.crush();
         let n = w.stops.len();
         for (r, ra) in acc.runs.iter().enumerate() {
-            let m = ra.deps.len();
+            let m = ra.trains.deps.len();
             if m == 0 || ra.n != n {
                 continue;
             }
@@ -1184,7 +1230,7 @@ fn old_window(b: &Boarding, svc: &Service, t: f64, past: bool) -> Vec<f64> {
                 let (mut best, mut at_t, mut seen) = (0.0f64, f64::NAN, false);
                 for k in 0..n {
                     let o = ra.stop_dep_of(j).get(k).copied().unwrap_or(0.0);
-                    let s = (ra.deps[j] + o).rem_euclid(DAY);
+                    let s = (ra.trains.deps[j] + o).rem_euclid(DAY);
                     let from = ra.stop_open.get(k).map_or(line_from, |o| if o - day0 > line_from { o - day0 - 1e-6 } else { line_from });
                     if s > to || s <= from {
                         continue;
@@ -1211,14 +1257,14 @@ fn old_window(b: &Boarding, svc: &Service, t: f64, past: bool) -> Vec<f64> {
         let (mut on, mut packed) = (0.0, 0.0);
         for (r, ra) in acc.runs.iter().enumerate() {
             let n = ra.n;
-            for j in 0..ra.deps.len() {
-                let lv = ra.levels[j] as usize;
+            for j in 0..ra.trains.deps.len() {
+                let lv = ra.trains.levels[j] as usize;
                 let span = if ls.is_loop() {
                     ls.round_trip[lv] / ls.live_runs() as f64
                 } else {
                     ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0)
                 };
-                if (tod - ra.deps[j]).rem_euclid(DAY) >= span {
+                if (tod - ra.trains.deps[j]).rem_euclid(DAY) >= span {
                     continue;
                 }
                 on += 1.0;
@@ -1325,8 +1371,8 @@ fn every_change(b: &Boarding, svc: &Service, l: u32) -> Vec<f64> {
                     out.extend([s.next_down(), s, s.next_up()]);
                 }
             }
-            for (j, &d) in ra.deps.iter().enumerate() {
-                let lv = ra.levels[j] as usize;
+            for (j, &d) in ra.trains.deps.iter().enumerate() {
+                let lv = ra.trains.levels[j] as usize;
                 let span = ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0);
                 let s = (d + span).rem_euclid(DAY);
                 out.extend([s.next_down(), s, s.next_up()]);

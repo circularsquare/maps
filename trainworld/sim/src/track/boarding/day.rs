@@ -116,7 +116,7 @@ impl DayKept {
         let mut packed: [Vec<bool>; 2] = Default::default();
         for (r, ra) in acc.runs.iter().enumerate() {
             let n = ra.n;
-            for &lv in &ra.levels {
+            for &lv in &ra.trains.levels {
                 let lv = lv as usize;
                 if span[r].len() <= lv {
                     span[r].resize(lv + 1, f64::NAN);
@@ -128,7 +128,7 @@ impl DayKept {
                     ls.runs[r].prof[lv].duration + ((ls.round_trip[lv] - ls.runs[0].prof[lv].duration - ls.runs[1].prof[lv].duration) / 2.0).max(0.0)
                 };
             }
-            packed[r] = (0..ra.deps.len()).map(|j| ra.load[j * n..(j + 1) * n].iter().any(|&v| v as f64 >= cap - 0.5)).collect();
+            packed[r] = (0..ra.trains.deps.len()).map(|j| ra.load[j * n..(j + 1) * n].iter().any(|&v| v as f64 >= cap - 0.5)).collect();
         }
         let crowd_key = [acc.id, cap.to_bits(), ls.rated().to_bits()];
         let crowd = match was {
@@ -241,11 +241,11 @@ impl DayKept {
         let tod = self.tod;
         let (mut on, mut packed) = (0.0, 0.0);
         for (r, ra) in acc.runs.iter().enumerate() {
-            for (j, &dep) in ra.deps.iter().enumerate() {
+            for (j, &dep) in ra.trains.deps.iter().enumerate() {
                 // `(tod - dep).rem_euclid(DAY)` to the bit: both are times of day
                 let d = tod - dep;
                 let d = if d > -DAY && d < DAY { if d < 0.0 { d + DAY } else { d } } else { d.rem_euclid(DAY) };
-                if d >= self.span[r][ra.levels[j] as usize] {
+                if d >= self.span[r][ra.trains.levels[j] as usize] {
                     continue;
                 }
                 on += 1.0;
@@ -264,7 +264,7 @@ impl Part {
     fn read(acc: &LineAccount, n: usize, from: f64, to: f64, day0: f64, past: bool) -> Part {
         let mut runs = vec![];
         for (r, ra) in acc.runs.iter().enumerate() {
-            let m = ra.deps.len();
+            let m = ra.trains.deps.len();
             if m == 0 || ra.n != n {
                 continue;
             }
@@ -357,7 +357,7 @@ impl Run {
     /// today's takes in each stop's departures up to it, yesterday's lets them go.
     fn advance(&mut self, ra: &RunAccount, past: bool, tod: f64) {
         let n = ra.n;
-        let m = ra.deps.len();
+        let m = ra.trains.deps.len();
         for (k, st) in self.stops.iter_mut().enumerate() {
             let ts = ra.stop_times(k);
             let ord = ts.ord;

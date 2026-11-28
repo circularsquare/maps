@@ -632,7 +632,7 @@ fn a_crowded_bus_stop_holds_a_bus_stops_crowd() {
     a.set_arrivals(come, 0);
     a.boarding.ensure(&a.w.net, &a.w.svc);
     let ra = &a.boarding.accounts[0][b as usize].as_ref().unwrap().runs[0];
-    let most = (0..ra.deps.len()).map(|j| ra.queues.q_after(j * n)).fold(0.0f32, f32::max) as f64;
+    let most = (0..ra.trains.deps.len()).map(|j| ra.queues.q_after(j * n)).fold(0.0f32, f32::max) as f64;
     assert!(most > 0.0 && most <= BUS_STOP_WAITING - BUS_CRUSH + 1e-3, "{most} waiting as a bus leaves");
     let v = a.boarding.today(&a.w.svc, 2.0 * DAY + 23.999 * 3600.0);
     let (carried, left) = (v[3], v[5]);
@@ -670,12 +670,12 @@ fn riders_left_at_a_bus_stop_count_once_each() {
     a.boarding.ensure(&a.w.net, &a.w.svc);
     let ra = &a.boarding.accounts[0][b as usize].as_ref().unwrap().runs[0];
     // the second stop's boarders, those of buses leaving it in the morning
-    let morning: f64 = (0..ra.deps.len())
-        .filter(|&j| { let t = (ra.deps[j] + ra.stop_dep_of(j)[1]).rem_euclid(DAY); t >= 6.0 * 3600.0 && t < 10.0 * 3600.0 })
+    let morning: f64 = (0..ra.trains.deps.len())
+        .filter(|&j| { let t = (ra.trains.deps[j] + ra.stop_dep_of(j)[1]).rem_euclid(DAY); t >= 6.0 * 3600.0 && t < 10.0 * 3600.0 })
         .map(|j| (ra.load[j * n + 1] - ra.load[j * n]) as f64)
         .sum();
     // nobody waits at the first stop; the second holds its 200, the next buses' room for 30 each
-    let most = |k: usize| (0..ra.deps.len()).map(|j| ra.queues.q_after(j * n + k)).fold(0.0f32, f32::max) as f64;
+    let most = |k: usize| (0..ra.trains.deps.len()).map(|j| ra.queues.q_after(j * n + k)).fold(0.0f32, f32::max) as f64;
     assert!(most(0) == 0.0 && (most(1) - (BUS_STOP_WAITING - 30.0)).abs() < 5.0, "{} {}", most(0), most(1));
     assert!((morning - 4.0 * 900.0).abs() < 0.05 * 3600.0, "{morning} boarded in the morning");
     let v = a.boarding.past_day(&a.w.svc, 2.0 * DAY + 12.0 * 3600.0);

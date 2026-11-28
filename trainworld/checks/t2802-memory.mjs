@@ -9,92 +9,15 @@
 // stages; NOGC=1 forces no collection anywhere (the natural figures, with a lazy collector's leftovers). Writes ../artifacts/trainworld/t2802/LABEL.json.
 import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
 import { ARTIFACTS, GL, launchChrome, collectErrors, playwright } from './lib.mjs';
+import { chromeMemory, contexts, MB, mb, rawCdp } from './lib/memory.mjs';
 
 const BASE = process.argv[2] ?? 'http://127.0.0.1:6211/';
 const LABEL = process.env.LABEL ?? 'run', QS = process.env.QS ?? '', NOGC = !!process.env.NOGC;
 // DESKTOP=1 (T-3160): a 1400 x 900 desktop window, no phone emulation, 3 solving workers (DW= to change)
 const DESKTOP = !!process.env.DESKTOP, DW = process.env.DW ?? (DESKTOP ? '3' : '1');
 const OUT = join(ARTIFACTS, 't2802');
-const MB = 1048576;
 const PORT = 9300 + Math.floor(Math.random() * 500);
-const run = promisify(execFile);
-const mb = (x) => Math.round(x / MB);
-
-async function chromeMemory(profile) {
-  const needle = profile.replace(/'/g, "''");
-  const ps = `Get-CimInstance Win32_Process -Filter "Name='chrome.exe'" | Where-Object { $_.CommandLine -like '*${needle}*' } | ForEach-Object { $t = if ($_.CommandLine -match '--type=(\\S+)') { $matches[1] } else { 'browser' }; '{0} {1}' -f $t, $_.PrivatePageCount }`;
-  const { stdout } = await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', ps]);
-  const by = {};
-  let total = 0;
-  for (const l of stdout.trim().split(/\r?\n/).filter(Boolean)) {
-    const [type, priv] = l.trim().split(' ');
-    by[type] = (by[type] ?? 0) + mb(+priv);
-    total += mb(+priv);
-  }
-  return { total, renderer: by.renderer ?? 0, gpu: by['gpu-process'] ?? 0 };
-}
-
-/** a raw CDP connection to the browser, so a worker's session can be spoken to (Playwright's CDPSession can't) */
-async function rawCdp(port) {
-  let v;
-  for (let k = 0; k < 50 && !v; k++) v = await fetch(`http://127.0.0.1:${port}/json/version`).then((r) => r.json()).catch(() => new Promise((r) => setTimeout(r, 200)));
-  const ws = new WebSocket(v.webSocketDebuggerUrl);
-  await new Promise((r, j) => { ws.onopen = r; ws.onerror = j; });
-  let id = 0;
-  const wait = new Map();
-  ws.onmessage = (ev) => {
-    const m = JSON.parse(ev.data);
-    const w = m.id && wait.get(m.id);
-    if (!w) return;
-    wait.delete(m.id);
-    if (m.error) w.j(new Error(m.error.message)); else w.r(m.result);
-  };
-  const send = (method, params = {}, sessionId) => new Promise((r, j) => {
-    const i = ++id;
-    wait.set(i, { r, j });
-    ws.send(JSON.stringify({ id: i, method, params, ...(sessionId ? { sessionId } : {}) }));
-    setTimeout(() => { if (wait.delete(i)) j(new Error('timeout ' + method)); }, 15000);
-  });
-  return { send, close: () => ws.close() };
-}
-
-const sessions = new Map();
-const shortName = (url) => url.replace(/^.*\/(.*?)(\?.*)?$/, '$1').replace(/-[A-Za-z0-9_-]{8}\.js$/, '.js') || url;
-/** a context's WASM memories, MB (they are not in its backing stores): every WebAssembly.Memory it holds, by
- * queryObjects, which collects garbage first, so only at the stages */
-async function wasmOf(cdp, s) {
-  try {
-    const { result: proto } = await cdp.send('Runtime.evaluate', { expression: 'WebAssembly.Memory.prototype' }, s);
-    const { objects } = await cdp.send('Runtime.queryObjects', { prototypeObjectId: proto.objectId }, s);
-    const { result } = await cdp.send('Runtime.callFunctionOn', { objectId: objects.objectId, functionDeclaration: 'function () { return this.reduce((a, m) => a + m.buffer.byteLength, 0); }', returnByValue: true }, s);
-    return mb(result.value);
-  } catch { return -1; }
-}
-
-/** each context's heap: [name, used MB, ArrayBuffer backing MB] */
-async function contexts(cdp, withWasm = false) {
-  const { targetInfos } = await cdp.send('Target.getTargets', { filter: [{}] });
-  const out = [];
-  for (const t of targetInfos) {
-    if (t.type !== 'page' && t.type !== 'worker') continue;
-    if (t.type === 'page' && !t.url.startsWith(BASE)) continue;
-    try {
-      let s = sessions.get(t.targetId);
-      if (!s) {
-        s = (await cdp.send('Target.attachToTarget', { targetId: t.targetId, flatten: true })).sessionId;
-        sessions.set(t.targetId, s);
-      }
-      const h = await cdp.send('Runtime.getHeapUsage', {}, s);
-      const row = [t.type === 'page' ? 'page' : shortName(t.url), mb(h.usedSize), mb(h.backingStorageSize ?? 0)];
-      if (withWasm) row.push(await wasmOf(cdp, s));
-      out.push(row);
-    } catch { /* a worker that just ended */ }
-  }
-  return out.sort((a, b) => b[1] + b[2] - a[1] - a[2]);
-}
 
 /** Chrome's own accounting (memory-infra) for the renderer: the biggest allocators by effective size, in MB */
 async function memoryDump(cdp, where) {
@@ -143,7 +66,7 @@ const t0 = Date.now();
 const sampler = (async () => {
   while (sampling) {
     try {
-      const [proc, ctx] = await Promise.all([chromeMemory(chrome.profile), contexts(raw)]);
+      const [proc, ctx] = await Promise.all([chromeMemory(chrome.profile), contexts(raw, BASE)]);
       const s = { s: Math.round((Date.now() - t0) / 1000), stage, ...proc, ctx };
       timeline.push(s);
       if (!peak || s.renderer > peak.renderer) peak = s;
@@ -171,7 +94,7 @@ try {
       const tiles = Object.entries(ms).map(([id, m]) => [id, m._inViewTiles?.getAllIds?.().length ?? -1, m._outOfViewCache?.order?.length ?? -1, m._outOfViewCache?.max ?? -1]).filter((t) => t[1] > 0 || t[2] > 0);
       return { canvases, tiles };
     }).catch(() => null);
-    const r = { where, ...(await chromeMemory(chrome.profile)), ctx: await contexts(raw, !NOGC), demandWasm: wasm, gfx };
+    const r = { where, ...(await chromeMemory(chrome.profile)), ctx: await contexts(raw, BASE, !NOGC), demandWasm: wasm, gfx };
     stages.push(r);
     console.log(where, `renderer ${r.renderer} gpu ${r.gpu} total ${r.total} demand wasm/live/peak ${wasm}`);
     console.log('    used+backing+wasm', r.ctx.map(([n, u, b, w]) => `${n} ${u}+${b}+${w}`).join(', '));
