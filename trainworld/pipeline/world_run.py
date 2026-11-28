@@ -100,6 +100,27 @@ GATE_CHUNK = int(os.environ.get("TW_GATE_CHUNK", 10))
 GATE_SLOTS = 2
 
 
+def wait_for_landing(limit=45 * 60):
+    """T-4571: agent-tree.mjs holds data/work/landing.lock from before it merges a tree until its WASM is
+    built, and app/ is out of step with the WASM in between; wait for it. A dead owner's lock, or one older
+    than `limit` seconds, is ignored."""
+    lock = REAL / "data/work/landing.lock"
+    announced = False
+    while lock.exists():
+        try:
+            pid = json.loads(lock.read_text(encoding="utf-8")).get("pid")
+            age = time.time() - lock.stat().st_mtime
+        except (OSError, ValueError):
+            return
+        alive = subprocess.run(["tasklist", "/FI", f"PID eq {pid}", "/NH"], capture_output=True, text=True).stdout.count(str(pid)) if os.name == "nt" and pid else (pid is not None and Path(f"/proc/{pid}").exists())
+        if not alive or age > limit:
+            return
+        if not announced:
+            print(f"    a landing (pid {pid}) is under way: waiting before the gate copies app/", flush=True)
+            announced = True
+        time.sleep(5)
+
+
 class RunFault(Exception):
     """A fault of the run, not of a row (T-764, T-773): the run stops and parks nothing for it."""
 
@@ -1389,6 +1410,7 @@ class Run:
         browser check (72 of Russia's rows parked on a half-rebuilt sim). The copy's node_modules and its
         sibling data are junctions: vite.config.ts reads ../data/packs, terrain and the rest from there."""
         import tempfile
+        wait_for_landing()
         self.drop_frozen()
         src = self.root / "app"
         top = Path(tempfile.mkdtemp(prefix="tw-frozen-"))

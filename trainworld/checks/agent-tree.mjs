@@ -430,6 +430,23 @@ function landTree(dir, branch, message, coauthors = [], t = intoOf('master')) {
   return tw;
 }
 
+// T-4571: a landing changes app/ at the merge and the WASM only minutes later, so a gate (world_run.py freeze_app) copying app/
+// in between would serve a page its WASM can't run. Landing holds this file from before the merge until the WASM is built;
+// freeze_app waits while it exists (a dead owner's or a 45-minute-old one is ignored).
+const landingLock = path.join(maps, 'trainworld', 'data', 'work', 'landing.lock');
+let holdingLanding = false;
+function releaseLanding() {
+  if (!holdingLanding) return;
+  holdingLanding = false;
+  try { if (JSON.parse(fs.readFileSync(landingLock, 'utf8')).pid === process.pid) fs.rmSync(landingLock, { force: true }); } catch { /* gone */ }
+}
+function holdLanding() {
+  fs.mkdirSync(path.dirname(landingLock), { recursive: true });
+  fs.writeFileSync(landingLock, JSON.stringify({ pid: process.pid, since: new Date().toISOString() }));
+  if (!holdingLanding) process.on('exit', releaseLanding);
+  holdingLanding = true;
+}
+
 // Agents' pages in the main tree load its WASM bindings, which a landed Rust change leaves stale
 // (three agents hit "set_part is not a function" after T-1543, 2026-10-27).
 function rebuildWasm(root = maps) {
@@ -564,6 +581,7 @@ function finishTree(args) {
       line(2, `land ${branch}: ${tw.length} trainworld file(s), ${git(dir, 'rev-list', '--count', `${into}..HEAD`)} branch commit(s) plus any uncommitted work, rebased onto ${targetName} and squashed into one commit "${message}"`);
       if (t.track && fs.existsSync(path.join(t.dir, '.git')) && git(t.dir, 'status', '--porcelain', '--untracked-files=no')) throw new Error(`${t.dir} (the ${into} checkout) has uncommitted edits; commit or discard them there first`);
     } else {
+      holdLanding();
       const tw = landTree(dir, branch, message, o.coauthor, t);
       state.landed = true;
       state.simChanged = tw.some((f) => f.startsWith('trainworld/sim/'));
@@ -575,6 +593,7 @@ function finishTree(args) {
       if (!o.dry) { rebuildWasm(t.dir); state.wasm = true; }
       line(3, `wasm: sim/ changed, ${t.track ? `${path.basename(t.dir)}'s` : "main tree's"} WASM ${o.dry ? 'would be rebuilt' : 'rebuilt'}`);
     } else line(3, 'wasm: sim/ unchanged, no rebuild');
+    releaseLanding();
     // 4: remove the tree
     step = 4;
     if (o.keep) line(4, `tree kept: ${dir}`);
@@ -605,6 +624,7 @@ function finishTree(args) {
     if (!o.dry) console.log(`log: ${LOG}${warned ? ` (${warned} warning(s) in it)` : ''}`);
     else console.log('dry run: nothing changed');
   } catch (e) {
+    releaseLanding();
     const names = ['', 'changelog', 'land', 'wasm', 'remove tree', 'tasks'];
     console.error(`FAILED at step ${step}/5 (${names[step]}):\n${e.message}`);
     console.error(`state: ${state.moved.length ? `${state.moved.length} changelog item(s) already moved to the main tree and reverted in the tree (do not move again). ` : ''}${state.landed ? `${into} has the landing commit (${git(maps, 'log', '-1', '--format=%h', into)}). ` : `${into} is unchanged by this run. `}${state.removed ? 'tree removed. ' : 'tree still there. '}${state.doneTasks.length ? `tasks archived: ${state.doneTasks.join(', ')}. ` : ''}`);
@@ -716,8 +736,10 @@ if (cmd === 'new') {
     if (t.track && fs.existsSync(path.join(t.dir, '.git')) && git(t.dir, 'status', '--porcelain', '--untracked-files=no')) console.log(`${t.dir} has uncommitted edits: the real land would stop`);
     process.exit(0);
   }
+  holdLanding();
   const tw = landTree(dir, branch, words.join(' ').trim(), [], t);
   if (tw.some((f) => f.startsWith('trainworld/sim/'))) rebuildWasm(t.dir);
+  releaseLanding();
 } else if (cmd === 'sync-track') {
   syncTrack([name, ...rest].filter(Boolean));
 } else if (cmd === 'finish') {
