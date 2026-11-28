@@ -134,7 +134,17 @@ function day(s) {
 
 // ---------- loading ----------
 
+// The page used to reload data.json only on a click or when the orchestrator handled one of her actions, so
+// tasks started or closed since then never showed. Every few minutes it rebuilds itself, unless she is mid-edit.
+const AUTO_REBUILD_MS = 120000;
+let lastRebuild = Date.now();
+function boardBusy() {
+  const a = document.activeElement;
+  const typing = a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName));
+  return !!typing || !!clDrag.id || !!RM.drag || !!RM.timer || Object.values(CL.timers).some(Boolean) || $('#refresh').disabled;
+}
 async function rebuild() {
+  lastRebuild = Date.now();
   const btn = $('#refresh');
   btn.disabled = true;
   setBuilt('Rebuilding');
@@ -2603,6 +2613,7 @@ setInterval(async () => {
   const applied = [...was].some((id) => !withdrawn.has(id) && !INBOX.pending.some((a) => a.id === id))
     || INBOX.pads.some((p) => p.handled && !padsWere.has(p.id));
   if (applied) rebuild();
+  else if (Date.now() - lastRebuild >= AUTO_REBUILD_MS && !boardBusy()) rebuild();
   else render();
 }, POLL_MS);
 rebuild();
