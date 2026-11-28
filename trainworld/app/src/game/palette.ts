@@ -30,17 +30,36 @@ export const LEVEL_COLOURS: Record<Level, string> = {
  * green, blue-green, blue, indigo and purple at high-speed track's 320. */
 export const SPEED_STOPS: [number, string][] = [[1, "#8a2232"], [20, "#d85b4b"], [40, "#e2922e"], [60, "#d9b92e"], [80, "#a3c23c"], [110, "#4aa850"], [160, "#4e9d95"], [200, "#397bc1"], [260, "#5b4fc9"], [320, "#a03fc2"]];
 
+/** Each stop list's colours as numbers, parsed once. */
+const STOP_RGB = new WeakMap<[number, string][], [number, number, number][]>();
+const HEX2 = Array.from({ length: 256 }, (_, i) => i.toString(16).padStart(2, "0"));
+
+/** The colour of `v` along `stops`, blended between the two either side, as red, green and blue (whole
+ * numbers 0-255) written into `out`. */
+function rampRgb(stops: [number, string][], v: number, out: number[]): number[] {
+  let nums = STOP_RGB.get(stops);
+  if (!nums) STOP_RGB.set(stops, (nums = stops.map(([, h]) => rgb(h))));
+  const s = stops;
+  let i = 1;
+  if (v <= s[0][0]) i = 0;
+  else for (; i < s.length && v > s[i][0]; i++);
+  if (i === 0 || i === s.length) {
+    const c = nums[i === 0 ? 0 : s.length - 1];
+    out[0] = c[0]; out[1] = c[1]; out[2] = c[2];
+    return out;
+  }
+  const t = (v - s[i - 1][0]) / (s[i][0] - s[i - 1][0]), a = nums[i - 1], b = nums[i];
+  for (let k = 0; k < 3; k++) out[k] = Math.round(a[k] + (b[k] - a[k]) * t);
+  return out;
+}
+
+const RAMP_OUT = [0, 0, 0];
 /** The colour of `v` along `stops`, blended between the two either side. */
 function rampColour(stops: [number, string][], v: number): string {
-  const s = stops;
-  if (v <= s[0][0]) return s[0][1];
-  for (let i = 1; i < s.length; i++) {
-    if (v > s[i][0]) continue;
-    const t = (v - s[i - 1][0]) / (s[i][0] - s[i - 1][0]);
-    const a = rgb(s[i - 1][1]), b = rgb(s[i][1]);
-    return "#" + a.map((c, k) => Math.round(c + (b[k] - c) * t).toString(16).padStart(2, "0")).join("");
-  }
-  return s[s.length - 1][1];
+  if (v <= stops[0][0]) return stops[0][1];
+  if (!(v <= stops[stops.length - 1][0])) return stops[stops.length - 1][1];
+  const c = rampRgb(stops, v, RAMP_OUT);
+  return "#" + HEX2[c[0]] + HEX2[c[1]] + HEX2[c[2]];
 }
 
 /** The colour the Speed display gives `kmh`. */
@@ -59,6 +78,8 @@ export const profitColour = (ratio: number) => rampColour(PROFIT_STOPS, ratio);
  * strain marks start at `CROWDED_FROM` (boarding.rs), not here. */
 export const CROWD_STOPS: [number, string][] = [[0.7, "#4f9a4f"], [0.8, "#98bd3a"], [1, "#d8b425"], [1.3, "#e07a1f"], [1.4, "#c43c3c"], [1.5, "#a82846"]];
 export const crowdColour = (load: number) => rampColour(CROWD_STOPS, load);
+/** `crowdColour`'s red, green and blue, written into `out`. */
+export const crowdRgb = (load: number, out: number[]) => rampRgb(CROWD_STOPS, load, out);
 
 /** Station rings and names on the map. */
 export const NET_INK = "#2b2b2b";

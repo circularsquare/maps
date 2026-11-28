@@ -555,7 +555,9 @@ export class TrainGuard {
         const c = v[j * REG], was = prevS[cand[c]];
         fr.push((Number.isNaN(was) ? cs[c] : Math.min(was, cs[c])) + v[j * REG + 1] + half[c]);
       }
-      order.sort((x, y) => fr[y] - fr[x] || v[x * REG] - v[y * REG]);
+      sortFr = fr;
+      sortV = v;
+      order.sort(byFront);
       const out = sc.outs[lists.length] ??= [];
       out.length = 0;
       for (const j of order) for (let q = 0; q < REG; q++) out.push(v[j * REG + q]);
@@ -1087,6 +1089,11 @@ export class TrainGuard {
 
 /** Numbers per registration on a track: candidate, offset to its coordinate there, the track's length. */
 const REG = 3;
+
+/** `order.sort`'s comparator and what it reads, kept so no closure is made for each track each frame: the
+ * fronts of a track's registrations and the registrations (`REG` numbers each) */
+let sortFr: number[] = [], sortV: number[] = [];
+const byFront = (x: number, y: number) => sortFr[y] - sortFr[x] || sortV[x * REG] - sortV[y * REG];
 
 /** `regs` keeps its arrays from frame to frame (emptied, not dropped); `keys` lists the tracks in the order this
  * frame first met them, the order a new map each frame gave */

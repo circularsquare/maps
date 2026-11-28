@@ -19,7 +19,7 @@ export class PlatformCrowds {
    * per station which sides have platforms (1 the + side, 2 the - side) */
   private placed: { station: Int32Array; side: Int8Array; sides: Uint8Array; board: BoardHour; net: NetworkBuffers } | null = null;
   /** T-2219: each station building's hall as last worked out, in the network's order */
-  hall: (Hall & { room: number; members: number })[] = [];
+  hall: (Omit<Hall, "spill"> & { spill: Set<number>; room: number; members: number })[] = [];
   private memberOf: { net: NetworkBuffers; of: Int32Array } | null = null;
   /** the time and hour the crowds were last worked out for */
   private at = { t: NaN, board: null as BoardHour | null };
@@ -63,7 +63,13 @@ export class PlatformCrowds {
     // building; a side shows red only once the hall is full too
     const bs = n.buildings ?? [];
     const memberOf = this.membersOf(n);
-    const hall = bs.map((b) => ({ id: b.id, waiting: 0, full: false, spill: new Set<number>(), room: b.room, members: b.members.length }));
+    // (the halls are kept from update to update while the buildings stay the same, emptied here)
+    const hall = this.hall.length === bs.length ? this.hall : (this.hall = bs.map((b) => ({ id: b.id, waiting: 0, full: false, spill: new Set<number>(), room: b.room, members: b.members.length })));
+    for (let k = 0; k < bs.length; k++) {
+      const h = hall[k], b = bs[k];
+      h.id = b.id; h.waiting = 0; h.full = false; h.room = b.room; h.members = b.members.length;
+      h.spill.clear();
+    }
     const sideRoom = (s: number) => (sides[s] === 3 ? platformRoom(n.stationLength?.[s] ?? 0) : 2 * platformRoom(n.stationLength?.[s] ?? 0));
     for (let s = 0; s < n.stationCount; s++) {
       const k = memberOf[s];
@@ -75,7 +81,6 @@ export class PlatformCrowds {
       }
     }
     for (const h of hall) h.full = h.waiting >= h.room;
-    this.hall = hall;
     for (let s = 0; s < n.stationCount; s++) {
       if (!sides[s]) continue;
       const room = platformRoom(n.stationLength?.[s] ?? 0), inHall = memberOf[s] >= 0, hallFull = inHall ? hall[memberOf[s]].full : true;
@@ -87,7 +92,7 @@ export class PlatformCrowds {
       } else {
         // trains on one side only (a terminal): the whole platform is theirs
         const f = Math.min(1, (w[s * 2] + w[s * 2 + 1]) / (2 * room)), bad = f >= 1 && hallFull ? 1 : 0;
-        c.set([f, f, bad, bad], s * 4);
+        c[s * 4] = f; c[s * 4 + 1] = f; c[s * 4 + 2] = bad; c[s * 4 + 3] = bad;
       }
     }
     // each dot's (T-228): its station's platforms; in a building, its fullest side against its own

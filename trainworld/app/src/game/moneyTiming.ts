@@ -49,7 +49,8 @@ export function between(per: PerHour, c: number[][] | null, u0: number, u1: numb
   for (let u = u0; u < u1;) {
     const day = Math.floor(u / 86400), k = kindOf(day);
     const s = (u - day * 86400) / 3600;
-    const p = PERIODS.findIndex((x) => s >= x.from && s < x.to);
+    let p = -1;
+    for (let q = 0; q < PERIODS.length; q++) if (s >= PERIODS[q].from && s < PERIODS[q].to) { p = q; break; }
     const P = PERIODS[p], a = day * 86400 + P.from * 3600, len = (P.to - P.from) * 3600;
     const end = Math.min(u1, a + len);
     const v = per(k, p);

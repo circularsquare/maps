@@ -20,7 +20,7 @@ import { lineRunFactor } from "./regionMoney";
 import { clockTime, trainKind } from "./format";
 import { boatOf, boatRunKm } from "./boats";
 import { hourSpan, PERIODS, periodAt } from "./periods";
-import { crowdColour, rgb } from "./palette";
+import { crowdColour, crowdRgb } from "./palette";
 import { tipEnds, tipStrip } from "../ui/tip";
 import { holidayOn, kindIn, lineCountry } from "./holidays";
 import type { Demand, LineInput, LineStats } from "./types";
@@ -105,10 +105,18 @@ function skewedLoad(per: ArrayLike<number>): number {
  * blue each, every stretch counting the same since the bar draws them equal) and 30% (`CROWD_SKEW`) the
  * colour of the skewed load, `skewedLoad`. */
 export function stretchColour(per: ArrayLike<number>): string {
-  const sum = [0, 0, 0], sk = rgb(crowdColour(skewedLoad(per)));
-  for (let k = 0; k < per.length; k++) rgb(crowdColour(per[k])).forEach((c, i) => (sum[i] += c));
-  return "#" + sum.map((c, i) => Math.round((1 - CROWD_SKEW) * c / Math.max(1, per.length) + CROWD_SKEW * sk[i]).toString(16).padStart(2, "0")).join("");
+  const sum = SUM_RGB, sk = SKEW_RGB, one = ONE_RGB;
+  sum[0] = sum[1] = sum[2] = 0;
+  crowdRgb(skewedLoad(per), sk);
+  for (let k = 0; k < per.length; k++) {
+    crowdRgb(per[k], one);
+    sum[0] += one[0]; sum[1] += one[1]; sum[2] += one[2];
+  }
+  let out = "#";
+  for (let i = 0; i < 3; i++) out += Math.round((1 - CROWD_SKEW) * sum[i] / Math.max(1, per.length) + CROWD_SKEW * sk[i]).toString(16).padStart(2, "0");
+  return out;
 }
+const SUM_RGB = [0, 0, 0], SKEW_RGB = [0, 0, 0], ONE_RGB = [0, 0, 0];
 
 /** T-2279: the Lines list's trains cell's load in period `p` from a line's `line_periods` numbers
  * (`stretchLoad` over each stretch's busiest hour then); null where `v` has no loads. */
