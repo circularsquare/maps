@@ -442,7 +442,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On an emulated iPad (NYC save, one solving worker that is the aux worker too, T-4103) a job just after the load's final takes its heap in use from 66 to 166 MB; the solve itself peaks at 66. A WASM memory keeps its highest size, so that stays all game. Which job was not traced.
   - Goal: That job named and its peak brought near the solve's, rail trips unchanged.
   - Other: notes/T-4370.md
-- T-4434 [P3] {L:memory} Page garbage while trains run
+- T-4434 [P3] {L:memory} Page garbage while trains run (taking, 2026-11-27, agent framegarbage)
   - Context: Safari collects late, so garbage piles up: with the clock running the web process swings about 240 MB on an emulated iPad after T-4370. Biggest allocators left: boarding queues and station crowds, speed colours made as text per bus point, text formatting each frame, the clock worker's money every 250 ms.
   - Goal: The running swing halved on the NYC save in WebKit, the map unchanged.
   - Other: notes/T-4370.md
@@ -511,10 +511,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4238 [P3] {L:timetables} Bus weekend rows run more often than weekdays on the same fleet
   - Context: Seen by the batch checker (11-24): a midtown bus line with 25 buses showed a 1 min headway on its weekend rows and 1.5 min on weekdays. May be right (shorter weekend trips) or a slip near T-4227's weekend share-out; not read yet.
   - Goal: The code says why, and it's fixed if it's a slip.
-- T-4435 [P2] {L:accounts-server} {after:T-3742 lands} Server save check for nudged rows
-  - Context: T-3742 raises the save level to 43 with a trailing LOF1 block (the rows a player nudged). The server calls a level 43 save "new" and skips its check, and its test pinning save.rs LEVEL fails once T-3742 lands.
-  - Goal: trainworld_savecheck.go knows level 43 and reads LOF1, with a test; deployed on your word before the next publish.
-  - Other: notes/T-3742.md
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; a currency shown differently per device. You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
   - Goal: The chosen currency is stored in each save, so every device shows a game in the currency it was saved in; old saves keep the device's choice (about 1-1.5 h).
@@ -1413,6 +1409,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
+- T-4506 [P1] {L:small-fixes} Smoke's patched rows check fails on an edge's cost (taking, 2026-11-27, agent edgecost)
+  - Context: Smoke on master 888dc9c73 logged "T-4214 check: the patched rows differ from the state's: edges 2: cost" on the real NYC save; the last passing smoke was b5697efed.
+  - Goal: The patch and the next state give every edge the same cost, and the check passes.
+  - Other: notes/T-4506.md
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.

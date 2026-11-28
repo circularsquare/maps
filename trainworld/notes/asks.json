@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-27-22",
+    "title": "Server deploy, save level 43",
+    "text": "Deploy shonei-server 07f5a75 (save check accepts level 43 and the LOF1 nudge block; needed before the next publish)? Recommended: yes, now.",
+    "since": "2026-11-27",
+    "by": "maps-dd"
+  }
+]

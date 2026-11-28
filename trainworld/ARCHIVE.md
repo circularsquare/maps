@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4435 [P2] {L:accounts-server} Server save check for nudged rows (2026-11-27): shonei-server save check learns level 43 and LOF1, commit 07f5a75 (not pushed or deployed) go vet and go test pass.
 - T-4450 [P2] {L:edit-speed} The train work's before and after reads by scope (2026-11-27): closed without code: T-4267 stage C6 dropped: T-4441 found every read it named under 1 ms on her Asia save (demand_view 0.7, cars_needed 0.8, the rest under 1 together); cars_needed and line_shift stay in T-4134. notes/T-4441.md.
 - T-4443 [P1] {L:edit-speed} Train work goes over only lines sharing track (2026-11-27): closed without code: T-4267 stage C1 dropped: T-4441 timed the settle's rounds at 4 ms of a trunk click's 152 ms train work on her Asia save; what scoping them would need is kept in notes/T-4267.md section 3. notes/T-4441.md.
 - T-4370 [P2] {L:memory} iPad games crash on big saves (2026-11-27): the peak is an edit's solve, garbage Safari collects late (emulated iPad in WebKit, NYC save): packDays and the train guard allocate far less, edit peak 2,432 -> 2,225 MB, rail trips unchanged; T-4433, T-4434 left.
