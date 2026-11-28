@@ -423,12 +423,13 @@ impl IntercityApi {
                     held[ws[x] as usize] = Some(h);
                 }
             }
-            // each destination station's route costs and fare km, as the unit's access list has them
-            let cols = |list: &[(usize, f32)], planned: bool| -> Vec<(&[f32], &[f32])> {
+            // each destination station's route costs, fare km and weight's log, as the unit's access list
+            // has them: made once a zone, read by all its pairs
+            let cols = |list: &[(usize, f32)], planned: bool| -> Vec<EndCol<'_>> {
                 list.iter()
-                    .map(|&(x, _)| {
+                    .map(|&(x, w)| {
                         let k = rs[x] as usize;
-                        (if planned && has_re[k] { &rec[k][..] } else { &rc[k][..] }, &kmc[k][..])
+                        (if planned && has_re[k] { &rec[k][..] } else { &rc[k][..] }, &kmc[k][..], (w as f64).ln())
                     })
                     .collect()
             };

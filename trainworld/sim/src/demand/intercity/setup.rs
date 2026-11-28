@@ -68,6 +68,8 @@ impl IntercityApi {
         if weighed {
             trip_km_on(g, st, dst, &g.rn_kmw, kw, dep);
         }
+        // the other nodes were needed to reach the stations, but only the stations are read and priced
+        col.truncate(g.n_st);
         if g.fare_curve.zones.is_empty() {
             for (i, v) in col.iter_mut().enumerate() {
                 let k = *v;
@@ -80,7 +82,7 @@ impl IntercityApi {
                 zw.run(g, st, dst, &self.fare_km, &g.rn_kmw, dep);
                 for (i, v) in col.iter_mut().enumerate() {
                     let k = *v;
-                    *v = self.fare_per_km * k * if weighed { fare_mul_of(k, kw[i]) } else { 1. } + if i < g.n_st { zw.extra(i) } else { 0. };
+                    *v = self.fare_per_km * k * if weighed { fare_mul_of(k, kw[i]) } else { 1. } + zw.extra(i);
                 }
             });
         }
