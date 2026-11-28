@@ -83,8 +83,8 @@ export function LoadBar({ fraction, step, thin, tip, quiet }: { fraction: number
 
 /** T-180: while a loaded game's clock waits for its first demand estimate, a card in the middle of
  * the map. Pointer events pass through it to the map, except on the bar (its hover), and once the
- * map and network are in and only trips remain (T-4346: STAGE_TEXT.demand), its header drags the
- * card anywhere in the window and its x closes it into the top status bar.
+ * map and network are in and only trips remain (T-4346: STAGE_TEXT.demand), a drag moves the card
+ * anywhere in the window and its x closes it into the top status bar.
  * T-677: the bunny's train on top (only here; the small statuses have their bar alone, T-2728). T-1194: it names the stage in hand (game/loadBar.ts), "Loading"
  * until the demand pool has a load to describe. */
 function LoadingCard() {
@@ -125,7 +125,7 @@ function LoadingCard() {
   const fraction = load?.fraction ?? 0;
   const left = load?.leftMs;
 
-  const onHeadDown = (e: PointerEvent) => {
+  const onDown = (e: PointerEvent) => {
     if (!canDismiss || e.button !== 0) return;
     const el = cardRef.current;
     if (!el) return;
@@ -134,14 +134,14 @@ function LoadingCard() {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     setDragging(true);
   };
-  const onHeadMove = (e: PointerEvent) => {
+  const onMove = (e: PointerEvent) => {
     const d = dragRef.current;
     if (!d || d.id !== e.pointerId) return;
     const x = Math.max(0, Math.min(window.innerWidth - d.w, d.origX + e.clientX - d.startX));
     const y = Math.max(0, Math.min(window.innerHeight - d.h, d.origY + e.clientY - d.startY));
     setPos({ x, y });
   };
-  const onHeadUp = (e: PointerEvent) => {
+  const onUp = (e: PointerEvent) => {
     const d = dragRef.current;
     if (!d || d.id !== e.pointerId) return;
     dragRef.current = null;
@@ -152,15 +152,14 @@ function LoadingCard() {
   const posStyle = pos ? { position: "fixed" as const, left: `${pos.x}px`, top: `${pos.y}px` } : undefined;
   return <div class={"loading-card-wrap" + (pos ? " dragged" : "")}>
     <div class="loading-card-pos" style={posStyle}>
-      <div class={"loading-card" + (canDismiss ? " movable" : "") + (dragging ? " dragging" : "")} role="status" ref={cardRef}>
-        <div class="loading-card-head" onPointerDown={canDismiss ? onHeadDown : undefined} onPointerMove={onHeadMove} onPointerUp={onHeadUp} onPointerCancel={onHeadUp}>
-          <BunnyTrain />
-          <p class="big">{step}</p>
-        </div>
+      <div class={"loading-card" + (canDismiss ? " movable" : "") + (dragging ? " dragging" : "")} role="status" ref={cardRef}
+        onPointerDown={canDismiss ? onDown : undefined} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
         {canDismiss && <button type="button" class="btn icon loading-card-close" aria-label={t("modal.close")}
           onPointerDown={(e) => e.stopPropagation()} onClick={() => dismissLoadingCard()}>
           <Icon.cross />
         </button>}
+        <BunnyTrain />
+        <p class="big">{step}</p>
         <LoadBar fraction={fraction} step={step} />
         <p class="load-left small muted num"><span>{Math.floor(fraction * 100)}%</span>{left != null && <span>{leftText(left)}</span>}</p>
       </div>

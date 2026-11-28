@@ -1668,7 +1668,7 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   no count could move). The percentage is only the bar's hover ("42% loaded"). The card has no
   Cancel (T-1236: a reload does the same). While loading the game and city data it takes no input
   but the bar's hover (a press elsewhere pans the map beneath). Once the map and network are in and
-  only trips are left to calculate (`STAGE_TEXT.demand`), its header drags the card anywhere inside
+  only trips are left to calculate (`STAGE_TEXT.demand`), a drag moves the card anywhere inside
   the window (not remembered between loads) and an x closes it into the top status tag ("Calculating
   trips here…" or "Calculating trips in N cities…" with the same filling bar) so the player can
   build while the clock stays held until the final lands [T-4346]. The card goes when the clock

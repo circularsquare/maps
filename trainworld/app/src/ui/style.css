@@ -1354,15 +1354,15 @@ body:has(.guide.open) .install-banner { display: none; }
 .loading-card-wrap { position: absolute; left: 0; right: 0; top: var(--bar-h); bottom: 0; z-index: 6;
   display: grid; place-items: center; padding: 16px; pointer-events: none; }
 .loading-card-wrap.dragged { z-index: 40; }
-.loading-card-pos { pointer-events: none; }
-.loading-card { position: relative; background: var(--bg); border: 1px solid var(--rule); padding: 14px 20px;
-  min-width: min(260px, 100%); max-width: 100%; text-align: center; }
-.loading-card.movable { pointer-events: auto; }
-.loading-card.movable .loading-card-head { cursor: grab; user-select: none; touch-action: none; }
-.loading-card.dragging .loading-card-head { cursor: grabbing; }
-.loading-card-close { position: absolute; top: 6px; right: 6px; width: 22px; min-width: 22px; height: 22px;
-  border-color: transparent; background: none; color: var(--muted); }
-.loading-card-close:hover { color: var(--text); background: var(--shade); }
+/* T-4346: the box a drag places, in window px (it is not zoomed). It holds the card's width and the card fills it: a
+   percentage on the card would be of this box's own shrink-to-fit width (T-4440). */
+.loading-card-pos { pointer-events: none; min-width: min(calc(260px * var(--ui, 1)), 100%); max-width: 100%; }
+.loading-card { position: relative; background: var(--bg); border: 1px solid var(--rule); padding: 14px 20px; text-align: center; }
+.loading-card.movable { pointer-events: auto; cursor: grab; user-select: none; touch-action: none; }
+.loading-card.dragging { cursor: grabbing; }
+.btn.icon.loading-card-close { position: absolute; top: 6px; right: 6px; width: 22px; min-width: 22px; height: 22px;
+  border-color: transparent; background: none; }
+.btn.icon.loading-card-close:hover { background: var(--shade); }
 .loading-card-close svg { width: 12px; height: 12px; }
 .loading-card p + p { margin-top: 2px; }
 /* T-1479: the share done at the bar's left end, the time left at its right */
