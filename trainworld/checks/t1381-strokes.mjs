@@ -4,12 +4,13 @@
 // removed, moved (the runs after an insert or removal are copied within the page's arrays, T-1509), the last few replaced (blueprint track), nothing changed, many added at once (past
 // the room after the last segment), everything removed, and a state the page dropped (the next is
 // whole). Each post goes through a real structured clone with its buffers transferred, and the
-// segments of every earlier network that the posts since did not write over must still be intact.
+// segments of every earlier network that the posts since did not write over must still be intact. T-4401:
+// `mergeNet` leaves the drawn network's arrays as they are until the merged one is drawn (`netIn`).
 //   node trainworld/checks/t1381-strokes.mjs [seeds]      (from the maps root)
 import { loadApp } from './lib.mjs';
 
-const { StrokeSender, mergeStrokes, planStrokes, strokesOfPieces, strokeRuns } = await loadApp(
-  "export { StrokeSender, mergeStrokes, planStrokes, strokesOfPieces } from '@app/src/map/strokePost.ts'; export { strokeRuns } from '@app/src/map/network.ts';");
+const { StrokeSender, mergeStrokes, planStrokes, strokesOfPieces, strokeRuns, mergeNet, netIn } = await loadApp(
+  "export { StrokeSender, mergeStrokes, planStrokes, strokesOfPieces } from '@app/src/map/strokePost.ts'; export { strokeRuns, mergeNet, netIn } from '@app/src/map/network.ts';");
 
 const SEEDS = Number(process.argv[2] ?? 40);
 let fails = 0, steps = 0;
@@ -138,6 +139,47 @@ const refusals = {
 if (!planStrokes('lines', own, { ...tailOf(2), count: 12 }, 'patch', ranges(10, 2))) { fails++; console.log('FAIL a post that fits was refused'); }
 for (const [what, f] of Object.entries(refusals)) if (f() !== null) { fails++; console.log(`FAIL a post with ${what} was taken`); }
 if (Array.from(own.seg).join() !== before.join()) { fails++; console.log('FAIL a refused post changed the arrays'); }
+
+// T-4401: a merged network's segments go into the last one's arrays only once it is drawn (`netIn`), since the page
+// draws the last one until then (a state held for its trips); two merged before either is drawn are written in order
+function netsCase(drawFirst) {
+  const send = { track: new StrokeSender(), lines: new StrokeSender() }, r = rng(drawFirst ? 11 : 12);
+  let serial = 0;
+  const post = (parts, last) => {
+    const n = { serial: ++serial, edgePts: new Map() }, counts = {};
+    const patch = last ? { base: last.serial, oldTrack: last.counts.track, oldLines: last.counts.lines, same: [], edgeIds: new Uint32Array(0), modes: {}, ranges: {}, moves: {} } : null;
+    for (const kind of ['track', 'lines']) {
+      const ps = parts[kind], c = ps.reduce((s, p) => s + p.strokes.count, 0);
+      const runs = last ? strokeRuns(ps, (p) => p.strokes.count, last.parts[kind]) : null;
+      const p = send[kind].post(kind, ps, c, runs, last ? last.counts[kind] : 0);
+      n[kind] = structuredClone(p.strokes, { transfer: [...new Set(p.buffers)] });
+      counts[kind] = c;
+      if (patch) Object.assign(patch, { [kind]: runs }), (patch.modes[kind] = p.mode), (patch.ranges[kind] = p.ranges), (patch.moves[kind] = p.moves);
+    }
+    if (patch) n.patch = patch;
+    return { n, serial: n.serial, counts, parts };
+  };
+  const fail = (why) => { fails++; console.log(`FAIL merged networks (${drawFirst ? 'each drawn' : 'the second drawn alone'}): ${why}`); };
+  const p0 = { track: Array.from({ length: 6 }, () => piece(r, 'track')), lines: Array.from({ length: 6 }, () => piece(r, 'lines')) };
+  // each edit puts a piece first, so every segment after it moves
+  const p1 = { track: [piece(r, 'track'), ...p0.track], lines: [piece(r, 'lines'), ...p0.lines] };
+  const p2 = { track: [piece(r, 'track'), ...p1.track], lines: [piece(r, 'lines'), ...p1.lines] };
+  const a = post(p0, null), b = post(p1, a), c = post(p2, b);
+  if (!mergeNet(null, a.n)) return fail('the whole one was refused');
+  const was = { track: strokesOfPieces('track', p0.track), lines: strokesOfPieces('lines', p0.lines) };
+  if (!mergeNet(a.n, b.n) || !mergeNet(b.n, c.n)) return fail('a patch was refused');
+  if (b.n.patch.modes.lines !== 'patch' || !b.n.patch.moves.lines.length) return fail(`the posts were not patches that move segments (${b.n.patch.modes.lines})`);
+  for (const kind of ['track', 'lines']) { const why = differs(a.n[kind], was[kind]); if (why) return fail(`the drawn network's ${kind} changed before the next was drawn: ${why}`); }
+  if (drawFirst) {
+    netIn(b.n);
+    for (const kind of ['track', 'lines']) { const why = differs(b.n[kind], strokesOfPieces(kind, p1[kind])); if (why) return fail(`the first drawn differs in ${kind}: ${why}`); }
+  }
+  netIn(c.n);
+  netIn(b.n);
+  for (const kind of ['track', 'lines']) { const why = differs(c.n[kind], strokesOfPieces(kind, p2[kind])); if (why) return fail(`the second drawn differs in ${kind}: ${why}`); }
+}
+netsCase(true);
+netsCase(false);
 
 for (const kind of ['track', 'lines']) {
   const s = seen[kind];

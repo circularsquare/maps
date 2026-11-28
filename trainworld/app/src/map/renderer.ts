@@ -31,7 +31,7 @@ import { ParkingLots } from "./parkingLots";
 import { BuildingFloors } from "./buildingFloors";
 import { TrainGuard } from "./trainGuard";
 import { LOT_BLUEPRINT, LOT_STRIDE } from "./facilityPlace";
-import { backBaseOf, F_BLUEPRINT, platformShapeAt, sampleValue, stationIndexOf, type NetPatch, type NetworkBuffers, type Strokes } from "./network";
+import { backBaseOf, F_BLUEPRINT, netIn, platformShapeAt, sampleValue, stationIndexOf, type NetPatch, type NetworkBuffers, type Strokes } from "./network";
 import { BEND_LIMIT, PHASE_ROOM, bendRows, blankSlots, checkSlots, phaseRows, phasesFromFirst, planSlots, putSlots, sampleRows, slottedLineTable, slottedMeta, trainNamesTest, type SlotLayout, type SlotNames, type SlotSrc, type SlotTex } from "./trainSlots";
 import type { EditTouched } from "../workers/protocol";
 import { aheadChevrons, aheadEmpty, aheadParts, joinStations, noAhead, standInStations, type AheadModel } from "./lineAhead";
@@ -699,6 +699,9 @@ export class NetworkRenderer {
    * changed, as the worker names them) */
   setNetwork(n: NetworkBuffers, touched?: EditTouched | null) {
     const gl = this.gl, t0 = performance.now();
+    // T-4401: this network's merged segments are written into the arrays it shares with the last one only now, as
+    // the last one is no longer drawn
+    netIn(n);
     this.dropPlaced(); // T-1407: the network drawn now has the segment its stand-in showed
     // (T-4145: what is drawn ahead was cleared by game/pending.ts just before, `setAhead`)
     // T-1028: an edit's network posted as changes to the one drawn keeps the strokes' unchanged runs

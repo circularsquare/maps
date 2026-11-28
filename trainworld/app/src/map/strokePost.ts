@@ -11,8 +11,8 @@
 // The page has to hold the whole arrays (picking, the pick grids, the renderer all read them), so
 // posting only the new runs and rebuilding the rest there would move the copy to the main thread.
 // A patch writes only where the last network has segments that the new one does not, and the new
-// network's arrays are views of the same buffers: so the last network is not to be read once its
-// successor is merged (`planStrokes`).
+// network's arrays are views of the same buffers: so the write waits until the page draws the new
+// network (`netIn`, map/network.ts), and the last network is not read after that (`planStrokes`).
 
 import { BAND_STRIDE } from "./lineBands";
 import type { Strokes, TrackStrokes } from "./network";
@@ -157,7 +157,7 @@ export class StrokeSender {
 }
 
 /** A set made whole from the one before it (`planStrokes`): `write` puts a patch's new segments into
- * the page's arrays, and is called only once every set of the network can be merged. */
+ * the page's arrays, and is called only once every set of the network can be merged and it is drawn. */
 export interface StrokeMerge {
   strokes: Strokes;
   write: () => void;

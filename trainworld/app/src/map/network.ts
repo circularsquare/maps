@@ -223,6 +223,8 @@ export interface NetworkBuffers {
   strokePieces?: Record<StrokeKind, StrokePiece[]>;
   /** `?patch=check` only: the strokes whole, which the merged ones are compared with (`mergeNet`) */
   checkStrokes?: Record<StrokeKind, Strokes>;
+  /** T-4401, the page only: the new segments `mergeNet` has yet to write, until the network is drawn (`netIn`) */
+  unwritten?: () => void;
 }
 
 /**
@@ -2317,8 +2319,8 @@ export function shiftNetCache(cache: NetCache, was: ReadonlyMap<number, Float32A
 /**
  * A network posted as changes (`NetPatch`) made whole from the one before it, `prev`, in place: the
  * fields left out taken from it (the run profiles from `service` when a train count came between),
- * its edges' points from both. False, changing nothing that matters, when `prev` is not the build the
- * changes are to.
+ * its edges' points from both; its new segments are written into the arrays it shares with `prev` when it
+ * is drawn (`netIn`). False, changing nothing that matters, when `prev` is not the build the changes are to.
  */
 export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service?: { phases: Float32Array; meta: Float32Array } | null): boolean {
   const p = n.patch;
@@ -2346,17 +2348,32 @@ export function mergeNet(prev: NetworkBuffers | null, n: NetworkBuffers, service
   const set = [...n.edgePts.keys()];
   const track = planStrokes("track", prev.track, n.track, p.modes.track, p.ranges.track, p.moves?.track), lines = planStrokes("lines", prev.lines, n.lines, p.modes.lines, p.ranges.lines, p.moves?.lines);
   if (!track || !lines) return false;
-  // nothing is written into the last network's arrays unless the whole network can be merged
-  track.write();
-  lines.write();
+  // T-4401: written only once `n` is drawn: until then the page still draws `prev` and reads its arrays (a state is
+  // held for its trips, T-648, or staged until a train count takes effect, T-1071), and what the renderer makes of
+  // them meanwhile (a zoom band's simplified copy) is carried into later networks. `prev`'s own write goes first.
+  const before = prev.unwritten, check = n.checkStrokes ? `${p.modes.track}/${p.modes.lines}` : null;
+  let done = false;
+  n.unwritten = () => {
+    if (done) return;
+    done = true;
+    n.unwritten = undefined;
+    before?.();
+    track.write();
+    lines.write();
+    if (check) checkMergedStrokes(n, check);
+  };
   for (const k of p.same) (n as unknown as Record<string, unknown>)[k] = from[k];
   n.edgePts = pts;
   // (the last build's ids out of order: not known, and `gone` cannot be trusted)
   if (ordered && prev.serial !== undefined && gone.length + pts.size === prev.edgePts.size + set.filter((id) => !prev.edgePts.has(id)).length) n.edgeStep = { base: prev.serial, set, gone };
   n.track = track.strokes;
   n.lines = lines.strokes;
-  if (n.checkStrokes) checkMergedStrokes(n, `${p.modes.track}/${p.modes.lines}`);
   return true;
+}
+
+/** T-4401: network `n` is drawn from now on, its strokes written into the arrays it shares with the last (`mergeNet`) */
+export function netIn(n: NetworkBuffers) {
+  n.unwritten?.();
 }
 
 /** `?patch=check`: the strokes as merged against those the worker made whole beside them (T-1381). */
