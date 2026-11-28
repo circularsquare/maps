@@ -1,18 +1,19 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 456cd30a-32f0-442b-89be-51ca3ca2e13e, name maps-d2, since 2026-11-28 03:54 UTC
-Updated: 2026-11-28 03:54 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-28 04:40 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word 11-27 22:42 her time: "lets also set core cap to 10 for a while").
 
 ## Next
 1. Work order (her 11-27): real bug fixes and regular chores first; solve speed and memory where possible; track rework toward the release 1 merge (before new modes); modes (T-4479-T-4498) after. Edit-speed work stops at 50 ms an action.
 2. Track rework: tracksync is merging master into tw/track (_track, levels to 44+, checklist in notes/T-3444-design/10-build-plan.md "The 11-28 sync"). Then T-4037 g3b (with T-4518: a click still picks between stations, her yes), then the release 1 list; crash round T-4519 and Asia edit bench T-4521 are gates before the merge.
-3. Train shifting (T-4511, stages T-4543-T-4560, about 29 h): T-4543 waits on her ask (land stages switched off on master). T-4514's real-gap waits sit in tree realgaps (not landed; its agent is at 570k, follow-ups go to a fresh one). prs agent: PR table + reply drafts to notes/prs-2026-11-28.md, replies are hers to see first. copysel (T-1447): design then build; saves review before landing.
+3. Train shifting (T-4511, stages T-4543-T-4560, about 29 h, each landing switched off until T-4559; her 11-27 yes): T-4543 landed 11-28, T-4544 next. T-4250 smooth fade (her yes) in tree smoothfade. PRs: six landed (T-4561), 41 and 42 held, 45/46 Turkey run is P3 (T-4562); the six's comments posted 11-28; close each with a link after the next open-source sync (notes/prs-2026-11-28.md).
 4. Server deploy waits for "more things in": shonei-server 07f5a75 + 3a8e65c (save level 43 with weekend offsets), unpushed; ask when a publish nears. Owed: 1 edit_bench + 1 perf_bench NYC on master, batch Gemini review before release.
 5. Country run (her 11-27, slow): Uzbekistan running, PID 30372, 3 cores "countryrun", log artifacts/trainworld/countryrun-uz-run.log, plan notes/country-plan-2026-11-28.md (8 batches). It owns data/packs from its first gate register until the join: snap8800 with the freeze. Join waits to go with Kazakhstan (needs 6 cores). Her 11-27: pause after batch 4 (the Levant and Yemen). Stop: data/work/world_run/STOP.
 6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
+- 11-27 23:00-23:37 her time: chores' last run is stamped on their lines in docs/orchestrator.md (her idea); smooth fade for T-4250 yes (DECISIONS); hold PR 42 and 41 (one-way pairing was "not a priority", never a rule: DECISIONS reworded); PR 45 "can do it eventually".
 - 11-27 21:16-21:33 her time: track rework before new modes (DECISIONS); catch up tw/track, Gemini on it and the plan; crash testing all at once near release, not before; easy tasks to cut the count (notes/task-sweep-2026-11-28.md).
 - 11-27 20:55 her time, nudges: players shift trains to space interlined lines evenly ("not one train A then a train B 2 minutes later, then like 20 minutes until the next train A"); "it would be cool if [ridership responded] ... but if it introduces lots of cost we dont have to do it in full weight way". T-4511: weekday/weekend switch yes, build now yes.
 - 11-27 20:14: pause edit-speed work under 50 ms an action (DECISIONS); server deploy (07f5a75, 3a8e65c) once more is in.

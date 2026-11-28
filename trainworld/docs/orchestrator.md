@@ -111,7 +111,7 @@ the other Claude login when this one runs low (notes/T-4424.md).
 - **Player requests**: once a day and when she pastes reports, `board/requests.py fetch`, then `requests.py
   sort-brief` to a scratch file for a Sonnet sorting agent (procedure, her Accept, Merge, Dismiss and Comment:
   notes/T-3391.md "Stage 3"). Groups clearly done or duplicates are settled without her (a new design decision still
-  goes to her); say which.
+  goes to her); say which. Last run: 2026-11-28 04:05 UTC; update it when you run it.
 - Images she should look at now (one or two): copy to `artifacts/trainworld/review/`, short names, older copies
   deleted, and give her that full path.
 
@@ -168,8 +168,10 @@ checks (smoke, perf_bench, strings) current meanwhile; after a big batch of land
   otherwise.
 - Lost games: `tools/ops/restore_game.py`; every `--yes` needs her yes for that player.
 - Daily: `tools/ops/check_resources.py` (read-only, about 2 minutes); every flagged line (OVER, HIGH, SOON, MISSING)
-  goes in that day's report to her with what docs/ops-checks.md says to do.
-- **Non-default settings check** (T-4426): after cpu, memory, loading or worker changes, about weekly, at most daily.
+  goes in that day's report to her with what docs/ops-checks.md says to do. Last run: 2026-11-28 03:57 UTC; update it
+  when you run it.
+- **Non-default settings check** (T-4426): after cpu, memory, loading or worker changes, about weekly, at most daily. Last run: never;
+  update it when you run it.
 - **Gemini for adversarial review only** (her 11-27), at release prep and on every big design before it's built
   (11-24): `tools/gemini_audit.py --brief <file> --out <file>` (Gemini 4 Neon medium, her pick). The brief names a
   diff file under artifacts/trainworld/gemini/ and the task's Goal: "try to break it". The agent acting on a finding
@@ -194,7 +196,8 @@ checks (smoke, perf_bench, strings) current meanwhile; after a big batch of land
 - Staging only some hunks of a file: `checks/keep_hunks.py`. Of a JSON file: parse the staged blob (`git show
   :<path>`) first; a line-level stage can put keys after the closing brace.
 - Files copied back after a source swap keep old mtimes, so cargo and wasm-pack skip the rebuild: touch them.
-- A world run's gates serve the main tree's app/ live: hold app/ writes during gates.
+- A world run's gates serve a frozen copy of app/ made at each chunk's start (T-2298): app/ and WASM landings need no
+  hold.
 - Run `date` before writing a time in the handoff (guesses run 1-2 h ahead). Two sessions can share a name: message by
   id.
 - Recount what a change touches before landing; an agent's estimate can miss it.

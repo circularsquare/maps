@@ -3,3 +3,6 @@
 - T-4510: one of two timed lines released alone, or a pair timed later, averages that pair on weekends only (saves fine).
 - T-4510: on a weekday-pattern line with a weekday offset, the weekend row shows its own step, not what runs (weekday +90 s, weekend +30 s shows +30, runs +120).
 - T-4510: a build from before T-4510 misreads a save with weekend holds instead of refusing it (rollback only).
+- T-1447: SavesPanel.tsx removeGroup and StartMenu.tsx DeleteAsk onYes call deleteClipsOf even when deleteVersions refused (the game stays, its waiting copied blueprint is gone silently); await the delete and clear clips only when it returned no refusal.
+- T-1447: slots.ts pastedClips is one list for the worker, not per slot: a paste whose autosave never ran (slot taken by another tab, writeBlock) is deleted by the next game's autosave, so that game loses its waiting blueprint; key the list by slot or empty it on leave.
+- T-1447: slots.ts autosave deletes the clip after the write with a fire-and-forget deleteClips; a page closed in that gap re-pastes at next load (overlap refuses it unless the player removed the pasted pieces meanwhile, then they come back).

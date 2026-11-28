@@ -14,6 +14,10 @@ tasks (except those an open task or the handoff cites) live in `notes/archive/` 
 
 ## World and countries
 Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pipeline: notes/T-535.md "Stages".
+- T-4562 [P3] {L:region-redraws} Ankara takes in Sincan
+  - Context: You, 11-27, of open-source PR 46: "looks like it makes sense". Sincan's zone (Etimesgut, Sincan) cuts through Ankara's west side. As written Ankara fails its gate (pop_vs_fua 1.70); with Sincan's urban area added it passes at 1.18. Spec and dry run ready; needs a data run. PR 45's Turkey figures can ride along.
+  - Goal: sic retired into ank and shipped after the Turkey join, PR 46 credited; PR 45 in the same run if taken.
+  - Other: notes/T-4562.md
 - T-3706 [P4] {L:new-countries} Venezuela's trips to Caracas look low
   - Context: Discord bug-reports 2026-11-18 (lekker puh): Venezuela intercity travel "should be boosted", most of all the Valles del Tuy cities (Charallave, Cúa, Ocumare) to Caracas, less the Altos Mirandinos. You, 11-18: "no need to worry about the venezuela intercity demand yet, thats fine tuning we can do later".
   - Goal: Compared with any published commute or travel figure for those pairs; a fix proposed to you if one is clearly off, else recorded as within the worldwide rule.
@@ -184,7 +188,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 11 (tree stage11) redid train speeds only along a cut line's changed stretch; the bands' last step (profile, records and tables copied whole per cut line, 10-15 ms on Asia) was not started.
   - Goal: Copies in the bands' last step cover only the cut stretch; figures unchanged.
   - Other: notes/T-4153.md "Stage 11"
-- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5 (taking, 2026-11-27, agent pagestage5)
+- T-4284 [P1] {L:edit-speed} The page redoes only what an edit changed, stage 5
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
   - Other: notes/T-4150.md "Stage 4" and "Left"
@@ -192,10 +196,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Paused: already under 50 ms (her 11-27). From T-4284: after each edit, in idle time, the page's upkeep shares go over every edge, station and bus route point (3.5-6.3 ms on your Asia save), and the region shares post their whole table.
   - Goal: Under 0.5 ms an edit on Asia.
   - Other: notes/T-4150.md "Left"
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
-  - Context: Stage 3 landed 11-25: the panels' `today` with the clock running costs 3-6 ms on your Asia save (was about 107). Click run on Asia: first 46 ms, later 37, 170, 272. Left: which follow-up piece later clicks wait behind (no per-click laps yet); the page's click hold stays (unsafe to drop).
-  - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
-  - Other: notes/T-4281.md
 - T-4431 [P1] {L:edit-speed} A station's owed settle costs its lines' whole length
   - Context: From T-4281: a later click on your Asia save waits behind the click before's owed settle, 105-200 ms natively for a station on a three-line, 1,000 km trunk: capacity rebuilt along the whole lines (weekdays and weekends), their timetables (about 40 ms), passing plans worked out again from empty memos.
   - Goal: A station's owed settle costs the stretch around it; under 40 ms natively on the click run's trunk.
@@ -336,7 +336,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4359: a load adds each zone viewed while it runs and keeps it open until the load ends (Lantian 208 s in your session); a game load's card still does. At a save's load the default zone (New York) kept a "Loading city data" bar for 7 s after the view left it.
   - Goal: A zone viewed during a load opens and closes on its own.
   - Other: notes/T-4359.md
-- T-4424 [P2] {L:checks} Second Claude account (taking, 2026-11-27, agent claude2)
+- T-4424 [P2] {L:checks} Second Claude account
   - Context: You, 11-27: "i think i'll get a second claude subscription." Set up 11-27: the claude2 command, the .claude-2 folder, shared maps memory, tools look in both folders, next_orchestrator.py --account 2. Logged in 11-27; sessions on the two accounts do not see each other (no messages between them). Left: memory check from a claude2 session.
   - Goal: A claude2 session in maps uses the shared memory and your global CLAUDE.md.
   - Other: notes/T-4424.md
@@ -480,9 +480,8 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4242 [P2] {L:timetables} {after:loads are faster} Weekend riders follow weekend trains
   - Context: You, 11-25: decide once loads are faster (it makes loads 45-55% longer where weekends differ). A player, 11-24: a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
-- T-4250 [P2] {L:route-choice} {waits:Anita} A short line beside a crowded long one stays empty
-  - Need from Anita: Try a smooth fade of the dearer line's share in place of today's cliff, judged on an NYC figure diff? I'd say yes.
-  - Context: A player (11-25): relief line B near 60% while long line A stays over 130%. Gemini read the code: riders inside B split by frequency and keep A's full share until A is dearer by half B's headway, then drop to none; round 0's uncrowded split also keeps a quarter.
+- T-4250 [P2] {L:route-choice} A short line beside a crowded long one stays empty (taking, 2026-11-27, agent smoothfade)
+  - Context: A player (11-25): relief line B near 60% while long line A stays over 130%. You said yes 11-27 to a smooth fade of the dearer line's share in place of the cliff. Gemini read the code: riders inside B split by frequency and keep A's full share until A is dearer by half B's headway, then drop to none; round 0's uncrowded split also keeps a quarter.
   - Goal: Riders whose trip fits B move to it as A fills; NYC lines within 1% or the shift to you.
   - Other: notes/T-4250.md (Gemini, not yet checked by a Claude agent)
 - T-4245 [P3] {L:timetables} Timetables for bus and ferry lines
@@ -534,7 +533,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3875 [P3] {L:cleanup} {after:T-2374 and T-3873} Cut code-map.md to one line per file
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
-- T-3160 [P2] {L:memory} Phone memory on real-network starts
+- T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-27, agent phonemem)
   - Context: On the Tokyo real-network start on an emulated iPhone the solving worker's WASM is now 261 MB (330 before stage 6, figures identical). Left: the page (about 200), the clock worker (170) and the worker's held results (142). You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones."
   - Goal: The next biggest of those cut, rail trips unchanged, measured on a production build on an emulated iPhone.
   - Other: notes/T-3160.md, stage 6.
@@ -664,6 +663,17 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4563 [P2] {L:checks} A stop hook hides the message meant for Anita
   - Context: You, 11-28: "when you send a message and then a stop hook happens, i can't read the message / it gets hidden, though i think its meant for me." The hook's note makes the orchestrator reply again, and focus view shows only that last reply.
   - Goal: A stop hook's note never buries the orchestrator's last message to you (the note waits for the next turn, or the reply repeats what it said).
+- T-4566 [P3] {L:station-placement} A station building with no track left can't be demolished
+  - Context: A phone player, 11-27 (g175): buildings don't resize by dragging, a long press removes one corner, and a building can't be demolished once its tracks are deleted, which leaves it stuck.
+  - Goal: A building left without track can be demolished on a phone.
+  - Other: notes/requests-sort-2026-11-28.md
+- T-4567 [P2] {L:route-choice} Riders walk farther to take an extra train leg (taking, 2026-11-27, agent walkleg)
+  - Context: Discord bug-reports, 11-27 (player arcades): riders walk farther to take a whole extra train leg, which looks quite wrong (you, 11-27: "prob worth looking into"). A French player, 11-27 (g205): riders change between far-apart stations, ignoring a closer station or a transfer tunnel; "did not do this before".
+  - Goal: The cause found; riders take the closer station or fewer legs where that is quicker, or the rule that sends them is named.
+  - Other: notes/requests-sort-2026-11-28.md
+- T-4568 [P3] {L:timetables} Headways from train count disagree between periods
+  - Context: A French player, 11-27 (g183): on some lines the headway worked out from the train count differs between periods; "did not do this before". One report, maybe T-4238.
+  - Other: notes/requests-sort-2026-11-28.md
 - T-4518 [P2] {L:track-rework} Picking track between stations
   - Context: You, 11-27: yes, a click still picks between two stations. From T-4037 g3b: with stations off the track, a click picks the whole stretch from junction to junction, so making the part between two stations single, raised or one way would need a joint first. Today players pick between stations.
   - Goal: The stretch between two stations made single, raised or one way in one edit and one undo.
@@ -1092,15 +1102,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
   - Other: research/late-game-spending.md C.
-- T-4511 [P2] {L:timetables} Single trains, minimum gap and auto-space (taking, 2026-11-27, agent shiftplan)
+- T-4511 [P2] {L:timetables} Single trains, minimum gap and auto-space
   - Context: Your 11-27: single-train moves, a 90 s minimum gap between lines at shared stops and an auto-space option per line land in one release with the real-gap waits (T-4514). Design updated 11-28: about 29 h in 18 stages, T-4543 to T-4560, each landing switched off until T-4559.
   - Goal: All 18 stages landed and switched on; closes with T-4560.
   - Other: notes/T-4511.md
-- T-4543 [P2] {L:timetables} {waits:Anita} Real-gap waits onto master switched off
-  - Need from Anita: OK to put T-4514 on master switched off, so players see nothing of it until T-4559 switches everything on? I'd say yes.
-  - Context: Stage 1 of 18 (T-4511). T-4514 is built in the realgaps tree and held off master (your 11-27). Behind a switch, figures stay as they are until T-4559; the alternative, a branch until the end, costs about 2-4 h of merges.
-  - Goal: Master's figures to the bit with the switch off, T-4514's tests passing with it on. About 1 h.
-  - Other: notes/T-4511.md "Stages"
 - T-4544 [P2] {L:timetables} {after:T-4543} Single-train moves through the timetable
   - Context: Stage 2 of 18 (T-4511). Each line gets a list of moved departures beside its pattern, which everything that reads the timetable applies; the 90 s gap and auto-space write to the same list.
   - Goal: One departure moves and nothing else does; a game with no moves runs bit for bit as before. 2-2.5 h.
@@ -1302,9 +1307,6 @@ Anita's TODO.md short term, filed 2026-10-27 (night).
 - T-3862 [P4] {L:real-networks} Make a custom fake city
   - Context: Your TODO.md, 11-20, from player suggestions: "make custom fake city". Design for you first.
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
-- T-1447 [P2] {L:track-drawing} Copy a selection into another save as a blueprint (taking, 2026-11-27, agent copysel)
-  - Context: You, 11-27 (players ask): select with the Select tool, a Copy button opens a version of the save menu listing your other saves, and the selection goes into the picked save as a blueprint, constructed there with money. Tooltip: "Copy selection into another save as a blueprint".
-  - Goal: A short design (how the target save takes it without being open, ids, levels, the track rework's format), then built.
 - T-3860 [P4] {L:track-drawing} Building demolition cost
   - Context: Your TODO.md, 11-20, from player suggestions: "building demolition cost". Design for you first.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
