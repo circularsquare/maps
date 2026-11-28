@@ -1238,3 +1238,34 @@ fn an_exact_stop_beside_a_station_stays_a_plain_stop_through_a_redraw_and_a_save
     assert_eq!(a.set_bus_stop(b, at[1], at[2], false), 0);
     assert!(!a.save().windows(4).any(|w| w == b"LBE1"));
 }
+
+#[test]
+fn undoing_a_redraw_puts_the_stops_back_where_they_were() {
+    // T-4091: a by-hand line 90 m beside a station pair, its route bent and the bend undone
+    let bits = |a: &TrackApi, b: u32| stops(a, b).iter().flatten().map(|v| v.to_bits()).collect::<Vec<_>>();
+    let route_bits = |a: &TrackApi, b: u32| a.bus_route(b).iter().map(|v| v.to_bits()).collect::<Vec<_>>();
+    let mut a = api();
+    rail(&mut a, 6, 1700.0);
+    let b = a.new_line_id();
+    assert_eq!(a.set_bus_line(b, &[-500.0, 90.0, 1.0, 7300.0, 90.0, 3.0], 480, 600, 1200, 30.0, 120.0, 0, "Hand".into()), 0, "{}", a.issues());
+    assert_eq!(a.set_bus_hand(b), 0);
+    for x in [1700.0, 3400.0, 2500.0] {
+        assert_eq!(a.set_bus_stop(b, x, 90.0, true), 0, "{}", a.issues());
+    }
+    assert_eq!(a.set_bus_stop_exact(b, 1830.0, 90.0), 0, "{}", a.issues());
+    let kinds: Vec<u8> = stops(&a, b).iter().map(|c| c[4] as u8).collect();
+    assert_eq!(kinds, vec![KIND_END, KIND_STATION, KIND_MIDDLE, KIND_MIDDLE, KIND_STATION, KIND_END]);
+    let (was, was_route) = (bits(&a, b), route_bits(&a, b));
+    for bend in [4.0, 60.0] {
+        assert_eq!(a.set_bus_route(b, &[-500.0, 90.0, 1.0, 2600.0, 90.0 + bend, 1.0, 7300.0, 90.0, 3.0]), 0, "{}", a.issues());
+        let moved = bits(&a, b);
+        assert_ne!(moved, was, "a bend moves the station stops");
+        assert_eq!(a.undo(), 0, "{}", a.issues());
+        assert_eq!(route_bits(&a, b), was_route);
+        assert_eq!(bits(&a, b), was, "{bend} m bend undone: {:?}", stops(&a, b));
+        assert_eq!(a.redo(), 0, "{}", a.issues());
+        assert_eq!(bits(&a, b), moved);
+        assert_eq!(a.undo(), 0, "{}", a.issues());
+        assert_eq!(bits(&a, b), was);
+    }
+}
