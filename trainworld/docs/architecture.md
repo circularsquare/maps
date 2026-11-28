@@ -203,10 +203,11 @@ Web first, so it can be shared as a link.
   track it runs over gone) comes with its paths, laid on its row so the edges say what runs on them [T-4214 stage A].
   None is sent when a line is new, gone, starts or stops running or stops elsewhere, for a service edit or a rename, when
   everything was touched (a load), past the cap, or with the draw anchor moving. Ground that lands outside an edit (a
-  road tile, a terrain block, a water mask) and re-prices an edge the last patch laid sends the patch again, with the
-  station names' message ("outside"), so the patches and the state after them agree [T-4506] (clockPatch.ts
-  `patchOutside`). Each state read makes the same test first, since a road tile prices track as it lands while its
-  burst's patch waits for the burst's end [T-4534].
+  road tile, a terrain block, a water mask) and re-prices an edge a patch laid since the last state posted sends the
+  patch again with those edges, with the station names' message ("outside"), so the patches and the state after them
+  agree [T-4506] (clockPatch.ts `patchOutside`). Each state read makes the same test first, since a road tile prices
+  track as it lands while its burst's patch waits for the burst's end [T-4534]; since the last state posted, not the
+  last read, as a read whose state was dropped for an edit between its pieces leaves the page its patches [T-4363].
   A station or delete clicked on the map (`edit`'s "click") whose edit was patched and cost nothing is answered right
   after its word; any other edit once `world` holds it, as before; a paid one after its state, whose world its money's
   split is read off. **A station or a track delete is applied from what it touches** [T-4272]: a station placed or removed,

@@ -18,24 +18,29 @@ import { send } from "./clockState";
 export const PATCH_MAX = 2000;
 const ALL = 0xffffffff;
 
-/** The patch for the model as it is now, or undefined (why: `patchMiss`). */
-export function mapPatch(api: TrackApi): MapPatch | undefined {
+/** The patch for the model as it is now, or undefined (why: `patchMiss`). `extra`: edges to carry besides those the edits
+ * since the last state read touched (`patchOutside`'s, which the page may hold patched from before that read). */
+export function mapPatch(api: TrackApi, extra: readonly number[] = []): MapPatch | undefined {
   patchMiss = "";
   if (!rowsCanGo()) return void (patchMiss = "no network posted, or the anchor moving");
   const t = api.peek_touched();
   if (t[0] === ALL) return void (patchMiss = "everything touched");
   const ne = t[0];
-  if (t.length - 1 > PATCH_MAX) return void (patchMiss = `${t.length - 1} records`);
+  if (t.length - 1 + extra.length > PATCH_MAX) return void (patchMiss = `${t.length - 1 + extra.length} records`);
   // (a line's other figures, a timetable a settle moved, stay the last state's in the page until its state, as before)
   const lines = movedPaths(api);
   if (typeof lines === "string") return void (patchMiss = lines);
-  const edgeIds = t.subarray(1, 1 + ne), nodeIds = t.subarray(1 + ne);
+  const touchedE = t.subarray(1, 1 + ne), nodeIds = t.subarray(1 + ne);
+  const edgeIds = extra.length ? Uint32Array.from(new Set([...touchedE, ...extra])).sort() : touchedE;
   const { edges, nodes } = stateRows.touchedRows(api, rowEnv, edgeIds, nodeIds);
-  laidCost = new Map(edges.map((e) => [e.id, e.cost]));
   const liveE = new Set(edges.map((e) => e.id)), liveN = new Set(nodes.map((n) => n.id));
+  const goneEdges = Array.from(edgeIds).filter((id) => !liveE.has(id));
+  const held = laid();
+  for (const e of edges) held.set(e.id, e.cost);
+  for (const id of goneEdges) held.delete(id);
   return {
     edges, nodes,
-    goneEdges: Array.from(edgeIds).filter((id) => !liveE.has(id)),
+    goneEdges,
     goneNodes: Array.from(nodeIds).filter((id) => !liveN.has(id)),
     pts: edges.map((e) => drawnEdgeNow(api, e.id).slice()),
     anchor: anchor().version,
@@ -86,23 +91,34 @@ const same = (a: ArrayLike<number>, b: ArrayLike<number>) => {
 /** why the last `mapPatch` gave none ("" when it gave one), for the edit's answer */
 export let patchMiss = "";
 
-/** each edge's price as the last patch gave it */
-let laidCost = new Map<number, number>();
+/** T-4363: each edge's price as the patches sent since the last state posted gave it, the newest last: the page holds
+ * them all until it takes the next state, a read whose state never went (its follow-up's job dropped for an edit between
+ * its pieces, clockFollowUp.ts `standAside` and `later`) included, while the touched list and `patchedSince` start again
+ * at every read */
+const laidCost = new Map<number, number>();
+let laidPosts = -1;
+function laid(): Map<number, number> {
+  if (laidPosts !== posted.posts) { laidCost.clear(); laidPosts = posted.posts; }
+  return laidCost;
+}
 
 /** T-4506: after ground lands outside an edit (a road tile, a terrain block, a water mask re-price the track over it),
- * and (T-4534) as a state read begins, the patch again when an edge the last patch laid has another price now, so the
- * page's map and its patches hold it as the next state reads it. A state read must come after it: the read clears
- * what the page holds patched, and a road tile prices track as it lands while its burst's call here waits for the
- * burst's end. None while no patch read rows since the last state read (the next state brings the change), nor when
- * no laid edge's price moved (a road tile beside the new track, or re-pricing track the patch did not lay). */
-export function patchOutside(api: TrackApi) {
-  if (!stateRows.patchedSince) return;
+ * and (T-4534) as a state read begins (`read`), the patch again, with the edges laid since the last state posted whose
+ * price moved since, so the page's map and its patches hold them as the next state reads them. A state read must come
+ * after it: a road tile prices track as it lands while its burst's call here waits for the burst's end. Outside a read,
+ * none while no patch read rows since the last read began (that read's state is still to go, and brings the change,
+ * or it was dropped and the next read tests); none when no laid edge's price moved (a road tile beside the new track,
+ * or re-pricing track no patch laid). */
+export function patchOutside(api: TrackApi, read = false) {
+  if (!read && !stateRows.patchedSince) return;
+  const held = laid();
+  if (!held.size) return;
+  const moved: number[] = [];
   if (api.peek_touched()[0] !== ALL) {
-    const ei = api.edges_info_of(Uint32Array.from(laidCost.keys()));
-    let moved = false;
-    for (let i = 0; i < ei.length && !moved; i += 10) moved = laidCost.get(ei[i]) !== ei[i + 6];
-    if (!moved) return;
+    const ei = api.edges_info_of(Uint32Array.from(held.keys()));
+    for (let i = 0; i < ei.length; i += 10) if (held.get(ei[i]) !== ei[i + 6]) moved.push(ei[i]);
+    if (!moved.length) return;
   }
-  const patch = mapPatch(api);
+  const patch = mapPatch(api, moved);
   send({ kind: "outside", ...(patch ? { patch } : {}) });
 }

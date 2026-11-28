@@ -466,8 +466,9 @@ function buildState(rowsOnly = false): ClockState {
   StateRows.alternate = patchMode === "check";
   // (with `?patch=walk` a rows state is built as a full one, as before)
   rowsOnly &&= StateRows.bounded;
-  // T-4534: ground that re-priced patched track with no patch since (a road tile mid-burst) is patched again first
-  patchOutside(a);
+  // T-4534: ground that re-priced patched track with no patch since (a road tile mid-burst) is patched again first;
+  // T-4363: any laid since the last state posted, a read dropped since included
+  patchOutside(a, true);
   stateRows.begin(a, rowsOnly ? { rect: viewRect() } : undefined);
   if (patchMode === "check") {
     const [n, e] = stateRows.regions.counts(), ni = a.nodes_info().length / 10, ei = a.edges_info().length / 10;

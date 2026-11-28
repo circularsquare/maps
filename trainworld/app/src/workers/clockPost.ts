@@ -169,6 +169,8 @@ export const posted = {
   edgeIds: [] as number[], nodeIds: [] as number[], lineIds: [] as number[],
   /** T-4291: the first rows read (workers/rowLog.ts) the client has not had, once a state was posted */
   read: undefined as number | undefined,
+  /** T-4363: the states posted: the page holds the patches sent since the last (clockPatch.ts `laid`) */
+  posts: 0,
 };
 export const sender = new StrokeSender();
 export function postWhole() {
@@ -460,6 +462,7 @@ function listsPosted(s: ClockState) {
  * (T-648, T-1029: copying them to the main thread and back into objects was most of a state's time
  * there on a big network). */
 export function postState(s: ClockState, transfer: Transferable[]) {
+  posted.posts++;
   const read = s.rowsRead;
   delete s.rowsRead;
   if (patchMode === "0" || !posted.edgeIds.length && !posted.nodeIds.length && !posted.lineIds.length) {
