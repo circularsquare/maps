@@ -59,6 +59,27 @@ interface Label {
   oy?: number;
 }
 
+/** Labels set aside to be used again, by their text and look. Several can share a key (the buildings of one complex
+ * all show its name), and every one not taken leaves the DOM: one left behind stays on the map where it was last
+ * placed (T-4229). */
+class Spares<L extends Label> {
+  private by = new Map<string, L[]>();
+  put(key: string, l: L) {
+    const v = this.by.get(key);
+    if (v) v.push(l);
+    else this.by.set(key, [l]);
+  }
+  take(key: string): L | undefined {
+    return this.by.get(key)?.pop();
+  }
+  drop() {
+    for (const v of this.by.values()) for (const l of v) l.el.remove();
+    this.by.clear();
+  }
+}
+
+const spareKey = (l: Label) => l.el.className + "\u0000" + (l.name ?? l.el.textContent);
+
 const GAP = 10; // px from the station centre
 const BUS_GAP = 7; // px from a bus stop's dot
 /** more stations than this named unlike every label drawn wait for the paint (T-1357) */
@@ -84,6 +105,8 @@ export class StationLabels {
   private shadowKey = "";
   private placedMatrix: number[] | null = null;
   private placedSize: [number, number] = [0, 0];
+  /** the draw anchor's version at the last full placement: a new anchor moves every local position, so it is no pan */
+  private placedAv = -1;
   private anchor: [number, number] = [0, 0];
   private needsPlacement = true;
   /** the `hidden.v` the names were last placed for: a station hidden or shown places them again (T-4400) */
@@ -171,21 +194,22 @@ export class StationLabels {
     const key = named?.size ? [...named].map(([id, name]) => { const s = stops.get(id); return `${id}:${name}:${s?.lng}:${s?.lat}`; }).join("|") + `@${anchor().version}` : "";
     if (key === this.busKey) return;
     this.busKey = key;
-    const spare = new Map(this.busLabels.map((l) => [l.name + "~" + l.x + "," + l.y, l]));
+    const spare = new Spares<Label>();
+    for (const l of this.busLabels) spare.put(l.name + "~" + l.x + "," + l.y, l);
     this.busLabels = [];
     for (const [id, name] of named ?? []) {
       const s = stops.get(id);
       if (!s) continue;
       const [x, y] = toLocal(s.lng, s.lat), k = name + "~" + x + "," + y;
-      const old = spare.get(k);
-      if (old) { spare.delete(k); this.busLabels.push(old); continue; }
+      const old = spare.take(k);
+      if (old) { this.busLabels.push(old); continue; }
       const el = document.createElement("div");
       el.className = "stn-label bus";
       el.textContent = name;
       this.plane.appendChild(el);
       this.busLabels.push({ el, name, x, y, below: false, w: 0, h: 0 });
     }
-    for (const l of spare.values()) l.el.remove();
+    spare.drop();
     this.needsPlacement = true;
   }
 
@@ -245,12 +269,13 @@ export class StationLabels {
    * whose text and look are unchanged keeps its element and measured size (T-496): a new station
    * then costs one new element, not a rebuild and a layout of every name. Shown labels never
    * overlap, so their order in the DOM draws nothing differently. */
-  private labelFor(g: NameGroup, spare: Map<string, Label[]>): Label {
+  private labelFor(g: NameGroup, spare: Spares<Label>): Label {
     const cls = "stn-label" + (g.built ? "" : " plan");
     const [x, y] = toLocal(g.lng, g.lat);
     const below = Math.abs(Math.cos(g.heading)) > Math.abs(Math.sin(g.heading));
-    const old = spare.get(cls + "\u0000" + g.name)?.pop();
-    if (old) return { ...old, x, y, below };
+    const old = spare.take(cls + "\u0000" + g.name);
+    // the same object, so `shownLabels` (and `follow` until the next placement) moves it to its new place
+    if (old) { old.x = x; old.y = y; old.below = below; return old; }
     const el = document.createElement("div");
     el.className = cls;
     el.textContent = g.name;
@@ -258,20 +283,13 @@ export class StationLabels {
     return { el, name: g.name, x, y, below, w: 0, h: 0 };
   }
 
-  private keepSpare(spare: Map<string, Label[]>, l: Label) {
-    const k = l.el.className + "\u0000" + (l.name ?? l.el.textContent);
-    const v = spare.get(k);
-    if (v) v.push(l);
-    else spare.set(k, [l]);
-  }
-
   /** Every label and the shadow made again from the whole list of names. */
   private rebuild() {
     const names = this.names.list;
-    const spare = new Map<string, Label[]>();
-    for (const l of this.labels) this.keepSpare(spare, l);
+    const spare = new Spares<Label>();
+    for (const l of this.labels) spare.put(spareKey(l), l);
     this.labels = names.map((g) => this.labelFor(g, spare));
-    for (const v of spare.values()) for (const l of v) l.el.remove();
+    spare.drop();
     // A stop edit changes a station's lines, mostly not the shadow: MapLibre then keeps its layout
     // instead of tiling and placing every name again (T-648). The features kept then keep their ids,
     // which are those the source holds.
@@ -287,13 +305,13 @@ export class StationLabels {
 
   /** The labels and shadow features followed through the names that left and entered (T-1380). */
   private patch(ops: NameOp[]) {
-    const features = this.shadow.features, spare = new Map<string, Label[]>();
+    const features = this.shadow.features, spare = new Spares<Label>();
     type Moved = { at: number; text: string; feature: (typeof features)[number] };
     const left: Moved[] = [], entered: Moved[] = [];
     for (const op of ops) {
       if (op.kind !== "remove") continue;
       const [l] = this.labels.splice(op.at, 1);
-      this.keepSpare(spare, l);
+      spare.put(spareKey(l), l);
       left.push({ at: op.at, text: this.shadowKeys.splice(op.at, 1)[0], feature: features.splice(op.at, 1)[0] });
     }
     for (const op of ops) {
@@ -304,7 +322,7 @@ export class StationLabels {
       features.splice(op.at, 0, feature);
       entered.push({ at: op.at, text, feature });
     }
-    for (const v of spare.values()) for (const l of v) l.el.remove();
+    spare.drop();
     left.reverse();
     if (left.length === entered.length && left.every((x, i) => x.at === entered[i].at && x.text === entered[i].text)) {
       // the same features in the same places: the source keeps the ones it has
@@ -362,7 +380,7 @@ export class StationLabels {
     // while the camera moves, a full placement at most every MOVING_PLACE_MS (T-1207); a pan between
     // them moves the names as one, past the margin if need be
     const due = this.throttle.due();
-    if ((!this.needsPlacement || !due) && prev && W === this.placedSize[0] && H === this.placedSize[1]
+    if ((!this.needsPlacement || !due) && prev && W === this.placedSize[0] && H === this.placedSize[1] && anchor().version === this.placedAv
       && m[3] === 0 && m[7] === 0
       && prev.every((v, i) => i === 12 || i === 13 || i === 14 || same(v, m[i]))) {
       const [x, y] = this.overlay.toScreen(0, 0);
@@ -378,6 +396,7 @@ export class StationLabels {
     this.needsPlacement = false;
     this.placedMatrix = Array.from(m);
     this.placedSize = [W, H];
+    this.placedAv = anchor().version;
     this.anchor = this.overlay.toScreen(0, 0);
     this.plane.style.transform = "";
     this.shownLabels = [];
@@ -529,7 +548,8 @@ export class StationLabels {
     const key = named.map((b) => `${b.id}:${b.name}:${b.corners.join(",")}`).join("|") + `@${anchor().version}`;
     if (key !== this.bldKey) {
       this.bldKey = key;
-      const spare = new Map(this.bldLabels.map((l) => [l.el.textContent ?? "", l]));
+      const spare = new Spares<Label>();
+      for (const l of this.bldLabels) spare.put(l.el.textContent ?? "", l);
       this.bldLabels = named.map((b) => {
         const n = b.corners.length / 2;
         let my = 0;
@@ -540,8 +560,7 @@ export class StationLabels {
         const [x, y] = local(um, vm);
         const corners = Array.from({ length: n }, (_, i) => toLocal(...packToLngLat(b.corners[2 * i], b.corners[2 * i + 1])));
         const ends = shortU ? [local(um - half, vm), local(um + half, vm)] : [local(um, vm - half), local(um, vm + half)];
-        const old = spare.get(b.name);
-        if (old) spare.delete(b.name);
+        const old = spare.take(b.name);
         const el = old?.el ?? document.createElement("div");
         if (!old) {
           el.className = "stn-label bld";
@@ -550,7 +569,7 @@ export class StationLabels {
         }
         return { el, x, y, below: true, w: old?.w ?? 0, h: old?.h ?? 0, corners, ends, inside: insideOutline(b.corners, ...f.back(um, vm)) };
       });
-      for (const l of spare.values()) l.el.remove();
+      spare.drop();
     }
     // T-3759: a station unbound from its complex's name keeps its own label beside the building's
     const out = new Set<string>();
