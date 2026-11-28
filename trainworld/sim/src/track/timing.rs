@@ -25,7 +25,7 @@ use super::net::Network;
 use super::overtake::{self, Pass, PASS_CLEAR_S};
 use super::params::*;
 use super::profile::{self, Hold, Profile};
-use super::moves::{self, Move, Moves};
+use super::moves::{self, Move, Moves, Pair, Train};
 use super::service::{TimingKey, hold_plan, lattice_deps_local, lattice_deps_local_moved, lattice_deps_moved, profile_with_plan, Cal, Dep, Lattice, Run, Service, Variant, NO_PLACE};
 
 /// Variants per run and slot, besides the slot's own timetable.
@@ -66,6 +66,8 @@ struct Built {
     days: HashMap<(u32, u8), Rc<Vec<Vec<(f64, f64, u32)>>>>,
     /// Each run's stand lost to moves per weekday departure, as `days` lays them out (T-4546).
     lost: HashMap<(u32, u8), Rc<Vec<Vec<f64>>>>,
+    /// The pairs of trains timed directly with each other, by the line whose timetable is worked out against the other's (T-4548).
+    pairs: Vec<(u32, Pair)>,
     /// What each run's holds do on its hops, once for all the timetables built with them.
     plans: Plans,
     /// Per run, the parts of those plans the holds have in common.
@@ -317,7 +319,7 @@ pub fn retime(net: &Network, svc: &mut Service) {
         }
         false
     });
-    let mut built = Built { old, new: HashMap::new(), moves: svc.moves.clone(), around: HashMap::new(), days: HashMap::new(), lost: HashMap::new(), plans: HashMap::new(), plan_memos: HashMap::new() };
+    let mut built = Built { old, new: HashMap::new(), moves: svc.moves.clone(), around: HashMap::new(), pairs: vec![], days: HashMap::new(), lost: HashMap::new(), plans: HashMap::new(), plan_memos: HashMap::new() };
     // the waits and following losses of the clusters worked out again, each cluster's in its key's order
     let res: Vec<usize> = cl.iter().zip(&stood).filter(|x| !*x.1).flat_map(|x| x.0.res.iter().copied()).collect();
     if !res.is_empty() {
@@ -330,6 +332,9 @@ pub fn retime(net: &Network, svc: &mut Service) {
         floor(net, svc, &redo, &lats, &mut built);
         let follow = following(net, svc, &lats, &mut built, &res);
         install(svc, follow, &lats);
+    }
+    for (l, p) in std::mem::take(&mut built.pairs) {
+        svc.pairs.entry(l).or_default().push(p);
     }
     memo.extend(built.new);
     svc.timing_memo = memo;
@@ -388,6 +393,7 @@ pub fn put_back(svc: &mut Service, held: Vec<(u32, Held)>) {
 
 /// Each line's variants and patterns dropped, and the line untimed, where `redo`.
 fn clear(svc: &mut Service, redo: &[bool]) {
+    svc.pairs.retain(|&l, _| !redo.get(l as usize).copied().unwrap_or(true));
     for (ls, _) in svc.lines.iter_mut().zip(redo).filter(|x| *x.1) {
         for r in ls.runs.iter_mut() {
             for lev in 0..SLOTS {
@@ -720,7 +726,7 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
             // the faster trains that can meet these: from a run before the first to a run and an
             // hour after the last
             let (lo, hi) = window(&deps, b.duration);
-            let mut stations: BTreeMap<usize, Vec<Pass>> = BTreeMap::new();
+            let mut stations: BTreeMap<usize, Vec<(Pass, Train)>> = BTreeMap::new();
             let mut hcap = f64::INFINITY;
             for &w in ws {
                 let (f, k) = cap.wait_point(w).unwrap();
@@ -742,18 +748,20 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
                     let fp = fl.prof_of(fr, flev as usize, fl.runs[fr].var_at(flev as usize, place));
                     let x = leave(fp, pt.fat);
                     let lead = PASS_CLEAR_S.max(reach(fp, q.fat) - x + plan.spacing - s_to_q);
-                    passes.push(Pass { at: d + x, lead, run_f: reach(fp, nb.fat) - x, run_s, spacing: plan.spacing, most: hf.min(cap_h) + lead });
+                    passes.push((Pass { at: d + x, lead, run_f: reach(fp, nb.fat) - x, run_s, spacing: plan.spacing, most: hf.min(cap_h) + lead }, Train { line: f, run: fr as u8, lev: flev, place }));
                 }
             }
-            let stations: Vec<(usize, f64, Vec<Pass>)> = stations
+            let (stations, who): (Vec<(usize, f64, Vec<Pass>)>, Vec<Vec<Train>>) = stations
                 .into_iter()
                 .map(|(j, mut v)| {
-                    v.sort_by(|a, b| a.at.total_cmp(&b.at));
-                    (j, b.dep[j], v)
+                    v.sort_by(|a, b| a.0.at.total_cmp(&b.0.at));
+                    let (ps, ts): (Vec<Pass>, Vec<Train>) = v.into_iter().unzip();
+                    ((j, b.dep[j], ps), ts)
                 })
-                .collect();
+                .unzip();
             let times: Vec<(f64, f64)> = deps.iter().map(|d| (d.0, d.1.min(hcap))).collect();
             let waits = overtake::train_waits(&times, &stations);
+            note_waits(&mut built.pairs, (l, r, lev as u8), &deps, &waits, &stations, &who);
             let each: Vec<Vec<i64>> = waits.iter().map(|w| w.iter().map(|&x| step(x)).collect()).collect();
             // a train runs a merged timetable only where it meets no faster train at a station its
             // own does not
@@ -844,15 +852,15 @@ fn lead_in(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut B
             // the slower trains leaving each node, and at the passing station their arrival and
             // `LEAD_IN_CLEAR_S` (in `follow_one`'s terms, less the spacing it adds); no spacing at
             // the stretch's start, as in the plan (`Plan::sweep`), so its offsets time no one
-            let mut slow: Vec<(f64, Vec<f64>)> = slow_deps
+            let mut slow: Vec<(f64, Vec<f64>, Train)> = slow_deps
                 .iter()
                 .filter(|x| x.0 >= lo - srun.prof[x.1 as usize].duration && x.0 < hi)
-                .map(|&(d, slev, _, _)| {
+                .map(|&(d, slev, _, place)| {
                     let p = &srun.prof[slev as usize];
                     let mut t: Vec<f64> = xs.iter().map(|&x| d + leave(p, x + delta)).collect();
                     t[0] = f64::NEG_INFINITY;
                     *t.last_mut().unwrap() = d + reach(p, p1.at) + LEAD_IN_CLEAR_S - plan.spacing;
-                    (d + reach(p, a + delta), t)
+                    (d + reach(p, a + delta), t, Train { line: su.line, run: su.run, lev: slev, place })
                 })
                 .collect();
             slow.sort_by(|x, y| x.0.total_cmp(&y.0));
@@ -875,6 +883,7 @@ fn lead_in(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut B
                     ((st - (over - (dl - d2))).max(0.0), x0, d2)
                 })
                 .collect();
+            note_follow(&mut built.pairs, (f, fr, lev as u8), &deps, &each, e_at[0], &slow);
             if each.iter().all(|x| step(x.0) == 0 && step(x.2) == 0) {
                 continue;
             }
@@ -1018,13 +1027,13 @@ fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut
             // the faster train reaching each node, the slower one leaving it
             let e_at: Vec<f64> = xs.iter().map(|&x| reach(&e0, x)).collect();
             // the slower trains as they run (their own variants included), by when they reach the start
-            let mut slow: Vec<(f64, Vec<f64>)> = slow_deps
+            let mut slow: Vec<(f64, Vec<f64>, Train)> = slow_deps
                 .iter()
                 .filter(|x| x.0 >= lo - srun.prof[x.1 as usize].duration && x.0 < hi)
                 .map(|&(d, slev, _, place)| {
                     let var = if slow_timed { srun.var_at(slev as usize, place) } else { 0 };
                     let p = sl.prof_of(su.run as usize, slev as usize, var);
-                    (d + reach(p, a + delta), xs.iter().map(|&x| d + leave(p, x + delta)).collect())
+                    (d + reach(p, a + delta), xs.iter().map(|&x| d + leave(p, x + delta)).collect(), Train { line: su.line, run: su.run, lev: slev, place })
                 })
                 .collect();
             slow.sort_by(|x, y| x.0.total_cmp(&y.0));
@@ -1046,6 +1055,7 @@ fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut
                     ((st - (over - (d - d2))).max(0.0), x0, d2)
                 })
                 .collect();
+            note_follow(&mut built.pairs, (f, fr, lev as u8), &deps, &each, e_at[0], &slow);
             // told apart by stand and loss, each in whole steps, and where the loss starts
             let starts: Vec<f64> = {
                 let mut v: Vec<f64> = each.iter().map(|x| x.1).collect();
@@ -1088,6 +1098,39 @@ fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut
         }
     }
     out
+}
+
+/// T-4548: the pairs of faster trains timed behind the slower train ahead of them (`follow_one`'s stand and loss, `each`, per
+/// departure of `deps`), each with that train: `slow` by when its train reaches the stretch, `e0` when a faster one with no
+/// departure delay does.
+fn note_follow(out: &mut Vec<(u32, Pair)>, (f, fr, lev): (u32, u8, u8), deps: &[(f64, f64, u32)], each: &[(f64, f64, f64)], e0: f64, slow: &[(f64, Vec<f64>, Train)]) {
+    for (&(d, _, place), &(st, _, dl)) in deps.iter().zip(each) {
+        if step(st) == 0 && step(dl) == 0 || place == NO_PLACE {
+            continue;
+        }
+        let i = slow.partition_point(|s| s.0 <= d + e0);
+        if let Some(s) = i.checked_sub(1).map(|i| slow[i].2).filter(|s| s.place != NO_PLACE) {
+            out.push((f, Pair { timed: Train { line: f, run: fr, lev, place }, other: s }));
+        }
+    }
+}
+
+/// T-4548: the pairs of slower trains with the faster train each waits for (the pass that set the time it leaves a station at,
+/// `overtake::train_waits`), `who` being the trains of `stations`' passes.
+fn note_waits(out: &mut Vec<(u32, Pair)>, (l, r, lev): (u32, u8, u8), deps: &[(f64, f64, u32)], waits: &[Vec<f64>], stations: &[(usize, f64, Vec<Pass>)], who: &[Vec<Train>]) {
+    for (&(d, _, place), ws) in deps.iter().zip(waits) {
+        let mut acc = 0.0;
+        for (((_, off, passes), ids), &w) in stations.iter().zip(who).zip(ws) {
+            acc += w;
+            if step(w) == 0 || place == NO_PLACE {
+                continue;
+            }
+            let leaves = d + off + acc;
+            if let Some(i) = passes.iter().position(|p| (p.at + p.lead - leaves).abs() < 1e-3).filter(|&i| ids[i].place != NO_PLACE) {
+                out.push((l, Pair { timed: Train { line: l, run: r, lev, place }, other: ids[i] }));
+            }
+        }
+    }
 }
 
 /// `cluster` for following keys (stand, where the loss starts, loss): alike ones merge to the

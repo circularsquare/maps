@@ -27,6 +27,26 @@ pub struct Move {
     pub kind: MoveKind,
 }
 
+/// A train by its place in its line's day (`Dep`'s level and place: the pattern's own numbering, the table's column), which no
+/// move or retime changes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Train {
+    pub line: u32,
+    pub run: u8,
+    pub lev: u8,
+    pub place: u32,
+}
+
+/// T-4548: two trains `retime` timed directly with each other on a weekday: `timed` runs a timetable of its own worked out
+/// against `other`'s train as it runs (a faster train behind a slower one it can't pass, a slower train waiting at a passing
+/// station for a faster one). A move of either takes the other with it by the same seconds, one step only: never through
+/// a partner's partners.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Pair {
+    pub timed: Train,
+    pub other: Train,
+}
+
 /// A line's moves, sorted by `at`, shared by the service and the eras that ran them.
 pub type Moves = Arc<[Move]>;
 

@@ -1,6 +1,7 @@
 use super::super::hours_tests::corridor;
 use super::super::params::HIGH;
-use super::super::moves::MoveKind;
+use super::super::moves::{MoveKind, Train};
+use super::super::overtake::tests::{set_passing, shinkansen};
 use super::super::service::Trip;
 use super::super::tests::{edge, headway_line, node, set_headway, station, terminals_at_dead_ends, world};
 use super::super::moves::{self, Move};
@@ -277,3 +278,116 @@ fn stored_seconds_run_clamped_and_a_move_with_no_train_waits() {
     w.undo().unwrap().unwrap();
     assert_eq!(w.svc.moves_waiting(&w.net, c), 0);
     assert_eq!(moved_trains(&w, c, t.run), vec![(t.dep, 60.0)]);}
+
+/// Local and express headways (minutes) on the test line: far enough apart that a train has room to move.
+const HL: f32 = 30.0;
+const HX: f32 = 20.0;
+
+/// Every mid-morning departure of run 0 of `line` with a train timed with it that the group can move 40 s either way, and its
+/// partners (T-4548).
+fn partnered(w: &TrackWorld, line: u32) -> Vec<(Trip, Vec<Train>)> {
+    let (a, b) = (2.0 * DAY + 6.0 * 3600.0, 2.0 * DAY + 14.0 * 3600.0);
+    trips(w, line as usize, a, b)
+        .into_iter()
+        .filter(|t| t.run == 0)
+        .filter_map(|t| {
+            let lat = w.svc.lattice(&w.net, line as usize)?;
+            let me = w.svc.train_at(&w.net, line as usize, 0, moves::key_of(t.dep, lat.shift + lat.lead))?;
+            let ps = w.svc.partners(me);
+            (!ps.is_empty() && w.move_op(line, 0, t.dep, 40.0).is_ok() && w.move_op(line, 0, t.dep, -40.0).is_ok()).then_some((t, ps))
+        })
+        .collect()
+}
+
+/// A train's own timetable's length, by its place in the day.
+fn run_secs(w: &TrackWorld, t: Train) -> f64 {
+    let ls = &w.svc.lines[t.line as usize];
+    ls.prof_of(t.run as usize, t.lev as usize, ls.runs[t.run as usize].var_at(t.lev as usize, t.place)).duration
+}
+
+/// An express with nowhere to pass follows its local: a step of the local moves its express by the same seconds, the express
+/// keeps the waits it had behind it, the whole group stops at the tightest range, and a step back to 0 takes the express back.
+#[test]
+fn a_local_moves_the_express_timed_behind_it() {
+    let (mut w, _, local, express) = shinkansen();
+    for (id, h) in [(local, HL), (express, HX)] {
+        set_headway(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
+    }
+    let all = partnered(&w, local);
+    assert!(all.len() >= 5, "{} locals with a train timed behind them", all.len());
+    let base = dump_both(&w, local, express);
+    // a step of 30 s on each: the express goes the same seconds, and keeps its waits unless it has no room left for them (a
+    // train moved later has that much less stand at its far end, and its waits are fitted into what is left)
+    let (mut kept, mut cut) = (0, 0);
+    let mut shown = None;
+    for (t, ps) in &all {
+        assert!(ps.iter().all(|p| p.line == express), "{ps:?}");
+        let before: Vec<f64> = ps.iter().map(|p| run_secs(&w, *p)).collect();
+        w.apply(w.move_op(local, t.run, t.dep, 30.0).unwrap().unwrap()).unwrap();
+        let with = w.svc.moves_of(express as usize);
+        assert!(with.len() == ps.len() && with.iter().all(|m| m.kind == MoveKind::With && (m.secs - 30.0).abs() < 1e-3), "the same seconds: {with:?}");
+        let own = w.svc.moves_of(local as usize);
+        assert!(own.len() == 1 && own[0].kind == MoveKind::Own && (own[0].secs - 30.0).abs() < 1e-3, "{own:?}");
+        let after: Vec<f64> = ps.iter().map(|p| run_secs(&w, *p)).collect();
+        if before.iter().zip(&after).all(|(b, a)| (a - b).abs() < 1.0) {
+            kept += 1;
+            shown.get_or_insert((*t, ps.clone()));
+        } else {
+            cut += 1;
+        }
+        w.undo().unwrap().unwrap();
+        assert_eq!(dump_both(&w, local, express), base, "undone to the bit");
+    }
+    eprintln!("{kept} expresses keep their waits, {cut} have less room for them after the move");
+    assert!(kept == all.len(), "{cut} expresses lose waits behind the local");
+    let (t, _) = shown.unwrap();
+    w.apply(w.move_op(local, t.run, t.dep, 30.0).unwrap().unwrap()).unwrap();
+    assert!(w.svc.move_holds(&w.net, express as usize)[0], "the express's row is held with it");
+    // walk to the end: the step stops at the tightest range of the group, the express always the local's seconds
+    let mut steps = 1;
+    let (up, _) = walk(&mut w, local, &t, 30.0, &mut steps);
+    let top = w.svc.moves_of(express as usize).iter().map(|m| m.secs as f64).fold(f64::NEG_INFINITY, f64::max);
+    assert!((top - up).abs() < 1e-3 && up > 30.0 && up <= 120.0 + 1e-3, "{up} {top}");
+    // back to 0: the express is where it was
+    let now = w.move_range(local, t.run, t.dep).unwrap().now;
+    w.apply(w.move_op(local, t.run, t.dep, -now).unwrap().unwrap()).unwrap();
+    assert!(w.svc.moves_of(local as usize).is_empty() && w.svc.moves_of(express as usize).is_empty());
+    assert_eq!(dump_both(&w, local, express), base);
+}
+
+fn dump_both(w: &TrackWorld, a: u32, b: u32) -> String {
+    format!("{}{}", dump(w, a as usize), dump(w, b as usize))
+}
+
+/// An express every local waits for at a passing station moves with the one local moved, not with the other locals it passes:
+/// one step, never through a partner.
+#[test]
+fn an_express_passing_two_locals_moves_only_with_the_one_moved() {
+    let (mut w, n, local, express) = shinkansen();
+    for (id, h) in [(local, 10.0f32), (express, 10.0f32)] {
+        set_headway(&mut w, id, [60.0 / h, 60.0 / h, 0.0]);
+    }
+    set_passing(&mut w, &n[1..6], true);
+    // the express's partners are the locals that wait for it: find one with several
+    let express_train = trips(&w, express as usize, 2.0 * DAY + 8.0 * 3600.0, 2.0 * DAY + 12.0 * 3600.0).into_iter().filter(|t| t.run == 0).find_map(|t| {
+        let lat = w.svc.lattice(&w.net, express as usize)?;
+        let me = w.svc.train_at(&w.net, express as usize, 0, moves::key_of(t.dep, lat.shift + lat.lead))?;
+        let ps = w.svc.partners(me);
+        (ps.len() >= 2).then_some((t, ps))
+    });
+    let (_, ps) = express_train.expect("an express two locals wait for");
+    assert!(ps.iter().all(|p| p.line == local), "{ps:?}");
+    // move the first of the locals: its express moves, and so does no other local
+    let first = ps[0];
+    let (lat, k) = (w.svc.lattice(&w.net, local as usize).unwrap(), w.svc.place_key(&w.net, first).unwrap());
+    let t = trips(&w, local as usize, 2.0 * DAY + 6.0 * 3600.0, 2.0 * DAY + 14.0 * 3600.0).into_iter().find(|x| x.run == first.run && moves::apart(moves::key_of(x.dep, lat.shift + lat.lead), k) < 1.0).unwrap();
+    let op = w.move_op(local, t.run, t.dep, 30.0).unwrap().unwrap();
+    w.apply(op).unwrap();
+    let ours = w.svc.moves_of(local as usize);
+    assert!(ours.len() == 1 && ours[0].kind == MoveKind::Own, "no other local moves: {ours:?}");
+    assert!(ps[1..].iter().all(|p| w.svc.partners(*p).iter().all(|x| x.line != local)), "(a local's partners are expresses)");
+    let theirs = w.svc.moves_of(express as usize);
+    assert!(!theirs.is_empty() && theirs.iter().all(|m| m.kind == MoveKind::With && (m.secs - ours[0].secs).abs() < 1e-3), "{theirs:?}");
+}
+
+

@@ -6,7 +6,7 @@ use super::capacity::{self, Capacity};
 use super::geom;
 use super::net::{path_dir, path_edge, DayFleet, LoopKind, Network};
 use super::params::*;
-use super::moves::{self, Move, MoveKind, Moves};
+use super::moves::{self, Move, MoveKind, Moves, Pair, Train};
 use super::profile::{self, Hold, Profile};
 
 pub mod bends;
@@ -838,6 +838,9 @@ pub struct Service {
     /// `moves` is this clamped to the room each train has now (`TrackWorld::clamp_moves`), so a train that has lost its
     /// room runs less, and runs the stored seconds again when the room comes back.
     pub stored: Vec<Moves>,
+    /// T-4548: the pairs of trains `timing::retime` timed directly with each other, by the line whose train is timed against
+    /// the other's; worked out with the variants and dropped with them (`Service::partners`).
+    pub pairs: std::collections::HashMap<u32, Vec<Pair>>,
     /// T-1382: the lines whose service was rebuilt, rescheduled or had its profiles recomputed, or
     /// that the net was changed under (`note_changed`), since `take_changed`, and whether to take
     /// them all (a world just made or reloaded).
@@ -2254,6 +2257,40 @@ impl Service {
             }
         }
         held
+    }
+
+    /// T-4548: the train of line `l` running `run` that a move keyed `key` is on (the departure it takes on a weekday), by its place
+    /// in the day.
+    pub fn train_at(&self, net: &Network, l: usize, run: u8, key: f64) -> Option<Train> {
+        let lat = self.lattice(net, l)?;
+        let (_, lev, _, place) = move_dep(&lat, &Move { run, at: key, secs: 0.0, kind: MoveKind::Own }, self.ref_day(l), &mut vec![])?;
+        (place != NO_PLACE).then_some(Train { line: l as u32, run, lev, place })
+    }
+
+    /// T-4548: the key (`moves::key_of`) of a train's departure on a weekday; None where its line no longer has it.
+    pub fn place_key(&self, net: &Network, t: Train) -> Option<f64> {
+        let lat = self.lattice(net, t.line as usize)?;
+        let wl = Lattice { cal: Cal::all(super::timing::DAY_REF, WEEKDAYS), ..lat };
+        let (a, mut buf) = (super::timing::DAY_REF as f64 * DAY_S, vec![]);
+        lattice_deps(&wl, t.run as usize, a - DAY_S, a + 2.0 * DAY_S, &mut buf);
+        buf.iter().find(|d| d.1 == t.lev && d.3 == t.place).map(|d| moves::key_of(d.0, lat.shift + lat.lead))
+    }
+
+    /// T-4548: the trains `retime` timed directly with `t`, each a train whose own timetable is worked out against the other's
+    /// as it runs (`moves::Pair`); in order. Direct only, never through a partner's partners.
+    pub fn partners(&self, t: Train) -> Vec<Train> {
+        let timed = |x: &Train| self.lines.get(x.line as usize).and_then(|ls| ls.runs.get(x.run as usize)).is_some_and(|r| r.var_at(x.lev as usize, x.place) != 0);
+        let mut out: Vec<Train> = self
+            .pairs
+            .values()
+            .flatten()
+            .filter(|p| (p.timed == t || p.other == t) && timed(&p.timed))
+            .map(|p| if p.timed == t { p.other } else { p.timed })
+            .collect();
+        out.sort();
+        out.dedup();
+        out.retain(|x| *x != t);
+        out
     }
 
     /// T-4547: how many of line `l`'s own and partner moves match no departure now (they wait, kept and saved, and

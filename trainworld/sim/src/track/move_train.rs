@@ -18,6 +18,7 @@ use super::timing::TURN_MIN_S;
 use super::net::LoopKind;
 use super::world::{Op, TrackWorld};
 
+const DAY: f64 = 86400.0;
 /// Fewest seconds between two trains of one line leaving one way.
 const MIN_APART_S: f64 = 60.0;
 /// A step that moves a train less than this is none.
@@ -69,7 +70,8 @@ impl TrackWorld {
     /// The longest time one of line `l`'s trains holds a place it uses running run `run` (`User::occ`).
     fn line_occ(&self, l: u32, run: u8) -> f64 {
         let cap = &self.svc.cap;
-        (0..cap.res.len()).flat_map(|r| cap.users_of(r)).filter(|u| u.line == l && u.run == run).map(|u| u.occ).fold(0.0, f64::max)
+        // (a following loss's users hold no place: the owner's `occ` is where its stretch ends)
+        (0..cap.res.len()).filter(|&r| !cap.is_follow(r)).flat_map(|r| cap.users_of(r)).filter(|u| u.line == l && u.run == run).map(|u| u.occ).fold(0.0, f64::max)
     }
 
     /// Where the train of line `line` leaving at `dep` (its pattern's time, `Trip::dep`) running `run` may be moved to, and
@@ -134,27 +136,77 @@ impl TrackWorld {
         Ok(Range { now: cur, lo, hi, lo_why, hi_why, raw_lo, raw_hi })
     }
 
+    /// The trains that move with the one of line `line` leaving at `dep` (T-4548): those `retime` timed directly with it, as
+    /// (line, run, departure in their pattern) on the day of `dep`, with their ranges. The train itself comes first.
+    fn group(&self, line: u32, run: u8, dep: f64, own: Range) -> Vec<(u32, u8, f64, Range)> {
+        let mut out = vec![(line, run, dep, own)];
+        let net = &self.net;
+        let Some(lat) = self.svc.lattice(net, line as usize) else { return out };
+        let Some(me) = self.svc.train_at(net, line as usize, run, moves::key_of(dep, lat.shift + lat.lead)) else { return out };
+        for p in self.svc.partners(me) {
+            let (Some(k), Some(pl)) = (self.svc.place_key(net, p), self.svc.lattice(net, p.line as usize)) else { continue };
+            let ofs = pl.shift + pl.lead;
+            // the partner's departure nearest this one's, on the same day
+            let g = dep + (k - ofs - dep + 0.5 * DAY).rem_euclid(DAY) - 0.5 * DAY;
+            let trips = self.svc.line_trips(net, p.line as usize, g - 7200.0, g + 7200.0);
+            let Some(t) = trips.iter().filter(|t| t.run == p.run && moves::apart(moves::key_of(t.dep, ofs), k) < 0.5 * t.hw).min_by(|a, b| moves::apart(moves::key_of(a.dep, ofs), k).total_cmp(&moves::apart(moves::key_of(b.dep, ofs), k))) else { continue };
+            if let Ok(r) = self.move_range(p.line, p.run, t.dep) {
+                out.push((p.line, p.run, t.dep, r));
+            }
+        }
+        out
+    }
+
     /// The edit that moves that train `by` seconds later (earlier when negative) than it runs now, as far as its range
     /// allows. None for no step; refused, with the reason, where it can go no further that way (the step's end is the range's).
+    /// T-4548: the trains timed with it move by the same seconds (stored as moves of their lines marked `With`), the step
+    /// ending at the tightest of their ranges, and a train back at 0 takes its partners back to where they were.
     pub fn move_op(&self, line: u32, run: u8, dep: f64, by: f64) -> Result<Option<Op>, Refused> {
         let r = self.move_range(line, run, dep)?;
         if by.abs() < MIN_STEP_S {
             return Ok(None);
         }
-        let to = (r.now + by).clamp(r.lo, r.hi);
-        if (to - r.now).abs() < MIN_STEP_S {
-            return Err(if by > 0.0 { Refused { limit: r.hi, why: r.hi_why } } else { Refused { limit: r.lo, why: r.lo_why } });
+        let group = self.group(line, run, dep, r);
+        // the furthest every train of the group goes each way, as seconds more than it is moved now
+        let (mut lo, mut lo_why, mut hi, mut hi_why) = (f64::NEG_INFINITY, Why::Far, f64::INFINITY, Why::Far);
+        for g in &group {
+            if g.3.lo - g.3.now > lo {
+                (lo, lo_why) = (g.3.lo - g.3.now, g.3.lo_why);
+            }
+            if g.3.hi - g.3.now < hi {
+                (hi, hi_why) = (g.3.hi - g.3.now, g.3.hi_why);
+            }
         }
+        let delta = by.clamp(lo, hi);
+        if delta.abs() < MIN_STEP_S {
+            return Err(if by > 0.0 { Refused { limit: r.now + hi, why: hi_why } } else { Refused { limit: r.now + lo, why: lo_why } });
+        }
+        let to = r.now + delta;
+        let delta = if to.abs() < MIN_STEP_S { -r.now } else { delta };
         let to = if to.abs() < MIN_STEP_S { 0.0 } else { to };
-        // the headway of that departure: the moves of its run within half of it are its own
-        let hw = self.svc.line_trips(&self.net, line as usize, dep - 1.0, dep + 1.0).iter().find(|t| t.run == run && (t.dep - dep).abs() < 0.5).map_or(0.0, |t| t.hw);
-        let Some(lat) = self.svc.lattice(&self.net, line as usize) else { return Err(none(Why::NoTimetable)) };
-        let key = moves::key_of(dep, lat.shift + lat.lead);
-        let mut list: Vec<Move> = self.svc.stored_of(line as usize).iter().copied().filter(|m| !(m.run == run && moves::apart(m.at, key) < 0.5 * hw.max(1.0))).collect();
-        if to != 0.0 {
-            list.push(Move { run, at: key, secs: to as f32, kind: MoveKind::Own });
+        let mut lists: std::collections::BTreeMap<u32, Vec<Move>> = Default::default();
+        for (i, &(l, run, dep, rg)) in group.iter().enumerate() {
+            let total = if i == 0 { to } else { rg.now + delta };
+            let total = if total.abs() < MIN_STEP_S { 0.0 } else { total };
+            // the headway of that departure: the moves of its run within half of it are its own
+            let hw = self.svc.line_trips(&self.net, l as usize, dep - 1.0, dep + 1.0).iter().find(|t| t.run == run && (t.dep - dep).abs() < 0.5).map_or(0.0, |t| t.hw);
+            let Some(lat) = self.svc.lattice(&self.net, l as usize) else {
+                if i == 0 {
+                    return Err(none(Why::NoTimetable));
+                }
+                continue;
+            };
+            let key = moves::key_of(dep, lat.shift + lat.lead);
+            let list = lists.entry(l).or_insert_with(|| self.svc.stored_of(l as usize).to_vec());
+            let near = |m: &Move| m.run == run && moves::apart(m.at, key) < 0.5 * hw.max(1.0);
+            let kind = if i > 0 && !list.iter().any(|m| near(m) && m.kind == MoveKind::Own) { MoveKind::With } else { MoveKind::Own };
+            list.retain(|m| !near(m));
+            if total != 0.0 {
+                list.push(Move { run, at: key, secs: total as f32, kind });
+            }
         }
-        Ok(Some(Op::MoveTrain { line, moves: list }))
+        let mut ops: Vec<Op> = lists.into_iter().map(|(line, moves)| Op::MoveTrain { line, moves }).collect();
+        Ok(Some(if ops.len() == 1 { ops.pop().unwrap() } else { Op::Batch(ops) }))
     }
 }
 
