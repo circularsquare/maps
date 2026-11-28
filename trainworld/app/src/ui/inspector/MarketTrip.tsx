@@ -17,7 +17,7 @@ import { modeColours } from "../../game/palette";
 import { PERIODS } from "../../game/periods";
 import { intercityDemand, intercityPlaceName } from "../../game/demand";
 import { pairFigures as pairOf, type PairTrips } from "../../game/corridorFigures";
-import { baseFareOf, peopleOf, plannedFirstWait, routeTerms, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
+import { baseFareOf, marketKinds, peopleOf, plannedFirstWait, routeTerms, tripPeriod, wholePeople, type MarketEnd, type MarketPeriod, type MarketShown, type TripRoute } from "../../game/trip";
 import { shownDayPhrase } from "../../game/ui";
 import { linesById, stationNames, world } from "../../game/world";
 import { lowerWord, t as tr, tRich, tSeries } from "../../i18n";
@@ -377,11 +377,12 @@ export function MarketTrip({ m }: { m: MarketShown }) {
   const sum = (k: "trips" | "rail" | "air" | "car") => ways * m.periods.reduce((s, p) => s + (p?.[k] ?? 0), 0);
   const all = sum("trips");
   // T-1229: the everyday outings across a zone line are legs a day both ways already
+  const kinds0 = marketKinds(m.periods, ways);
   const sumE = (k: "legs" | "rail" | "walk") => m.periods.reduce((s, p) => s + (p?.everyday[k] ?? 0), 0);
-  const [eLegs, eRail, eWalk] = [sumE("legs"), sumE("rail"), sumE("walk")];
+  const [eLegs, eRail, eWalk] = [kinds0.everyday, sumE("rail"), sumE("walk")];
   // T-880: the commutes between the zones too, legs a day both ways, so the total is the bubble's
-  const cLegs = m.periods.reduce((s, p) => s + (p?.commute.legs ?? 0), 0), cRail = m.periods.reduce((s, p) => s + (p?.commute.rail ?? 0), 0);
-  const total = all + eLegs + cLegs;
+  const cLegs = kinds0.commute, cRail = m.periods.reduce((s, p) => s + (p?.commute.rail ?? 0), 0);
+  const total = kinds0.total;
   const others = eLegs >= 0.5 || cLegs >= 0.5;
   // T-1148: the rows give the car's parts and the plane
   marketRowsReady.value;

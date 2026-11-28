@@ -23,7 +23,7 @@
 // Asked for, not pushed, and asked again whenever `demandView` changes, keeping the last answer
 // meanwhile.
 
-import { t as tr } from "../i18n";
+import { t as tr, tSeries } from "../i18n";
 import { tPlace } from "../i18n/places";
 import { computed, effect, signal, untracked } from "@preact/signals";
 import { mapBlank, zoneLoads } from "../game/loading";
@@ -31,7 +31,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, CITIES, type City } from "../game/cities";
 import { shownRealms, zoneShown } from "../game/realms";
 import { groundScale, lngLatToPack, packToLngLat } from "../game/coords";
-import { openFarTrip, tripOpenedFrom } from "../game/trip";
+import { askMarketTrip, marketKinds, openFarTrip, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, rowsLanded, rowsOf, type IntercitySelection, type PlaceFlows } from "../game/demand";
 import { builtCities } from "../game/worldTotals";
 import { marketPairs, Z, zoneOf, zoneRowOf, type MarketPairs } from "../game/corridorFigures";
@@ -46,7 +46,7 @@ import { DISC, RES_AREA_M2 } from "../workers/commutersProtocol";
 import { anchorVersion } from "./anchorVersion";
 import { localModes, modeBar, purposeLines } from "./modeBar";
 import { zoneTransit } from "../game/transitModes";
-import { addFinder, discAt, pointerAt } from "./demandHover";
+import { addFinder, discAt, pointerAt, refreshHover } from "./demandHover";
 import { BUBBLE_BASE, bubbleLevel, LINE, splitEdge, type DemandOverlay } from "./demandOverlay";
 import { labelFont, type LabelFont } from "./labelLayout";
 import { anchor, kAtLat, pxPerUnitAt, toLocal, toLngLat, type Anchor } from "./geo";
@@ -282,6 +282,21 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
 
   // ---- the market's corridors ----
   let market: MarketPairs | null = null;
+  // T-4606: a zone pair's three kinds of trips as the trip explorer counts them (the workers' answer
+  // for the pair, asked when it is first hovered); null: not answerable, so the hover keeps the market's two kinds
+  let pairKinds: { src: MarketPairs | null; got: Map<string, ReturnType<typeof marketKinds> | null | "asking"> } = { src: null, got: new Map() };
+  const pairKindsOf = (a: number, b: number) => {
+    if (pairKinds.src !== market) pairKinds = { src: market, got: new Map() };
+    const key = `${a}:${b}`, had = pairKinds.got.get(key);
+    if (had !== undefined) return had;
+    const mine = pairKinds;
+    mine.got.set(key, "asking");
+    void askMarketTrip("home", new Uint32Array(0), b, -1, { place: a, gid: -1 }).then((ps) => {
+      mine.got.set(key, ps ? marketKinds(ps, 2) : null);
+      if (pairKinds === mine) refreshHover();
+    });
+    return "asking" as const;
+  };
   /** a selected zone's rows were asked for and are not in yet */
   let rowWanted = false;
 
@@ -345,6 +360,15 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
       const tier = unbuilt && tiered ? startTier(c.id) : null;
       // T-494: a zone's local and inter-region trips are two figures, each with a mode bar; written
       // when hovered (T-2748: writing every zone's on each zoom step was most of a step)
+      const pairTag = (a: City, b: City, old: { all: number }, oldBar: string) => {
+        const k = pairKindsOf(a.place, b.place);
+        const between = (n: number) => tr("intercityView.between", { count: count(n), when: day, a: tPlace(a.id, a.name), b: tPlace(b.id, b.name) });
+        if (k === "asking") return [tr("cityInspector.calculating"), tr("intercityView.explore")];
+        if (!k) return [between(old.all), oldBar, tr("intercityView.explore")];
+        const kinds = ([["inter", k.long], ["commute", k.commute], ["everyday", k.everyday]] as [string, number][]).filter(([, n]) => n >= 0.5)
+          .map(([kind, amount]) => tr("intercityView.kind", { kind, amount: count(amount) }));
+        return [between(k.total), modeBar(k.rail, k.walk, Math.max(0, k.total - k.rail - k.walk), 0, 1, null), tSeries(kinds), tr("intercityView.explore")];
+      };
       const tag = () => {
         const v = local.get(c.id);
         const localAll = v ? v.tripsPerDay : c.localTrips ?? 0;
@@ -363,7 +387,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
           ? [localLine, localBar, ...(known ? [interLine, interBar] : []), ...(tier ? [tr("intercityView.startTier", { tier })] : [])]
           : isOwn
             ? (known ? [interLine, interBar, `(${localLine})`] : [localLine, localBar])
-            : [tr("intercityView.between", { count: count(t.all), when: day, a: tPlace(own.id, own.name), b: tPlace(c.id, c.name) }), interBar, tr("intercityView.explore")];
+            : pairTag(own, c, t, interBar);
       };
       return [{ ...t, city: c, isOwn, tag, unbuilt, tier }];
     }).sort((a, b) => b.all - a.all), zq: NaN, spaced: [] };

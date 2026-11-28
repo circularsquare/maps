@@ -1134,6 +1134,7 @@
   "intercityView.interCity": "{count} intercity trips {when} to and from {name}",
   "intercityView.between": "{count} trips {when} between {a} and {b}",
   "intercityView.explore": "Click to explore these trips",
+  "intercityView.kind": "{kind, select, inter {{amount} intercity} commute {{amount} commutes} other {{amount} everyday}}",
   "intercityView.label": "{name} · {count} trips",
   "intercityView.interCityTrips": "intercity trips",
   "intercityView.purposeTrips": "{purpose} trips",

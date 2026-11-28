@@ -106,6 +106,10 @@ export function hoverAt(map: MlMap, px: number, py: number, under = false, click
   return null;
 }
 
+let redoHover: (() => void) | null = null;
+/** Ask the finders again at the pointer's last place, when a tag showing is waiting on an answer that has landed (T-4606). */
+export const refreshHover = () => redoHover?.();
+
 /** The tag itself: one DOM element in the map, moved and filled on mouse moves. */
 export function startHover(map: MlMap) {
   const tag = document.createElement("div");
@@ -113,12 +117,15 @@ export function startHover(map: MlMap) {
   tag.style.display = "none";
   map.getContainer().appendChild(tag);
   let last = "";
+  let at: { e: MouseEvent; px: number; py: number } | null = null;
   const hide = () => {
+    at = null;
     tag.style.display = "none";
     last = "";
     setPointerDisc(null);
   };
   const show = (e: MouseEvent, px: number, py: number) => {
+    at = { e, px, py };
     if (restHolds(px, py)) return; // on the way to the resting hover's list (T-732)
     if (e.buttons) return hide();
     const t = hoverAt(map, px, py);
@@ -132,6 +139,7 @@ export function startHover(map: MlMap) {
     tag.style.display = "";
     tag.style.transform = `translate(${Math.round(px + TAG_OFFSET_PX)}px, ${Math.round(py + TAG_OFFSET_PX)}px)`;
   };
+  redoHover = () => { if (at && tag.style.display !== "none") show(at.e, at.px, at.py); };
   // after the move's other handlers, so a build tool's tag is up to date (main.ts, T-526)
   map.on("mousemove", (e) => queueMicrotask(() => show(e.originalEvent, e.point.x, e.point.y)));
   // A lower capacity tag is a DOM target even when an upper demand disc covers it. MapLibre

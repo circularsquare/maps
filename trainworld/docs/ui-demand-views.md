@@ -452,7 +452,9 @@ bubble per other zone for the regional trips between the two, on a scale of its 
 with the zoom the same way [T-525, T-530]: 1,400 trips a day per px² at zoom 6.5
 (`SELECTED_TRIPS_PER_PX2`), the selected zone's own bubble its inter-city trips on that scale
 (the selected zone's hover: the inter-city line and its bar first, the local figure in brackets under it; the
-others: "N trips a day between A and B" and a bar), a fading line from each other bubble toward
+others: "N trips a day between A and B", a bar and the split "465k intercity, 309k commutes, 170k everyday"
+(zero kinds left out), all three kinds counted as the trip explorer counts them, asked from the workers when the
+hover first lands on the pair [T-4606]; the bubble's size and label still count two kinds), a fading line from each other bubble toward
 it (Lines to the selection, above), under the bubbles with no hover, so the
 selection shows from afar [T-520, T-858], and the city
 inspector (`ui/inspector/CityInspector.tsx`, T-600) has, under its title, an icon button (hover "Go to Philadelphia"; T-1439)

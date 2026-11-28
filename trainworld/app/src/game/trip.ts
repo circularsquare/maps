@@ -354,6 +354,20 @@ export function readMarketPeriod(v: Float64Array, at: RouteNodes): MarketPeriod 
   };
 }
 
+/** The three kinds of trips between two ends over a day's periods, legs a day: the longer trips
+ * (`ways` 2 counts them both ways, as between two whole places; 1 as a selection's one way), the
+ * commutes and the everyday outings (both already both ways), with their rail and walking parts. The
+ * trip explorer's total and the zone hover's are this one sum (T-4606). */
+export function marketKinds(periods: readonly (MarketPeriod | null)[], ways: number) {
+  const sum = (f: (p: MarketPeriod) => number) => periods.reduce((s, p) => s + (p ? f(p) : 0), 0);
+  const long = ways * sum((p) => p.trips), everyday = sum((p) => p.everyday.legs), commute = sum((p) => p.commute.legs);
+  return {
+    long, commute, everyday, total: long + commute + everyday,
+    rail: ways * sum((p) => p.rail) + sum((p) => p.everyday.rail) + sum((p) => p.commute.rail),
+    walk: sum((p) => p.everyday.walk),
+  };
+}
+
 /** A market place, or one of its 6 km zones (`gid`, -1 the whole place). */
 export interface MarketEnd {
   place: number;
