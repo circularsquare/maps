@@ -926,7 +926,9 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   `TrackApi::double_up` for each run of picked double track (pieces joined where only two meet),
   one undoable edit a run, so it covers each run whole, junction to junction, even where only part
   is picked; its hover gives the summed price and the runs' count, or the first refusal, greyed
-  when none can; then Copy ([below](#the-select-tool) "Copy"), Remove (key Delete or Backspace) and Clear. E acts on the pick with the Select tool only, so
+  when none can. The price is worked out with no trial edit (T-4542, `preview_double_up`): each run's pair on the side
+  the edit tries first, fitted and priced as new track there, plus the run's flat crossings once more, so a run the
+  edit's checks refuse on both sides (crossing other track, water) is priced and greys nothing, and the click says why; then Copy ([below](#the-select-tool) "Copy"), Remove (key Delete or Backspace) and Clear. E acts on the pick with the Select tool only, so
   while plain selecting Disable's and Enable's hovers name no key [T-2397]; Delete and Esc act in both [T-3746]. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
   and beside the blueprint total, in small muted type, what the disabled pieces would cost ("$1.54B
   disabled"; hover: the pieces and the exact sum, left out of the total, then "Double click to enable

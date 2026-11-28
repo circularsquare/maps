@@ -30,7 +30,9 @@
 // time of each move), a track piece, a station, Construct a line, a stop click (removed, added back), a stop
 // reorder, undo, deleting a line, and a click run (T-4267: four stations pressed 0.3 s apart on a line's track; each
 // click's confirm is its press to the worker's word or refusal in the page, the first click apart from the later ones,
-// which wait on the ones before). The ledger is the main tree's notes/edit-ledger.jsonl, from any tree.
+// which wait on the ones before), and Double up's price on the selection bar for a pick of the save's 20 longest runs of
+// double track (doubleprice, T-4542: its questions to the worker timed post to answer, summed and the slowest, and the
+// pick to the last answer). The ledger is the main tree's notes/edit-ledger.jsonl, from any tree.
 //
 // Steady numbers: it claims cores in the root ledger (cores.py) and pins the Chrome and its workers to them, holds
 // a lock so two benches never run together, and records how busy those cores were before it started (`loaded`).
@@ -517,6 +519,20 @@ async function play(g, runs, only, acc, note) {
     }
     await plain({ op: 'construct', edges: F.edges, stations: F.stations });
     await sample(() => (SHOTS && k === 0 ? shotEdit({ op: 'rebuild', edges: F.edges, stations: [], level: null, kind: 2, tracks: 0 }, 'rebuild') : doEdit({ op: 'rebuild', edges: F.edges, stations: [], level: null, kind: 2, tracks: 0 })), ['rebuild'], { shows: 'rebuild: shows', built: 'rebuild: built' }, 'rebuild ' + (k + 1));
+  }
+
+  // T-4542: Double up's price on the selection bar, for a pick of the save's 20 longest runs of double track
+  if (want('doubleprice')) {
+    await g.act.key('Escape');
+    await g.act.tool('select');
+    const { STATE } = await import('../checks/lib/reads.mjs');
+    const r = await page.evaluate(STATE.doubleUpPricing, { n: 20 });
+    note('  double up price: ' + JSON.stringify(r));
+    add('double up price, 20 runs: every question', r.sumMs);
+    add('double up price, 20 runs: slowest question', r.maxMs);
+    add('double up price, 20 runs: pick to price', r.wallMs);
+    await page.evaluate(async () => (await import('/src/game/blueprintPick.ts')).clearBpPicked());
+    await g.act.key('Escape');
   }
 
   // stops, reorder, undo on the save's biggest line

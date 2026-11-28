@@ -166,6 +166,29 @@ impl Network {
         out
     }
 
+    /// T-4542: about what an express pair of `kind` adds to the blueprint, US$M, without laying it (Double up's price on
+    /// the selection bar): each of its pieces (`shapes`, vertices end to end as `edge_vertices` will give them) fitted
+    /// and priced as a new piece of double track is, and each flat crossing on the pieces it runs beside (`beside`) once
+    /// more. The lie: the pair crosses at grade what they cross, and nothing else.
+    pub fn pair_price(&self, shapes: &[Vec<Pi>], beside: &[u32], kind: TrackKind) -> f64 {
+        let mut c = 0.0;
+        for v in shapes {
+            let f = geom::with_ramps(geom::Ramps::of(0, kind), || self.fit(v));
+            let (wet, ground, cross) = self.ground_along(&f, kind.spec().road_crossings);
+            c += cost::track_cost_t(f.len, &f.vert, &wet, &ground, 2, kind) + roads::charge(&f.vert, &cross).1;
+        }
+        let mut on = beside.to_vec();
+        on.sort_unstable();
+        for x in &self.crossings {
+            if let CrossKind::Flat(level) = x.kind {
+                if (on.binary_search(&x.e1).is_ok() || on.binary_search(&x.e2).is_ok()) && self.priced_crossing(x) {
+                    c += cost::crossing_cost(level, self.water_mask.is_water(x.x, x.y));
+                }
+            }
+        }
+        c
+    }
+
     /// Build cost of everything standing, US$M.
     pub fn total_cost(&self) -> f64 {
         let mut c = 0.0;

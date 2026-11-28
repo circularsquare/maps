@@ -219,12 +219,12 @@ export function BlueprintPick() {
   );
 }
 
-/** T-4541: how long the pick stays as it is before Double up is priced, ms: a drag box changes it every frame, and each
- * run's price is trial edits holding the clock worker 0.2-5 s on a big network */
+/** T-4541: how long the pick stays as it is before Double up is priced, ms: a drag box changes it every frame, and every
+ * run's price is a question in the clock worker's one queue, ahead of edits and previews */
 const DOUBLE_UP_REST_MS = 300;
 
-/** T-1680: Double up for every run of double track in the pick; the hover gives the summed price,
- * or why not. */
+/** T-1680: Double up for every run of double track in the pick; the hover gives the summed price (about what the
+ * edits add, T-4542: `TrackApi::preview_double_up`), or why not. */
 function PickDoubleUp() {
   const p = bpPicked.value, w = world.value;
   const pieces = useMemo(() => doubleUpPieces(p), [p, w]);

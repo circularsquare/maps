@@ -170,4 +170,52 @@ export const STATE = {
   money: () => { const m = window.tw.moneyState.value; return m ? { mode: m.mode, cash: m.cash ?? null } : null; },
   /** the last load: from autosave, file or new */
   lastLoad: () => window.tw.client.lastLoad ?? null,
+  /** T-4542: Double up's price on the selection bar for a pick of the save's `n` longest runs of double track (walked as
+   * `doubleUpPieces` walks them), timed: each `doubleUp` question from its post to its answer, its own time in the worker
+   * (`work`: the answer's `ms`; the rest of its time is waiting behind the worker's other messages), and the pick to the
+   * last answer (the bar's 300 ms rest included). Sets the pick; the Select tool must be in hand (`act.tool('select')`). */
+  doubleUpPricing: async ({ n = 20, waitMs = 120000 } = {}) => {
+    const tw = window.tw, w = tw.world.value, c = tw.client;
+    const bp = await import('/src/game/blueprintPick.ts');
+    const ok = (e) => e.tracks === 2 && !e.crossover && e.kind !== 4;
+    const family = (e) => (e.hsr ? 1 : e.kind === 4 ? 3 : e.kind ? 2 : 0);
+    const at = new Map();
+    for (const e of w.edges) for (const k of [e.a, e.b]) { if (!at.has(k)) at.set(k, []); at.get(k).push(e); }
+    const seen = new Set(), runs = [];
+    for (const e0 of w.edges) {
+      if (!ok(e0) || seen.has(e0.id)) continue;
+      const run = [e0];
+      seen.add(e0.id);
+      for (let i = 0; i < run.length; i++) for (const k of [run[i].a, run[i].b]) {
+        const here = at.get(k) ?? [];
+        const o = here.length === 2 ? here.find((x) => x !== run[i]) : undefined;
+        if (o && ok(o) && family(o) === family(run[i]) && !seen.has(o.id)) { seen.add(o.id); run.push(o); }
+      }
+      runs.push({ edges: run.map((e) => e.id), m: run.reduce((s, e) => s + (e.lengthM ?? 0), 0), built: run.every((e) => e.built) });
+    }
+    runs.sort((a, b) => b.m - a.m || a.edges[0] - b.edges[0]);
+    const pick = runs.slice(0, n);
+    const asked = new Map(), times = [], work = [];
+    const post = c.post, arrive = c.arrive;
+    c.post = function (msg, tr) { if (msg.kind === 'query' && msg.q?.what === 'doubleUp') asked.set(msg.seq, performance.now()); return post.call(this, msg, tr); };
+    c.arrive = function (msg) { if (msg.kind === 'answer' && asked.has(msg.seq)) { times.push(performance.now() - asked.get(msg.seq)); work.push(msg.ms ?? NaN); } return arrive.call(this, msg); };
+    const p = { edges: pick.flatMap((r) => r.edges), stations: [], ...(pick.every((r) => r.built) ? { built: true } : {}) };
+    const t0 = performance.now();
+    bp.bpPicked.value = p;
+    const want = bp.doubleUpPieces(p).length;
+    try {
+      while (times.length < want && performance.now() - t0 < waitMs) await new Promise((r) => setTimeout(r, 50));
+    } finally { c.post = post; c.arrive = arrive; }
+    const wallMs = performance.now() - t0;
+    await new Promise((r) => setTimeout(r, 100));
+    const btn = document.querySelector('.blueprint-bar path[d^="M1.5 3h13M1.5 6h13M8 9v6"]')?.closest('button');
+    const r0 = (x) => Math.round(x * 10) / 10;
+    return {
+      stations: w.save.stations.length, edges: w.edges.length, doubleRuns: runs.length,
+      runs: pick.map((r) => ({ km: r0(r.m / 1000), pieces: r.edges.length })), asked: want, answered: times.length,
+      sumMs: r0(times.reduce((s, x) => s + x, 0)), maxMs: r0(Math.max(0, ...times)), wallMs: r0(wallMs), each: times.map(r0),
+      workSumMs: r0(work.reduce((s, x) => s + x, 0)), workMaxMs: r0(Math.max(0, ...work)), work: work.map(r0),
+      button: btn ? { disabled: btn.disabled, tip: btn.dataset.tip ?? null } : null,
+    };
+  },
 };

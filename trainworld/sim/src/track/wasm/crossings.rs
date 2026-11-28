@@ -21,25 +21,23 @@ impl TrackApi {
         r
     }
 
-    /// What `double_up` would add to the blueprint, US$M, or -1 when it would be refused
-    /// (`issue_kinds()` says why).
+    /// What `double_up` would add to the blueprint, US$M, with no trial edit (T-4542: the selection bar asks it of every
+    /// run in a pick, and trials held the game seconds a run on a big network): the pair on the side and stretch the
+    /// edit tries first, priced as the edit prices it (`Network::pair_price`). -1 when the edit is refused before its
+    /// checks (`issue_kinds()` says why); one its checks refuse on that side (crossing other track, water) is priced
+    /// all the same, and on both sides too.
     pub fn preview_double_up(&mut self, edge: u32) -> f64 {
-        let (op, nn, ne) = match self.double_up_op(edge) {
+        let (op, nn, ne, pieces) = match self.double_up_try(edge, |_, _| Ok(())) {
             Ok(v) => v,
             Err(i) => {
                 self.refuse(i);
                 return -1.0;
             }
         };
-        let r = self.w.trial(op);
         self.release(&nn, &ne);
-        let cost = r.as_ref().map_or(-1.0, |r| r.cost_after - r.cost_before);
-        self.done(r.map(|mut r| {
-            r.dirty = Default::default();
-            r
-        }));
-        self.last = None;
-        cost
+        self.issues.clear();
+        let net = &self.w.net;
+        net.pair_price(&laid_shapes(net, &op), &pieces, pair_kind(net.edge_kind[edge as usize]))
     }
 
     /// The double-up edit on the left of the piece's own direction, else on its right where the
@@ -48,6 +46,11 @@ impl TrackApi {
     /// T-1678: the run stops short of a piece with a curve too tight for the pair beside it on
     /// that side, a side that needs no such stop first; the selected piece having one refuses.
     pub(super) fn double_up_op(&mut self, edge: u32) -> Result<(Op, Vec<u32>, Vec<u32>), Issue> {
+        self.double_up_try(edge, |a, op| a.w.trial(op.clone()).map(|_| ())).map(|(op, nn, ne, _)| (op, nn, ne))
+    }
+
+    /// `double_up_op`'s edits in the order it tries them, the first that `fits` takes, and the run's pieces it covers.
+    fn double_up_try(&mut self, edge: u32, mut fits: impl FnMut(&mut Self, &Op) -> Result<(), Vec<Issue>>) -> Result<(Op, Vec<u32>, Vec<u32>, Vec<u32>), Issue> {
         let (full_run, full_nodes) = self.double_run(edge)?;
         let at = full_run.iter().position(|r| r.0 == edge).unwrap_or(0);
         let mut first_err = None;
@@ -71,8 +74,8 @@ impl TrackApi {
                     (run, nodes) = (&full_run[lo..hi], &full_nodes[lo..=hi]);
                     (op, nn, ne) = self.double_side(run, nodes, side, &mut vec![])?;
                 }
-                match self.w.trial(op.clone()) {
-                    Ok(_) => return Ok((op, nn, ne)),
+                match fits(self, &op) {
+                    Ok(()) => return Ok((op, nn, ne, run.iter().map(|r| r.0).collect())),
                     Err(e) => {
                         self.release(&nn, &ne);
                         first_err.get_or_insert(e);
@@ -567,6 +570,18 @@ impl TrackApi {
         self.delete_pieces(&[], &[node])
     }
 
+}
+
+/// The vertices of each piece of track a batch lays, end to end, as `Network::edge_vertices` gives them once it is
+/// applied: a node the batch places where it puts it, any other where it is.
+fn laid_shapes(net: &Network, op: &Op) -> Vec<Vec<Pi>> {
+    let Op::Batch(ops) = op else { return vec![] };
+    let placed: Vec<(u32, &NodeData)> = ops.iter().filter_map(|o| match o { Op::Node { id, data: Some(d) } => Some((*id, d)), _ => None }).collect();
+    let at = |n: u32| match placed.iter().find(|p| p.0 == n) {
+        Some((_, d)) => Pi::new(d.x, d.y, 0.0, d.level),
+        None => Pi::new(net.node_x[n as usize], net.node_y[n as usize], 0.0, net.node_level[n as usize]),
+    };
+    ops.iter().filter_map(|o| match o { Op::Edge { data: Some(d), .. } => Some([at(d.a)].into_iter().chain(d.pis.iter().cloned()).chain([at(d.b)]).collect()), _ => None }).collect()
 }
 
 /// The kind of the express pair beside a piece of `kind` (T-3166): its own, except street tram

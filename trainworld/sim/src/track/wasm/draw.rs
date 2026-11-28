@@ -1345,16 +1345,24 @@ impl TrackApi {
     /// parallel at about `QUAD_SPACING` (or the wider `BESIDE_SPACING` of track drawn beside, T-1895),
     /// and the chainage on it level with `s`.
     pub(super) fn twin_at(&self, e: u32, s: f64) -> Option<(u32, f64)> {
+        self.twin_in(e, s, true)
+    }
+
+    /// `twin_at` among the edges the grid holds near the point (`near`), else every edge. T-4542: Double up asks it of
+    /// every piece of a run, and going through every edge was most of a long run's price on a big network.
+    pub(super) fn twin_in(&self, e: u32, s: f64, near: bool) -> Option<(u32, f64)> {
         let net = &self.w.net;
         let (x, y, th) = geom::pos_at(net.edge_pieces(e), s);
         let k = net.k_at(y);
+        let reach = beside::BESIDE_SPACING * 1.25 * k;
+        let edges = near.then(|| net.grid.in_box([x - reach, y - reach, x + reach, y + reach])).flatten().unwrap_or_else(|| (0..net.edge_count() as u32).collect());
         let mut best: Option<(u32, f64, f64)> = None;
-        for f in 0..net.edge_count() as u32 {
+        for f in edges {
             if f == e || !net.edge_ok(f) {
                 continue;
             }
             let (sf, dist) = net.project(f, x, y);
-            if !(QUAD_SPACING * 0.5 * k..=beside::BESIDE_SPACING * 1.25 * k).contains(&dist) {
+            if !(QUAD_SPACING * 0.5 * k..=reach).contains(&dist) {
                 continue;
             }
             let thf = geom::pos_at(net.edge_pieces(f), sf).2;

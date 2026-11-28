@@ -94,7 +94,7 @@ fn double_up_makes_quad() {
     let mut old = TrackApi::new(-73.985, 40.758, true);
     assert!(old.load(&a.save()));
     assert_eq!(a.double_up(local[2]), 0, "{}", a.issues());
-    assert!((a.total_cost() - before - price).abs() < 1e-6);
+    assert!((a.total_cost() - before - price).abs() < 1e-6, "priced {price}, the edit added {}", a.total_cost() - before);
     assert!(a.crossover_edges().is_empty(), "no crossover goes in (T-1688)");
     let on_old = |e: u32| {
         let r = a.edge_render(e);
@@ -147,6 +147,33 @@ fn double_up_makes_quad() {
     assert_eq!(ex.len(), 3, "three express pieces");
     assert!(ex.iter().all(|&e| !a.w.net.edge_built[e as usize]), "blueprint");
     assert!(price > 0.0);
+}
+
+/// T-4542: the track beside a piece found among the edges the grid holds near it is the one going through every
+/// edge finds, along every piece of quad with a station on it.
+#[test]
+fn twin_from_the_grid_is_the_scan_s() {
+    let mut a = TrackApi::new(-73.985, 40.758, true);
+    a.set_route_tangent(true);
+    let j = route(&mut a, [0.0, 0.0, 0.0, 0.0, 0.0], 1000.0, 0.0, 2);
+    route(&mut a, [1.0, j as f64, 0.0, 0.0, 0.0], 1800.0, 300.0, 2);
+    let second = *live(&a).last().unwrap();
+    let (sx, sy, _) = geom::pos_at(a.w.net.edge_pieces(second), 450.0);
+    assert_eq!(a.add_station(2, second, sx, sy, 160, "Mid".into()), 0, "{}", a.issues());
+    let local = live(&a);
+    assert_eq!(a.double_up(local[0]), 0, "{}", a.issues());
+    let mut found = 0;
+    for e in live(&a) {
+        let len = a.w.net.edge_len[e as usize];
+        for f in [0.1, 0.5, 0.9] {
+            let twin = a.twin_in(e, len * f, true);
+            assert_eq!(twin, a.twin_in(e, len * f, false), "edge {e} at {f}");
+            found += twin.is_some() as usize;
+        }
+    }
+    assert!(found >= 18, "{found}");
+    let (x, y, _) = geom::pos_at(a.w.net.edge_pieces(local[0]), 500.0);
+    assert!(a.w.net.grid.in_box([x - 20.0, y - 20.0, x + 20.0, y + 20.0]).is_some(), "the grid is asked, not every edge");
 }
 
 /// T-711: the drawing tag's cost multiplier (`preview_route`'s fifth number) is the level's on

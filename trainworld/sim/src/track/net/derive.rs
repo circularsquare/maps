@@ -3,6 +3,21 @@
 use super::*;
 
 impl Network {
+    /// What a fitted shape's price reads along it: the spans over water, the terrain's, and (`on_roads`, track that
+    /// crosses roads at ground level) the roads it crosses (T-4542: also for Double up's price, `pair_price`).
+    pub(super) fn ground_along(&self, f: &geom::Fit, on_roads: bool) -> (Vec<[f64; 2]>, Vec<[f64; 3]>, Vec<[f64; 2]>) {
+        let mut wet = vec![];
+        cost::water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
+        let mut ground = vec![];
+        let frame = self.frame;
+        cost::terrain_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
+        let mut cross = vec![];
+        if on_roads && !roads::off_ground(&f.vert) {
+            roads::crossings(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.roads, &mut cross);
+        }
+        (wet, ground, cross)
+    }
+
     pub fn take_touch(&mut self) -> Touch {
         let mut t = std::mem::take(&mut self.touch);
         for v in [&mut t.nodes, &mut t.edges, &mut t.stations, &mut t.lines, &mut t.schedules, &mut t.weekend] {
@@ -66,15 +81,7 @@ impl Network {
                 continue;
             }
             let f = self.fit_edge(e, &self.edge_vertices(e));
-            let mut wet = vec![];
-            cost::water_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); (x, y) }, self.water_mask.as_ref(), &mut wet);
-            let mut ground = vec![];
-            let frame = self.frame;
-            cost::terrain_spans(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.terrain, &mut ground);
-            let mut cross = vec![];
-            if !self.edge_crossover[i] && self.edge_kind[i].spec().road_crossings && !roads::off_ground(&f.vert) {
-                roads::crossings(f.len, |s| { let (x, y, _) = geom::pos_at(&f.pieces, s); frame.to_lonlat(x, y) }, &self.roads, &mut cross);
-            }
+            let (wet, ground, cross) = self.ground_along(&f, !self.edge_crossover[i] && self.edge_kind[i].spec().road_crossings);
             self.edge_len[i] = f.len;
             self.edge_cost[i] = self.edge_price(i, &f.vert, &wet, &ground, &cross);
             self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
