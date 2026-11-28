@@ -90,14 +90,15 @@ export let patchMiss = "";
 let laidCost = new Map<number, number>();
 
 /** T-4506: after ground lands outside an edit (a road tile, a terrain block, a water mask re-price the track over it),
- * the patch again when the price of an edge the page holds patched since the last state read moved, so the page's
- * map and its patches hold it as the next state will read it. None while no patch read rows since that read (the
- * next state brings the change), nor when no patched edge's price moved (a road tile beside the new track). */
+ * and (T-4534) as a state read begins, the patch again when an edge the last patch laid has another price now, so the
+ * page's map and its patches hold it as the next state reads it. A state read must come after it: the read clears
+ * what the page holds patched, and a road tile prices track as it lands while its burst's call here waits for the
+ * burst's end. None while no patch read rows since the last state read (the next state brings the change), nor when
+ * no laid edge's price moved (a road tile beside the new track, or re-pricing track the patch did not lay). */
 export function patchOutside(api: TrackApi) {
   if (!stateRows.patchedSince) return;
-  const t = api.peek_touched();
-  if (t[0] !== ALL) {
-    const ei = api.edges_info_of(t.subarray(1, 1 + t[0]));
+  if (api.peek_touched()[0] !== ALL) {
+    const ei = api.edges_info_of(Uint32Array.from(laidCost.keys()));
     let moved = false;
     for (let i = 0; i < ei.length && !moved; i += 10) moved = laidCost.get(ei[i]) !== ei[i + 6];
     if (!moved) return;

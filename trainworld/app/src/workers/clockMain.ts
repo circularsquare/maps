@@ -17,6 +17,7 @@ import { buildSnapshot, busRow, complexInputs, complexOfNodes, forgetKeeps, grou
 import { pinFareRef } from "./clockFares";
 import { moneyState } from "./clockMoney";
 import { keep } from "./clockPanic";
+import { patchOutside } from "./clockPatch";
 import { checkRows, checkShift, DiagramIn, diagramOn, keepPosted, netForPost, NO_PHASES, patchMode, postDiagram, posted, postState, postWhole, SAME_FIELDS, sameBytes } from "./clockPost";
 import { anchorSpec, api, applyRunFactors, clk, diagramCities, frame, frameSpec, freezeCheckpoint, hiddenLines, home, hourShape, lineShapes, midLoad, newLineHeadway, opened, packLngLat, packLocal, partCost, partHour, pinDayShift, placeLineCountries, putClk, putIncomePerHour, putLineIncome, putLinePoints, putLineRides, putMidLoad, putPartCost, putPartFare, putPartHour, putRidesPerHour, putSettledT, SAMPLE_STEP, send, startZone, syncFrame, syncHolidays, timing, wallNow } from "./clockState";
 
@@ -465,6 +466,8 @@ function buildState(rowsOnly = false): ClockState {
   StateRows.alternate = patchMode === "check";
   // (with `?patch=walk` a rows state is built as a full one, as before)
   rowsOnly &&= StateRows.bounded;
+  // T-4534: ground that re-priced patched track with no patch since (a road tile mid-burst) is patched again first
+  patchOutside(a);
   stateRows.begin(a, rowsOnly ? { rect: viewRect() } : undefined);
   if (patchMode === "check") {
     const [n, e] = stateRows.regions.counts(), ni = a.nodes_info().length / 10, ei = a.edges_info().length / 10;
