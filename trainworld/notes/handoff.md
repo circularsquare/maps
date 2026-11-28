@@ -13,6 +13,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 6. brief.py requires --tree and --port; fix in a tooling round.
 
 ## Her words
+- 11-27 20:14 her time: "pause any edit speed work for actions that already take under 50ms" (DECISIONS); shonei-server 07f5a75 (save level 43) not deployed yet: "we can deploy once more things are in"; ask again when the next publish nears.
 - 11-27 18:30 her time: a hidden mode that was never built "dont show up anywhere, like in build menus" (T-4334 Goal); nothing to do for Resend or R2; track rework not started while there is enough other work ("shouldnt spread ourselves too thin").
 - 11-27 18:25 her time, priorities: demand solve speed (if improvements are possible), memory (if actually possible), schedule nudging, monorail and cable cars, track rework. Real bug fixes and regular chores come before these.
 - 11-27 18:10 her time: Windows 11 done, "can resume work as normal"; 3-10 agents at once; "stay lean as an orchestrator... try to not do that [work yourself]"; a code guard for it, yes (T-4428).

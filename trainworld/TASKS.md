@@ -190,8 +190,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 4 (tree pagestage4): each line's money and points terms kept and added again in line order; the take's rows, edges and posts laid by ids. Your Asia save: a removal's page work about 45 to 41 ms, an undo 40 to 31. Left: fare income 3-5 ms, complexes (T-4300), the take's own 5, hovers and layers.
   - Goal: Under 20 ms of the page's own work for a station placed or removed on Asia.
   - Other: notes/T-4150.md "Stage 4" and "Left"
-- T-4315 [P2] {L:edit-speed} Upkeep shares worked out by what an edit changed
-  - Context: From T-4284: after each edit, in idle time, the page's upkeep shares go over every edge, station and bus route point (3.5-6.3 ms on your Asia save), and the region shares post their whole table.
+- T-4315 [P4] {L:edit-speed} Upkeep shares worked out by what an edit changed
+  - Context: Paused: already under 50 ms (her 11-27). From T-4284: after each edit, in idle time, the page's upkeep shares go over every edge, station and bus route point (3.5-6.3 ms on your Asia save), and the region shares post their whole table.
   - Goal: Under 0.5 ms an edit on Asia.
   - Other: notes/T-4150.md "Left"
 - T-4198 [P3] {L:checks} Changelog edited mark only for your edits
@@ -262,12 +262,12 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage C4. Around each edit's train work, every line's pattern and every running train on your Asia save are noted, so trains keep their places: 7 + 5 of a trunk click's 152 ms (T-4441).
   - Goal: Only the lines sharing track with the edit noted, checked against the whole walk; both under 1 ms in Node.
   - Other: notes/T-4267.md
-- T-4447 [P2] {L:edit-speed} A click's own checks without whole-save walks
-  - Context: T-4267 stage A6. A click's own checks take 9-21 ms in Node on your Asia save; part of that is walks over every line (its stops, its path, the edges each line uses) and the cost sums.
+- T-4447 [P4] {L:edit-speed} A click's own checks without whole-save walks
+  - Context: Paused: already under 50 ms (her 11-27). A click is confirmed in about 45 ms. T-4267 stage A6. A click's own checks take 9-21 ms in Node on your Asia save; part of that is walks over every line (its stops, its path, the edges each line uses) and the cost sums.
   - Goal: Under 10 ms in Node on the trunk.
   - Other: notes/T-4267.md
-- T-4448 [P2] {L:edit-speed} Ways back and twins checked only where an edit reached
-  - Context: T-4267 stage A8, from Gemini's review. Every edit searches the track again for each line with a way back of its own, and on saves with quad-track twins plans every twin again.
+- T-4448 [P4] {L:edit-speed} Ways back and twins checked only where an edit reached
+  - Context: Paused: already under 50 ms (her 11-27). Part of a click's confirm, about 45 ms. T-4267 stage A8, from Gemini's review. Every edit searches the track again for each line with a way back of its own, and on saves with quad-track twins plans every twin again.
   - Goal: Only the lines whose searched track or twin route the edit touched; both under 1 ms in Node on Asia.
   - Other: notes/T-4267.md
 - T-4449 [P1] {L:edit-speed} Retime costs less for each line it redoes (taking, 2026-11-27, agent retime)
@@ -290,8 +290,8 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage A5. New line on the Lines tab is three edits (the line, its headways, its weekend share), answered in 226-242 ms on your Asia save.
   - Goal: One edit and one undo step, answered under 100 ms on Asia.
   - Other: notes/T-4267.md
-- T-4455 [P2] {L:edit-speed} A click's word and patch without whole-save walks
-  - Context: T-4267 stage A7. The worker's word and map patch, and the page's take of them, still walk every line, edge or station in places (station names, the delete tool's searches, the click map's edge points).
+- T-4455 [P4] {L:edit-speed} A click's word and patch without whole-save walks
+  - Context: Paused: already under 50 ms (her 11-27). A click is confirmed in about 45 ms. T-4267 stage A7. The worker's word and map patch, and the page's take of them, still walk every line, edge or station in places (station names, the delete tool's searches, the click map's edge points).
   - Goal: Word and patch under 5 ms in Node; the page's take under 5 ms.
   - Other: notes/T-4267.md
 - T-4456 [P2] {L:edit-speed} Trips sent only for lines that moved
