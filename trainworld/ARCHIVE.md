@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4368 [P3] {L:map-look} A high-speed line made normal still shows as high-speed (2026-11-27): closed without code: closed without code: not reproduced: on current code a line switched to normal is redrawn at once (zoom 10, 14.5 and 17.5, one run); the line-kind and track-kind paths both redraw, same code in 0.4.7; the track itself stays high-speed. Reopen with a picture if it shows again. notes/T-4368.md.
 - T-4536 [P2] {L:small-fixes} Blueprints tip out; cities served counts every transit trip (2026-11-27): tip removed in 12 languages; cities served already counted every mode, wording fixed. notes/T-4536.md.
 - T-4502 [P2] {L:loading} A selected city shows no trips to other places while its market opens (2026-11-27): A selected city says Calculating trips while the figures shown have no market yet and one is coming, not To other places 0; T-4533 filed for the zoomed-out case with no station.
 - T-4096 [P3] {L:checks} A daily sweep of old session scratch (2026-11-27): tools/scratch_sweep.py: dry run by default, --yes deletes units over 2 days old, skips folders a session holds; not scheduled.

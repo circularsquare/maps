@@ -586,12 +586,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4375 [P3] {L:map-look} Station circles missing on an Android phone
   - Context: A player on 0.4.7.1 (tw-feedback 1795782306-1df30531, 11-27), Chrome 145 on a Qualcomm Adreno 650, 8 lines, says station circles aren't shown on mobile. No picture, no zoom given. Reach: few, since most phones would show it.
   - Goal: Cause found on an emulated phone at the player's zoom, or closed as not reproducible.
-- T-4376 [P3] {L:map-look} No sound for days for one player
+- T-4376 [P3] {L:map-look} No sound for days for one player (taking, 2026-11-27, agent nosound)
   - Context: A Japanese player on 0.4.7.1 (tw-feedback 1795779886-f61e0c7e, 11-27), Chrome 158 on Windows, 109 lines, hears nothing for days. Could be the Sound switch, volume 0, a browser muted site or audio never starting after a reload. Reach: few.
   - Goal: Sound starts after the first click in a fresh game on Chrome, or the cause is found.
-- T-4368 [P3] {L:map-look} A high-speed line made normal still shows as high-speed (taking, 2026-11-27, agent hsrstroke)
-  - Context: A player on 0.4.7 (tw-feedback 1795690226, 11-26): after changing a high-speed line to a normal one, the line is still drawn as high-speed. One report.
-  - Goal: Changing a line's kind redraws it in the new kind's style at once.
 - T-4328 [P3] {L:map-look} {after:players still blocked after 0.4.6.1} OpenFreeMap through our own address as a last route
   - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail. A possible case: on 11-25 afternoon one player (0.4.6, software graphics) saw a plain brown Map mode with satellite fine (tw-feedback 1795642752).
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
@@ -607,7 +604,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4228 [P3] {L:map-look} Profit view leaves some track uncoloured
   - Context: Player report 11-21 (board g150): in the profit view some areas show no profit with trains running. Reach: few, one report.
   - Goal: Every segment trains run on gets a profit colour.
-- T-4229 [P3] {L:map-look} Station names stay after zooming in
+- T-4229 [P3] {L:map-look} Station names stay after zooming in (taking, 2026-11-27, agent labelstay)
   - Context: Player report 11-20 (board g170): after zooming in once, station names stay on screen. Reach: few, one report.
   - Goal: Station names follow the map at every zoom.
 - T-3744 [P3] {L:fares} Fare per stop made
@@ -1393,6 +1390,10 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
+- T-4534 [P2] {L:small-fixes} Patched rows check still trips on edge cost (taking, 2026-11-27, agent edgecost2)
+  - Context: After T-4506's fix, the T-4214 dev check logged "the patched rows differ from the state's: edges 0: cost" on the first route of a new NYC game, built near Pittsburgh while that area's ground was still loading (T-4368's run, 11-28).
+  - Goal: The check stays quiet for track built where the ground is still loading.
+  - Other: notes/T-4506.md, notes/T-4368.md "Found on the way"
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.

@@ -195,7 +195,7 @@ artifacts/trainworld/T-4120/.
 
 ## Map and UI
 - 2026-11-27 (T-4502): The city view's trips to other places wait ("Calculating trips") only while the figures shown have no market at all. A zone whose own market pack is still opening shows them at once: any composed market holds every place's trips. notes/T-4502.md
-- 2026-11-28 (orchestrator, T-4049): Her "about 1,000 rides" for a served city is read per day, like the other thresholds: a city counts once its zone has 1,000 transit trips a day on any kind of line (a bus-only city counts, T-4536), so Cities served is known only once demand is final. notes/T-4049.md
+- 2026-11-28 (Anita, T-4049): A city counts as served once its zone has 1,000 transit trips a day on any kind of line, buses included, so Cities served is known only once demand is final. notes/T-4049.md
 - 2026-11-27 (Anita, T-4334): The Build tab's mode gear lists Tram beside Bus, Ferry, Monorail and Cable car; trains and high speed always show. An unticked mode leaves the build menus unless the game has some of it, blueprints included. notes/T-4334.md
 - 2026-11-27 (Anita, T-4440): The first load's card gets its x and drag only once only trips are left to calculate; before that the map isn't usable. notes/T-4346.md
 - 2026-11-27 (Anita, T-4400): Hidden modes and hidden levels are removed from the map entirely. An even fade was ruled out: an opaque colour mixed toward the land paints over shown track crossing it and reads as a causeway over water. A ramp still fades out toward a hidden level.
