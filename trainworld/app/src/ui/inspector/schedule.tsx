@@ -343,7 +343,6 @@ export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = tr
       <div class={label ? "h set-by" : "h"}>
         {label ?? t("schedule.title")}
         {canAuto && copy}
-        {weekends && nudge && <OffsetsToggle />}
         {canAuto && (
           <span class="right">
             <Segmented<boolean>
@@ -356,6 +355,7 @@ export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = tr
             />
           </span>
         )}
+        {weekends && nudge && <OffsetsToggle />}
       </div>
       {above}
       <table class="sched">
