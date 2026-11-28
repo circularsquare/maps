@@ -165,8 +165,7 @@ export function SettingsTab() {
         <ModeToggles hidden={hiddenModes.value} onToggle={toggleMode} />
       </div>
       <div class="checks">
-        <Check checked={!(saveSlotsState.value.viewing ? hideBlueprintsView : hideBlueprints).value} tip={t("settingsTab.blueprintsTip")}
-          onChange={(v) => ((saveSlotsState.peek().viewing ? hideBlueprintsView : hideBlueprints).value = !v)}>
+        <Check checked={!(saveSlotsState.value.viewing ? hideBlueprintsView : hideBlueprints).value}          onChange={(v) => ((saveSlotsState.peek().viewing ? hideBlueprintsView : hideBlueprints).value = !v)}>
           {t("settingsTab.blueprints")}
         </Check>
       </div>

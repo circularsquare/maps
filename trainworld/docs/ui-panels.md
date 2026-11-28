@@ -1026,7 +1026,7 @@ keeps what it had and earns no more.
   day counts coarse zones too, as the All cities row does. Network figures are checked as the
   world changes, demand ones on each final, the best line's profit as each game hour turns.
 - **Tiered** (each tier a step): **Cities served** 2, 10, 25, 100 (regions, the Cities tab's rows, with a
-  built station where a running line stops and at least 1,000 train trips a day, T-4049; so known once demand is final); **Trips per day** 1M, 10M, 100M, 300M, 1B (the All cities row's
+  built station where a running line stops and at least 1,000 transit trips a day of any kind of line, T-4049, T-4536; so known once demand is final); **Trips per day** 1M, 10M, 100M, 300M, 1B (the All cities row's
   train trips a day); **Busiest station** 500k, 1M, 2M, 5M boardings a day at one station complex;
   **Busiest line** 500k, 1M, 3M, 10M riders a day on one line. A jump over several tiers records each
   and toasts the highest.

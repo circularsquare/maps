@@ -82,7 +82,7 @@ export const CITY_SHARE = 20;
 export const INTERCITY_SHARE = 20;
 /** trips a day to and from other places a city needs before its share counts */
 export const INTERCITY_MIN_TRIPS = 100e3;
-/** T-4049: trips by train a day to, from and within a city for it to count as served (her "about 1,000 rides", read per day like the other thresholds) */
+/** T-4049, T-4536: transit trips a day (every kind of line) to, from and within a city for it to count as served (her "about 1,000 rides", read per day like the other thresholds) */
 export const CITY_MIN_RIDES = 1000;
 export const SLEEPER_S = 12 * 3600;
 /** riders a day who must be on one train that long */
@@ -404,7 +404,7 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
   const zones = zoneViewsOf(d);
   const views = [...built].map((id) => zones.get(id)).filter((x) => x?.final);
   const trips = sumModes(views)?.rides.train ?? 0;
-  // T-4049: a city counts as served once its zone has CITY_MIN_RIDES train trips a day
+  // T-4049: a city counts as served once its zone has CITY_MIN_RIDES transit trips a day, whatever the kind of line (railTripsPerDay counts them all)
   const cities = served.filter((id) => { const z = zones.get(id); return z?.final && z.railTripsPerDay >= CITY_MIN_RIDES; }).length;
   // busiest station, by complex (each complex by a place of its own, one of none after them, in the order first met)
   const n = cx.members.size, own = new Map<string, number>(), slot = new Map<number, number>();
