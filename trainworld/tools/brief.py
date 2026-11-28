@@ -134,6 +134,31 @@ def scratch(live, tree):
     return os.path.join(base, tree).replace("\\", "/")
 
 
+def similar(live, kind, tid):
+    """One line on what finished agents of the same budget row (and the task's LINES line, if 3+ share it) used, from
+    notes/agent-tokens.jsonl (T-4600; her 11-28: 200-500k tokens an agent, a note at 400k)."""
+    recs = []
+    for l in text(os.path.join(live, "notes", "agent-tokens.jsonl")).split("\n"):
+        try:
+            recs.append(json.loads(l))
+        except ValueError:
+            pass
+    pool = [r for r in recs if r.get("kind") == kind and r.get("task") != tid]
+    line = ""
+    m = re.search(r"\{L:([\w-]+)\}", next((l for l in text(os.path.join(live, "TASKS.md")).split("\n") if l.startswith(f"- {tid} [")), ""))
+    if m and len([r for r in pool if r.get("line") == m.group(1)]) >= 3:
+        pool = [r for r in pool if r.get("line") == m.group(1)]
+        line = f" on line {m.group(1)}"
+    if len(pool) < 3:
+        return f"Size: {len(pool)} finished {kind} agent(s) on record, too few for a figure; aim for one context of 200-500k tokens."
+    v = sorted(r["tokens"] for r in pool)
+    over = sum(x > 500_000 for x in v)
+    med = v[len(v) // 2] if len(v) % 2 else (v[len(v) // 2 - 1] + v[len(v) // 2]) // 2
+    s = (f"Size: {len(v)} finished {kind} agents{line} used a median {med // 1000}k tokens, highest {v[-1] // 1000}k"
+         f" (target 200-500k; you get a note at 400k).")
+    return s + (f" {over} of {len(v)} ran past 500k: split it." if over * 3 >= len(v) else "")
+
+
 def build(a, root):
     live = main_root(root)
     title, notes = task_info(live, a.task, root)
@@ -142,6 +167,7 @@ def build(a, root):
     L = [f"Task {a.task}: {title}. Grep trainworld/TASKS.md for {a.task}; notes: {notes}.",
          f"Kind: {kind}. Budget, from the table in trainworld/CLAUDE.md: {kind} | {row}. Add no measuring beyond it.",
          "Start from the code (CLAUDE.md \"Read before you run\"). Read trainworld/CLAUDE.md first; it has the rules, which this brief doesn't repeat."]
+    L.append(similar(live, kind, a.task))
     for d in a.decisions or []:
         L.append(f"Decision: {d}")
     if a.todo:

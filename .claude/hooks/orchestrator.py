@@ -9,7 +9,8 @@
     agent-guard    stops a handed-over orchestrator from starting new agents
     reply-nudge    (PostToolUse) once per message: if her latest message has gone REPLY_AFTER seconds
                    with no reply text from this orchestrator, add a reminder to the tool result;
-                   also the intake reminder and the read-code reminder (post is the same command)
+                   also the intake reminder and the read-code reminder (post is the same command), and a
+                   subagent's one note when its context passes 400k (T-4600)
     code-guard     (PreToolUse on edits and shell) refuses an orchestrator's edits to code under
                    app/, sim/, pipeline/, checks/ of trainworld and isochrone: brief an agent instead.
                    Anything else (notes, docs, tasks, tools) stays open. Subagents are never affected
@@ -347,7 +348,7 @@ def intake(data):
 READ_GAP = 300            # seconds between two read-code reminders (T-4596, her 11-28: reminders, never blocks)
 CODE_PATH = re.compile(r"(?:trainworld|isochrone)[/\\](?:app|sim|pipeline|checks|tools)(?:[/\\]|$)|\.claude[/\\]hooks(?:[/\\]|$)", re.I)
 CODE_TOKEN = re.compile(r"[^\s'\"|;&<>]*(?:(?:trainworld|isochrone)[/\\](?:app|sim|pipeline|checks|tools)(?:[/\\]|$)|\.claude[/\\]hooks(?:[/\\]|$))[^\s'\"|;&<>]*", re.I)
-SHELL_READS = re.compile(r"\b(?:cat|head|tail|rg|grep|egrep|less|more|bat|type|Get-Content|Select-String|gc)\b|\bsed\s+-n", re.I)
+SHELL_READS = re.compile(r"\b(?:cat|head|tail|rg|grep|egrep|bat|Get-Content|Select-String)\b|\bsed\s+-n", re.I)
 REPL_READS = re.compile(r"\bfile\(|\bRead\(|\bGrep\(|\.text\(\)|\.lines\(\)|\bcat\b|\bsed\s+-n|\bhead\b|\btail\b|\brg\b|\bgrep\b", re.I)
 REPL_QUIET = re.compile(r"git\s+(?:-C\s+\S+\s+)?(?:diff|show)\b", re.I)
 
@@ -355,6 +356,24 @@ REPL_QUIET = re.compile(r"git\s+(?:-C\s+\S+\s+)?(?:diff|show)\b", re.I)
 def _is_code_file(path):
     p = str(path or "").replace("\\", "/")
     return bool(CODE_PATH.search(p)) and not p.lower().endswith(OPEN_SUFFIXES)
+
+
+def _segments_read_code(cmd, mask):
+    """Per command of a chain: a read verb and a code file in the same command. Running a script under tools/ or
+    checks/ (python x.py, node x.mjs) prints no file, so it stays quiet; so does anything starting with git."""
+    if not CODE_PATH.search(cmd.replace("\\", "/")):
+        return False
+    masked = _mask_quotes(cmd) if mask else cmd
+    start = 0
+    for m in list(re.finditer(r"&&|\|\||;|\||\n", masked)) + [None]:
+        end = m.start() if m else len(masked)
+        seg_m, seg = masked[start:end], cmd[start:end]
+        start = m.end() if m else end
+        if re.match(r"\s*(?:await\s+)?(?:\$`)?\s*git\b", seg_m) or not SHELL_READS.search(seg_m):
+            continue
+        if any(_is_code_file(t) for t in CODE_TOKEN.findall(seg)):
+            return True
+    return False
 
 
 def _reads_code(data):
@@ -372,24 +391,14 @@ def _reads_code(data):
                    and not str(ti.get(k)).lower().endswith(OPEN_SUFFIXES))
                    for k in ("path", "glob", "pattern") if k != "pattern" or name == "Glob")
     if name in ("Bash", "PowerShell"):
-        cmd = ti.get("command") or ""
-        if not CODE_PATH.search(cmd.replace("\\", "/")):
-            return False
-        masked = _mask_quotes(cmd)
-        start = 0
-        for m in list(re.finditer(r"&&|\|\||;|\||\n", masked)) + [None]:
-            end = m.start() if m else len(masked)
-            seg_m, seg = masked[start:end], cmd[start:end]
-            start = m.end() if m else end
-            if re.match(r"\s*git\b", seg_m) or not SHELL_READS.search(seg_m):
-                continue
-            if any(_is_code_file(t) for t in CODE_TOKEN.findall(seg)):
-                return True
-        return False
+        return _segments_read_code(ti.get("command") or "", True)
     if name == "REPL":
         code = ti.get("code") or ""
-        return bool(CODE_PATH.search(code.replace("\\", "/")) and REPL_READS.search(code)
-                    and not REPL_QUIET.search(code) and any(_is_code_file(t) for t in CODE_TOKEN.findall(code)))
+        if _segments_read_code(code, False):
+            return True
+        # the file() and Read() calls of a script: a code file named inside them
+        return any(_is_code_file(t) for m in re.finditer(r"\b(?:file|Read)\s*\(([^)]*)\)", code)
+                   for t in CODE_TOKEN.findall(m.group(1)))
     return False
 
 
@@ -412,10 +421,75 @@ def read_nudge(data):
             "reviewing a diff is yours.")
 
 
+AGENT_NOTE_AT = 400_000   # T-4600, her 11-28: an agent's task is 200-500k tokens, with a note at 400k
+
+
+def _agent_transcript(data):
+    """The subagent's own transcript: the payload's agent_transcript_path, a transcript_path that is already an
+    agent's, else <session folder>/subagents/agent-<id>.jsonl beside the session's transcript."""
+    path = data.get("agent_transcript_path") or ""
+    if path:
+        return path
+    tp = data.get("transcript_path") or ""
+    aid = data.get("agent_id") or ""
+    if os.path.basename(tp).startswith("agent-"):
+        return tp
+    return str(Path(tp).with_suffix("") / "subagents" / f"agent-{aid}.jsonl") if tp and aid else ""
+
+
+def agent_context(transcript):
+    """Context size of a subagent's latest model call (its entries are sidechain ones), 0 when unreadable."""
+    try:
+        with open(transcript, "rb") as f:
+            f.seek(0, 2)
+            f.seek(max(0, f.tell() - 2_000_000))
+            tail = f.read().decode("utf-8", errors="replace").splitlines()
+    except OSError:
+        return 0
+    for line in reversed(tail):
+        if '"usage"' not in line:
+            continue
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        if entry.get("type") != "assistant":
+            continue
+        u = (entry.get("message") or {}).get("usage") or {}
+        total = sum(u.get(k) or 0 for k in ("input_tokens", "cache_creation_input_tokens",
+                                             "cache_read_input_tokens", "output_tokens"))
+        if total:
+            return total
+    return 0
+
+
+def agent_budget(data):
+    """A subagent of an orchestrating session, once, when its context passes AGENT_NOTE_AT: finish the step, write
+    its state to the task's notes, report. Delivered at the tool call, not at Stop. Never blocks."""
+    aid = data.get("agent_id")
+    sid = data.get("session_id", "")
+    if not aid or not sid:
+        return None
+    if not any(sid in orch for _, _, orch, _, _ in handoffs()):
+        return None
+    safe = re.sub(r"[^\w.-]", "_", str(aid))
+    state = STATE_DIR / f"{sid}-agent-{safe}.note"
+    if state.exists():
+        return None
+    tokens = agent_context(_agent_transcript(data))
+    if tokens < AGENT_NOTE_AT:
+        return None
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    state.write_text(str(tokens))
+    return (f"Your context is at {tokens // 1000}k tokens, past the 400k note (an agent's task is 200-500k). Finish the "
+            "step you are in, write your state to the task's notes (done, left, the next step), and report. Anything "
+            "unfinished is filed as a new task for another agent.")
+
+
 def post(data):
     """PostToolUse: every reminder that is due, as one additionalContext."""
     parts = []
-    for fn in (take_held, reply_nudge, intake, read_nudge):
+    for fn in (take_held, reply_nudge, intake, read_nudge, agent_budget):
         try:
             text = fn(data)
         except Exception:

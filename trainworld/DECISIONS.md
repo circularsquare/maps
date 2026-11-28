@@ -10,6 +10,7 @@ artifacts/trainworld/T-4120/.
 
 ## Track
 
+- 2026-11-28 (T-4518): A pick between stations is cut out of its piece. An end station goes with it when picked, for a level change or doubling (cut past its platform); made single or retyped it keeps its track (cut 20 m short). notes/T-4518.md (on tw/track)
 - 2026-11-28 (T-4520): A way set on built track is free (trains still bought). Lie: the per-track price values a same-way pair above a double, so a flip raises the built value with no charge; charging it made flip and undo a cash drain, since nothing refunds. notes/T-4520.md (on tw/track)
 - 2026-11-28 (T-4542): Double up's price on the selection bar comes from no trial edit: each run's pair on the side the edit tries first, priced as the edit prices it. Lie: a run the edit's checks refuse is still priced, and the pair's flat crossings are its run's. notes/T-4542.md
 - 2026-11-28 (T-1447): Track copied into another game loses an imported real network's grade separation (`sep`) and crosses by the usual rule. Lie: a real network copied out of a sandbox gets flat crossings where its levels did not keep its lines apart. notes/T-1447.md
@@ -94,6 +95,7 @@ artifacts/trainworld/T-4120/.
 
 ## Demand
 
+- 2026-11-28 (T-4610): A zone's everyday trips with each partner zone are split from the place's everyday total by the partners' weekday shares, so a pair's bubble can be 0.1% off its hover (943,376 against 944,131). Lie: each place's mix of periods and purposes is taken as the market's. notes/T-4610.md
 - 2026-11-28 (T-4567): A market access list also keeps the best station of a line longer than any already listed (still at most 10), so an inter-city station stays listed once the metro reaches it. Lie: line length stands for how far a line goes. notes/T-4567.md
 - 2026-11-27 (Anita, T-4569): after a train change, long trips and cross-zone commutes may keep old figures until the 2-minute refresh; correct after it is fine. notes/T-4564.md
 - 2026-11-27 (Anita, T-4250): On one track and stops a dearer line keeps its trains-an-hour share while dearer by under half the combined headway and none from the cheaper line's headway minus that, fading straight between (was a cliff); the uncrowded round's weight stays. Lie: real gaps step. notes/T-4250.md
@@ -200,6 +202,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-28 (Anita, T-4607): A city or realm counts as built once it has any built stop of any mode (station, bus stop, tram, ferry), not only a station. One rule, `builtCitiesOf` in game/worldTotals.ts; its station count stays stations only. notes/T-4607.md
 - 2026-11-27 (T-4502): The city view's trips to other places wait ("Calculating trips") only while the figures shown have no market at all. A zone whose own market pack is still opening shows them at once: any composed market holds every place's trips. notes/T-4502.md
 - 2026-11-28 (Anita, T-4049): A city counts as served once its zone has 1,000 transit trips a day on any kind of line, buses included, so Cities served is known only once demand is final. notes/T-4049.md
 - 2026-11-27 (Anita, T-4334): The Build tab's mode gear lists Tram beside Bus, Ferry, Monorail and Cable car; trains and high speed always show. An unticked mode leaves the build menus unless the game has some of it, blueprints included. notes/T-4334.md
@@ -278,6 +281,8 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-28 (T-4501): A zone in view or beside it that a station reaches before a shown solve covers it opens its bare copy again for its bubbles. Lie: they show no rail until that solve lands; the copy stays in memory until the next pan after that. notes/T-4501.md
+- 2026-11-28 (Anita, T-4586): A kept result stands in when only the market differs (a country run's market packs and drives, or which markets are open); changed city packs still mean a full load (cells may be renumbered). Lie: minutes of old trips to other places; new places show none.
 - 2026-11-28 (T-3659): Of caelum418's PR 23 we took stations-only fare columns and each far station's weight log taken once a zone in the pass. Stored f64 logs would double the access lists in WASM (98 MB on all China); its deferred walking times clash with T-4179's dropped waits. notes/T-3659.md
 - 2026-11-28 (T-3160): The commutes' station pairs, read only by the station and place views, are kept as 16-bit half floats under one power-of-two scale: Tokyo's real-network start solves in 20 MB less (40 to 20). Lie: each pair within 1 part in 2,048; rail figures untouched. notes/T-3160.md
 - 2026-11-28 (T-1447): A copied selection waits in this browser and is pasted at the target game's next load, in the tab that saves it; the copying page never writes the target's slot, since only a loaded game has its network, water masks and undo. notes/T-1447.md
@@ -311,7 +316,6 @@ artifacts/trainworld/T-4120/.
 - 2026-11-24 (, T-4199): Fare weights and income groups are fareBits.json's (Chrome's last bits) in every browser, so one corridor file serves all; New York's book is the file's plus its two-lands rows. Lie: other engines' last bits; no trip moved on New York or Montana. notes/T-4199.md
 - 2026-11-24 (T-4204): An idle demand worker over its need restarts only when the pool's memory passes 95% of the budget, since its restart recalculates the whole game (6 minutes on Asia); up to a few hundred MB a worker stay held meanwhile.
 - 2026-11-24 (Anita, T-4202): After an update, a save opens with the last version's kept trip figures while the new ones calculate; the lie is a few minutes of old figures, for opening at about map time.
-- 2026-11-24 (T-4202): A stand-in needs the same packs as the new build; a pack rebuilt in the update means a full load, since its cells or the market's places could be renumbered under the kept figures.
 - 2026-11-24 (Anita, T-4157): Coarse demand stays off by default on desktop for now, though it takes about 23% off a Tokyo load with trips moving about 0.006%; on by default on phones.
 - 2026-11-23 (Anita, T-4126): 8800 serves master only; the track branch is behind ?track with its own saves storage and no account, so a newer-format save never reaches master or her account.
 
@@ -379,6 +383,8 @@ artifacts/trainworld/T-4120/.
 
 ## Tooling and process
 
+- 2026-11-28 (Anita): Reviews use Gemini whenever its quota allows ("we should be, whenever its available. for reviews"): saves reviews, big designs before they are built, release prep; a fresh Sonnet reviewer only when Gemini is out.
+- 2026-11-28 (Anita, T-4600): Agent tasks are sized by tokens, 200-500k per agent context, from measured data (notes/agent-tokens.jsonl); an agent gets a note at 400k. Estimates to her stay real minutes of one agent. Why: hours mixed agent and real time, and agents ran to 500-600k.
 - 2026-11-28 (Anita): Timing runs (perf_bench, edit_bench) go to AWS by default, "since our AWS request got rejected because we didnt use it enough"; usage kept in notes/aws-usage.md and told to her. While AWS allows only 1 vCPU, see notes/aws-usage.md.
 - 2026-11-28 (Anita, T-4596): Orchestrators get reminders, not blocks, when they read code ("i dont want to make future orchestrators feel jailed"); the code edit refusal (T-4428) stays.
 - 2026-11-27 (Anita): Development is the default: changes land on their own tests, only save, slot and cash diffs get a review, and only save, lost-edit, crash or wrong-money findings are fixed. One Gemini review at release prep covers the rest.

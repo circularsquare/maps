@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-28-5",
+    "title": "Countries and borders design",
+    "text": "T-4617 (notes/T-4617-design.md section 8): five calls before it is built. 1 one figure for all travel between two countries (France-Germany 0.22x), or long trips only, or plain 1x; 2 close closed borders to long trips too, as a separate task; 3 range 0-1 in steps; 4 leave out trips within, to other places, by trip length, top destinations, goals reached; 5 show trips per day beside each multiplier. Recommended: all five as listed. Also the new strings in section 9 (Show countries, All countries, Border multipliers, Show all countries, the two multiplier hovers in her wording). Gemini design review running (geminidesign).",
+    "since": "2026-11-28",
+    "by": "maps-f0"
+  }
+]

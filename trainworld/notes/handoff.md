@@ -1,17 +1,21 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session e4482553-ed27-4817-abf8-a654e5f6c3ac, name maps-f0, account 2 (claude2), since 2026-11-28 12:44 UTC
-Updated: 2026-11-28 13:35 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-28 15:24 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word 11-28 00:05 her time: "we can raise core cap back to 14, and use a few more for country run if helpful").
 
 ## Next
-1. Work order (her 11-27): real bug fixes and regular chores first; speed and memory where possible; track rework toward the release 1 merge (her 11-28: "the main new feature priority"); modes (T-4479-T-4498) after. Edit-speed work stops at 50 ms an action; sweep agent is cutting the 42 edit-speed tasks (notes/task-sweep-edit-speed-2026-11-28.md), P1 changes go to her.
-2. Track rework: T-4520 landed into tw/track 11-28; g3b (T-4037, then T-4518) and addconn (T-4067) run on tw/track; then the release 1 list; crash round T-4519 and Asia edit bench T-4521 gate the merge.
-3. Train shifting (T-4511, stages T-4543-T-4560, landing switched off until T-4559): T-4543-T-4547 landed; shift6 on T-4548. PRs: six landed, comments posted, close each with a link after the next open-source sync (notes/prs-2026-11-28.md); PR 23 reply approved, post at that sync; 41, 42 held; 45/46 P3 (T-4562).
-4. Server deploy waits for "more things in": shonei-server 07f5a75 + 3a8e65c (save level 43), unpushed; ask when a publish nears. Owed: edit_bench + perf_bench NYC on master (AWS refused 4 vCPU 11-28, her call on 1-vCPU runs pending), batch Gemini review before release; release-findings has T-4583 and T-4284 stage 5 to recheck.
-5. Country run (her 11-27, slow; stop after the Levant and Yemen): agent countryrun reruns UZ ckc/psd, then the UZ+KZ join, then the plan's batches (notes/country-plan-2026-11-28.md). Watchdog (T-4582) runs hourly; doubleup tree waits on maps-d2's dead Vite (her tab).
+1. Daytime is short-term work; country adds overnight only (her 11-28). Main features: track rework, then train shifting. 3-10 agents; reviews by Gemini when its quota allows (DECISIONS). Edit-speed P1s are T-4431 and T-4442 only (sweep, her yes).
+2. Land staleworker (T-4618: 8800 and deploy keep 2 days of builds) before the next 8800 rebuild, then snap8800 at master (8800 is at ef76965ae; zonebubble, cityload2, phonemem3 stage 9 landed after). Smoke after.
+3. Track rework (tw/track): pick4518 on T-4518. Next: T-4593 (join drawn by pointer, not shown in game) and a fix agent for release-findings' T-4520 store.rs:695 (a second Add a track charges the station upgrade before Construct: money); the rest of T-4037 (notes/T-4037.md groups) after T-4518.
+4. Train shifting (switched off until T-4559): shift8 on T-4550 (save block: Gemini saves review before landing), shiftarrows on T-4597 then T-4556; next T-4551.
+5. Running bugs: linefare (T-4615, Sichuan profit before the solve settles), tokyodrop (T-4605, Tokyo -9.4% rail trips on the iPhone path), benchhold (T-4603 core hold, then the owed master timing runs incl. Asia edit_bench --steps for the edit-speed sweep), geminidesign (T-4617 design review), boardq (T-3002, T-3003 "already done?").
+6. Her open asks: a-5 countries and borders design calls (build T-4617 stages after her answer and the Gemini review), a-6 updated-page text. AWS: 1-vCPU jobs now and then for usage history; remind her to re-ask the raise about 12-05 (notes/aws-usage.md). Country batch 3 (TJ, KG, TM, MN) tonight from notes/country-plan-2026-11-28.md.
 
 ## Her words
+- 11-28 10:20 her time: reload/quit prompts save first ("Save and reload"; CLAUDE.md Player text, T-4622); T-4617 shows long trips' factor only, and she asks how hard one ratio for every trip kind would be (borders agent answering); Gemini review of the T-4501 bubbles fix, she is skeptical it covers every case (geminibubbles); text acknowledged.
+- 11-28 10:15 her time: country adds overnight only ("lets focus on more short term work for daytime"); batch 3 (TJ, KG, TM, MN) starts tonight from the plan notes.
+- 11-28 08:45 her time: edit-speed priorities as the sweep proposed, yes; AWS plan yes: 1-vCPU jobs now and then to build a usage history, re-ask the raise about 12-05 (hers), timing runs here meanwhile with cores held for the run (benchhold agent queued until an agent slot frees; >10 asks first). Sizing: 200-500k tokens, note at 400k (T-4600). T-4586 yes. Timetables are a feature priority too.
 - 11-28 08:00-08:35 her time: delegate, don't work ("please spawn subagents rather than just working"; "please respond rather than starting work!"); keep 3-10 agents busy; track rework is "the main new feature priority, lets please keep working on that"; timing runs on AWS (DECISIONS; AWS refused 4 vCPU today, her call on 1-vCPU runs pending); reminders not blocks (DECISIONS); "why are there 42 open edit speed tasks?" (sweep running); T-3938 warm start dropped; redrawn zones fine; board auto-refresh (T-4595, board.js).
 - 11-28 07:50 her time: an hourly watchdog that restarts a stalled orchestrator, yes ("maybe hourly", T-4582); T-4230 packs after the first state, yes (T-4583); PR 23 reply "ok to send yes" after the next open-source sync; show her the text itself, never a notes file to search. Asked what T-3938 is (warm start was never on 8800; her fast loads were the T-328 cache).
 - 11-27 23:00-23:37 her time: chores' last run is stamped on their lines in docs/orchestrator.md (her idea); smooth fade for T-4250 yes (DECISIONS); hold PR 42 and 41 (one-way pairing was "not a priority", never a rule: DECISIONS reworded); PR 45 "can do it eventually".
@@ -26,10 +30,6 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 - 11-27 11:26 her time: Gemini quota out; "oki we can move bus fix to sonnet. but mostly just pause starting new work". Core cap 10 "for a while".
 - 11-27 ~09:45: agents 2-8, Gemini agents counted; Gemini 5x plan, Neon as Opus, Hydrogen as Sonnet (DECISIONS). Load
   proposals "3 then 1", "just proposals so no need to treat them as gospel"; Discord 30-minute loads: assume low memory or big saves.
-- 11-27 ~10:00: core slider is high leverage now (T-3932, P1); light mode wouldn't help ("drawing is already very
-  minimal"); T-4370/T-3160 stay high P2 unless an easy clear path; "buses are settled" dropped (DECISIONS); loads felt
-  instant sometimes, 10 min others, 30 min for players: is that expected? Her guess: low memory / resources. She asked
-  about reading Discord directly (T-4383). With Gemini back she's started work again (agents running 11-27).
 - 11-25 ~12:15: (1-4 agents that week, lifted 11-27); usage at 83%, "dont worry about running out... dont want you
   to perform worse cuz u feel limited"; after the release, mostly quiet-machine work. T-4346 is P3.
 - 11-19: player complaints before new features. 11-25: player region requests are leads, not orders ("we gotta judge").

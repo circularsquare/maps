@@ -57,7 +57,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 ## Community and accounts {area:community}
 
 - community | Community | Sharing games with other players: the community saves, view only links.
-- feedback | Feedback | The in-game feedback form and replies: screenshots, phone layout.
+- feedback | Feedback | The in-game feedback form and replies: screenshots, phone layout. | done:2026-11-28
 - twstats | Play stats | The twstats page: who is playing, where, and for how long. | done:2026-11-19
 - open-source | Open source and mods | The public trainsworld repo, contributors' pull requests, and mod support.
 - accounts-server | Accounts and server | Accounts, security, server backups and the website.
@@ -67,7 +67,7 @@ line through its `{L:<slug>}` tag. Areas are the board's rows. Format and the bo
 ## Interface {area:interface}
 
 - translations | Translations | The game in more languages, and place names in the player's language.
-- help-tutorial | Help and tutorial | Help panels and tutorial hovers that explain demand and the game's words.
+- help-tutorial | Help and tutorial | Help panels and tutorial hovers that explain demand and the game's words. | done:2026-11-28
 - map-look | Map look | How the map looks: day and night, station faces, zones not loaded yet, sounds, small drawing faults.
 - world-map | World map | The zoomed-out world map: start cameras, labels, the real rail layer at far zooms.
 - small-fixes | Small interface fixes | Panel and hover fixes too small for a line of their own.

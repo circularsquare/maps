@@ -16,7 +16,8 @@ orchestrator also reads `docs/orchestrator.md`. Where rules came from: `notes/ru
 - **Reports go to the orchestrator**, about 15 lines (each stays in its context for the session): what changed and
   where, check results, strings, anything for Anita marked as hers. Detail goes in notes/. She doesn't read code:
   quote the value or list, or name the place on 8800.
-- **Estimates in hours of real agent time**, checked against similar past tasks; never "agent-days". Our guesses run
+- **Estimates to her in real minutes of one agent**, read from the minutes of similar finished agents
+  (`tools/agent_tokens.py stats`, notes/agent-tokens.jsonl); never "agent-days". Our guesses run
   pessimistic: don't call something impossible by a time. No deadlines unless she gives one; aim for the next release.
 - **A time saving as a percent** of the whole wait it belongs to, seconds after ("about 10% off an edit's wait, 11 of
   105 s"); seconds alone don't say much (her 11-23).
@@ -40,6 +41,7 @@ new standing process.
   up to an edit "shows up" ("deleting a station shows up faster"); the numbers updating after a change are
   "calculating trips" ("trips are calculated 10x faster"), never "settle", "demand" or "rides"; memory "uses N MB
   less memory".
+- **Reload and quit prompts save first** where saving makes sense, and say so: "Save and reload", "Save and quit" (her 11-28), so players don't have to save themselves.
 - Watch for an object or colour as the subject ("grey fills") and dropped words ("from street zooms"). A gesture with
   no visible control gets its instruction in a tag ("Click to close the loop").
 - **Review**: list every in-game string you add or change, old -> new, exactly as shown. Landing doesn't wait; she
@@ -151,7 +153,9 @@ new standing process.
   stuck, not to confirm a cause, not for routine steps, wording, small UI, or a choice already going to Anita. Say in
   your report whether you called it and what changed.
 - **A refused permission check**: make the step safer and retry; don't wait for Anita.
-- **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back.
+- **Stop at a clean point** if the work outgrows one context: finish the stage, file the rest, hand back. A hook
+  note at 400k tokens of context (her 11-28; a task is 200-500k) means finish the step you're in, write your state
+  to the task's notes and report.
 - **Read before you run** (her 11-24: agents "get a lot more mileage by thinking about actual code than by trying to
   test"): start from the code. Follow the player's action to what they see, list what can go wrong and which of it a
   player could hit, and fix the cause so its cousins are covered too. The report leads with that reasoning. A test
@@ -172,8 +176,9 @@ new standing process.
   | Loading, memory | the above + 1 `perf_bench` NYC run, judged on bytes and memory first |
 
   At most 2 benchmark runs per tree, ever; never re-run to average out noise. Don't build the old version to compare:
-  compare against master's stored numbers. A run taken while more than 4 other cores are busy is noisy: report it as
-  noisy with the exact numbers (bytes, memory, riders) and stop. Big saves (her Asia save, Tokyo, Belgrade) only when
+  compare against master's stored numbers. Timing runs use the core hold (her 11-28), not a wait for a quiet machine:
+  `powershell -NoProfile -ExecutionPolicy Bypass -File trainworld/tools/ops/bench_hold.ps1 -Cores 4 node trainworld/tools/perf_bench.mjs run ...`
+  (same for `edit_bench.mjs`; it pins the run to 2 physical cores, moves everything else off, T-4603). Big saves (her Asia save, Tokyo, Belgrade) only when
   your brief names the save and why, 1 run. Breadth is the batch review's and the release's (docs/orchestrator.md).
   No smoke or standing checks in your tree, except the save checks near a change to how saves are written or loaded. A standing check
   only for a bug that really happened and could quietly come back; first grep `checks/INDEX.md`. End your report with

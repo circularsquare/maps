@@ -10,6 +10,7 @@ orchestrator is current reads it, not only the session that started the agent. R
   venv\Scripts\python.exe trainworld/tools/reports.py add --name <agent> --text-file <f> [--task T-1] [--kind gemini]
                                                         keep a report that no hook sees (gemini_agent.py calls Box.add)
 
+The hook also adds the agent's tokens to notes/agent-tokens.jsonl (tools/agent_tokens.py).
 The hook (registered in .claude/settings.json) fires when any subagent of any maps session stops. It keeps only
 top-level agents of a session that orchestrates trainworld: one registered by `watch.py --session`, or named on
 notes/handoff.md's Orchestrator or Previous line. The reports are the agent's successful SubagentHandback
@@ -416,6 +417,12 @@ def main():
                 return 0                         # the rewrite reaches us on the next stop
             for rec in from_stop(box, data):
                 box.write(rec)
+            try:
+                import agent_tokens                  # tokens per finished agent (T-4600), notes/agent-tokens.jsonl
+                agent_tokens.add_from_stop(box, data)
+            except Exception as ex:
+                with open(os.path.join(box.dir, "hook-errors.log"), "a", encoding="utf-8") as f:
+                    f.write(f"{now_iso()} agent_tokens {type(ex).__name__}: {ex}\n")
         except Exception as ex:                  # never block or disturb an agent's stop
             try:
                 os.makedirs(box.dir, exist_ok=True)

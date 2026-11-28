@@ -45,8 +45,10 @@ The rules broken most (maps-e0 broke them on 11-27 and filled 500k in under two 
   disk, shared files, her review), run more; something struggling (claims waiting at the cap, smoke timing out, agents
   colliding, timings that need a quiet machine), fewer. Start one when its work is ready, not to fill a slot. A file
   collision rules out only the tasks sharing files with a running agent: name them, start something else.
-- **Size tasks to about an hour or one stage**; split bigger work before it starts (each stage its own id and report).
-  An agent that compacts was given too much.
+- **Size tasks to one agent context, 200-500k tokens** (her 11-28), from the record: `brief.py` prints what finished
+  agents of the same budget row used, and `tools/agent_tokens.py stats` lists every row. Split bigger work before it
+  starts (each stage its own id and report); "split it" in the brief's size line means similar ones ran past 500k.
+  Agents get a note at 400k and wrap up. An agent that compacts was given too much.
 - **Model** (11-27): Sonnet by default; Opus for UI layout, design calls nobody has made, debugging nobody
   understands. No Gemini code agents and no Fable for agents unless she asks (the successor's advisor is the one Fable
   use). Briefs don't invite the advisor; log each of your calls in notes/handoff-log.md (what was asked, whether it
@@ -77,6 +79,7 @@ The rules broken most (maps-e0 broke them on 11-27 and filled 500k in under two 
 
 - On a low-disk warning (under 30 GB), clear to at least 60 GB free (her 11-24: otherwise "we will be in a perpetual
   state of clearing"). What can go: notes/T-4088.md.
+- **Timing runs** (her 11-28) go through `trainworld/tools/ops/bench_hold.ps1 -Cores 4 <bench command>`: it holds 2 physical cores for the run (T-4603), so no waiting for a quiet machine; the summary lands in artifacts/trainworld/benchhold/.
 - **Cores 0-1 are hers** (11-21): at takeover start, in the background, `powershell -NoProfile -ExecutionPolicy Bypass
   -File trainworld/tools/ops/reserve_cores.ps1 -All -Loop 30` (one loop serves every session; a second copy exits).
 
@@ -126,7 +129,7 @@ its own commit once its builder's tests (typecheck, budget row, one game run) pa
 waiting (11-21). If the batch raises the save level, tell her a save made there may not load if a change is reverted.
 
 - **Review during development** only for a diff that changes what a save writes or reads, writes, clears or reloads a
-  slot, or settles cash: a fresh Sonnet saves reviewer before landing. Everything else lands on its own tests.
+  slot, or settles cash: a saves review before landing, by Gemini (`tools/gemini_audit.py`) whenever its quota allows, else a fresh Sonnet reviewer (her 11-28: "we should be [using gemini], whenever its available. for reviews"). Everything else lands on its own tests.
 - **Fix a finding during development only if** it is a save that won't load, lost edits, a crash, or wrong money or
   figures written into a save. Every other finding is one line in `notes/release-findings.md` (task id, line, what
   breaks): no fix agent, no task. The fixing agent checks a finding against the code first; no re-review unless the

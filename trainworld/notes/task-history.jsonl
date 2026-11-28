@@ -508,3 +508,5 @@
 {"t":"2026-11-28T11:19Z","n":373,"area":{"demand":101,"interface":21,"ops":20,"schedule":36,"performance":69,"track":92,"community":16,"schematic":18},"pri":{"P3":277,"P2":87,"P1":9},"opened":0,"closed":0}
 {"t":"2026-11-28T12:09Z","n":373,"area":{"demand":101,"interface":21,"ops":20,"schedule":36,"performance":69,"track":92,"community":16,"schematic":18},"pri":{"P3":277,"P2":87,"P1":9},"opened":0,"closed":0}
 {"t":"2026-11-28T12:59Z","n":373,"area":{"demand":101,"interface":21,"ops":20,"schedule":36,"performance":69,"track":92,"community":16,"schematic":18},"pri":{"P3":277,"P2":87,"P1":9},"opened":1,"closed":1}
+{"t":"2026-11-28T13:49Z","n":355,"area":{"demand":101,"interface":21,"ops":19,"schedule":35,"performance":54,"track":91,"community":16,"schematic":18},"pri":{"P3":276,"P2":76,"P1":3},"opened":2,"closed":23}
+{"t":"2026-11-28T14:39Z","n":356,"area":{"demand":101,"interface":21,"ops":20,"schedule":34,"performance":55,"track":91,"community":16,"schematic":18},"pri":{"P3":275,"P2":78,"P1":3},"opened":6,"closed":5}
