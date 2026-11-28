@@ -1102,12 +1102,13 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
   - Other: research/late-game-spending.md C.
-- T-4510 [P2] {L:timetables} Offset column behind a toggle, with weekend offsets (taking, 2026-11-27, agent offsettoggle)
-  - Context: You, 11-27, on T-3742's nudges: "for all trains lets have the offset column be toggleable with an icon button that represents like shifting. default off / not shown. also why dont we have separate offsets for weekends?"
-  - Goal: The Offset column hidden by default behind a shift icon button; weekend rows take their own offsets.
-- T-4511 [P2] {L:timetables} Nudge single trains (taking, 2026-11-27, agent nudgesingle)
-  - Context: You, 11-27: "i was thinking we nudge individual trains"; T-3742 built offsets for a whole schedule row.
-  - Goal: A design to you first: how a player picks a train or departure, how far it moves, how it holds through edits.
+- T-4511 [P3] {L:timetables} Nudge single trains
+  - Context: Design done 11-27 (16-21 h). You, 11-27: "put single-train moves to p3 and do it later ... see if players request single train after" the real-gaps waits (T-4514) and line-wide nudges.
+  - Goal: Build when players still ask for it after T-4514.
+  - Other: notes/T-4511.md
+- T-4514 [P2] {L:demand-ideas} Waits on shared stretches from the real gaps (taking, 2026-11-27, agent realgaps)
+  - Context: You, 11-27: yes. Lines sharing a stretch are counted as perfectly even today, so evening interlined trains earns nothing; from the real gaps (sum of squared gaps over twice their sum), bunched lines lose riders until evened. Design in notes/T-4511.md "Interlining".
+  - Goal: Implemented with an NYC trip-figure diff shown to you before landing; under 1 ms per service change.
 - T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows
   - Context: Your pad, 11-25: most players won't care about every mode as niche ones come (cable cars, monorail, maglev, maybe planes). Your design: a gear on the construct panel to hide or show modes; by default it shows today's (bus and ferry), with checkboxes for cable cars and monorail.
   - Goal: That gear and its setting, kept per player; a mode switched off and never built shows up nowhere, build menus included (you, 11-27). Needed before the next mode ships.

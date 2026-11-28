@@ -89,6 +89,7 @@ artifacts/trainworld/T-4120/.
 
 ## Demand
 
+- 2026-11-27 (Anita, T-4514): A trip served by several lines on a shared stretch waits by the real gaps in their combined departures, not as if perfectly even, so evening interlined lines earns riders. Single-train moves wait at P3 until players ask again. notes/T-4511.md
 - 2026-11-24 (Anita, T-921): Commute zone pairs under 1 person a day are dealt in chunks of about 1 (`COMMUTE_CHUNK_DAY`, the one number to tune), was 0.1 trips a period. The lie: a station under 1,000 a day can move up to about 3.5%, as much as redrawing. notes/T-921.md
 - 2026-11-24 (Anita, T-4158): A bus line's consecutive stops within 500 m on the same lines are one demand station ("ok, lets do 500m"), was 300 m. About 18-29% faster solves on bus-heavy saves; rides inside a group are lost, about 1% of Auto lines' riders. notes/T-4158.md
 - 2026-11-23 (Anita, T-4093): Crowding stays at 3 rounds; 2 rounds (24% faster) is refused for its line swings (NJT NEC +19%), "final unless the swing numbers get a lot lower". Don't ask again. Rounds stop early once loads move under 3%, was 1%. notes/T-4057.md
@@ -266,7 +267,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
-- 2026-11-27 (T-4449): Retime plans a run's holds once and lays held hops from their start, offset by when the train takes them. Lie: last-bit differences in timetables (Asia: 908 of 931 changed rows under 1e-9 s, 12 slot rows up to 0.024 s, one line's variants reordered); NYC to the bit. notes/T-4449.md
+- 2026-11-27 (T-4449): Retime plans a run's holds once and lays held hops from their start, offset by when the train takes them. Lie: last-bit differences in timetables (Asia: 12 of 5,253 rows move up to 0.024 s); NYC to the bit. notes/T-4449.md
 - 2026-11-27 (Anita, T-4267): Edit-speed work stops at 50 ms an action ("pause any edit speed work for actions that already take under 50ms"): a stage whose only target is an action already under 50 ms on her Asia save, as felt in the page, waits at P4. notes/T-4267.md
 - 2026-11-27 (T-4501): During a game load the focus pool moves from the zone in view, once it has shown it a round, to a city selected in the city view that has no figures yet. Lie: the zone in view's later rounds come from the main pool, later. notes/T-4501.md
 - 2026-11-27 (T-4396): A load on one worker that runs out of memory retries once on its own, with intercity trips off, else in less detail, by changing the real Settings toggles so the player can turn them back. notes/T-4396.md
