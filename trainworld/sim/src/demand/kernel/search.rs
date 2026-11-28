@@ -7,71 +7,71 @@ pub struct Graph {
     pub n_st: usize,
     pub n: usize,
     /// Route nodes (index node - n_st): one per stop per direction per line.
-    pub rn_station: Vec<u32>,
-    pub rn_line: Vec<u32>,
+    pub rn_station: Shared<u32>,
+    pub rn_line: Shared<u32>,
     /// Real ride minutes to the next stop in this direction (0 at the end).
-    pub rn_ride: Vec<f32>,
+    pub rn_ride: Shared<f32>,
     /// Distance fare in perceived minutes, kept separate from the crowding multiplier.
-    pub rn_fare: Vec<f32>,
+    pub rn_fare: Shared<f32>,
     /// Departures an hour for each route node in this period.
-    pub rn_tph: Vec<f32>,
+    pub rn_tph: Shared<f32>,
     /// Average extra real minutes a rider boarding at this route node waits because full trains
     /// leave riders on the platform (T-188, `left_behind`), plus `rn_span`. Added to the
     /// boarding's cost.
-    pub rn_left: Vec<f32>,
+    pub rn_left: Shared<f32>,
     /// Perceived minutes per real minute of each route node's ride (a bus line's `BUS_RIDE_WEIGHT`); empty when none is a bus.
-    pub rn_busw: Vec<f32>,
+    pub rn_busw: Shared<f32>,
     /// Perceived minutes added to boarding where only a share `phi` of the period's riders have a
     /// train due within their tolerance (T-842, `Network::span`): -ln(phi) / `Params::beta`, the
     /// logit's own form for an option open to that share. 0 with service all period.
-    pub rn_span: Vec<f32>,
+    pub rn_span: Shared<f32>,
     /// T-3888: perceived minutes a trip pays where its first boarding is at route node r
     /// (`Params::train_in_min` on a train or tram but at a tram stop on the street, T-4041, else 0), and where its last ride leaves at r (`train_out_min`); both empty where nothing pays. In the station pair's cost after the
     /// search (`trip_ends`), so route choice between lines does not see them.
-    pub rn_in: Vec<f32>,
-    pub rn_out: Vec<f32>,
+    pub rn_in: Shared<f32>,
+    pub rn_out: Shared<f32>,
     /// Each route node's platform less its station's position, metres (`Network::stop_x`): a change
     /// of trains walks from the platform it arrives at to the one it leaves from (T-717).
-    pub rn_dx: Vec<f32>,
-    pub rn_dy: Vec<f32>,
+    pub rn_dx: Shared<f32>,
+    pub rn_dy: Shared<f32>,
     /// Stations with a platform away from their position, where a change can walk.
     pub st_spread: Vec<bool>,
     /// Per station, how much of its minutes a wait there counts (`wait_factor`, T-1281).
-    pub st_wait: Vec<f32>,
+    pub st_wait: Shared<f32>,
     /// T-2220: per station, whether it is in a station building (`upgrades::IN_BUILDING`). Empty
     /// when none is.
     pub st_bld: Vec<bool>,
     /// T-3718: per station, the stations a trip starting there may walk to before boarding, as a
     /// trip may walk to one after its last ride (`xfer_walk_m`, its complex), CSR by `st_walk_off`,
     /// with the walk's real minutes from position to position (`StartWalk`).
-    pub st_walk_off: Vec<u32>,
-    pub st_walk_to: Vec<u32>,
-    pub st_walk_min: Vec<f32>,
+    pub st_walk_off: Shared<u32>,
+    pub st_walk_to: Shared<u32>,
+    pub st_walk_min: Shared<f32>,
     /// Incoming edges, CSR, for destination-based strategy search.
-    pub rev_off: Vec<u32>,
-    pub rev_from: Vec<u32>,
-    pub rev_edge: Vec<u32>,
-    pub adj_off: Vec<u32>,
-    pub adj_to: Vec<u32>,
-    pub adj_cost: Vec<f32>,
+    pub rev_off: Shared<u32>,
+    pub rev_from: Shared<u32>,
+    pub rev_edge: Shared<u32>,
+    pub adj_off: Shared<u32>,
+    pub adj_to: Shared<u32>,
+    pub adj_cost: Shared<f32>,
     /// For ride edges, the route node the segment starts at; NONE otherwise.
-    pub adj_seg: Vec<u32>,
+    pub adj_seg: Shared<u32>,
     /// Each route node's ride edge's end (a node id), NONE at a line's end: a rider who boards
     /// there rides at least to it (T-1055).
-    pub rn_next: Vec<u32>,
+    pub rn_next: Shared<u32>,
     /// The fare curve's departure from `rn_fare`'s straight line (T-883, T-1143), and each route
     /// node's fare km to the next stop, which it needs; both empty while the curve is that line.
     pub fare_curve: FareCurve,
-    pub rn_km: Vec<f32>,
+    pub rn_km: Shared<f32>,
     /// T-1626: each route node's fare multiplier (its line's high-speed one, else 1), and its fare
     /// km to the next stop times that; both empty while every line's is 1. A trip pays the base
     /// once and the rest of its fare times its km-weighted multiplier.
-    pub rn_fare_mul: Vec<f32>,
-    pub rn_kmw: Vec<f32>,
+    pub rn_fare_mul: Shared<f32>,
+    pub rn_kmw: Shared<f32>,
     /// T-3578: each route node's line's own fare multiplier, which the base takes too: a trip pays
     /// the base times the largest of the lines it rides (`trip_base_mul`). Empty while every
     /// line's is 1; with it, `rn_km` is filled whatever the curve.
-    pub rn_base_mul: Vec<f32>,
+    pub rn_base_mul: Shared<f32>,
     /// The base fare `rn_base_mul` scales, perceived minutes (`Params::fare_min`).
     pub base_min: f32,
     /// T-3784: the transfer fare in the boarding edges' costs (`Params::xfer_fare`), which a change
@@ -79,10 +79,10 @@ pub struct Graph {
     pub xfer_fare: f32,
     /// T-4050: per route node, its class of departures run as one evenly spaced service
     /// (`even_classes`): the least route node of the class, `NONE` in none. Empty when none is.
-    pub rn_even: Vec<u32>,
+    pub rn_even: Shared<u32>,
     /// T-4514: per route node, its class's factor on the evenly spaced wait this period (`Network::gap_f`, the real
     /// gaps between its lines' departures), 1 or more; empty where every class's is 1.
-    pub rn_gap: Vec<f32>,
+    pub rn_gap: Shared<f32>,
 }
 
 impl Graph {
@@ -471,42 +471,43 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     } else {
         (vec![], vec![])
     };
+    let rn_span: Shared<f32> = rn_span.into();
     Graph {
-        rn_even,
-        rn_gap,
-        rn_in,
-        rn_out,
+        rn_even: rn_even.into(),
+        rn_gap: rn_gap.into(),
+        rn_in: rn_in.into(),
+        rn_out: rn_out.into(),
         rn_left: rn_span.clone(),
-        rn_busw,
+        rn_busw: rn_busw.into(),
         rn_span,
-        rn_dx,
-        rn_dy,
+        rn_dx: rn_dx.into(),
+        rn_dy: rn_dy.into(),
         st_spread,
-        st_wait,
+        st_wait: st_wait.into(),
         st_bld,
-        st_walk_off,
-        st_walk_to,
-        st_walk_min,
-        rn_tph,
-        rev_off,
+        st_walk_off: st_walk_off.into(),
+        st_walk_to: st_walk_to.into(),
+        st_walk_min: st_walk_min.into(),
+        rn_tph: rn_tph.into(),
+        rev_off: rev_off.into(),
         rev_from: incoming.iter().map(|x| x.1).collect(),
         rev_edge: incoming.iter().map(|x| x.2).collect(),
         n_st: s,
         n,
-        rn_station,
-        rn_line,
-        rn_fare: vec![0.0; rn_ride.len()],
-        rn_ride,
-        adj_off,
+        rn_fare: vec![0.0; rn_ride.len()].into(),
+        rn_station: rn_station.into(),
+        rn_line: rn_line.into(),
+        rn_ride: rn_ride.into(),
+        adj_off: adj_off.into(),
         adj_to: edges.iter().map(|e| e.1).collect(),
         adj_cost: edges.iter().map(|e| e.2).collect(),
         adj_seg: edges.iter().map(|e| e.3).collect(),
-        rn_next,
+        rn_next: rn_next.into(),
         fare_curve: FareCurve::default(),
-        rn_km: vec![],
-        rn_fare_mul: vec![],
-        rn_kmw: vec![],
-        rn_base_mul: vec![],
+        rn_km: Shared::default(),
+        rn_fare_mul: Shared::default(),
+        rn_kmw: Shared::default(),
+        rn_base_mul: Shared::default(),
         base_min: 0.0,
         xfer_fare: p.xfer_fare,
     }
@@ -525,13 +526,17 @@ pub fn complex_members(group: &[u32]) -> Vec<Vec<u32>> {
 
 /// Ride edges cost real minutes times a crowding factor per segment (indexed by route node).
 pub fn set_crowding(g: &mut Graph, factor: &[f32]) {
-    for e in 0..g.adj_to.len() {
-        let seg = g.adj_seg[e];
-        if seg != NONE {
+    let cost: Vec<f32> = (0..g.adj_to.len())
+        .map(|e| {
+            let seg = g.adj_seg[e];
+            if seg == NONE {
+                return g.adj_cost[e];
+            }
             let r = seg as usize - g.n_st;
-            g.adj_cost[e] = g.rn_ride[r] * factor[r] * g.rn_busw.get(r).copied().unwrap_or(1.0) + g.rn_fare[r];
-        }
-    }
+            g.rn_ride[r] * factor[r] * g.rn_busw.get(r).copied().unwrap_or(1.0) + g.rn_fare[r]
+        })
+        .collect();
+    g.adj_cost = cost.into();
 }
 
 /// Station-to-station strategies towards some of the stations. Each destination's search is
@@ -3589,33 +3594,34 @@ pub fn egress_stations(sz: &Subzones, n_st: usize) -> Vec<bool> {
     want
 }
 
-/// What a skims table depends on: the graph's edges and the boarding cost's parameters.
+/// What a skims table depends on: the graph's edges and the boarding cost's parameters (the graph's
+/// own arrays, `Shared`, so a kept table holds no copy of them).
 pub(super) struct SkimKey {
     pub(super) n_st: usize,
     pub(super) n: usize,
-    pub(super) adj_off: Vec<u32>,
-    pub(super) adj_to: Vec<u32>,
-    pub(super) adj_cost: Vec<f32>,
-    pub(super) rn_tph: Vec<f32>,
-    pub(super) rn_left: Vec<f32>,
-    pub(super) rn_dx: Vec<f32>,
-    pub(super) rn_dy: Vec<f32>,
+    pub(super) adj_off: Shared<u32>,
+    pub(super) adj_to: Shared<u32>,
+    pub(super) adj_cost: Shared<f32>,
+    pub(super) rn_tph: Shared<f32>,
+    pub(super) rn_left: Shared<f32>,
+    pub(super) rn_dx: Shared<f32>,
+    pub(super) rn_dy: Shared<f32>,
     pub(super) transfer_min: f32,
     /// T-3784: the transfer fare alone, which zone runs take off the route costs
     pub(super) xfer_fare: f32,
-    pub(super) st_wait: Vec<f32>,
+    pub(super) st_wait: Shared<f32>,
     pub(super) st_bld: Vec<bool>,
     pub(super) fare_curve: FareCurve,
-    pub(super) rn_km: Vec<f32>,
-    pub(super) rn_kmw: Vec<f32>,
-    pub(super) rn_base_mul: Vec<f32>,
+    pub(super) rn_km: Shared<f32>,
+    pub(super) rn_kmw: Shared<f32>,
+    pub(super) rn_base_mul: Shared<f32>,
     pub(super) base_min: f32,
-    pub(super) st_walk_to: Vec<u32>,
-    pub(super) st_walk_min: Vec<f32>,
-    pub(super) rn_in: Vec<f32>,
-    pub(super) rn_out: Vec<f32>,
-    pub(super) rn_even: Vec<u32>,
-    pub(super) rn_gap: Vec<f32>,
+    pub(super) st_walk_to: Shared<u32>,
+    pub(super) st_walk_min: Shared<f32>,
+    pub(super) rn_in: Shared<f32>,
+    pub(super) rn_out: Shared<f32>,
+    pub(super) rn_even: Shared<u32>,
+    pub(super) rn_gap: Shared<f32>,
 }
 
 impl SkimKey {

@@ -273,6 +273,8 @@ fn main() {
         st.mark(&format!("period {q}: solve + {rounds} rounds, skims released"));
     }
     println!("\nsolve {:.0} ms; highest heap during the periods {:.1} MB, at rest after {:.1} MB", now_ms() - t_solve, alloc::mb(peak_all.max(alloc::peak())), alloc::mb(alloc::current()));
+    let (once, each) = trainworld_sim::demand::kernel::held_bytes();
+    println!("graph arrays held (kernel::Shared): {:.1} MB, {:.1} MB as each holder's own copy", alloc::mb(once), alloc::mb(each));
     let mut rail = 0f64;
     for q in 0..PERIODS {
         for (_, a, e) in pops.iter() {

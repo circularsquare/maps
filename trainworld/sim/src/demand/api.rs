@@ -137,9 +137,7 @@ pub(crate) fn check_fare_zones(st: &[u32], off: &[u32], usd: &[f32], dist: &[u8]
 pub(crate) fn put_fares(g: &mut Graph, knots: &[f32], zones: &FareZones, hop_km: &[f32], mul: &[f32], base_mul: &[f32], fare_min: f32, per_km: f32, fare_w: f32) {
     let km = |r: usize| hop_km.get(r).copied().unwrap_or(0.0);
     let m = |r: usize| mul.get(r).copied().unwrap_or(1.0);
-    for (r, fare) in g.rn_fare.iter_mut().enumerate() {
-        *fare = km(r) * per_km * m(r);
-    }
+    g.rn_fare = (0..g.rn_fare.len()).map(|r| km(r) * per_km * m(r)).collect();
     put_fare_curve(g, knots, zones, hop_km, fare_min, per_km, fare_w);
     let n = g.rn_fare.len();
     if mul.iter().any(|&v| v != 1.0) {
@@ -1248,7 +1246,7 @@ impl DemandApi {
     }
     /// The route-node layout: per route node, its station and line (kernel order).
     pub fn route_nodes(&self, q: usize) -> (Vec<u32>, Vec<u32>) {
-        self.period(q).map_or((vec![], vec![]), |st| (self.svc().out_copy(st.g.rn_station.clone()), self.svc().out_copy(st.g.rn_line.clone())))
+        self.period(q).map_or((vec![], vec![]), |st| (self.svc().out_copy(st.g.rn_station.to_vec()), self.svc().out_copy(st.g.rn_line.to_vec())))
     }
     /// Snapshot station -> demand station (stations within `station_merge_m` are one).
     pub fn station_map(&self) -> Vec<u32> {
@@ -1940,7 +1938,7 @@ impl DemandApi {
                 return true;
             }
             set_crowding(&mut st.g, &fac);
-            st.g.rn_left = left;
+            st.g.rn_left = left.into();
             st.uniform = false;
             st.fac = fac;
             let mut xfer = vec![0.0; st.xi.len];

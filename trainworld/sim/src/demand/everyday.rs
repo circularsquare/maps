@@ -2436,7 +2436,7 @@ impl EverydayApi {
             st.uniform = false;
             st.fac = fac;
             set_crowding(&mut st.g, &st.fac);
-            st.g.rn_left = left;
+            st.g.rn_left = left.into();
             let (probability, loads, parts, xfer, walk_lost, rail_d, unr_lost) = self.pass(&st.g, &st.p, q, &st.xi);
             for (old, new) in st.walk_lost.iter_mut().zip(&walk_lost) {
                 *old += (new - *old) / (st.round as f64 + 1.0);

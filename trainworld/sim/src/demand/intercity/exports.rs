@@ -169,7 +169,7 @@ impl IntercityApi {
         if let Some(total) = crowd {
             let Some((f, left)) = round_costs(&g, &net, &p, total) else { return false };
             set_crowding(&mut g, &f);
-            g.rn_left = left;
+            g.rn_left = left.into();
             (fac, uniform) = (f, false);
         }
         let xi = xfer_index(&g);
@@ -409,7 +409,7 @@ impl IntercityApi {
             return true;
         }
         set_crowding(&mut st.g, &fac);
-        st.g.rn_left = left;
+        st.g.rn_left = left.into();
         st.uniform = false;
         st.fac = fac;
         let Pass { loads: l, c_loads, r_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st: st_new, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d } = self.pass(&st.g, &st.p, q, &st.xi);

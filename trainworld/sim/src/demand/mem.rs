@@ -41,10 +41,13 @@ pub(crate) fn network(n: &Network) -> usize {
         + vb(&n.line_wrap) + vb(&n.span) + vb(&n.st_ups) + vb(&n.st_passage) + vb(&n.catches) + n.catches.iter().map(|c| vb(&c.pts)).sum::<usize>() + vb(&n.st_bus) + vb(&n.st_tram) + vb(&n.back_stops)
 }
 
+/// A graph's arrays, those it shares with other graphs (`kernel::Shared`) by its share of them, so that
+/// every holder's together count each once.
 pub(crate) fn graph(g: &Graph) -> usize {
-    vb(&g.rn_station) + vb(&g.rn_line) + vb(&g.rn_ride) + vb(&g.rn_fare) + vb(&g.rn_tph) + vb(&g.rn_left) + vb(&g.rn_span) + vb(&g.rn_in) + vb(&g.rn_out) + vb(&g.rn_dx) + vb(&g.rn_dy)
-        + vb(&g.st_spread) + vb(&g.st_wait) + vb(&g.st_bld) + vb(&g.rev_off) + vb(&g.rev_from) + vb(&g.rev_edge) + vb(&g.adj_off) + vb(&g.adj_to) + vb(&g.adj_cost) + vb(&g.adj_seg)
-        + vb(&g.rn_next) + vb(&g.fare_curve.km) + vb(&g.fare_curve.min) + vb(&g.fare_curve.zones.st) + vb(&g.fare_curve.zones.off) + vb(&g.fare_curve.zones.min) + vb(&g.fare_curve.zones.dist) + vb(&g.fare_curve.zones.pass_off) + vb(&g.fare_curve.zones.pass) + vb(&g.rn_km) + vb(&g.rn_fare_mul) + vb(&g.rn_kmw) + vb(&g.rn_base_mul)
+    let u = [&g.rn_station, &g.rn_line, &g.st_walk_off, &g.st_walk_to, &g.rev_off, &g.rev_from, &g.rev_edge, &g.adj_off, &g.adj_to, &g.adj_seg, &g.rn_next, &g.rn_even].map(|v| v.heap_share()).iter().sum::<usize>();
+    let f = [&g.rn_ride, &g.rn_fare, &g.rn_tph, &g.rn_left, &g.rn_busw, &g.rn_span, &g.rn_in, &g.rn_out, &g.rn_dx, &g.rn_dy, &g.st_wait, &g.st_walk_min, &g.adj_cost, &g.rn_km, &g.rn_fare_mul, &g.rn_kmw, &g.rn_base_mul, &g.rn_gap].map(|v| v.heap_share()).iter().sum::<usize>();
+    u + f + vb(&g.st_spread) + vb(&g.st_bld)
+        + vb(&g.fare_curve.km) + vb(&g.fare_curve.min) + vb(&g.fare_curve.zones.st) + vb(&g.fare_curve.zones.off) + vb(&g.fare_curve.zones.min) + vb(&g.fare_curve.zones.dist) + vb(&g.fare_curve.zones.pass_off) + vb(&g.fare_curve.zones.pass)
 }
 
 pub(crate) fn loads(l: &Loads) -> usize {

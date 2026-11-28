@@ -261,12 +261,12 @@ fn a_bent_fare_curve_charges_long_trips_and_counts_its_extra() {
     let (base, rate, steep) = (4.5f32, 0.3f32, 0.9f32);
     let graph = |knots: &[(f32, f32)]| {
         let mut g = build_graph(&net, &p);
-        g.rn_fare = vec![20.0 * rate; g.rn_ride.len()];
+        g.rn_fare = vec![20.0 * rate; g.rn_ride.len()].into();
         let ones = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &ones);
         if knots.len() >= 2 {
             g.fare_curve = FareCurve { km: knots.iter().map(|k| k.0).collect(), min: knots.iter().map(|k| k.1).collect(), base, rate, ..Default::default() };
-            g.rn_km = vec![20.0; g.rn_ride.len()];
+            g.rn_km = vec![20.0; g.rn_ride.len()].into();
         }
         g
     };
@@ -335,7 +335,7 @@ fn fare_zones_count_every_zone_a_trip_touches_in_the_curves_place() {
         set_crowding(&mut g, &ones);
         if let Some(z) = zones {
             g.fare_curve = FareCurve { base, rate, zones: z, ..Default::default() };
-            g.rn_km = km.to_vec();
+            g.rn_km = km.to_vec().into();
         }
         g
     };
@@ -407,7 +407,7 @@ fn distance_lines_split_a_trip_into_its_zone_runs() {
             z.pass = vec![c];
         }
         g.fare_curve = FareCurve { base, rate, zones: z, ..Default::default() };
-        g.rn_km = km.clone();
+        g.rn_km = km.clone().into();
         g
     };
     let plain = {
@@ -468,7 +468,7 @@ fn a_change_inside_a_zone_run_pays_no_transfer_fare() {
         let ones = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &ones);
         g.fare_curve = FareCurve { base, rate, zones: z, ..Default::default() };
-        g.rn_km = km.to_vec();
+        g.rn_km = km.to_vec().into();
         g
     };
     let p0 = common_test_params();
@@ -579,7 +579,7 @@ fn a_feeders_share_of_the_fare_curve_extra_goes_by_its_km() {
     let ones = vec![1.0; g.rn_ride.len()];
     set_crowding(&mut g, &ones);
     g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate, ..Default::default() };
-    g.rn_km = km.to_vec();
+    g.rn_km = km.to_vec().into();
     let sk = skims(&g, &p);
     let mut od = vec![0.0f32; 16];
     od[3] = 10.0; // 0 -> 3
@@ -614,12 +614,12 @@ fn a_lines_own_multiplier_scales_the_base_by_the_largest_on_the_trip() {
         set_crowding(&mut g, &ones);
         if bent {
             g.fare_curve = FareCurve { km: vec![0.0, 5.0, 200.0], min: vec![base, base + 5.0 * rate, base + 5.0 * rate], base, rate, ..Default::default() };
-            g.rn_km = km.to_vec();
+            g.rn_km = km.to_vec().into();
         }
         if let Some(m) = mul {
             g.rn_base_mul = g.rn_line.iter().map(|&l| m[l as usize]).collect();
             g.base_min = base;
-            g.rn_km = km.to_vec();
+            g.rn_km = km.to_vec().into();
         }
         g
     };
@@ -669,7 +669,7 @@ fn a_lines_own_multiplier_scales_the_base_by_the_largest_on_the_trip() {
     let plain = skims(&g, &p);
     g.rn_base_mul = g.rn_line.iter().map(|&l| if l == 0 { 3.0 } else { 1.5 }).collect();
     g.base_min = base;
-    g.rn_km = vec![1.0; g.rn_line.len()];
+    g.rn_km = vec![1.0; g.rn_line.len()].into();
     let sk = skims(&g, &p);
     let want = base * ((3.0 + 2.0 * 1.5) / 3.0 - 1.0);
     assert!((at(&sk.r, 0, 2) - at(&plain.r, 0, 2) - want).abs() < 1e-4, "{} against {want}", at(&sk.r, 0, 2) - at(&plain.r, 0, 2));
@@ -1093,7 +1093,7 @@ fn lines_on_one_track_and_stops_are_evenly_spaced() {
     let gap = |x: f32| x - (x - 2.5) * (x - 2.5) / 10.0;
     for (extra, want, dearer) in [(2.0, 2.0 + 1.0 + 2.5, 0.5), (3.0, 2.0 + 2.5 + gap(3.0) / 2.0, 0.45), (5.0, 2.0 + 2.5 + gap(5.0) / 2.0, 0.25), (6.0, 2.0 + 2.5 + gap(6.0) / 2.0, 0.15), (9.0, 2.0 + 5.0, 0.0)] {
         let mut g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]), &p);
-        g.rn_fare[4] = extra;
+        g.rn_fare.edit(|v| v[4] = extra);
         let ones = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &ones);
         let sk = skims(&g, &p);
@@ -1158,7 +1158,7 @@ fn a_dearer_line_on_one_track_fades_out() {
         for step in 0..=48 {
             let extra = step as f32 * 0.25;
             let mut g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &tph, &[2.0, 2.0]), &p);
-            g.rn_fare[4] = extra;
+            g.rn_fare.edit(|v| v[4] = extra);
             let ones = vec![1.0; g.rn_ride.len()];
             set_crowding(&mut g, &ones);
             let sk = skims(&g, &p);
@@ -1213,7 +1213,7 @@ fn an_evenly_spaced_service_does_not_depend_on_line_order() {
         let tph: Vec<f32> = order.iter().map(|&i| lines[i].0).collect();
         let mut g = build_graph(&common_test_net(&[&[0, 1], &[0, 1], &[0, 1]], &tph, &[2.0, 2.0, 2.0]), &p);
         for (k, &i) in order.iter().enumerate() {
-            g.rn_fare[4 * k] = lines[i].1;
+            g.rn_fare.edit(|v| v[4 * k] = lines[i].1);
         }
         let ones = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &ones);
@@ -1402,7 +1402,7 @@ fn riders_wait_for_a_full_line_rather_than_ride_back() {
         let net = common_test_net(&[&[0, 1, 2, 3]], &[12.0], &[2.0]);
         let mut g = build_graph(&net, &p);
         let (south, north) = (1, 6);
-        g.rn_left[south] = 60.0;
+        g.rn_left.edit(|v| v[south] = 60.0);
         let sk = skims(&g, &p);
         let s = g.n_st;
         let tph = sk.board_tph(&g, sk.slot[3] as usize);
@@ -1423,7 +1423,7 @@ fn riders_wait_for_a_full_line_rather_than_ride_back() {
         assert_eq!(legs.len(), 1);
         assert!((legs[0].wait_min - 62.5).abs() < 1e-4, "{}", legs[0].wait_min);
         // a shorter wait: still the direct train, its cost with the shorter wait
-        g.rn_left[south] = 2.0;
+        g.rn_left.edit(|v| v[south] = 2.0);
         let sk = skims(&g, &p);
         let tph = sk.board_tph(&g, sk.slot[3] as usize);
         assert!((sk.r[1 * s + 3] - (2.5 + 2.0 + 4.0)).abs() < 1e-3, "{}", sk.r[1 * s + 3]);
@@ -1534,8 +1534,8 @@ fn a_lollipop_line_changes_onto_itself_at_its_junction() {
     // behind for 20 minutes, and riding out to J for a train back in would cost 13
     let mut g = g;
     let (in_run0, in_run1) = (12, 14 + 12);
-    g.rn_left[in_run0] = 20.0;
-    g.rn_left[in_run1] = 20.0;
+    g.rn_left.edit(|v| v[in_run0] = 20.0);
+    g.rn_left.edit(|v| v[in_run1] = 20.0);
     let sk = skims(&g, &p);
     // (T-4041: a train out round the whole loop takes a few riders when it comes first, those who
     // take the first train a few more, so about the two trains in alone)
@@ -1616,7 +1616,7 @@ fn a_walk_off_a_line_never_rides_it_back() {
     let mut g = build_graph(&net, &p);
     let s = g.n_st;
     let z_on = 2;
-    g.rn_left[z_on] = 20.0;
+    g.rn_left.edit(|v| v[z_on] = 20.0);
     let sk = skims(&g, &p);
     let direct = 2.5 + 20.0 + 2.0;
     assert!((sk.r[2 * s + 3] - direct).abs() < 1e-3, "{} against {direct}", sk.r[2 * s + 3]);
@@ -1707,12 +1707,12 @@ fn common_lines_use_expected_ride_cost_and_respect_fare_and_crowding() {
     // quarters of the time, 0.25 x 2 + 0.75 x 3 plus a wait of 2.0833
     let want = FIRST_ARRIVAL_SHARE * (2.0 + 0.95 + 5.5 / 3.0) + (1.0 - FIRST_ARRIVAL_SHARE) * (2.75 + 25.0 / 12.0);
     assert!((sk.r[1] - want).abs() < 1e-4, "{} against {want}", sk.r[1]);
-    g.rn_fare[4] = 100.0;
+    g.rn_fare.edit(|v| v[4] = 100.0);
     let uncrowded = vec![1.0; g.n - g.n_st];
     set_crowding(&mut g, &uncrowded);
     let expensive = skims(&g, &p);
     assert!((expensive.r[1] - 7.0).abs() < 1e-5);
-    g.rn_fare[4] = 0.0;
+    g.rn_fare.edit(|v| v[4] = 0.0);
     let mut factor = vec![1.0; g.n - g.n_st]; factor[4] = 100.0;
     set_crowding(&mut g, &factor);
     let crowded = skims(&g, &p);
@@ -2565,9 +2565,11 @@ fn leaf_stations_leave_every_strategy_as_it_was() {
         for waits in [false, true] {
             let mut g = build_graph(net, &p);
             if waits {
-                for r in (0..g.rn_left.len()).step_by(3) {
-                    g.rn_left[r] += 1.5;
-                }
+                g.rn_left.edit(|v| {
+                    for r in (0..v.len()).step_by(3) {
+                        v[r] += 1.5;
+                    }
+                });
             }
             let s = g.n_st;
             let (_, leaves, _) = DestSearch::new(&g, &p).counts();
@@ -2614,4 +2616,29 @@ fn a_reverse_run_boards_at_its_own_platform_beside_the_stop() {
     assert!(near(l.board[4], 10.0) && near(l.alight[4], 5.0) && near(l.alight[1], 3.0) && near(l.board[1], 0.0));
     // the station is one of the line's for access, as its listed stops are
     assert_eq!(on_train(&net), vec![true, true, true, false, true]);
+}
+
+/// T-3160: two graphs of one network hold each array once; a crowding that differs makes costs of its own, and
+/// the last holder's going frees an array.
+#[test]
+fn graphs_of_one_network_hold_their_arrays_once() {
+    let (u0, f0) = (held::<u32>(), held::<f32>());
+    {
+        let p = common_test_params();
+        let net = common_test_net(&[&[0, 1, 2], &[0, 1, 3]], &[6.0, 12.0], &[2.0, 3.0]);
+        let (mut a, mut b) = (build_graph(&net, &p), build_graph(&net, &p));
+        assert!(a.adj_to.same_array(&b.adj_to) && a.rev_from.same_array(&b.rev_from) && a.rn_station.same_array(&b.rn_station));
+        assert!(a.adj_cost.same_array(&b.adj_cost) && a.rn_tph.same_array(&b.rn_tph) && a.rn_left.same_array(&b.rn_span));
+        assert_eq!(a.adj_to.heap_share() + b.adj_to.heap_share(), 4 * a.adj_to.len());
+        let crowded = vec![1.5; a.rn_ride.len()];
+        set_crowding(&mut a, &crowded);
+        assert!(!a.adj_cost.same_array(&b.adj_cost) && a.adj_cost != b.adj_cost);
+        let f1 = held::<f32>();
+        set_crowding(&mut b, &crowded);
+        assert!(a.adj_cost.same_array(&b.adj_cost));
+        assert_eq!(held::<f32>(), f1 - 1, "b's own costs went with its last holder");
+        let sk = skims(&a, &p);
+        assert_eq!(sk.r, skims(&b, &p).r);
+    }
+    assert_eq!((held::<u32>(), held::<f32>()), (u0, f0));
 }

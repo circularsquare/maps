@@ -26,6 +26,7 @@ impl HalfTable {
         HalfTable { bits: (0..n).map(|i| to_half(at(i) * down)).collect(), shift }
     }
 
+    #[cfg(test)]
     pub(crate) fn from_f32(v: &[f32]) -> HalfTable {
         Self::build(v.len(), |i| v[i])
     }

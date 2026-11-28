@@ -1012,6 +1012,7 @@ mod assign;
 mod stalls;
 mod fare_zones;
 mod fans;
+mod shared;
 pub use gravity::*;
 pub use access::*;
 pub use subzones::*;
@@ -1021,6 +1022,7 @@ pub use assign::*;
 pub use stalls::*;
 pub use fare_zones::*;
 pub use fans::*;
+pub use shared::*;
 
 #[cfg(test)]
 mod tests;
