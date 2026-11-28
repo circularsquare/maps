@@ -30,7 +30,7 @@ import { previewStrokes } from "./network";
 import type { Overlay } from "./overlay";
 import { marksLayer, placeAt } from "./screenPlace";
 import { nodeOff, stationOff } from "./visibility";
-import { curveLabels, CurveLabelPool, slowestFirst } from "./trackTagRows";
+import { curveLabels, CurveLabelPool, rampLabels, slowestFirst } from "./trackTagRows";
 
 /** a press becomes a drag once the pointer has moved this far, px (MapLibre's click tolerance) */
 const DRAG_PX = 3;
@@ -244,7 +244,7 @@ export class NodeDrag {
       this.tag.style.display = "none";
     }
     this.placeTangent(d, pv);
-    this.labels.place(pv ? slowestFirst(curveLabels(pv.verts)) : [],(x, y) => this.overlay.toScreen(x, y), this.overlay.cssW, this.overlay.cssH);
+    this.labels.place(pv ? slowestFirst(rampLabels(pv.ramps), curveLabels(pv.verts)) : [],(x, y) => this.overlay.toScreen(x, y), this.overlay.cssW, this.overlay.cssH);
   }
 
   /** T-2765: dragging a loose end (the only track at the node), the line on from where the track arrives

@@ -151,9 +151,9 @@ function fitStrips(tag: HTMLElement) {
   }
 }
 
-/** T-1835: a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
+/** T-1835 (T-4327: full-width brackets too, as ja and zh write them): a key named in brackets at the end of a hover's name, "Track (T)", "Build (Shift+1)",
  * "Keep placing (Caps Lock)", is lettered in the theme's accent, the brackets and all faded as a hint (T-2157). */
-const KEY_HINT = /\(((?:Ctrl\+|Shift\+)?(?:[A-Z0-9/,.]|Esc|Enter|Delete|Space|Backspace|Caps Lock|Tab)|\/ or Ctrl\+F)\)/;
+const KEY_HINT = /([(（])((?:Ctrl\+|Shift\+)?(?:[A-Z0-9/,.]|Esc|Enter|Delete|Space|Backspace|Caps Lock|Tab)|\/ or Ctrl\+F)([)）])/;
 /** T-1851: a negative amount of money in a hover ("−$1.2M", the minus `money()` writes) is red, as in the panels. */
 const NEG_MONEY = /(−\$[\d.,]+[KMBT]?)/;
 function appendText(d: HTMLElement, text: string) {
@@ -172,13 +172,15 @@ const KEY_HINT_GONE = new RegExp(" ?" + KEY_HINT.source, "g");
 function appendWithKeys(d: HTMLElement, text: string) {
   if (mobileDevice()) text = text.replace(KEY_HINT_GONE, "");
   const parts = text.split(KEY_HINT);
-  for (let i = 0; i < parts.length; i++) {
-    if (i % 2 === 0) { appendText(d, parts[i]); continue; }
+  // split keeps the three groups of each match: opening bracket, key, closing bracket
+  for (let i = 0; i < parts.length; i += 4) {
+    appendText(d, parts[i]);
+    if (i + 3 >= parts.length) break;
     const hint = document.createElement("span"), k = document.createElement("span");
     hint.className = "tip-hint";
     k.className = "tip-key";
-    k.textContent = parts[i];
-    hint.append("(", k, ")");
+    k.textContent = parts[i + 2];
+    hint.append(parts[i + 1], k, parts[i + 3]);
     d.append(hint);
   }
 }

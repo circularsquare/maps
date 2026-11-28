@@ -27,13 +27,14 @@ import { t, tNumber } from "../i18n";
 function LoadingScreen() {
   // T-3582: the browser refuses the page graphics, at startup or mid-game: the same screen, a restart sentence
   if (startup.value !== "failed" && !graphicsGone.value) return null;
-  // T-3307: no WebGL2: what to do about it, and no button (a retry or a way on cannot help)
+  // T-3307: no WebGL2: what to do about it, and no retry or way on (neither can help); T-3675: only a way to report it
   // T-3315: no WASM SIMD (Safari before 16.4): the same, with its own sentence
   if (graphicsGone.value || noWebgl2.value || noSimd.value) {
     const text = t(graphicsGone.value ? "loadText.graphicsGone" : noWebgl2.value ? "loadText.noWebgl2" : "loadText.noSimd");
     return <div class="loading-screen" role="alertdialog" aria-label={text}>
       <div class="loading-box failed">
         <p class="big">{text}</p>
+        <div class="loading-actions"><FeedbackOpen class="btn" /></div>
       </div>
     </div>;
   }
