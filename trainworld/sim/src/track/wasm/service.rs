@@ -36,14 +36,15 @@ impl TrackApi {
         let (net, svc) = (&self.w.net, &self.w.svc);
         let Some(lat) = svc.lattice(net, l) else { return vec![] };
         let ls = &svc.lines[l];
-        let key = crate::track::span::span_key(ls, &lat);
+        let mv = svc.moves_of(l);
+        let key = crate::track::span::span_key(ls, &lat, &mv);
         if self.spans.len() <= l {
             self.spans.resize(l + 1, None);
         }
         match &self.spans[l] {
             Some((k, v)) if *k == key => v.clone(),
             _ => {
-                let v = crate::track::span::line_span(ls, &lat);
+                let v = crate::track::span::line_span(ls, &lat, &mv);
                 self.spans[l] = Some((key, v.clone()));
                 v
             }

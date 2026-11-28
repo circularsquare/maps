@@ -8,7 +8,8 @@
 
 use super::boarding::{shape_cum, shape_strength, PERIODS, SHAPE};
 use super::params::*;
-use super::service::{lattice_deps_local, Lattice, LineSvc};
+use super::moves::Move;
+use super::service::{lattice_deps_local_moved, Lattice, LineSvc};
 
 /// The shortest and longest wait any rider tolerates, seconds (Anita, 2026-10-21: "ramp from like
 /// 0.5-6 hrs"). Log-uniform between: a business rider and a leisure one differ by a factor.
@@ -286,9 +287,9 @@ pub fn stop_phi(deps: &[f64]) -> [f32; PERIODS] {
 }
 
 /// Each stop's departures in a steady day of pattern `lat` for run `r`, local time, sorted.
-pub fn stop_deps(ls: &LineSvc, lat: &Lattice, r: usize) -> Vec<Vec<f64>> {
+pub fn stop_deps(ls: &LineSvc, lat: &Lattice, mv: &[Move], r: usize) -> Vec<Vec<f64>> {
     let mut first = vec![];
-    lattice_deps_local(lat, r, DAY, 2.0 * DAY, &mut first);
+    lattice_deps_local_moved(lat, mv, r, DAY, 2.0 * DAY, &mut first);
     (0..ls.stops.len())
         .map(|k| {
             let mut deps: Vec<f64> = first.iter().map(|&(d, lev, _, _)| (d + ls.runs[r].prof[lev as usize].dep.get(k).copied().unwrap_or(0.0)).rem_euclid(DAY)).collect();
@@ -303,12 +304,12 @@ pub fn stop_deps(ls: &LineSvc, lat: &Lattice, r: usize) -> Vec<Vec<f64>> {
 /// (`demand::network::stop_span`): `SPAN_PASS` at a stop the run passes on the other track (T-3332),
 /// where demand boards and alights nobody; at a stop of `LineSvc::only` (T-4013) `SPAN_NO_BOARD`, or
 /// `SPAN_NO_ALIGHT` plus the share.
-pub fn line_span(ls: &LineSvc, lat: &Lattice) -> Vec<f32> {
+pub fn line_span(ls: &LineSvc, lat: &Lattice, mv: &[Move]) -> Vec<f32> {
     use crate::track::net::{ALIGHT_ONLY, BOARD_ONLY};
     let n = ls.stops.len();
     let mut out = vec![0.0f32; PERIODS * 2 * n];
     for r in 0..2 {
-        for (k, deps) in stop_deps(ls, lat, r).iter().enumerate() {
+        for (k, deps) in stop_deps(ls, lat, mv, r).iter().enumerate() {
             // run 1 lists its stops in its travel order, the line's backwards
             let only = ls.only.get(if r == 0 { k } else { n - 1 - k }).copied().unwrap_or(0);
             for (q, phi) in stop_phi(deps).into_iter().enumerate() {
@@ -326,7 +327,7 @@ pub fn line_span(ls: &LineSvc, lat: &Lattice) -> Vec<f32> {
 
 /// What `line_span` reads, hashed (FNV-1a), so the clock worker works out again only lines whose
 /// departures changed.
-pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
+pub fn span_key(ls: &LineSvc, lat: &Lattice, mv: &[Move]) -> u64 {
     let mut h = 0xcbf29ce484222325u64;
     let mut add = |v: u64| {
         for b in v.to_le_bytes() {
@@ -343,6 +344,8 @@ pub fn span_key(ls: &LineSvc, lat: &Lattice) -> u64 {
     add(lat.lead.to_bits());
     // T-3542: moved hours (nothing at the default hours, so their keys stay as they were)
     for v in lat.hours.words() { add(v); }
+    // T-4544: nothing for a line without moves
+    for v in super::moves::words(mv) { add(v); }
     // T-4013: nothing for a line without, so its key stays as it was
     for (k, &o) in ls.only.iter().enumerate().filter(|x| *x.1 != 0) {
         add(k as u64 | (o as u64) << 32 | 1 << 41);

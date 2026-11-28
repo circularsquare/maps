@@ -6,6 +6,7 @@ use super::capacity::{self, Capacity};
 use super::geom;
 use super::net::{path_dir, path_edge, DayFleet, LoopKind, Network};
 use super::params::*;
+use super::moves::{self, Move, Moves};
 use super::profile::{self, Hold, Profile};
 
 pub mod bends;
@@ -120,7 +121,7 @@ pub struct LineSvc {
     pub boat: super::ferry::Boat,
     /// T-3346 stage 2: the pattern the runs' variants were worked out for (`timing::retime`, as
     /// `Lattice::timing_key`); a trip takes one only while the line still runs it.
-    pub timed: Option<Lattice>,
+    pub timed: Option<TimingKey>,
     /// T-4013: per stop (parallel to `stops`), `LineData::only`'s kind there (0 both ways on and
     /// off); empty for a line with none. Demand reads it through `span::line_span`.
     pub only: Vec<u8>,
@@ -342,6 +343,7 @@ fn offset_at(r: &Run, at: (u32, usize, f64)) -> Option<f64> {
 #[derive(Clone, Debug, Default)]
 pub struct Before {
     lat: Vec<Option<Lattice>>,
+    moves: Vec<Moves>,
     flight: Vec<InFlight>,
     lens: Vec<[f64; 2 * SLOTS]>,
     /// T-4133: how many lines `changed` held: what the edit notes after this is what it touched
@@ -397,9 +399,17 @@ pub struct Lattice {
 impl Lattice {
     /// T-3346 stage 2: what a run's variants are worked out for: the pattern without its calendar,
     /// which moves on day by day without changing a weekday's departures.
-    pub fn timing_key(&self) -> Lattice {
-        Lattice { cal: Cal::NONE, ..*self }
+    pub fn timing_key(&self, moves: &Moves) -> TimingKey {
+        TimingKey { lat: Lattice { cal: Cal::NONE, ..*self }, moves: moves.clone() }
     }
+}
+
+/// T-4544: what a line's variants were worked out for: its pattern and its moves (a moved train changes the
+/// times its neighbours' waits are timed from).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TimingKey {
+    pub lat: Lattice,
+    pub moves: Moves,
 }
 
 /// T-3542: a line's day cut at its own hours as well as the periods' (`params::day_pieces`), each
@@ -542,6 +552,8 @@ const LEAD_MAX_S: f64 = 2.0 * 3600.0;
 pub struct Era {
     pub until: f64,
     pub lat: Lattice,
+    /// T-4544: the moves its trains ran (a loaded era's run none).
+    pub moves: Moves,
     /// The trains drawn at `until` (run, departure): only these may stand at a terminal across
     /// the change for a departure of the new pattern, so a train that had left service never
     /// comes back.
@@ -682,6 +694,40 @@ pub(crate) fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Ve
     out.truncate(k);
 }
 
+/// `lattice_deps` with the line's moves applied (T-4544): each departure's time moved, those moved out of `[a, b)`
+/// left out and those moved into it put in. No moves: `lattice_deps` to the bit.
+pub(crate) fn lattice_deps_moved(lat: &Lattice, mv: &[Move], r: usize, a: f64, b: f64, out: &mut Vec<Dep>) {
+    if mv.is_empty() {
+        return lattice_deps(lat, r, a, b, out);
+    }
+    let start = out.len();
+    lattice_deps(lat, r, a - moves::MAX_MOVE_S, b + moves::MAX_MOVE_S, out);
+    keep_moved(mv, r, 0.0, a, b, start, out);
+}
+
+/// `lattice_deps_local` with the moves applied: the departures in the line's local time (a move's `at` is game time).
+pub(crate) fn lattice_deps_local_moved(lat: &Lattice, mv: &[Move], r: usize, a: f64, b: f64, out: &mut Vec<Dep>) {
+    if mv.is_empty() {
+        return lattice_deps_local(lat, r, a, b, out);
+    }
+    let start = out.len();
+    lattice_deps_local(lat, r, a - moves::MAX_MOVE_S, b + moves::MAX_MOVE_S, out);
+    keep_moved(mv, r, lat.shift, a, b, start, out);
+}
+
+fn keep_moved(mv: &[Move], r: usize, shift: f64, a: f64, b: f64, start: usize, out: &mut Vec<Dep>) {
+    let mut k = start;
+    for i in start..out.len() {
+        let (d, lev, hw, place) = out[i];
+        let d2 = d + moves::secs(mv, r, d - shift, hw);
+        if d2 >= a && d2 < b {
+            out[k] = (d2, lev, hw, place);
+            k += 1;
+        }
+    }
+    out.truncate(k);
+}
+
 /// One run's departures from a pattern in `[a, b)` of the line's local time, with level and
 /// headway: per stretch of one level (`level_stretches`), `start - lead + off + k * headway`,
 /// leaving out any closer than half a headway after the stretch before's last (MIN_GAP_SHARE). A
@@ -761,6 +807,8 @@ pub struct Service {
     /// Per line, trains running when an edit changed their profile: (run, departure, seconds
     /// their drawing is moved by), so each carries on from where it was (T-206). Pruned with eras.
     pub shifts: Vec<Vec<(u8, f64, f64)>>,
+    /// T-4544: per line, its moved departures (`moves`); empty for most. Not saved yet.
+    pub moves: Vec<Moves>,
     /// T-1382: the lines whose service was rebuilt, rescheduled or had its profiles recomputed, or
     /// that the net was changed under (`note_changed`), since `take_changed`, and whether to take
     /// them all (a world just made or reloaded).
@@ -1800,7 +1848,8 @@ impl Service {
         let lens = (0..self.lines.len()).map(|l| self.trip_lens(net, l)).collect();
         #[cfg(not(target_arch = "wasm32"))]
         check::before(t0, flight.len());
-        Before { lat, flight, lens, noted: self.changed.len() }
+        let moves = (0..self.lines.len()).map(|l| self.moves_of(l)).collect();
+        Before { lat, moves, flight, lens, noted: self.changed.len() }
     }
 
     /// T-4133: per line, whether the edit since `before` noted it (`note_changed`: rebuilt,
@@ -1862,7 +1911,7 @@ impl Service {
                 _ if was != after || reshaped => {
                     let drawn = before.flight.iter().filter(|f| f.line as usize == l).map(|f| (f.run, f.dep)).collect();
                     let vars = before.flight.iter().filter(|f| f.line as usize == l && f.var > 0).map(|f| (f.run, f.dep, f.var)).collect();
-                    v.push(Era { until: now, lat: was, drawn, vars })
+                    v.push(Era { until: now, lat: was, moves: before.moves.get(l).cloned().unwrap_or_default(), drawn, vars })
                 }
                 _ => {}
             }
@@ -2074,7 +2123,7 @@ impl Service {
                 }
                 // T-3521: weekend trains are not in the era bytes: an old pattern loads running its
                 // weekday trains every day
-                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot, hours: h }, drawn, vars: vec![] });
+                v.push(Era { until, lat: Lattice { tph, off, lead, shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot, hours: h }, moves: Moves::default(), drawn, vars: vec![] });
             }
             let mut s = vec![];
             for _ in 0..num!(u32) {
@@ -2111,6 +2160,20 @@ impl Service {
         }
     }
 
+    /// T-4544: a line's moved departures (none for most).
+    pub fn moves_of(&self, l: usize) -> Moves {
+        self.moves.get(l).cloned().unwrap_or_default()
+    }
+
+    /// T-4544: put a line's moves (replacing them), noting the line as changed so what reads its departures does so again.
+    pub fn set_moves(&mut self, l: usize, v: Vec<Move>) {
+        if self.moves.len() <= l {
+            self.moves.resize(l + 1, Moves::default());
+        }
+        self.moves[l] = moves::sorted(v);
+        self.note_changed(&[l as u32]);
+    }
+
     /// A line's eras (empty for most).
     pub fn eras_of(&self, l: usize) -> &[Era] {
         self.eras.get(l).map_or(&[], |v| &v[..])
@@ -2127,7 +2190,7 @@ impl Service {
             lattice_deps(&e.lat, r, dep - 1.0, dep + 1.0, &mut buf);
             return buf.iter().find(|x| x.0 == dep).map_or(0, |x| era_var(e, &ls.runs[r], r, dep, x.1));
         }
-        if ls.timed != Some(cur.timing_key()) {
+        if ls.timed != Some(cur.timing_key(&self.moves_of(l))) {
             return 0;
         }
         lattice_deps(&cur, r, dep - 1.0, dep + 1.0, &mut buf);
@@ -2192,10 +2255,12 @@ impl Service {
         let mut buf: Vec<Dep> = vec![];
         // T-3346 stage 2: the variants were worked out for the pattern the line runs now; an era's
         // trains run the one they ran at the change
-        let timed = ls.timed.is_some() && ls.timed == Some(cur.timing_key());
+        let cur_moves = self.moves_of(l);
+        let timed = ls.timed.is_some() && ls.timed == Some(cur.timing_key(&cur_moves));
         for i in 0..=eras.len() {
             let era = if i < eras.len() { as_row(&eras[i].lat) } else { cur };
             let (lat, seg_end) = (&era, if i < eras.len() { eras[i].until } else { f64::INFINITY });
+            let mv: &[Move] = if i < eras.len() { &eras[i].moves } else { &cur_moves };
             // an era is followed by another pattern, whose first departures need its last one
             let lo = if i < eras.len() { seg_start.max(a.min(seg_end - ERA_LOOKBACK_S)) } else { seg_start.max(a) };
             let hi = if i < eras.len() { seg_end } else { b };
@@ -2208,7 +2273,7 @@ impl Service {
                 }
                 last = Some(d);
                 if d >= a && d < b {
-                    let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2);
+                    let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2) + moves::secs(mv, r, d, hw);
                     let var = if i < eras.len() {
                         era_var(&eras[i], &ls.runs[r], r, d, lev)
                     } else if timed {

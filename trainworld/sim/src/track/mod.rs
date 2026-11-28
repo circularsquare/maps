@@ -49,6 +49,7 @@ pub mod frame;
 pub mod geom;
 pub mod lanes;
 pub mod localtime;
+pub mod moves;
 pub mod names;
 pub mod net;
 pub mod nudge;
@@ -80,6 +81,8 @@ mod merc_tests;
 mod slot_tests;
 #[cfg(test)]
 mod hours_tests;
+#[cfg(test)]
+mod moves_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

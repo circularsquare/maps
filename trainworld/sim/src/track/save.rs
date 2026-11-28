@@ -2125,7 +2125,7 @@ mod tests {
         assert_eq!(w.net.line_only(l), &[(a, BOARD_ONLY), (b, ALIGHT_ONLY)], "a station no stop of the line is dropped");
         let ls = &w.svc.lines[l as usize];
         assert_eq!(ls.only, vec![BOARD_ONLY, ALIGHT_ONLY]);
-        let span = line_span(ls, &w.svc.lattice(&w.net, l as usize).unwrap());
+        let span = line_span(ls, &w.svc.lattice(&w.net, l as usize).unwrap(), &w.svc.moves_of(l as usize));
         // run 0 lists stop a then b, run 1 b then a
         for q in 0..PERIOD_HOURS.len() {
             let at = |run: usize, k: usize| stop_span(span[(q * 2 + run) * 2 + k]);

@@ -2333,7 +2333,7 @@ fn a_one_way_circle_goes_round_once_with_every_train() {
     }
     assert!(w.svc.cap.users.iter().all(|u| u.line != id || u.run == 0));
     assert_eq!(plats(&w) * 2, users_both, "half the platform uses");
-    let span = super::span::line_span(&w.svc.lines[id as usize], &lat);
+    let span = super::span::line_span(&w.svc.lines[id as usize], &lat, &[]);
     let n = ns.len() + 1;
     assert!((0..super::params::PERIOD_HOURS.len()).all(|q| span[(q * 2 + 1) * n..(q * 2 + 2) * n].iter().all(|&p| p == 0.0)), "no train due on run 1");
     // an odd count stays odd

@@ -17,6 +17,7 @@
 //! queue carries round. Each game hour's slice (`Boarding::hour`) is then read from it for the
 //! trips drawn that hour.
 
+use super::moves;
 use super::net::Network;
 use super::params::*;
 use super::service::{LineSvc, Service, Trip};
@@ -763,7 +764,10 @@ impl Boarding {
             h.f(e.lat.lead);
             h.f(e.lat.shift);
             for v in e.lat.hours.words() { h.add(v); }
+            for v in moves::words(&e.moves) { h.add(v); }
         }
+        // T-4544: the moved departures (nothing without)
+        for v in moves::words(&svc.moves_of(l)) { h.add(v); }
         for r in 0..2 {
             for lev in net.slots() {
                 let p = &ls.runs[r].prof[lev];
@@ -1638,7 +1642,7 @@ pub fn simulate(net: &Network, svc: &Service, l: usize, r: usize, lr: &LineRider
 pub type RunMasks = Option<Vec<Arc<Mask>>>;
 pub fn line_masks(net: &Network, svc: &Service, l: usize, r: usize) -> RunMasks {
     let ls = &svc.lines[l];
-    let deps = span::stop_deps(ls, &svc.lattice(net, l)?, r);
+    let deps = span::stop_deps(ls, &svc.lattice(net, l)?, &svc.moves_of(l), r);
     Some(deps.iter().map(|d| Arc::new(span::stop_mask(d))).collect())
 }
 

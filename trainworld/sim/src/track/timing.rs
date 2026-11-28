@@ -25,7 +25,8 @@ use super::net::Network;
 use super::overtake::{self, Pass, PASS_CLEAR_S};
 use super::params::*;
 use super::profile::{self, Hold, Profile};
-use super::service::{hold_plan, lattice_deps, lattice_deps_local, profile_with_plan, Cal, Dep, Lattice, Run, Service, Variant, NO_PLACE};
+use super::moves::{self, Move, Moves};
+use super::service::{TimingKey, hold_plan, lattice_deps_local_moved, lattice_deps_moved, profile_with_plan, Cal, Dep, Lattice, Run, Service, Variant, NO_PLACE};
 
 /// Variants per run and slot, besides the slot's own timetable.
 pub const MAX_VARS: usize = 16;
@@ -60,6 +61,8 @@ struct Built {
     /// Each run's departures, worked out once for this retime (T-4449): the lattices are fixed
     /// through it, and each of the three passes asks for them again.
     around: HashMap<(u32, u8), Rc<Vec<Dep>>>,
+    /// Each line's moves (T-4544), fixed through the retime as the lattices are.
+    moves: Vec<Moves>,
     days: HashMap<(u32, u8), Rc<Vec<Vec<(f64, f64, u32)>>>>,
     /// What each run's holds do on its hops, once for all the timetables built with them.
     plans: Plans,
@@ -69,12 +72,14 @@ struct Built {
 
 impl Built {
     fn around(&mut self, lat: &Lattice, l: u32, r: usize) -> Rc<Vec<Dep>> {
-        self.around.entry((l, r as u8)).or_insert_with(|| Rc::new(around(lat, r))).clone()
+        let mv = self.moves.get(l as usize).cloned().unwrap_or_default();
+        self.around.entry((l, r as u8)).or_insert_with(|| Rc::new(around(lat, &mv, r))).clone()
     }
 
     /// `day_deps` of every slot.
     fn days(&mut self, lat: &Lattice, l: u32, r: usize) -> Rc<Vec<Vec<(f64, f64, u32)>>> {
-        self.days.entry((l, r as u8)).or_insert_with(|| Rc::new(day_deps(lat, r))).clone()
+        let mv = self.moves.get(l as usize).cloned().unwrap_or_default();
+        self.days.entry((l, r as u8)).or_insert_with(|| Rc::new(day_deps(lat, &mv, r))).clone()
     }
 
     /// `profile_with`, or the same profile built before: by line, run, its free run (a rebuilt run
@@ -199,6 +204,7 @@ fn cluster_key(net: &Network, svc: &Service, c: &mut Cluster, lats: &[Option<Lat
             key.push(lat.rest_on as u64);
             key.extend(lat.period_slot.map(|s| s as u64));
             key.extend(lat.hours.words());
+            key.extend(moves::words(&svc.moves_of(li)));
         }
         key.extend([net.line_dwell[li].to_bits() as u64, net.line_turn[li].to_bits() as u64, ls.close_stand(net, l).to_bits(), ls.is_loop() as u64, ls.one_way as u64]);
         key.extend(net.line_split_of(l).iter().map(|x| x.to_bits() as u64));
@@ -303,7 +309,7 @@ pub fn retime(net: &Network, svc: &mut Service) {
         }
         false
     });
-    let mut built = Built { old, new: HashMap::new(), around: HashMap::new(), days: HashMap::new(), plans: HashMap::new(), plan_memos: HashMap::new() };
+    let mut built = Built { old, new: HashMap::new(), moves: svc.moves.clone(), around: HashMap::new(), days: HashMap::new(), plans: HashMap::new(), plan_memos: HashMap::new() };
     // the waits and following losses of the clusters worked out again, each cluster's in its key's order
     let res: Vec<usize> = cl.iter().zip(&stood).filter(|x| !*x.1).flat_map(|x| x.0.res.iter().copied()).collect();
     if !res.is_empty() {
@@ -323,7 +329,8 @@ pub fn retime(net: &Network, svc: &mut Service) {
     // it touched untimed)
     for l in (0..n).filter(|&l| in_cl[l] && !redo[l]) {
         if svc.lines[l].runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty())) {
-            svc.lines[l].timed = lats[l].map(|x| x.timing_key());
+            let mv = svc.moves_of(l);
+            svc.lines[l].timed = lats[l].map(|x| x.timing_key(&mv));
         }
     }
     for (i, c) in cl.iter().enumerate().filter(|x| !stood[x.0]) {
@@ -344,7 +351,7 @@ pub fn retime(net: &Network, svc: &mut Service) {
 #[derive(Clone, Debug)]
 pub struct Held {
     runs: Vec<([Vec<Variant>; SLOTS], [Vec<(u32, u8)>; SLOTS])>,
-    timed: Option<Lattice>,
+    timed: Option<TimingKey>,
 }
 
 /// A line's variants taken off it, None for a line with none.
@@ -427,18 +434,19 @@ fn floor(net: &Network, svc: &mut Service, redo: &[bool]) {
 
 fn install(svc: &mut Service, done: Vec<Timed>, lats: &[Option<Lattice>]) {
     for t in done {
+        let mv = svc.moves_of(t.line as usize);
         let ls = &mut svc.lines[t.line as usize];
         ls.runs[t.run].vars[t.lev] = t.vars;
         ls.runs[t.run].pattern[t.lev] = t.pattern;
-        ls.timed = lats[t.line as usize].map(|x| x.timing_key());
+        ls.timed = lats[t.line as usize].map(|x| x.timing_key(&mv));
     }
 }
 
 /// A run's weekday departures over the reference day (game time), per slot, with their
 /// headways and places in the day: each place once in its slot, the day being the same every weekday.
-fn day_deps(lat: &Lattice, r: usize) -> Vec<Vec<(f64, f64, u32)>> {
+fn day_deps(lat: &Lattice, mv: &[Move], r: usize) -> Vec<Vec<(f64, f64, u32)>> {
     let mut buf: Vec<Dep> = vec![];
-    lattice_deps_local(lat, r, DAY_REF as f64 * DAY - 3.0 * 3600.0, (DAY_REF + 1) as f64 * DAY, &mut buf);
+    lattice_deps_local_moved(lat, mv, r, DAY_REF as f64 * DAY - 3.0 * 3600.0, (DAY_REF + 1) as f64 * DAY, &mut buf);
     let mut seen: Vec<std::collections::HashSet<u32>> = vec![Default::default(); SLOTS];
     let mut out = vec![vec![]; SLOTS];
     for (d, l, hw, place) in buf {
@@ -452,9 +460,9 @@ fn day_deps(lat: &Lattice, r: usize) -> Vec<Vec<(f64, f64, u32)>> {
 }
 
 /// A run's departures around the reference day, every slot, game time.
-fn around(lat: &Lattice, r: usize) -> Vec<Dep> {
+fn around(lat: &Lattice, mv: &[Move], r: usize) -> Vec<Dep> {
     let mut buf = vec![];
-    lattice_deps(lat, r, DAY_REF as f64 * DAY - AROUND_S, (DAY_REF + 1) as f64 * DAY + AROUND_S, &mut buf);
+    lattice_deps_moved(lat, mv, r, DAY_REF as f64 * DAY - AROUND_S, (DAY_REF + 1) as f64 * DAY + AROUND_S, &mut buf);
     buf
 }
 
@@ -875,7 +883,7 @@ fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut
         xs.push(b);
         let slow_deps = built.around(slat, su.line, su.run as usize);
         let days = built.days(flat, f, fr as usize);
-        let slow_timed = sl.timed.is_some() && sl.timed == Some(slat.timing_key());
+        let slow_timed = sl.timed.is_some() && sl.timed == Some(slat.timing_key(&svc.moves_of(su.line as usize)));
         for lev in net.slots() {
             if flat.tph[lev] <= 0.0 || slat.tph[lev] <= 0.0 {
                 continue;
