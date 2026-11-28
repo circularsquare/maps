@@ -330,6 +330,9 @@ table.sched td.sched-offset .stepper .v { min-width: 50px; }
 .tt-veil { position: absolute; inset: 0; z-index: 1; background: var(--bg); opacity: 0.65; pointer-events: none; }
 .tt-col.on, .tt-bullet.on { z-index: 1; pointer-events: none; }
 .tt-col.on { background: var(--shade); opacity: 1; }
+/* T-4555: the picked train, its column tinted in its line's ink, over the drawn columns it lands on */
+.tt-col.picked, .tt-bullet.picked { z-index: 1; }
+.tt-col.picked { opacity: 1; color: var(--ink); background-color: color-mix(in srgb, var(--ink) 15%, var(--bg)); background-image: inherit; }
 .tt-chart { margin-top: 6px; cursor: grab; user-select: none; touch-action: pan-x pan-y; }
 .tt-scroll.dragging, .tt-scroll.dragging *, .tt-chart:active { cursor: grabbing; }
 /* T-3817: over a drawn column the hovered one lands on, the table's own background */

@@ -27,6 +27,7 @@ import { Chip, Segmented } from "../widgets";
 import { GUTTER, MareyBody, PAD_R, type Links } from "./MareyChart";
 import type { Shared } from "./mareyShare";
 import { ONLY_TIP, OnlyIcon } from "./stopOnly";
+import { MOVES_SHOWN, pickedOf, pickedTrain } from "./trainPick";
 import { groupLook, groupTable, lineRows, type TtLayout } from "./ttRows";
 
 const DAY = 86400, HOUR = 3600;
@@ -199,8 +200,9 @@ function sourcesOf(lay: TtLayout, lines: readonly LineInput[], related: readonly
 const trainKey = (line: number, p: number, dep: number) => `${line}@${p}@${dep}`;
 
 /** One train's column: its bullet, its time at the first row it has, its cells by row shown (NaN
- * blank, PASS run through) from its first row `lo` to its last `hi`, and its source's rank and lane. */
-interface Col { bullet: LineInput; t: number; cells: Float64Array; lo: number; hi: number; key: string; rank: number; lane: number }
+ * blank, PASS run through) from its first row `lo` to its last `hi`, and its source's rank and lane; its line's
+ * number, run and departure name the train for a pick (trainPick.ts). */
+interface Col { bullet: LineInput; t: number; cells: Float64Array; lo: number; hi: number; key: string; rank: number; lane: number; line: number; run: number; dep: number }
 
 /** The trips the table and the chart ask for: from two hours before the day, for trains that set off
  * then and reach the axis after it starts. One question for both, so the clock worker answers it once. */
@@ -262,7 +264,7 @@ function useColumns(srcs: Src[], rows: number, day0: number): [Col[], Col[]] | n
         for (let r = lo + 1; r < hi; r++) if (!Number.isFinite(cells[r]) && (!fill || fill[r])) cells[r] = PASS;
         const t0 = cells[lo];
         if (t0 < day0 || t0 >= day0 + DAY) continue;
-        out[dir].push({ bullet: src.bullet, t: t0, cells, lo, hi, key: trainKey(src.line.num, p, dep), rank: src.rank, lane: src.lane });
+        out[dir].push({ bullet: src.bullet, t: t0, cells, lo, hi, key: trainKey(src.line.num, p, dep), rank: src.rank, lane: src.lane, line: src.line.num, run, dep });
       }
     });
     for (const cs of out) cs.sort((a, b) => a.t - b.t);
@@ -382,20 +384,20 @@ function Column({ c, x, cls, cells, dark, lanes }: { c: Col; x: number; cls: str
   return <div class={"tt-col" + cls} data-k={c.key} style={{ left: x - COL / 2 + "px", ...at, width: COL + "px", "--ink": legibleOn(c.bullet.colour, dark) }}>{cells}</div>;
 }
 
-/** The hovered train, over a veil that fades the rest: its bullet (`part` "head"), or its times with
- * covers over the drawn columns it lands on (a train not drawn at this zoom shows the same way). One
- * element's change per hover, whatever the number of columns. */
-function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now, lanes }: {
-  part: "head" | "body"; hot: Signal<string | null>; at: Map<string, number>; cols: Col[]; drawn: Uint8Array; scale: number; x0: number; shift: number; dark: boolean; now: number; lanes: boolean;
-}) {
-  const i = hot.value === null ? undefined : at.get(hot.value);
-  if (i === undefined) return null;
+/** The columns a train is drawn over and where they stand. */
+interface Over { cols: Col[]; drawn: Uint8Array; scale: number; x0: number; shift: number; dark: boolean; now: number; lanes: boolean }
+
+/** Train `i` drawn over the rest: its bullet (`part` "head"), or its times with covers over the drawn columns it
+ * lands on (a train not drawn at this zoom shows the same way). `cls` "on" for the hovered train, over a veil that
+ * fades the rest; "picked" for the picked one (T-4555). */
+function Raised({ part, i, cls, veil, o }: { part: "head" | "body"; i: number; cls: string; veil: boolean; o: Over }) {
+  const { cols, drawn, scale, x0, shift, dark, now, lanes } = o;
   const c = cols[i], x = x0 + c.t * scale;
   if (part === "head") {
     return (
       <>
-        <div class="tt-veil" />
-        <span class={"tt-bullet on" + (c.rank ? " rel" : "")} style={{ left: x - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}><Bullet l={c.bullet} /></span>
+        {veil && <div class="tt-veil" />}
+        <span class={"tt-bullet " + cls + (c.rank ? " rel" : "")} style={{ left: x - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}><Bullet l={c.bullet} /></span>
       </>
     );
   }
@@ -404,10 +406,16 @@ function Lit({ part, hot, at, cols, drawn, scale, x0, shift, dark, now, lanes }:
   return (
     <>
       {covers.map((j) => <span class="tt-cover" style={{ left: x0 + cols[j].t * scale - COL / 2 - 1 + "px", width: COL + 2 + "px", ...(lanes ? { top: cols[j].lo * ROW + "px", bottom: "auto", height: (cols[j].hi - cols[j].lo + 1) * ROW + "px" } : {}) }} />)}
-      <div class="tt-veil" />
-      <Column c={c} x={x} cls={" on" + colClass(c, now)} cells={<Cells c={c} shift={shift} />} dark={dark} lanes={lanes} />
+      {veil && <div class="tt-veil" />}
+      <Column c={c} x={x} cls={" " + cls + colClass(c, now)} cells={<Cells c={c} shift={shift} />} dark={dark} lanes={lanes} />
     </>
   );
+}
+
+/** The hovered train, read only here, so a hover is one element's change whatever the number of columns. */
+function Lit({ part, hot, at, picked, o }: { part: "head" | "body"; hot: Signal<string | null>; at: Map<string, number>; picked: string | null; o: Over }) {
+  const i = hot.value === null ? undefined : at.get(hot.value);
+  return i === undefined ? null : <Raised part={part} i={i} cls={hot.value === picked ? "on picked" : "on"} veil o={o} />;
 }
 
 /** A time as printed in the table, local: "742", "1008". */
@@ -470,6 +478,24 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   // hover redraws neither the table nor the chart's trains
   const hot = useMemo(() => signal<string | null>(null), []);
   const colAt = useMemo(() => new Map(cols.map((c, i) => [c.key, i])), [cols]);
+  // T-4555: the picked train found again in each answer (trainPick.ts); one of the other way turns the table round to it
+  const sel = MOVES_SHOWN ? pickedTrain.value : null;
+  const found = useMemo(() => (sel && both ? pickedOf(sel, both[0].concat(both[1])) : null), [sel, both]);
+  useEffect(() => {
+    if (!sel || !both) return;
+    if (!found) { pickedTrain.value = null; return; }
+    if (found.dep !== sel.dep) pickedTrain.value = { line: found.line, run: found.run, dep: found.dep };
+    const d = both[1].includes(found) ? 1 : 0;
+    if (d !== dir) setPick(d);
+  }, [found, both]);
+  const picked = found?.key ?? null;
+  const pickedAt = picked === null ? undefined : colAt.get(picked);
+  const pickKey = (k: string | null) => {
+    const c = k === null || !both ? undefined : (both[0].find((x) => x.key === k) ?? both[1].find((x) => x.key === k));
+    pickedTrain.value = c ? { line: c.line, run: c.run, dep: c.dep } : null;
+  };
+  // the last press moved the table: its click picks nothing
+  const dragged = useRef(false);
   const drag = useRef<{ id: number; x: number; y: number; sl: number; st: number; moved: boolean } | null>(null);
   const onOver = (e: PointerEvent) => {
     if (drag.current?.moved) return;
@@ -505,7 +531,9 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
     if (!el || !both || !vw) return;
     if (placedFor.current !== k) {
       placedFor.current = k;
-      leftT.current = now - (0.25 * plotW) / scale;
+      // T-4555: a picked train out of view (the table turned round to it) a quarter of the way in instead
+      const pt = pickedAt === undefined ? null : cols[pickedAt].t, px = pt === null ? 0 : (pt - leftT.current) * scale;
+      if (pt === null || px < COL || px > plotW - COL) leftT.current = (pt ?? now) - (0.25 * plotW) / scale;
     }
     const x = xFor(leftT.current, scale);
     if (Math.abs(setX.current - x) > 0.5) { el.scrollLeft = x; setX.current = x; }
@@ -552,6 +580,7 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   useEffect(() => () => { if (wheel.current) cancelAnimationFrame(wheel.current.raf); }, []);
   // a press and drag moves the table and chart, sideways and down its rows (touch scrolls natively)
   const onDown = (e: PointerEvent) => {
+    dragged.current = false;
     const el = scroller.current;
     if (!el || e.button !== 0 || e.pointerType === "touch") return;
     // a press on the table's own scrollbars scrolls natively
@@ -578,6 +607,7 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
     const d = drag.current;
     if (!d || d.id !== e.pointerId) return;
     drag.current = null;
+    dragged.current = d.moved;
     scroller.current?.classList.remove("dragging");
   };
   // two fingers zoom about their midpoint by the change in their distance, through the wheel's step; one
@@ -597,11 +627,10 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
     zoomStep(d / prev, cx);
   };
   const onTouchEnd = (e: TouchEvent) => { pinch.current = e.touches.length === 2 ? span(e) : 0; };
-  const grab = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, onWheel, onTouchStart, onTouchMove, onTouchEnd, onTouchCancel: onTouchEnd };
   // the bullet nearest the pointer in the head row, so one under others is reached too
-  const onHeadMove = (e: PointerEvent) => {
+  const bulletAt = (e: MouseEvent): { k: string | null; tip: string } => {
     const el = scroller.current;
-    if (!el || drag.current?.moved) return;
+    if (!el) return { k: null, tip: "" };
     const z = zoomOf(el), r = el.getBoundingClientRect();
     const cx = (e.clientX - r.left) / z, cy = (e.clientY - r.top) / z;
     let k: string | null = null, tip = "";
@@ -620,8 +649,26 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
         if (b.num !== axis.num && b.name !== b.letter) tip = b.name;
       }
     }
+    return { k, tip };
+  };
+  // a click on a train's column or bullet picks it, anywhere else in the table or chart lets the pick go (the chart's
+  // trains come through `onPick`)
+  const onClick = (e: MouseEvent) => {
+    const el = e.target as Element, sc = scroller.current;
+    if (!MOVES_SHOWN || dragged.current || el.closest?.(".marey-layer")) return;
+    // nor a click on the table's own scrollbars
+    if (el === sc && (e.offsetX >= sc.clientWidth || e.offsetY >= sc.clientHeight)) return;
+    const k = el.closest?.(".tt-body [data-k]")?.getAttribute("data-k") ?? (!lanes && el.closest?.(".tt-head") ? bulletAt(e).k : null);
+    pickKey(k);
+  };
+  const onChartPick = (k: string | null) => { if (!dragged.current) pickKey(k); };
+  const grab = { onPointerDown: onDown, onPointerMove: onMove, onPointerUp: onUp, onPointerCancel: onUp, onWheel, onTouchStart, onTouchMove, onTouchEnd, onTouchCancel: onTouchEnd, onClick };
+  const onHeadMove = (e: PointerEvent) => {
+    if (!scroller.current || drag.current?.moved) return;
+    const { k, tip } = bulletAt(e);
     const head = e.currentTarget as HTMLElement;
     if ((head.getAttribute("data-tip") ?? "") !== tip) head.setAttribute("data-tip", tip);
+    if (MOVES_SHOWN) head.style.cursor = k === null ? "" : "pointer";
     if (hot.value !== k) hot.value = k;
   };
 
@@ -645,6 +692,7 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   };
   // px from the table's left of game second 0
   const x0 = GUTTER - day0 * scale;
+  const over: Over = { cols, drawn, scale, x0, shift, dark, now, lanes };
   const bullet = (c: Col, cls: string) => <span key={c.key} class={"tt-bullet" + cls + (c.rank ? " rel" : "")} style={{ left: x0 + c.t * scale - COL / 2 + "px", width: COL + "px", top: MARK_H + (c.rank ? REL_DROP : 0) + "px" }}>{bulletOf(c.bullet)}</span>;
   // back to front: related lines' bullets behind the line's own, the drawn columns' in front of both
   const backs: VNode[] = [], fronts: VNode[] = [];
@@ -691,7 +739,7 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
   return (
     <div class="tt">
       <div class="sp-tabs">
-        <Segmented<number> options={[[down, label(down)], [1 - down, label(1 - down)]]} value={dir} onChange={setPick} />
+        <Segmented<number> options={[[down, label(down)], [1 - down, label(1 - down)]]} value={dir} onChange={(d) => { setPick(d); pickedTrain.value = null; }} />
         {tools}
       </div>
       <div class="tt-scroll" ref={scroller} onScroll={onScroll} {...grab} style={{ marginRight: PAD_R + "px", maxHeight: `min(${rowsH + HEAD + 14}px, 44vh)` }}>
@@ -703,7 +751,8 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
             ))}
             {backs}
             {fronts}
-            {!lanes && <Lit part="head" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} lanes={lanes} />}
+            {!lanes && pickedAt !== undefined && <Raised part="head" i={pickedAt} cls="picked" veil={false} o={over} />}
+            {!lanes && <Lit part="head" hot={hot} at={colAt} picked={picked} o={over} />}
           </div>
           <div class={"tt-body" + (lanes ? " lanes" : "")} style={{ height: rowsH + "px", "--row": ROW + "px" }}>
             <div class="tt-names" style={{ width: GUTTER + "px" }}>{rowNames}</div>
@@ -711,14 +760,15 @@ export function TrainTable({ axis, st, others = [], related = [], links, group, 
             <span class="tt-now" style={{ left: GUTTER + (now - day0) * scale + "px" }} />
             {marks.map((s) => <span class={"tt-hour-rule" + (s % HOUR ? "" : " full")} style={{ left: GUTTER + s * scale + "px" }} />)}
             {shown.map((i) => <Column key={cols[i].key} c={cols[i]} x={x0 + cols[i].t * scale} cls={colClass(cols[i], now)} cells={cellsOf(cols[i])} dark={dark} lanes={lanes} />)}
-            <Lit part="body" hot={hot} at={colAt} cols={cols} drawn={drawn} scale={scale} x0={x0} shift={shift} dark={dark} now={now} lanes={lanes} />
+            {pickedAt !== undefined && <Raised part="body" i={pickedAt} cls="picked" veil={false} o={over} />}
+            <Lit part="body" hot={hot} at={colAt} picked={picked} o={over} />
           </div>
         </div>
       </div>
       <div class="tt-chart" {...grab}>
         {vw > 0 && scale > 0 && (
           <Chart hot={hot} key={axis.num} l={axis} st={st} links={links} width={vw + PAD_R} plotH={plotH} group={group} dir={dir}
-            win={win} view={{ t0: day0 + left / scale, k: scale }} />
+            win={win} view={{ t0: day0 + left / scale, k: scale }} picked={picked} onPick={MOVES_SHOWN ? onChartPick : undefined} />
         )}
       </div>
     </div>

@@ -145,10 +145,12 @@ const placedPath = (r: Run, k: number, x0: number) => {
  * both the table's. `plotH` sets the height of its stops' span (else by its stop count), and
  * `group`'s lines are drawn where they share its track whether or not other lines are shown, at full
  * strength (T-3346). T-3475: `dir` the run of `l` the table shows, drawn in front, the other way dimmed
- * behind; `hot` the train hovered (line@profile@departure), lit over the rest faded, set by `onHot`. */
-export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, hot, onHot }: {
+ * behind; `hot` the train hovered (line@profile@departure), lit over the rest faded, set by `onHot`. T-4555: `picked`
+ * the train picked, drawn lit; a click on the chart gives `onPick` the train under it, or null. */
+export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, hot, onHot, picked = null, onPick }: {
   l: LineInput; st: LineStats; links: Links | null; width: number; plotH?: number; group?: ReadonlySet<number>;
   win: { t0: number; t1: number }; view: { t0: number; k: number }; dir?: number; hot: string | null; onHot: (k: string | null) => void;
+  picked?: string | null; onPick?: (k: string | null) => void;
 }) {
   const r0 = DEBUG ? performance.now() : 0;
   const w = world.value!;
@@ -275,7 +277,8 @@ export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, h
   // read once per size and shade, not every frame: each read would work out the page's style again
   const zoomFor = useRef({ w: 0, z: 1 });
   const bg = useMemo(() => getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#fff", [dark]);
-  const lit = hot === null ? null : (drawn?.runs.find((r) => r.key === hot) ?? otherDrawn?.runs.find((r) => r.key === hot) ?? null);
+  const runOf = (key: string | null) => (key === null ? null : (drawn?.runs.find((r) => r.key === key) ?? otherDrawn?.runs.find((r) => r.key === key) ?? null));
+  const lit = runOf(hot), sel = runOf(picked);
   const view0 = view.t0;
   // px from the plot's left of the window's start
   const x0 = -(view0 - base) * k;
@@ -345,12 +348,13 @@ export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, h
       ctx.stroke();
     }
     stroke(front.filter((r) => !r.colour));
-    if (lit) {
-      const [wd] = strokeOf(lit, true);
+    for (const r of [sel, lit]) {
+      if (!r) continue;
+      const [wd] = strokeOf(r, true);
       ctx.globalAlpha = 1;
-      ctx.strokeStyle = inkOf(lit.colour ?? l.colour, dark);
+      ctx.strokeStyle = inkOf(r.colour ?? l.colour, dark);
       ctx.lineWidth = wd;
-      ctx.stroke(placedPath(lit, k, x0));
+      ctx.stroke(placedPath(r, k, x0));
     }
     ctx.globalAlpha = 1;
     if (DEBUG) ((window as unknown as { __mareyDraw?: number[] }).__mareyDraw ??= []).push(performance.now() - d0);
@@ -358,9 +362,9 @@ export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, h
   });
   // the train or pass dot under the pointer: the one drawn last there. The canvas always has a data-tip, so
   // the tag (tip.ts) watches it from the first move and shows a change as it is made
-  const onMove = (e: PointerEvent) => {
+  const hitAt = (e: MouseEvent): { key: string | null; tip: string | null } => {
     const cv = canvas.current, ctx = cv?.getContext("2d");
-    if (!cv || !ctx || e.buttons) return;
+    if (!cv || !ctx) return { key: null, tip: null };
     const z = (cv as HTMLElement & { currentCSSZoom?: number }).currentCSSZoom ?? 1, r = cv.getBoundingClientRect();
     const px = (e.clientX - r.left) / z, py = (e.clientY - r.top) / z;
     let key: string | null = null, tip: string | null = null;
@@ -381,10 +385,17 @@ export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, h
     if (!run && !tip) run = hit(all.filter((r) => r.back || r.colour));
     if (run) { key = run.key; tip = run.tip; }
     ctx.restore();
-    if (tip) cv.setAttribute("data-tip", tip);
-    else cv.setAttribute("data-tip", "");
+    return { key, tip };
+  };
+  const onMove = (e: PointerEvent) => {
+    const cv = canvas.current;
+    if (!cv || e.buttons) return;
+    const { key, tip } = hitAt(e);
+    cv.setAttribute("data-tip", tip ?? "");
+    if (onPick) cv.style.cursor = key === null ? "" : "pointer";
     if (key !== hot) onHot(key);
   };
+  const onClick = (e: MouseEvent) => onPick?.(hitAt(e).key);
   const passAt = (px: number, py: number): string | null => {
     for (const m of otherDrawn?.marks ?? []) if (Math.hypot(x0 + m.x * k - px, m.y - py) <= 4.5) return m.tip;
     return null;
@@ -435,7 +446,7 @@ export function MareyBody({ l, st, links, width, plotH, group, win, view, dir, h
         <svg class="marey-ticks" width={PLOT_W} height={height}>
           {ticks.map((t) => <line class="marey-tick" x1={(t - view0) * k} x2={(t - view0) * k} y1={TOP} y2={height - AXIS} />)}
         </svg>
-        <canvas class="marey-layer" ref={canvas} data-tip="" style={{ width: PLOT_W + "px", height: height + "px" }} onPointerMove={onMove} onPointerLeave={onLeave} />
+        <canvas class="marey-layer" ref={canvas} data-tip="" style={{ width: PLOT_W + "px", height: height + "px" }} onPointerMove={onMove} onPointerLeave={onLeave} onClick={onPick ? onClick : undefined} />
         <svg class="marey-over" width={PLOT_W} height={height}>
           <rect class="marey-past" x={0} y={TOP - 2} width={nowX} height={H + 4} />
           {ticks.map((t) => {

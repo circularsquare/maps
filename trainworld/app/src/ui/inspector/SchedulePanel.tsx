@@ -23,6 +23,7 @@ import { Chip, Icon, Segmented } from "../widgets";
 import { limitsFrom } from "./LineInspector";
 import { useChartLinks } from "./MareyChart";
 import { TrainTable, useRelated } from "./TrainTable";
+import { pickedTrain } from "./trainPick";
 import { NO_LIMITS, Schedule, useLinePeriods, vehicleOf, vehiclesText } from "./schedule";
 import { ONLY_TIP, OnlyIcon } from "./stopOnly";
 
@@ -276,15 +277,17 @@ const scheduleModes = (): [string, string][] => [["simple", t("schedulePanel.sim
 function Frame({ label, title, mode, narrow = false, children }: { label: string; title: ComponentChildren; mode?: ComponentChildren; narrow?: boolean; children: ComponentChildren }) {
   const dialog = useRef<HTMLDialogElement>(null);
   useModalDialog(dialog, true);
-  const close = () => (scheduleShown.value = null);
+  const close = () => { pickedTrain.value = null; scheduleShown.value = null; };
+  // Esc lets a picked train go first (T-4555), then closes
+  const escape = () => { if (pickedTrain.value) pickedTrain.value = null; else close(); };
   // a click outside closes it, but not a drag of the timetable let go outside (its click lands on the dialog too)
   const pressedOutside = useRef(false);
   return (
     <dialog class={"saves-panel sched-panel" + (narrow ? " narrow" : "")} ref={dialog} aria-label={label}
-      onCancel={(e) => { e.preventDefault(); close(); }}
+      onCancel={(e) => { e.preventDefault(); escape(); }}
       onPointerDown={(e) => { pressedOutside.current = e.target === e.currentTarget; }}
       onClick={(e) => { if (e.target === e.currentTarget && pressedOutside.current) close(); }}
-      onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); close(); } }}>
+      onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); escape(); } }}>
       <div class="saves-inner">
         <div class="saves-head sp-title">
           <h2>{title}<span class="sp-word">{t("schedulePanel.schedule")}</span></h2>
@@ -327,7 +330,7 @@ export function SchedulePanel() {
     }
   }
   // its line gone or stopped: closed, so it does not come back by itself
-  useEffect(() => { if (s && w && !body) scheduleShown.value = null; }, [s, w, !body]);
+  useEffect(() => { if (s && w && !body) { pickedTrain.value = null; scheduleShown.value = null; } }, [s, w, !body]);
   return <>{body}</>;
 }
 
