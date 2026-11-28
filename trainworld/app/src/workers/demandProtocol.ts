@@ -152,7 +152,7 @@ export interface SelSquares { xy: Float32Array; share: Float32Array; air?: Float
 export const ALL_PERIODS = (1 << PERIODS.length) - 1;
 
 /** The questions for the demand views, `ToDemand`'s and `FromDemand`'s kinds alike */
-const QUERY_KIND_LIST = ["cells", "subSums", "cellModes", "station", "flowRail", "flows", "purposes", "icSel", "icStation", "purposeModes", "transfers", "trip", "icTrip", "bare", "bareFlows", "bareSquares", "tripLengths", "airLegs", "zoneSquares", "regLegs"] as const;
+const QUERY_KIND_LIST = ["cells", "subSums", "cellModes", "station", "flowRail", "flows", "purposes", "icSel", "icStation", "purposeModes", "transfers", "trip", "icTrip", "bare", "bareFlows", "bareSquares", "tripLengths", "airLegs", "zoneSquares", "regLegs", "icEveryday"] as const;
 export type QueryKind = (typeof QUERY_KIND_LIST)[number];
 const QUERY_KINDS: ReadonlySet<string> = new Set(QUERY_KIND_LIST);
 export const isQuery = <T extends { kind: string }>(m: T): m is Extract<T, { kind: QueryKind }> => QUERY_KINDS.has(m.kind);
@@ -163,7 +163,7 @@ export const isQuery = <T extends { kind: string }>(m: T): m is Extract<T, { kin
  * question the page names a worker for (the aux worker's), go as without the split.
  */
 export const ZONE_QUERIES: ReadonlySet<QueryKind> = new Set<QueryKind>(["subSums", "station", "flowRail", "purposes", "flows", "purposeModes", "trip", "tripLengths", "bareSquares"]);
-export const MARKET_QUERIES: ReadonlySet<QueryKind> = new Set<QueryKind>(["icSel", "icStation", "icTrip", "airLegs", "regLegs"]);
+export const MARKET_QUERIES: ReadonlySet<QueryKind> = new Set<QueryKind>(["icSel", "icStation", "icTrip", "airLegs", "regLegs", "icEveryday"]);
 /** T-3373 B: an answer about a split solve lists the populations it covers (`pops`): zone ids, and this for the
  * market (every cluster's part), each over the periods of the answer's `mask` */
 export const MARKET_POP = "market";
@@ -378,6 +378,9 @@ export type ToDemand =
    * this worker's periods (`IntercityApi.zone_legs_day`); `kinds`: bit 0 longer trips, bit 1
    * commutes, bit 2 + k everyday kind k */
   | { kind: "regLegs"; id: number; city: CityId; version: number; round: number; xy: Float32Array; kinds: number }
+  /** T-4610: a zone place's everyday outings across its lines by partner place over this worker's periods
+   * (`IntercityApi.everyday_partner_legs`) */
+  | { kind: "icEveryday"; id: number; city: CityId; version: number; round: number; place: number }
   /** T-2365: the zone's trips by length over this worker's periods (`DemandApi.trip_lengths_day`,
    * `EverydayApi.trip_lengths_day`); `bare`: the aux worker's for a zone open bare, every period */
   | { kind: "tripLengths"; id: number; city: CityId; version: number; round: number; bare?: boolean };
@@ -611,6 +614,9 @@ export type FromDemand =
   /** T-3503: per square, legs, rail legs and walking legs at the home end, then at the destination
    * end; null: no market, or not `version` and `round` */
   | { kind: "regLegs"; id: number; city: CityId; version: number; mask: number; legs: Float64Array | null }
+  /** T-4610: four numbers a partner place with any outings (place, legs, rail legs, walking legs) over the periods
+   * in `mask`; null: no network, or not `version` and `round` */
+  | { kind: "icEveryday"; id: number; city: CityId; version: number; mask: number; legs: Float64Array | null }
   /** T-2365: eight blocks of `trip_length_edges` bins each (trips, rail, walking, no way, then their
    * km); null: not `version` and `round` (or not held here); `everyday` null for a zone without the layer */
   | { kind: "tripLengths"; id: number; city: CityId; version: number; mask: number; edges: Float32Array; commute: Float64Array | null; everyday: Float64Array | null; kinds: Float64Array | null };

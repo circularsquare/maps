@@ -4,7 +4,7 @@
 
 import { CITIES } from "./cities";
 import { shareOf } from "./corridorShares";
-import { eachCorridor, INTERCITY_PLACES, rowsOf, type CorridorRows, type Corridors } from "./demand";
+import { askEverydayPartners, eachCorridor, INTERCITY_PLACES, rowsLanded, rowsOf, type CorridorRows, type Corridors } from "./demand";
 
 const PLACES = INTERCITY_PLACES.length;
 /** T-789: the city view draws zones only, so it keeps the places that hold a zone (`Z` of them),
@@ -24,15 +24,27 @@ const ends = (from: number, to: number): [number, number] =>
  * market (`totals`, [trips, rail, air] at `zoneOf` index * 3), all modes, by train and (T-378) by
  * plane; and a zone place's with each other zone place (`zoneRow`). T-3503: `totals` take each zone
  * place's everyday outings across its lines too (`everyday`), and `walk` their walking. */
-export interface MarketPairs { c: Corridors; totals: Float64Array; walk: Float64Array; rows: Map<number, Float64Array> }
+export interface MarketPairs {
+  c: Corridors; totals: Float64Array; walk: Float64Array;
+  /** each zone place's everyday outings across its lines, [legs, rail, walking] at `zoneOf` index * 3 (what `totals` and `walk` took) */
+  everyday: Float64Array;
+  rows: Map<number, Float64Array>;
+  /** a selected zone place's everyday outings by partner place (`askEverydayPartners`), `undefined` once asked, null if unanswered */
+  partners: Map<number, Float64Array | null | undefined>;
+}
+/** the width of a `zoneRowOf` row's entry for a zone place: trips, rail, air, walking */
+export const ROW = 4;
 export function marketPairs(c: Corridors, everyday: number[] = []): MarketPairs {
-  const b = c.book.totals, totals = new Float64Array(Z * 3), walk = new Float64Array(Z);
+  const b = c.book.totals, totals = new Float64Array(Z * 3), walk = new Float64Array(Z), eve = new Float64Array(Z * 3);
   for (let i = 0; i + 4 < everyday.length; i += 5) {
     const z = zoneOf(everyday[i]);
     if (z < 0) continue;
     totals[3 * z] += everyday[i + 1];
     totals[3 * z + 1] += everyday[i + 2];
     walk[z] += everyday[i + 3];
+    eve[3 * z] += everyday[i + 1];
+    eve[3 * z + 1] += everyday[i + 2];
+    eve[3 * z + 2] += everyday[i + 3];
   }
   if (b.length) for (let z = 0; z < Z; z++) {
     const o = 3 * ZONE_PLACES[z];
@@ -44,20 +56,51 @@ export function marketPairs(c: Corridors, everyday: number[] = []): MarketPairs 
     const r = c.longerRail[k] + c.commuteRail[k], f = c.longerRail[k] * shareOf(c.railAir[k]);
     for (const z of ends(c.railFrom[k], c.railTo[k])) if (z >= 0) { totals[3 * z + 1] += r; totals[3 * z + 2] -= f; }
   }
-  return { c, totals, walk, rows: new Map() };
+  return { c, totals, walk, everyday: eve, rows: new Map(), partners: new Map() };
 }
-/** Zone place `za`'s trips with each other zone place, [trips, rail, air] at `zoneOf` index * 3. */
+/** the last answer for each zone place's everyday partners, shown while a newer result's is asked */
+const lastPartners = new Map<number, Float64Array>();
+/**
+ * Zone place `za`'s trips with each other zone place, [trips, rail, air, walking] at `zoneOf` index * ROW: the longer
+ * trips and commutes between the zones, and (T-4610) the everyday outings across their lines, which the market holds
+ * only as one total a place and the workers give by partner (asked with the rows, once a selection). The partners'
+ * outings are scaled to the place's `everyday` total, so the kind of day and the period weights are the totals'.
+ * Null while the rows, or the first partners, are asked.
+ */
 export function zoneRowOf(p: MarketPairs, za: number): Float64Array | null {
   const kept = p.rows.get(za);
   if (kept) return kept;
   const r = rowsOf(p.c, ZONE_PLACES[za]);
   if (!r) return null;
-  const row = new Float64Array(Z * 3);
+  if (!p.partners.has(za)) {
+    p.partners.set(za, undefined);
+    void askEverydayPartners(ZONE_PLACES[za]).then((v) => {
+      p.partners.set(za, v);
+      if (v) lastPartners.set(za, v);
+      rowsLanded.value++;
+    });
+  }
+  const asked = p.partners.get(za), partners = asked === undefined ? lastPartners.get(za) : asked;
+  if (asked === undefined && !partners) return null;
+  const row = new Float64Array(Z * ROW);
   eachCorridor(p.c, r, (from, to) => { const [a, b] = ends(from, to); return a >= 0 && b >= 0 && (a === za || b === za); }, (from, to, v) => {
-    const [a, b] = ends(from, to), o = 3 * (a === za ? b : a);
+    const [a, b] = ends(from, to), o = ROW * (a === za ? b : a);
     row[o] += v.trips; row[o + 1] += v.rail; row[o + 2] += v.air;
   });
-  p.rows.set(za, row);
+  if (partners) {
+    let all = 0, rail = 0, walk = 0;
+    for (let i = 0; i + 3 < partners.length; i += 4) { all += partners[i + 1]; rail += partners[i + 2]; walk += partners[i + 3]; }
+    const [fa, fr, fw] = [all, rail, walk].map((s, k) => (s > 0 ? p.everyday[3 * za + k] / s : 0));
+    for (let i = 0; i + 3 < partners.length; i += 4) {
+      const z = zoneOf(partners[i]);
+      if (z < 0 || z === za) continue;
+      row[ROW * z] += partners[i + 1] * fa;
+      row[ROW * z + 1] += partners[i + 2] * fr;
+      row[ROW * z + 3] += partners[i + 3] * fw;
+    }
+  }
+  // (the last answer stands in while a newer one is asked, and is not kept)
+  if (asked !== undefined) p.rows.set(za, row);
   return row;
 }
 /** `zoneRowOf` for a place, from the corridors alone (checks). */

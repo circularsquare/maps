@@ -890,9 +890,40 @@ impl IntercityApi {
     /// legs between two landmasses or two zones' lands (no car, no walking) and this network's rail legs of them.
     /// Empty before the period is solved.
     pub fn everyday_place_legs(&self, q: usize) -> Vec<f64> {
-        let Some(s) = self.per(q) else { return vec![] };
+        let mut by = vec![[0f64; 6]; self.m.places.len()];
+        if !self.each_everyday(q, |h, a, d| {
+            for p in [h, a] {
+                for (x, y) in by[p].iter_mut().zip(d) {
+                    *x += y;
+                }
+            }
+        }) {
+            return vec![];
+        }
+        Self::pack_everyday(by.iter().enumerate())
+    }
+    /// T-4610: `everyday_place_legs` for the outings of one place alone, by the place at their other end
+    /// (the same seven numbers, `place` being the partner), so a zone's bubbles can count each pair's.
+    pub fn everyday_partner_legs(&self, q: usize, place: u32) -> Vec<f64> {
+        let mut by = std::collections::BTreeMap::<usize, [f64; 6]>::new();
+        if !self.each_everyday(q, |h, a, d| {
+            let other = if h == place as usize { a } else if a == place as usize { h } else { return };
+            for (x, y) in by.entry(other).or_default().iter_mut().zip(d) {
+                *x += y;
+            }
+        }) {
+            return vec![];
+        }
+        Self::pack_everyday(by.iter().map(|(p, v)| (*p, v)))
+    }
+}
+impl IntercityApi {
+    /// Each everyday outing across a zone line in period `q` (places `h`, `a`) as what it adds to the numbers of
+    /// both its places (`everyday_place_legs`' six, in its order): once for its legs, then once for the rail's
+    /// share of them. False before the period is solved.
+    fn each_everyday(&self, q: usize, mut add: impl FnMut(usize, usize, [f64; 6])) -> bool {
+        let Some(s) = self.per(q) else { return false };
         let m = &self.m;
-        let mut by = vec![[0f64; 6]; m.places.len()];
         let ends = |pair: &EPair| (m.zones[pair.h as usize].place, m.gid_place[pair.a as usize] as usize);
         for pair in &m.everyday {
             let (h, a) = ends(pair);
@@ -902,14 +933,8 @@ impl IntercityApi {
             let k = pair.kind as usize;
             let legs = pair.trips as f64 * (OUTWARD[k][q] + RETURN[k][q]) as f64;
             let apart = m.everyday_apart(pair.h, pair.a);
-            for p in [h, a] {
-                by[p][0] += legs;
-                by[p][2] += legs * pair.walk as f64;
-                by[p][3] += legs * pair.walk as f64;
-                if apart {
-                    by[p][4] += legs;
-                }
-            }
+            let walk = legs * pair.walk as f64;
+            add(h, a, [legs, 0., walk, walk, if apart { legs } else { 0. }, 0.]);
         }
         for (ei, ep) in self.epairs.iter().enumerate() {
             let pair = &m.everyday[ep.e as usize];
@@ -920,20 +945,20 @@ impl IntercityApi {
             let k = pair.kind as usize;
             let rail = pair.trips as f64 * (OUTWARD[k][q] + RETURN[k][q]) as f64 * s.e_frac.get(ei).copied().unwrap_or(0.) as f64;
             let apart = m.everyday_apart(pair.h, pair.a);
-            for p in [h, a] {
-                by[p][1] += rail;
-                by[p][2] -= rail * pair.walk as f64;
-                if apart {
-                    by[p][5] += rail;
-                }
-            }
+            add(h, a, [0., rail, -rail * pair.walk as f64, 0., 0., if apart { rail } else { 0. }]);
         }
+        true
+    }
+    fn pack_everyday<'a>(by: impl Iterator<Item = (usize, &'a [f64; 6])>) -> Vec<f64> {
         let mut out = vec![];
-        for (p, v) in by.iter().enumerate().filter(|(_, v)| v[0] > 0.) {
+        for (p, v) in by.filter(|(_, v)| v[0] > 0.) {
             out.extend([p as f64, v[0], v[1], v[2].max(0.), v[3], v[4], v[5]]);
         }
         out
     }
+}
+#[wasm_bindgen]
+impl IntercityApi {
     /// `station_flows` on a kind of day (T-260): each period weighed by the market's load factor.
     /// T-2747: packed, the 6 numbers per place, then the far zones the station reaches as
     /// `selection_all_day`'s, each with the riders starting, then ending; empty with no such station.

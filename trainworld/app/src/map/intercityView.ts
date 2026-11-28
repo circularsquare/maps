@@ -34,7 +34,7 @@ import { groundScale, lngLatToPack, packToLngLat } from "../game/coords";
 import { askMarketTrip, marketKinds, openFarTrip, tripOpenedFrom } from "../game/trip";
 import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, intercitySelection, rowsLanded, rowsOf, type IntercitySelection, type PlaceFlows } from "../game/demand";
 import { builtCities } from "../game/worldTotals";
-import { marketPairs, Z, zoneOf, zoneRowOf, type MarketPairs } from "../game/corridorFigures";
+import { marketPairs, ROW, Z, zoneOf, zoneRowOf, type MarketPairs } from "../game/corridorFigures";
 import { count } from "../game/format";
 import { BUBBLE_ALPHA, bubbleColour, purposeColour3, purposeSchemeOn, rgb, setBubbleColours, setBubbleShade, START_TIER_FILL, UNBUILT_FILL } from "../game/palette";
 import { openedZones } from "../game/openedZones";
@@ -324,9 +324,12 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     // T-2136: the selected zone's rows come from a worker; drawn again as they land (`rowWanted`)
     const row = pairsIn && ownZone >= 0 ? zoneRowOf(pairsIn, ownZone) : null;
     rowWanted = !!pairsIn && ownZone >= 0 && !row;
-    const at = (m: Float64Array | null, z: number) => (!m || z < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[3 * z], rail: m[3 * z + 1], air: m[3 * z + 2] });
+    const at = (m: Float64Array | null, z: number, w = 3) => (!m || z < 0 ? { all: 0, rail: 0, air: 0 } : { all: m[w * z], rail: m[w * z + 1], air: m[w * z + 2] });
     // (only ever the selected zone's pairs)
-    const pair = (a: number, b: number) => at(zoneOf(a) === ownZone ? row : null, zoneOf(b));
+    const pair = (a: number, b: number) => {
+      const z = zoneOf(b), r = zoneOf(a) === ownZone ? row : null;
+      return { ...at(r, z, ROW), walk: r && z >= 0 ? r[ROW * z + 3] : 0 };
+    };
     const total = (a: number) => at(totals, zoneOf(a));
     // T-3503: a zone's everyday outings across its lines on foot
     const interWalk = (a: number) => (pairsIn && zoneOf(a) >= 0 ? pairsIn.walk[zoneOf(a)] : 0);
@@ -345,7 +348,7 @@ export function startIntercityView(view: DemandOverlay, map: MlMap) {
     if (!cityPoints || perfOff("overviewCache") || inputs.some((x, k) => x !== cityPoints!.inputs[k])) {
       cityPoints = { inputs, all: CITIES.flatMap((c) => {
       const isOwn = c === own;
-      let t = { ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), walk: 0, none: 0 };
+      let t = { walk: 0, ...(!own || isOwn ? total(c.place) : pair(own.place, c.place)), none: 0 };
       if (!own) {
         // T-576: a zone's local walking is green; a zone not opened has no walk split (its walk is
         // inside `all`, so it draws as the rest)

@@ -174,7 +174,7 @@ let dayTable: ReturnType<typeof day_factors> | null = null;
 /** a paused round boundary's resume (a `go` or a newer network) */
 let wake: (() => void) | null = null;
 /** the questions whose answer reads the periods' state at a round (the others read none) */
-const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "tripLengths", "airLegs", "regLegs"]);
+const BY_ROUND = new Set<Query["kind"]>(["station", "flowRail", "purposes", "icSel", "icStation", "transfers", "trip", "icTrip", "tripLengths", "airLegs", "regLegs", "icEveryday"]);
 type Population = DemandApi | EverydayApi | IntercityApi;
 /** T-4220: a population, or a stand-in for one frozen as on screen (`ShownPop`): what the calls reading figures take */
 type Reader = Population | ShownPop;
@@ -1846,6 +1846,13 @@ function query(msg: Query) {
       } else if (!intercity || place === undefined || place < 0) legs = new Float64Array(0); // none: no market, or a zone outside it
       const mask = !ok ? 0 : mcs.length ? mcs.reduce((m, c) => m & c.part!.solved_mask(), ALL_PERIODS) : all;
       sendMessage({ kind: "regLegs", id: msg.id, version: msg.version, mask, legs }, legs ? [legs.buffer] : []);
+    } else if (msg.kind === "icEveryday") {
+      // T-4610: the market parts' answers over this worker's periods, each part's rail added
+      const ok = marketLive;
+      const periods = at?.markets ?? mine;
+      const legs = ok ? everydayPartners(mcs.map((c) => c.part!), periods, msg.place) : null;
+      const mask = !ok ? 0 : mcs.reduce((m, c) => m & c.part!.solved_mask(), maskOf(periods));
+      sendMessage({ kind: "icEveryday", id: msg.id, version: msg.version, mask, legs }, legs ? [legs.buffer] : []);
     } else if (msg.kind === "tripLengths") {
       // T-2365: a zone open bare from the aux worker's copy, its periods solved on no network
       const b = msg.bare ? bare.get(msg.city) : undefined;
@@ -1878,6 +1885,7 @@ function query(msg: Query) {
     else if (msg.kind === "airLegs") sendMessage({ kind: "airLegs", id: msg.id, version: msg.version, mask: 0, legs0: null, legs1: null });
     else if (msg.kind === "zoneSquares") sendMessage({ kind: "zoneSquares", id: msg.id, xy: null, sq: null, share: null });
     else if (msg.kind === "regLegs") sendMessage({ kind: "regLegs", id: msg.id, version: msg.version, mask: 0, legs: null });
+    else if (msg.kind === "icEveryday") sendMessage({ kind: "icEveryday", id: msg.id, version: msg.version, mask: 0, legs: null });
     else if (msg.kind === "tripLengths") sendMessage({ kind: "tripLengths", id: msg.id, version: msg.version, mask: 0, edges: new Float32Array(0), commute: null, everyday: null, kinds: null });
   }
 }
@@ -2091,19 +2099,34 @@ function marketFigures(parts: IntercityApi[], q: number) {
  * five numbers a place with any (place, legs, rail legs, walking legs, no-way legs): the legs and the walking
  * with no rail the same in every part, the rail each part's own and the walkers each part's rail takes. */
 function everydayPlaces(parts: IntercityApi[], q: number): number[] {
-  // legs, rail, walking, walking with no rail, then (T-2216) the legs between two lands and each part's rail on them
+  const out: number[] = [];
+  for (const [p, [legs, rail, walk, , apart, apartRail]] of mergedEveryday(parts.map((p) => p.everyday_place_legs(q)))) out.push(p, legs, rail, Math.max(0, walk), Math.max(0, apart - apartRail));
+  return out;
+}
+/** Each part's `everyday_place_legs` (or `everyday_partner_legs`) answer for one period as one by place: legs, rail, walking, walking with no
+ * rail, then (T-2216) the legs between two lands and each part's rail on them. */
+function mergedEveryday(answers: ArrayLike<number>[]): Map<number, [number, number, number, number, number, number]> {
   const by = new Map<number, [number, number, number, number, number, number]>();
-  for (const p of parts) {
-    const v = p.everyday_place_legs(q);
+  for (const v of answers) {
     for (let i = 0; i + 6 < v.length; i += 7) {
       const e = by.get(v[i]);
       if (!e) by.set(v[i], [v[i + 1], v[i + 2], v[i + 3], v[i + 4], v[i + 5], v[i + 6]]);
       else { e[1] += v[i + 2]; e[2] -= v[i + 4] - v[i + 3]; e[5] += v[i + 6]; }
     }
   }
-  const out: number[] = [];
-  for (const [p, [legs, rail, walk, , apart, apartRail]] of by) out.push(p, legs, rail, Math.max(0, walk), Math.max(0, apart - apartRail));
-  return out;
+  return by;
+}
+/** T-4610: one place's everyday outings across its lines over `periods`, by partner place: four numbers each
+ * (place, legs, rail legs, walking legs), each part's rail added as `everydayPlaces` does. */
+function everydayPartners(parts: IntercityApi[], periods: number[], place: number): Float64Array {
+  const by = new Map<number, [number, number, number]>();
+  for (const q of periods) {
+    for (const [p, [legs, rail, walk]] of mergedEveryday(parts.map((x) => x.everyday_partner_legs(q, place)))) {
+      const e = by.get(p) ?? by.set(p, [0, 0, 0]).get(p)!;
+      e[0] += legs; e[1] += rail; e[2] += Math.max(0, walk);
+    }
+  }
+  return Float64Array.from([...by].flatMap(([p, v]) => [p, ...v]));
 }
 /** Where a trip answer's pair and route counts sit (`count`, the routes' next), and its pairs' two
  * route nodes (`node`): `DemandApi.trip`'s (trip.rs) and `IntercityApi.market_trip`'s (market_trip.rs). */

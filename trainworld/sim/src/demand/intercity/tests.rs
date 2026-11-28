@@ -1167,6 +1167,20 @@ fn zone_legs_add_up_to_a_whole_place_selection() {
     let total: f64 = by.values().map(|c| c[0]).sum();
     assert!((total - 2. * s[4]).abs() <= 1e-6 * s[4], "{total} {}", s[4]);
     assert!(by.values().all(|c| c[1] <= c[0] && c[2] <= c[3] + 1e-9 && c[4] <= c[0] + 1e-9 && c[5] <= c[4] + 1e-9));
+    // T-4610: a place's partners add up to its own figures, and each partner sees the pair the same way
+    for (&p, own) in &by {
+        let part = a.everyday_partner_legs(q, p as u32);
+        let sum = |j: usize| part.chunks_exact(7).map(|c| c[1 + j]).sum::<f64>();
+        for j in [0, 1, 3, 4, 5] {
+            assert!((sum(j) - own[j]).abs() <= 1e-9 * own[0], "place {p} number {j}: {} {}", sum(j), own[j]);
+        }
+        assert!(part.chunks_exact(7).all(|c| c[0] as usize != p));
+        for c in part.chunks_exact(7) {
+            let back = a.everyday_partner_legs(q, c[0] as u32);
+            let r = back.chunks_exact(7).find(|b| b[0] as usize == p).expect("the pair is seen from both ends");
+            assert!((r[1] - c[1]).abs() <= 1e-9 * c[1] && (r[2] - c[2]).abs() <= 1e-9 * c[1].max(1.));
+        }
+    }
 }
 #[test]
 fn places_not_open_answer_by_place() {

@@ -70,6 +70,7 @@ import {
   rowsNow,
   seedRows,
   setRowsSource,
+  setEverydaySource,
   demandSolving,
   roughZones,
   refiningZone,
@@ -6352,6 +6353,27 @@ class DemandClient {
     return periods;
   }
 
+  /** T-4610: a zone place's everyday outings across its lines by partner place (game/demand.ts `askEverydayPartners`):
+   * the weekday's legs, rail legs and walking legs over every period, four numbers a partner (place first); null when not answered. */
+  everydayPartners(place: number): Promise<Float64Array | null> {
+    return this.viaRound(`icEveryday|${place}`, (t) => this.everydayPartnersAt(t, place));
+  }
+  private async everydayPartnersAt(t: Target, place: number): Promise<Float64Array | null> {
+    if (!t.solve) return null;
+    const by = new Map<number, [number, number, number]>();
+    let mask = 0;
+    for (const r of await this.ask((id) => ({ kind: "icEveryday", id, version: t.version, place }), undefined, [], undefined, t)) {
+      if (r.kind !== "icEveryday" || !r.legs) return null;
+      mask |= r.mask;
+      for (let i = 0; i + 3 < r.legs.length; i += 4) {
+        const e = by.get(r.legs[i]) ?? by.set(r.legs[i], [0, 0, 0]).get(r.legs[i])!;
+        e[0] += r.legs[i + 1]; e[1] += r.legs[i + 2]; e[2] += r.legs[i + 3];
+      }
+    }
+    if (mask !== ALL_PERIODS || !this.still(t)) return null;
+    return Float64Array.from([...by].flatMap(([p, v]) => [p, ...v]));
+  }
+
   /** Where the commuters of a set of cells go (T-098; game/demand.ts `Flows`): every worker's rail
    * part of its periods, added up, then one worker spreads all modes over the far end. */
   flows(end: "home" | "work", cells: Uint32Array): Promise<Flows | null> {
@@ -7157,6 +7179,7 @@ export function startDemand(city = HOME_CITY, newGame = false) {
   setTripQuery((from, to, purpose) => c.trip(from, to, purpose)); // T-195
   setMarketTripQuery((end, cells, far, farGid, near) => c.marketTrip(end, cells, far, farGid, near)); // T-866, T-885
   setRowsSource((key, place) => c.corridorRows(key, place)); // T-2136
+  setEverydaySource((place) => c.everydayPartners(place)); // T-4610
   setDemandQueries({ transfers: (members) => c.transfers(members), platformTransfers: () => c.platformTransfers(), cityCells: (city) => c.cityCells(city), cellModes: (purpose, city) => c.purposeModes(purpose ?? "all", city), stationRiders: (id, top, members) => c.stationRiders(id, top, members), flows: (end, cells) => c.flows(end, cells), intercitySelection: (end, cells, still) => c.intercitySelection(end, cells, still), intercityStation: (id, members) => c.intercityStation(id, members), tripLengths: (zone) => c.tripLengths(zone), legsKey: (zone) => c.legsKey(zone) });
   if (TEST) c.submitNetwork(demandTestSnapshot());
   if (tracing()) startDemandTrace(c); // T-4206

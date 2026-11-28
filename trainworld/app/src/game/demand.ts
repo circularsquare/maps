@@ -222,6 +222,12 @@ export function eachCorridor(c: Corridors, r: CorridorRows, keep: (from: number,
  * the market); null with none of the book's market open there. */
 let rowsSource: ((key: string, place: number) => Promise<CorridorRows | null>) | null = null;
 export const setRowsSource = (f: typeof rowsSource) => { rowsSource = f; };
+/** T-4610: where a zone place's everyday outings by partner place come from (the demand client's `everydayPartners`) */
+let everydaySource: ((place: number) => Promise<Float64Array | null>) | null = null;
+export const setEverydaySource = (f: typeof everydaySource) => { everydaySource = f; };
+/** `place`'s everyday outings across its lines by partner place, on the weekday and the network of the result in hand:
+ * four numbers a partner (place, legs, rail legs, walking legs); null when no worker answered. */
+export const askEverydayPartners = (place: number): Promise<Float64Array | null> => everydaySource?.(place) ?? Promise.resolve(null);
 /** bumped as asked rows land, so the views that read `rowsOf` work out again */
 export const rowsLanded = signal(0);
 /** the places' rows asked for lately, by book key and place; a place's are about 80 kB on the New York
