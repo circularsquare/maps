@@ -1,6 +1,7 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4541 [P1] {L:loading} The game freezes for minutes after a big selection (2026-11-27): The selection bar's Double up price stops asking once its pick changes or the bar goes, and waits 300 ms for a drag box to stop, so at most one question waits in the clock's queue; per-run cost left for T-4542.
 - T-4534 [P2] {L:small-fixes} Patched rows check still trips on edge cost (2026-11-27): Fixed: a state read now first re-sends the patch when a patched edge's price moved since it (a road tile mid-burst, whose patch waited for the burst's end); the price test compares only laid edges. notes/T-4534.md.
 - T-4229 [P3] {L:map-look} Station names stay after zooming in (2026-11-27): Fixed: station building names that share a name (one complex's buildings) were left on the map after zooming; one spare-label pool for station, building and bus-stop names. notes/T-4229.md.
 - T-4376 [P3] {L:map-look} No sound for days for one player (2026-11-27): No code cause found: on Chrome the sound starts within 1 s of the first click and building sounds play; the likely causes are the Sound checkbox, a muted site or Windows mixer, or playing zoomed out at 16x and faster, where station sounds are silent by design (notes/T-4376.md).

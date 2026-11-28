@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c031",
+      "text": "fixed the game freezing for minutes after selecting lots of double track",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4541",
+      "by": "freeze",
+      "at": "2026-11-28T03:31:46Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c030",
       "text": "fixed station building names left behind on the map after zooming",
       "edited": null,

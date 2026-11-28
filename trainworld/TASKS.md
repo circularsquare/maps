@@ -165,6 +165,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
+- T-4542 [P2] {L:edit-speed} Double up's price holds the game seconds per run
+  - Context: Found in T-4541: on your 3,090-station save each run's Double up price is up to five trial edits, 0.2-4.8 s, asked whenever a pick holds double track and again after every edit. Edits and previews wait behind the run being priced.
+  - Goal: A pick with 20 runs of double track adds under 1 s to an edit's wait on your save.
+  - Other: notes/T-4541.md
 - T-4134 [P3] {L:edit-speed} A line's time zone and fleet kind looked up once
   - Context: From T-4131: `utc_offset_at` per line costs 75-120 ms an edit and `cars_needed` 95 ms once on the Asia save.
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
@@ -1085,9 +1089,9 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
   - Other: research/late-game-spending.md C.
-- T-4511 [P3] {L:timetables} Nudge single trains
-  - Context: Design done 11-27 (16-21 h). You, 11-27: "put single-train moves to p3 and do it later ... see if players request single train after" the real-gaps waits (T-4514) and line-wide nudges.
-  - Goal: Build when players still ask for it after T-4514.
+- T-4511 [P2] {L:timetables} Nudge single trains (taking, 2026-11-27, agent shiftplan)
+  - Context: You, 11-27: build it together with the real-gap waits (T-4514, held off master until then), a 90 s minimum gap between trains on a shared stretch, and an auto-space option per line, since 11/14 minute lines can't be evened without moving single trains. Design done 11-27, 16-21 h.
+  - Goal: Single moves, auto-space and T-4514 land together; design updated with auto-space and the minimum gap first.
   - Other: notes/T-4511.md
 - T-4515 [P3] {L:timetables} Show a shared stretch's wait on the departures board
   - Context: Since T-4514 a stretch lines share waits by the real gaps between their trains, but nothing shows a player that wait or what evening them would save. Drafted in notes/T-4511.md "Readout", about 1-1.5 h.
