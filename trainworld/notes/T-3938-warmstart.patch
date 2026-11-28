@@ -1,0 +1,686 @@
+diff --git a/trainworld/app/src/workers/demand.worker.ts b/trainworld/app/src/workers/demand.worker.ts
+index bd8456897..dc92f0f6e 100644
+--- a/trainworld/app/src/workers/demand.worker.ts
++++ b/trainworld/app/src/workers/demand.worker.ts
+@@ -33,7 +33,7 @@ import { countryFareScales, faresIn, marketFareFactors, roundedDefault } from ".
+ import { demandZones } from "../game/fareZones";
+ import { fareFactors, fareScale, fareWeight, marketFareWeight } from "../game/income";
+ import type { CorridorBook, CorridorRows } from "../game/demand";
+-import { ALL_PERIODS, arriveOf, comeMax, MARKET_POP, MARKET_QUERIES, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type QueryKind, type BareFigures, type ExactParts, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand } from "./demandProtocol";
++import { ALL_PERIODS, arriveOf, comeMax, MARKET_POP, MARKET_QUERIES, MARKET_TRIP_LAYOUT, TRIP_LAYOUT, type QueryKind, type BareFigures, type ExactParts, type SelSquares, type DemandNetwork, type FromDemand, type Heap, type MarketPack, type MarketRows, type OpenRejected, type ToDemand, type WarmStart } from "./demandProtocol";
+ import { addIntercity } from "./demandSums";
+ import { CRUSH_SCALE, FARE_SCALE, LOAD_SCALE, addInto, stepOf, toF32 } from "./exactSum";
+ import { VIEW_TOLERANCE, sameView } from "./demandView";
+@@ -91,6 +91,8 @@ let planKinds = new Map<CityId, number>();
+ /** T-1607: market parts last solved sharing (their shared periods held by two workers) */
+ const sharedParts = new WeakSet<IntercityApi>();
+ let pending: Extract<ToDemand, { kind: "solve" }> | null = null;
++/** T-3938: the warm starts the page sent, by solve version (the newest only) */
++const warmIn = new Map<number, WarmStart>();
+ let busy = false;
+ /** the version whose network `api` holds (queries about any other get nulls) */
+ let current = -1;
+@@ -155,7 +157,7 @@ let stageRound = -1;
+ /** T-327: questions marked `wait` about a round (or version) this worker has not reached yet,
+  * answered the moment it has, before it starts the next round */
+ let waiting: Query[] = [];
+-type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "endLocal" | "close" | "corridorsAgain" | "rows" | "debugPanic" | "periods" | "first" | "view" | "loads" | "zones" | "aside" }>;
++type Query = Exclude<ToDemand, { kind: "init" | "open" | "solve" | "go" | "whole" | "endLocal" | "close" | "corridorsAgain" | "rows" | "debugPanic" | "periods" | "first" | "view" | "loads" | "zones" | "aside" | "warm" }>;
+ /** T-327: the round every worker may start, by version and group (a solve marked `barrier` waits
+  * for it) */
+ let go = { version: -1, group: 0, round: 0 };
+@@ -1395,6 +1397,9 @@ onmessage = (e: MessageEvent<ToDemand>) => {
+     wake?.();
+     if (msg.only) startRough();
+     else void opening.then(() => { if (started && !busy) run(); });
++  } else if (msg.kind === "warm") {
++    warmIn.clear();
++    warmIn.set(msg.version, msg.warm);
+   } else if (msg.kind === "whole") {
+     wholeGo = Math.max(wholeGo, msg.version);
+     if (msg.early) wholeEarly = Math.max(wholeEarly, msg.version);
+@@ -2863,7 +2868,7 @@ async function run() {
+       // not sharing, every one last solved sharing, whose shared periods are held apart)
+       // (T-2188: the idle refresh's, every cluster holding a period from a local solve)
+       const localHeld = (c: JobCluster) => c.pops.some((p) => units.some((q) => heldQ.get(p)?.[q]?.endsWith(LOCAL)));
+-      const dirty = sp ? jobClusters.slice() : jobClusters.filter((c) => (!!c.part && (sharing || sharedParts.has(c.part))) || c.pops.some((p) => held.get(p) !== c.sig) || (!!job.refresh && localHeld(c)));
++      const dirty = sp || job.again ? jobClusters.slice() : jobClusters.filter((c) => (!!c.part && (sharing || sharedParts.has(c.part))) || c.pops.some((p) => held.get(p) !== c.sig) || (!!job.refresh && localHeld(c)));
+       // which of a cluster's populations this worker solves period q of
+       // T-3373 B: under the split, the workers holding each cluster's populations (its zones' and the market's)
+       const byCity = sp ? new Map(sp.cities.map((c) => [c.id, c.by])) : null;
+@@ -3181,6 +3186,10 @@ async function run() {
+         for (let k = 0; k < t.length; k++) t[k] += m[k];
+         return asF32(t);
+       };
++      // T-3938: how each cluster's period started (`warmLoads`), by cluster and period
++      const warmStarts = new Map<string, string>();
++      // (a population's name in a warm start: its kind and zone, the market by its cluster's zones)
++      const warmKey = (c: JobCluster, a: Reader) => (a instanceof IntercityApi ? `m:${c.cities.join(",")}` : `${a instanceof EverydayApi ? "e" : "c"}:${c.cities.find((id) => cities.get(id) === a || everyday.get(id) === a) ?? "?"}`);
+       // One round of period q for the cluster. Periods are independent. Every population of a
+       // cluster advances from one frozen load vector of the whole cluster, never from whichever
+       // population happened to run first. False if a newer network came meanwhile.
+@@ -3209,13 +3218,20 @@ async function run() {
+         const total = round > 0 ? await loads(round - 1) : null;
+         if (round > 0 && !total) return false;
+         if (total) for (const a of c.pops) if (here(a)) keepTrail(a, q, round - 1);
++        // T-3938: a load's first pass priced on an earlier final of this network, then `warmStart` rounds; one solving
++        // worker only (a shared period's other side would take the warm pass's boardings for free flow)
++        const w = total === null && job.warmStart !== undefined ? warmIn.get(job.version) : undefined, rec = w?.periods[q] ?? null;
++        const start = !w ? "no record" : w.nodes !== N ? "another layout" : !rec ? "no record of the period" : rec.total.length !== 3 * N ? "another layout" : side !== "all" ? `shared (${side})` : "warm";
++        const warm = start === "warm" ? rec : null, cold = new Set<Reader>();
++        if (total === null && job.warmStart !== undefined) warmStarts.set(`${jobClusters.indexOf(c)}:${q}`, start);
+         for (const a of c.solveOrder) {
+           if (import.meta.env.DEV && panicInSolve && a instanceof DemandApi) { panicInSolve = false; if (oomPanic) { oomNow(); return false; } a.debug_panic(); }
+           if (import.meta.env.DEV && stallInSolve) { stallInSolve = false; await new Promise<never>(() => {}); }
+           if (!here(a) || (total === null && skip?.has(a))) continue;
+           const t1 = performance.now();
+-          if (total === null) a.solve(q);
+-          else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");
++          if (total === null) {
++            if (!warm || !a.solve_warm(q, ownOf(a, warm.total), job.warmStart!)) { a.solve(q); cold.add(a); }
++          } else if (!a.crowd_with_external(q, ownOf(a, total))) throw new Error("shared crowding layout disagrees");
+           addPass(a, q, round, performance.now() - t1);
+           // a population's pass is up to a second of one call: let a waiting query or a newer
+           // network in between
+@@ -3223,7 +3239,14 @@ async function run() {
+           if (pending) return false;
+         }
+         // T-1255: the free-flow pass's boardings, the riders who would come if the trains had room
+-        if (total === null) for (const a of c.pops) { if (!here(a)) continue; const b = boardsOf(a); b.free[q] = a.board(q); b.rounds[q] = undefined; }
++        if (warm && cold.size) warmStarts.set(`${jobClusters.indexOf(c)}:${q}`, `warm, ${[...cold].map((a) => warmKey(c, a)).join(" ")} at free flow`);
++        if (total === null) for (const a of c.pops) {
++          if (!here(a)) continue;
++          const b = boardsOf(a), now = a.board(q), was = warm && !cold.has(a) ? warm.free.find(([k]) => k === warmKey(c, a))?.[1] : undefined;
++          if (warm && !cold.has(a) && was?.length !== now.length) warmStarts.set(`${jobClusters.indexOf(c)}:${q}`, `no free flow of ${warmKey(c, a)}`);
++          b.free[q] = was?.length === now.length ? was.slice() : now;
++          b.rounds[q] = undefined;
++        }
+         if (side === "held") {
+           const t = ownLoads();
+           sendMessage({ kind: "loads", version: job.version, cluster: jobClusters.indexOf(c), period: q, round, side, loads: t, from: sp!.me, to: othersOf(c) }, [t.buffer]);
+@@ -3236,6 +3259,11 @@ async function run() {
+           // within the wait for a train with room, with everyone who comes to the platforms
+           const final = await loads(round);
+           if (!final) return false;
++          if (job.warmStart !== undefined && side === "all") {
++            const passMs = Array.from({ length: round + 1 }, (_, r) => c.pops.reduce((t, a) => t + (passByRound.get(a)?.[q]?.[r] ?? 0), 0));
++            const free = c.pops.map((a): [string, Float32Array] => [warmKey(c, a), (boardsOf(a).free[q] ?? a.board(q)).slice()]), t = final.slice();
++            sendMessage({ kind: "warmLoads", version: job.version, period: q, nodes: N, total: t, free, start: warmStarts.get(`${jobClusters.indexOf(c)}:${q}`) ?? "?", passMs }, [t.buffer, ...free.map(([, f]) => f.buffer)]);
++          }
+           for (const a of c.pops) if (here(a)) { boardsOf(a).rounds[q] = a.board(q); keepTrail(a, q, round); }
+           let come: Float32Array;
+           if (side === "all") come = comeOf([c], q);
+diff --git a/trainworld/app/src/workers/demandClient.ts b/trainworld/app/src/workers/demandClient.ts
+index 200f2aac9..5db67aada 100644
+--- a/trainworld/app/src/workers/demandClient.ts
++++ b/trainworld/app/src/workers/demandClient.ts
+@@ -107,7 +107,7 @@ import { stopsById, world } from "../game/world";
+ import { stopFareScales } from "../game/money";
+ import { trackZones } from "../game/trackZones";
+ import { viewCentre } from "../game/listScope";
+-import { ALL_PERIODS, MARKET_POP, MARKET_QUERIES, ZONE_QUERIES, isQuery, type Answer, type SplitPlan, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand } from "./demandProtocol";
++import { ALL_PERIODS, MARKET_POP, MARKET_QUERIES, ZONE_QUERIES, isQuery, type Answer, type SplitPlan, type SelSquares, type BareFigures, type DemandNetwork, type FromDemand, type Heap, type OpenRejected, type QueryKind, type ToDemand, type WarmStart } from "./demandProtocol";
+ import { addParts, dayFactor, dayResultOf, dayViews, flowsBody, selectionFlows, signature, stationFlows, summaryOnDay, sumParts, unpackDays, type CorridorRail, type DayInput, type DayViews, type FlowsAnswer, type FromSums, type PackedDays, type PurposePart, type SumsAsk, type SumsCtx, type ToSums } from "./demandSums";
+ import { SPLIT, SUM_FLAGS } from "./exactSum";
+ import { Holding, MARKET_UNIT } from "./demandPlan";
+@@ -371,6 +371,10 @@ interface Near { key: string; ll: Float64Array; near: CityId[]; markets: CityId[
+ 
+ /** A service's key: what demand reads of it (not `alone`). */
+ const keyOf = (svc: Service) => JSON.stringify({ ...svc, alone: undefined });
++/** T-3938 `?warmStart=K` (0-3; a prototype, off by default): a load solves each period from an earlier final of the same
++ * network in this tab (`WarmStart`), its first pass priced on that final's loads in place of free flow, then K crowding
++ * rounds; the rest are skipped as settled ones are. Nothing is stored beside the save. */
++const WARM_START = ((v) => (v !== null && /^[0-3]$/.test(v) ? Number(v) : undefined))(new URLSearchParams(location.search).get("warmStart"));
+ /** The stops of every line, the size a solve's time is estimated by */
+ const stopCount = (svc: Service) => svc.lines.reduce((n, l) => n + l.stops.length, 0);
+ 
+@@ -554,6 +558,9 @@ interface Solve {
+   earlyLines?: string[];
+   periodMs: number[][];
+   setupMs: number[];
++  /** T-3938 (`?warmStart`): sent from a kept final; and per period, how each cluster of it started and its passes' ms by round */
++  warm?: boolean;
++  warmStats?: { start: string[][]; passMs: number[][][] };
+   /** WASM linear memory per worker after its last stage, bytes */
+   memBytes: number[];
+   /** the cities open in every worker when it was sent: the solve covers at least these (T-149) */
+@@ -1203,6 +1210,9 @@ class DemandClient {
+   private cacheOn = cacheAvailable() && !TEST && !mobileDevice() && !marketOff();
+   /** off: no cache is written (a check turns it off to leave a network uncached) */
+   cacheWrites = true;
++  /** T-3938: finals kept to start a load of the same network from (`keyOf`, the newest last), and the one coming in */
++  private warmKept = new Map<string, WarmStart>();
++  private warmComing: { version: number; nodes: number; periods: WarmStart["periods"]; start: string[][]; passMs: number[][][] } | null = null;
+   /** SHA-256 of each pack opened in every worker (and "market"), as it downloads */
+   private packHash = new Map<string, { p: Promise<string>; set: (h: string) => void }>();
+   /** the zones of the cached result shown, and its network's hash */
+@@ -3129,6 +3139,42 @@ class DemandClient {
+     return this.days[0]?.view?.version === CACHE_VERSION;
+   }
+ 
++  /** T-3938: a cluster's period of the solve in hand at its final: its loads added to the others' (each cluster's are
++   * zero off its own route nodes) */
++  private warmLoads(m: Extract<FromDemand, { kind: "warmLoads" }>) {
++    if (m.version !== this.cur?.version) return;
++    let r = this.warmComing;
++    if (r?.version !== m.version) r = this.warmComing = { version: m.version, nodes: m.nodes, periods: PERIODS.map(() => null), start: PERIODS.map(() => []), passMs: PERIODS.map(() => []) };
++    if (r.nodes !== m.nodes) return;
++    const p = (r.periods[m.period] ??= { total: new Float32Array(3 * m.nodes), free: [] });
++    for (let k = 0; k < p.total.length; k++) p.total[k] += m.total[k];
++    p.free.push(...m.free);
++    r.start[m.period].push(m.start);
++    r.passMs[m.period].push(m.passMs);
++  }
++
++  /** T-3938: a final with every period's loads is kept for the next load of its network in this tab (two at most) */
++  private warmKeep(s: Solve) {
++    const r = this.warmComing?.version === s.version ? this.warmComing : null;
++    this.warmComing = null;
++    if (!r) return;
++    s.warmStats = { start: r.start, passMs: r.passMs };
++    if (r.periods.some((p) => !p)) return;
++    const key = keyOf(s.svc);
++    this.warmKept.delete(key);
++    this.warmKept.set(key, { nodes: r.nodes, periods: r.periods });
++    while (this.warmKept.size > 2) this.warmKept.delete(this.warmKept.keys().next().value!);
++  }
++
++  /** T-3938 (for measuring): the next game load of the network in hand is solved again, as in a new tab (a load of the
++   * same network is otherwise the solve in hand, `submitNetwork`); `fresh`: and at free flow, no final kept */
++  loadAgain(fresh: boolean) {
++    this.lastKey = "(again)";
++    this.again = true;
++    if (fresh) this.warmKept.clear();
++  }
++  private again = false;
++
+   /** A final result landed: keep it beside the save (not from a test page or a tab without the slot). */
+   private async writeCache(s: Solve) {
+     const slots = saveSlotsState.peek();
+@@ -4982,6 +5028,7 @@ class DemandClient {
+     markAlive(); // T-950: (not a query's answer, which an idle worker gives while another is stuck)
+     markStep();
+     if (msg.kind === "unit") { this.inUnit[i] = { version: msg.version, round: msg.round, period: msg.period, at: performance.now() }; return; }
++    if (msg.kind === "warmLoads") return this.warmLoads(msg);
+     if (msg.kind === "shown") return this.shownIn(i, msg.version, msg.snap);
+     if (msg.kind === "asidePlan" || msg.kind === "asideDone") return; // (a focus pool's alone)
+     if (msg.kind === "result") {
+@@ -5471,6 +5518,16 @@ class DemandClient {
+     const msg: ToDemand = { kind: "solve", version, net, ids, rounds: ROUNDS, barrier, ...(barrier ? { later: loadPace().later } : {}), first: activeCity.peek(), ...(next.length ? { next } : {}), ...(focused ? { focused } : {}), ...(perfOff("clusters") ? { whole: true } : {}), ...(perfOff("split") ? { oneMarket: true } : {}), ...(perfOff("reach") ? { wide: true } : {}), ...(perfOff("chunks") ? { exactMarket: true } : {}), ...(perfOff("farChunks") ? { nearChunks: true } : {}), ...(perfOff("periods") ? { fresh: true } : {}), ...(perfOff("estimate") ? { exact0: true } : {}), ...(this.freshParts ? { freshParts: true } : {}), ...(perfOff("noise") ? { exactKeep: true } : {}), ...(perfOff("steps") ? { oneSend: true } : {}), ...(perfOff("wholeSteps") ? { roundFirst: true } : {}), ...(noPreview ? { noPreview } : {}),...(LOCAL_SHARE ? { localShare: LOCAL_SHARE } : {}), ...(refresh ? { refresh } : {}) };
+     if (!barrier && this.snapOn()) msg.snap = this.cur.snap = true;
+     this.freshParts = false;
++    if (this.again && barrier) {
++      Object.assign(msg, { again: true, fresh: true });
++      this.again = false;
++    }
++    if (WARM_START !== undefined) {
++      msg.warmStart = WARM_START;
++      const warm = barrier ? this.warmKept.get(keyOf(svc)) : undefined;
++      if (warm) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "warm", version, warm } satisfies ToDemand);
++      this.cur.warm = !!warm;
++    }
+     this.postSolve(msg);
+     if (barrier) this.askTurn();
+     this.progress(); // T-243: a held game's solve shows its progress even with nothing to load
+@@ -6687,6 +6744,7 @@ class DemandClient {
+           demandSolving.value = null;
+           this.unsettled = null;
+           if (!stale) setTimeout(() => void this.writeCache(s), 0); // T-328; a task of its own (T-789)
++          if (!stale && WARM_START !== undefined) this.warmKeep(s);
+           // T-1734: what was held back meanwhile
+           if (s.barrier === false || stale) this.flush();
+           // T-2560: the levels of detail waited for this solve as for a load's card (`checkHold`)
+diff --git a/trainworld/app/src/workers/demandProtocol.ts b/trainworld/app/src/workers/demandProtocol.ts
+index b628a3c46..058c798c2 100644
+--- a/trainworld/app/src/workers/demandProtocol.ts
++++ b/trainworld/app/src/workers/demandProtocol.ts
+@@ -168,6 +168,11 @@ export const MARKET_QUERIES: ReadonlySet<QueryKind> = new Set<QueryKind>(["icSel
+  * market (every cluster's part), each over the periods of the answer's `mask` */
+ export const MARKET_POP = "market";
+ 
++/** T-3938 (`?warmStart`, a prototype): an earlier final of this network for a load to start from, per period (null: that
++ * period starts at free flow): its loads before the cap as `crowd_with_external` takes them over `nodes` route nodes, and
++ * each population's free-flow boardings (the cap's riders who would come, T-1255), which a warm start passes on */
++export interface WarmStart { nodes: number; periods: ({ total: Float32Array; free: [string, Float32Array][] } | null)[] }
++
+ export type ToDemand =
+   /** start the WASM with the periods this worker solves; city packs (header text and .bin) and
+    * zones' market packs may come here or in `open`s after it (T-149) */
+@@ -220,6 +225,11 @@ export type ToDemand =
+       nearChunks?: boolean;
+       /** T-124 `?perfOff=periods`: a cluster solved solves every period, none kept */
+       fresh?: boolean;
++      /** T-3938 `?warmStart=K` (a prototype): each final period's loads sent back (`warmLoads`), and a period with a
++       * `warm` record solved from it, its first pass priced on the record's loads, then K crowding rounds */
++      warmStart?: number;
++      /** T-3938 (measuring, `DemandClient.loadAgain`): every cluster solved, as in a new tab (with `fresh`, every period) */
++      again?: boolean;
+       /** T-393: the city in view: its cluster is solved first */
+       first?: CityId;
+       /** T-2453: zones whose clusters come next, in order (the zone the city view shows) */
+@@ -278,6 +288,8 @@ export type ToDemand =
+    * waits on the slowest worker either way). `group` (T-402, 0 when absent): the solve's group of
+    * clusters the round is of, as `plan.ahead` says (0 the cluster solved ahead, 1 the rest) */
+   | { kind: "go"; version: number; round: number; group?: number }
++  /** T-3938: the solve `version`'s warm start (sent before it) */
++  | { kind: "warm"; version: number; warm: WarmStart }
+   /** T-1733: every worker's local result after an edit is shown and a moment has passed: the whole solve of `version` may start */
+   | { kind: "whole"; version: number;
+       /** T-4220 stage 8: sent as the plans came in (a worker solves nothing locally, T-1733): no local result of the
+@@ -544,6 +556,10 @@ export type FromDemand =
+   /** T-3781: a barrier solve's period `period` of round `round` started here (its `result` ends it); a report's
+    * diagnosis names the period a quiet worker is in */
+   | { kind: "unit"; version: number; round: number; period: number }
++  /** T-3938: a cluster's period `period` at its final (`warmStart` on): its loads before the cap, three blocks per route
++   * node of `nodes` (`WarmStart`), each population's free-flow boardings by its `warmKey`, how it started ("warm", or
++   * why it did not) and the ms of each round's passes */
++  | { kind: "warmLoads"; version: number; period: number; nodes: number; total: Float32Array; free: [string, Float32Array][]; start: string; passMs: number[] }
+   | { kind: "work"; version: number; stage: 0 | 1; busy: boolean; done: [number, number]; of: [number, number]; unitMs: [number, number]; left: [number, number]; blind: [number, number]; cur: number | null; curSize: number; sizeMs: [number, number]; blindLate: [number, number]; viewBlindLate: [number, number]; curLate: boolean; sizeMsLate: [number, number]; ran: [number, number]; ranExp: [number, number]; ranN: [number, number]; viewLeft: [number, number]; viewBlind: [number, number]; curView: boolean; leftQ: number[]; ranQ: number[]; expQ: number[]; nQ: number[]; curQ: number }
+   /** `localHeld` (T-2188): a cluster here holds a period from a local solve no whole solve has replaced since */
+   | { kind: "done"; version: number; memBytes: number; heap?: Heap; clusters?: [number, number]; periods?: [number, number]; local?: CityId[]; localHeld?: boolean }
+diff --git a/trainworld/sim/src/demand/api.rs b/trainworld/sim/src/demand/api.rs
+index c8973c720..66b93125c 100644
+--- a/trainworld/sim/src/demand/api.rs
++++ b/trainworld/sim/src/demand/api.rs
+@@ -686,6 +686,8 @@ pub(crate) struct Period {
+     uniform: bool,
+     /// The segment loads the last crowding round was priced on (`kernel::settled`, T-434).
+     seen: Vec<f32>,
++    /// T-3938 (a prototype, `solve_warm`): the crowding rounds still to run; a later one is skipped as settled.
++    rounds_left: usize,
+     /// Transfers platform to platform (T-176): the slots of `g`, averaged like the loads.
+     xi: XferIndex,
+     xfer: Vec<f32>,
+@@ -1838,6 +1840,18 @@ impl DemandApi {
+ 
+     /// The free-flow first estimate for period `q` (SPEC 4.4). False if there is no network.
+     pub fn solve(&mut self, q: usize) -> bool {
++        self.solve_at(q, None)
++    }
++
++    /// T-3938 (a prototype behind `?warmStart`): period `q`'s first pass priced on the loads `total` (laid out as
++    /// `crowd_with_external` takes them: an earlier final's) in place of free flow, then at most `rounds` crowding
++    /// rounds. False if there is no network or `total` has another layout.
++    pub fn solve_warm(&mut self, q: usize, total: &[f32], rounds: usize) -> bool {
++        let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
++        self.solve_at(q, Some((t.as_deref().unwrap_or(total), rounds)))
++    }
++
++    fn solve_at(&mut self, q: usize, warm: Option<(&[f32], usize)>) -> bool {
+         let t0 = now_ms();
+         let Some(svc) = &self.svc else { return false };
+         if q >= PERIODS {
+@@ -1851,6 +1865,18 @@ impl DemandApi {
+         put_fares(&mut g, &self.fare_curve, &self.fare_zones, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+         let no_crowding = vec![1.0; g.rn_ride.len()];
+         set_crowding(&mut g, &no_crowding);
++        // (warm: uniform while the loads crowd nothing, so such a period still costs one pass, T-119)
++        let (fac, uniform, seen, rounds_left) = match warm {
++            None => (no_crowding, true, vec![], usize::MAX),
++            Some((total, rounds)) => {
++                let Some((fac, left)) = round_costs(&g, &net, &p, total) else { return false };
++                let uniform = fac == no_crowding && left == g.rn_left;
++                set_crowding(&mut g, &fac);
++                g.rn_left = left;
++                let seen = total[..g.rn_line.len()].to_vec();
++                (fac, uniform, seen, rounds)
++            }
++        };
+         let xi = xfer_index(&g);
+         let mut xfer = vec![0.0; xi.len];
+         let (rail, rail_walk, avg, pairs, sub, rail_d, len) = if self.sz.is_some() {
+@@ -1861,7 +1887,7 @@ impl DemandApi {
+         let walk0 = if self.part.0 == 0 { walk0 } else { 0.0 };
+         let unr0 = if self.part.0 == 0 { self.unr_all * p.period_share as f64 } else { 0.0 };
+         let unr = unr0 - sub.unr_rail();
+-        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, len, walk: walk0 - rail_walk, unr, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac: no_crowding, uniform: true, seen: vec![], xi, xfer, part: self.part });
++        self.per[q] = Some(Period { net, p, g, avg, rail, rail_d, len, walk: walk0 - rail_walk, unr, trips, round: 0, ms: now_ms() - t0, pairs, sub, fac, uniform, seen, rounds_left, xi, xfer, part: self.part });
+         true
+     }
+ 
+@@ -1892,7 +1918,7 @@ impl DemandApi {
+         rail_d.scale(k);
+         let mut len = src.len.clone();
+         len.scale(k, k, k);
+-        let est = Period { avg: src.avg.scaled(k as f32), rail: src.rail * k, rail_d, len, walk: src.walk * k, unr: src.unr * k, trips, round: 0, ms: 0.0, pairs: src.pairs, sub: src.sub.scaled(k as f32), fac: no_crowding, uniform: true, seen: vec![], net, p, g, xi, xfer, part: src.part };
++        let est = Period { avg: src.avg.scaled(k as f32), rail: src.rail * k, rail_d, len, walk: src.walk * k, unr: src.unr * k, trips, round: 0, ms: 0.0, pairs: src.pairs, sub: src.sub.scaled(k as f32), fac: no_crowding, uniform: true, seen: vec![], rounds_left: usize::MAX, net, p, g, xi, xfer, part: src.part };
+         self.per[to] = Some(est);
+         true
+     }
+@@ -1935,7 +1961,7 @@ impl DemandApi {
+         let t0 = now_ms();
+         let Some(mut st) = self.per.get_mut(q).and_then(|p| p.take()) else { return false };
+         if self.sz.is_some() {
+-            if settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left) {
++            if st.rounds_left == 0 || settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left) {
+                 // The period's loads have settled (T-434), or nothing is crowded enough to change a
+                 // cost, so this round would solve what the round before did (T-119).
+                 st.round += 1;
+@@ -1947,6 +1973,7 @@ impl DemandApi {
+             st.g.rn_left = left;
+             st.uniform = false;
+             st.fac = fac;
++            st.rounds_left = st.rounds_left.saturating_sub(1);
+             let mut xfer = vec![0.0; st.xi.len];
+             let (rail, rail_walk, l, _, sub, rail_d, len) = self.pass(&st.g, &st.p, q, Some((&st.xi, &mut xfer)));
+             st.round += 1;
+diff --git a/trainworld/sim/src/demand/api/tests.rs b/trainworld/sim/src/demand/api/tests.rs
+index 8f6c8ec94..c59ddd6c6 100644
+--- a/trainworld/sim/src/demand/api/tests.rs
++++ b/trainworld/sim/src/demand/api/tests.rs
+@@ -1829,3 +1829,39 @@ fn trips_towards_an_unsearched_station_are_counted() {
+     assert!((dropped - logged).abs() <= 1e-3 * dropped, "counted {dropped}, logged {logged}");
+     assert!(kernel::DROP_LOG.with(|l| l.borrow().iter().all(|e| e.0 != 0)), "station 0 was searched");
+ }
++
++/// T-3938: a warm solve on loads that crowd nothing is the free-flow solve to the bit; on crowded loads it runs
++/// only the crowding rounds it was given, the later ones keeping its figures as a settled round does, the round
++/// count still moving.
++#[test]
++fn a_warm_solve_runs_only_its_rounds() {
++    let (mut api, xy, n, stops, times, tph, cars) = small();
++    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
++    let figures = |api: &DemandApi| {
++        let mut s = api.summary(0);
++        s[4] = 0.0; // ms
++        (s, api.seg(0), api.board(0), api.alight(0), api.sub_sums())
++    };
++    api.solve(0);
++    let free = figures(&api);
++    let loads: Vec<f32> = [api.seg(0), api.board(0), api.alight(0)].concat();
++    assert!(api.solve_warm(0, &vec![0.0; loads.len()], 3));
++    assert_eq!(figures(&api), free);
++    let run = |api: &mut DemandApi, rounds: usize| -> Vec<Vec<f32>> {
++        assert!(api.solve_warm(0, &loads, rounds));
++        let mut out = vec![api.seg(0)];
++        for r in 1..=3 {
++            assert!(api.crowd(0));
++            assert_eq!(api.summary(0)[0], r as f64);
++            out.push(api.seg(0));
++        }
++        out
++    };
++    let none = run(&mut api, 0);
++    assert!(none.iter().all(|s| *s == none[0]), "no round runs");
++    let one = run(&mut api, 1);
++    assert_eq!(one[0], none[0], "the warm pass is the same whatever the rounds");
++    assert_ne!(one[1], one[0], "the round given runs");
++    assert!(one[2] == one[1] && one[3] == one[1], "the rounds after it do not");
++    clear_skim_cache();
++}
+diff --git a/trainworld/sim/src/demand/everyday.rs b/trainworld/sim/src/demand/everyday.rs
+index 878caec2a..6602a1d56 100644
+--- a/trainworld/sim/src/demand/everyday.rs
++++ b/trainworld/sim/src/demand/everyday.rs
+@@ -983,6 +983,8 @@ struct Period {
+     uniform: bool,
+     /// `kernel::settled` (T-434)
+     seen: Vec<f32>,
++    /// T-3938: `DemandApi`'s `rounds_left`
++    rounds_left: usize,
+     trips: f64,
+     rail: f64,
+     /// T-1300: `ModeOut::sense`, averaged like the shares
+@@ -2297,6 +2299,14 @@ impl EverydayApi {
+         Ok(())
+     }
+     pub fn solve(&mut self, q: usize) -> bool {
++        self.solve_at(q, None)
++    }
++    /// T-3938: `DemandApi::solve_warm`.
++    pub fn solve_warm(&mut self, q: usize, total: &[f32], rounds: usize) -> bool {
++        let t = self.engine.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
++        self.solve_at(q, Some((t.as_deref().unwrap_or(total), rounds)))
++    }
++    fn solve_at(&mut self, q: usize, warm: Option<(&[f32], usize)>) -> bool {
+         if q >= PERIODS {
+             return false;
+         }
+@@ -2315,8 +2325,19 @@ impl EverydayApi {
+         let net = DemandApi::period_net(svc, q);
+         let mut g = build_graph(&net, &p);
+         put_fares(&mut g, &self.engine.fare_curve, &self.engine.fare_zones, &self.engine.fare_km, &self.engine.fare_mul, &self.engine.base_mul, self.engine.base.fare_min, self.engine.fare_per_km, self.engine.base.fare_w);
+-        let fac = vec![1.0; g.rn_ride.len()];
+-        set_crowding(&mut g, &fac);
++        let no_crowding = vec![1.0; g.rn_ride.len()];
++        set_crowding(&mut g, &no_crowding);
++        let (fac, uniform, seen, rounds_left) = match warm {
++            None => (no_crowding, true, vec![], usize::MAX),
++            Some((total, rounds)) => {
++                let Some((fac, left)) = round_costs(&g, &net, &p, total) else { return false };
++                let uniform = fac == no_crowding && left == g.rn_left;
++                set_crowding(&mut g, &fac);
++                g.rn_left = left;
++                let seen = total[..g.rn_line.len()].to_vec();
++                (fac, uniform, seen, rounds)
++            }
++        };
+         let xi = xfer_index(&g);
+         let (probability, loads, parts, xfer, walk_lost, rail_d, unr_lost) = self.pass(&g, &p, q, &xi);
+         let part = self.engine.part;
+@@ -2337,8 +2358,9 @@ impl EverydayApi {
+             round: 0,
+             ms: now_ms() - t,
+             fac,
+-            uniform: true,
+-            seen: vec![],
++            uniform,
++            seen,
++            rounds_left,
+             trips,
+             rail,
+             walk,
+@@ -2405,7 +2427,7 @@ impl EverydayApi {
+         let mut rail_d = src.rail_d;
+         rail_d.scale(k as f64);
+         let part = src.part;
+-        self.per[to] = Some(Period { rail_d, walk_lost, unr, unr_lost, net, p, g, loads, parts, probability, round: 0, ms: 0.0, fac, uniform: true, seen: vec![], trips, rail, walk, xi, xfer, part });
++        self.per[to] = Some(Period { rail_d, walk_lost, unr, unr_lost, net, p, g, loads, parts, probability, round: 0, ms: 0.0, fac, uniform: true, seen: vec![], rounds_left: usize::MAX, trips, rail, walk, xi, xfer, part });
+         true
+     }
+     /// T-1543: `DemandApi::set_part`, over the pairs.
+@@ -2432,7 +2454,8 @@ impl EverydayApi {
+         let t = now_ms();
+         let mut st = self.per[q].take().unwrap();
+         st.round += 1;
+-        if !settled(&mut st.seen, &total[..st.g.rn_line.len()]) && (!st.uniform || fac != st.fac || left != st.g.rn_left) {
++        if st.rounds_left > 0 && !settled(&mut st.seen, &total[..st.g.rn_line.len()]) && (!st.uniform || fac != st.fac || left != st.g.rn_left) {
++            st.rounds_left -= 1;
+             st.uniform = false;
+             st.fac = fac;
+             set_crowding(&mut st.g, &st.fac);
+diff --git a/trainworld/sim/src/demand/everyday/tests.rs b/trainworld/sim/src/demand/everyday/tests.rs
+index 7e3869021..bff20e519 100644
+--- a/trainworld/sim/src/demand/everyday/tests.rs
++++ b/trainworld/sim/src/demand/everyday/tests.rs
+@@ -121,6 +121,38 @@ fn purpose_periods_cells_and_assignment_conserve_trip_legs() {
+     assert!(a.summary(0)[2] < before);
+     assert!(!a.crowd_with_external(0, &[f32::NAN]));
+ }
++/// T-3938: `DemandApi`'s `a_warm_solve_runs_only_its_rounds`, for the everyday layer.
++#[test]
++fn a_warm_solve_runs_only_its_rounds() {
++    let (h, b) = fixture(4000.0);
++    let mut a = EverydayApi::new(&h, &b).unwrap();
++    network(&mut a, 4000.0, [12.0; 3]);
++    let figures = |a: &EverydayApi| (a.summary(0)[1..4].to_vec(), a.seg(0), a.board(0), a.alight(0));
++    assert!(a.solve(0));
++    let free = figures(&a);
++    let zero = vec![0.0; a.seg(0).len()];
++    assert!(a.solve_warm(0, &zero, 3));
++    assert_eq!(figures(&a), free);
++    let crowded: Vec<f32> = a.seg(0).iter().map(|v| v * 100000.0).collect();
++    // each round priced on other loads than the one before, so none settles of itself
++    let run = |a: &mut EverydayApi, rounds: usize| -> Vec<f64> {
++        assert!(a.solve_warm(0, &crowded, rounds));
++        let mut out = vec![a.summary(0)[2]];
++        for (r, t) in [&zero, &crowded, &zero].into_iter().enumerate() {
++            assert!(a.crowd_with_external(0, t));
++            assert_eq!(a.summary(0)[0], (r + 1) as f64);
++            out.push(a.summary(0)[2]);
++        }
++        out
++    };
++    let none = run(&mut a, 0);
++    assert!(none.iter().all(|&x| x == none[0]), "no round runs: {none:?}");
++    let one = run(&mut a, 1);
++    assert!(one[1] > one[0], "the round given runs, uncrowded: {one:?}");
++    assert!(one[2] == one[1] && one[3] == one[1], "the rounds after it do not: {one:?}");
++    let three = run(&mut a, 3);
++    assert_ne!(three[2], three[1], "with more rounds given they run: {three:?}");
++}
+ /// T-3923: no everyday trips are dropped towards an unsearched station, in any period, and some rail trips are made.
+ #[test]
+ fn no_everyday_trips_are_dropped() {
+diff --git a/trainworld/sim/src/demand/intercity/exports.rs b/trainworld/sim/src/demand/intercity/exports.rs
+index 88f931bed..93296b945 100644
+--- a/trainworld/sim/src/demand/intercity/exports.rs
++++ b/trainworld/sim/src/demand/intercity/exports.rs
+@@ -146,8 +146,9 @@ impl IntercityApi {
+     }
+ }
+ impl IntercityApi {
+-    /// `solve`, at free flow or (T-1735) at the crowding the loads `crowd` give.
+-    pub(super) fn solve_at(&mut self, q: usize, crowd: Option<&[f32]>) -> bool {
++    /// `solve`, at free flow or (T-1735) at the crowding the loads `crowd` give; `warm` (T-3938, `solve_warm`): that
++    /// pass stands for free flow, followed by at most this many crowding rounds.
++    pub(super) fn solve_at(&mut self, q: usize, crowd: Option<&[f32]>, warm: Option<usize>) -> bool {
+         let Some(svc) = &self.svc else { return false };
+         if q >= PERIODS {
+             return false;
+@@ -165,12 +166,18 @@ impl IntercityApi {
+         put_fares(&mut g, &self.fare_curve, &self.fare_zones, &self.fare_km, &self.fare_mul, &self.base_mul, self.base.fare_min, self.fare_per_km, self.base.fare_w);
+         let no_crowding = vec![1.0; g.rn_ride.len()];
+         set_crowding(&mut g, &no_crowding);
+-        let (mut fac, mut uniform) = (no_crowding, true);
++        let (mut fac, mut uniform, mut seen) = (no_crowding, true, vec![]);
+         if let Some(total) = crowd {
+             let Some((f, left)) = round_costs(&g, &net, &p, total) else { return false };
++            if warm.is_some() {
++                uniform = f == fac && left == g.rn_left;
++                seen = total[..g.rn_line.len()].to_vec();
++            } else {
++                uniform = false;
++            }
+             set_crowding(&mut g, &f);
+             g.rn_left = left;
+-            (fac, uniform) = (f, false);
++            fac = f;
+         }
+         let xi = xfer_index(&g);
+         let pass = self.pass(&g, &p, q, &xi);
+@@ -205,7 +212,8 @@ impl IntercityApi {
+             ms: now_ms() - t,
+             fac,
+             uniform,
+-            seen: vec![],
++            seen,
++            rounds_left: warm.unwrap_or(usize::MAX),
+             xi,
+             xfer: pass.xfer,
+         });
+@@ -377,14 +385,19 @@ impl IntercityApi {
+         Ok(())
+     }
+     pub fn solve(&mut self, q: usize) -> bool {
+-        self.solve_at(q, None)
++        self.solve_at(q, None, None)
++    }
++    /// T-3938: `DemandApi::solve_warm`.
++    pub fn solve_warm(&mut self, q: usize, total: &[f32], rounds: usize) -> bool {
++        let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
++        self.solve_at(q, Some(t.as_deref().unwrap_or(total)), Some(rounds))
+     }
+     /// T-1735: period `q` solved in one pass at the crowding the loads `total` give (as
+     /// `crowd_with_external` takes them), for a window's pairs solved beside a market frozen at its
+     /// last round's crowding. False with no network.
+     pub fn solve_crowded(&mut self, q: usize, total: &[f32]) -> bool {
+         let t = self.svc.as_ref().and_then(|s| s.fold.as_ref()).map(|f| f.in_total(total));
+-        self.solve_at(q, Some(t.as_deref().unwrap_or(total)))
++        self.solve_at(q, Some(t.as_deref().unwrap_or(total)), None)
+     }
+     /// T-1607: drop period `q`'s result, which another worker holds (`DemandApi::forget_period`).
+     pub fn forget_period(&mut self, q: usize) {
+@@ -402,7 +415,7 @@ impl IntercityApi {
+         };
+         let t = now_ms();
+         let mut st = self.per[q].take().unwrap();
+-        if settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left) {
++        if st.rounds_left == 0 || settled(&mut st.seen, &total[..st.g.rn_line.len()]) || (st.uniform && fac == st.fac && left == st.g.rn_left) {
+             st.round += 1;
+             st.ms = now_ms() - t;
+             self.per[q] = Some(st);
+@@ -412,6 +425,7 @@ impl IntercityApi {
+         st.g.rn_left = left;
+         st.uniform = false;
+         st.fac = fac;
++        st.rounds_left = st.rounds_left.saturating_sub(1);
+         let Pass { loads: l, c_loads, r_loads, rail, c_rail, c_frac, cor, c_cor, pair_rail, st: st_new, xfer, e_loads, e_rail, e_walk_lost, e_frac, rail_d } = self.pass(&st.g, &st.p, q, &st.xi);
+         st.round += 1;
+         let d = st.round as f64 + 1.;
+diff --git a/trainworld/sim/src/demand/intercity/logsum.rs b/trainworld/sim/src/demand/intercity/logsum.rs
+index 0d029880e..358c920fc 100644
+--- a/trainworld/sim/src/demand/intercity/logsum.rs
++++ b/trainworld/sim/src/demand/intercity/logsum.rs
+@@ -355,6 +355,8 @@ pub(super) struct Period {
+     pub(super) uniform: bool,
+     /// `kernel::settled` (T-434)
+     pub(super) seen: Vec<f32>,
++    /// T-3938: `DemandApi`'s `rounds_left`
++    pub(super) rounds_left: usize,
+     pub(super) xi: XferIndex,
+     pub(super) xfer: Vec<f32>,
+     /// T-1175: the everyday pairs' loads by purpose, averaged like the commutes'; their legs, rail
+diff --git a/trainworld/tools/perf_bench.mjs b/trainworld/tools/perf_bench.mjs
+index 7d7182a51..ec0e2dac7 100644
+--- a/trainworld/tools/perf_bench.mjs
++++ b/trainworld/tools/perf_bench.mjs
+@@ -43,7 +43,7 @@ const BASELINE = join(HOME, 'baseline.json');                            // mast
+ const readBaseline = () => { try { return JSON.parse(readFileSync(BASELINE, 'utf8')); } catch { return {}; } };   // the main tree's, from any tree
+ const MB = 1048576;
+ const WORSE = 0.10;
+-const WORKERS = 3;                                                     // demand workers in every run, whatever the cores
++const WORKERS = Number(process.env.PERF_WORKERS) || 3;                 // demand workers in every run, whatever the cores (T-3938: PERF_WORKERS for a one-off)
+ const WANT_CORES = 5;
+ /** --edit-trips: also wait for the trips after the edit (about the load's whole solve again on NYC); off by default */
+ let EDIT_TRIPS = false;                                                  // the page, the clock worker and 3 demand workers
+@@ -386,6 +386,16 @@ const COUNTS = (t0) => {
+   };
+ };
+ 
++/** T-3938 `PERF_WARM`: the figures of the newest solve since `t0`: rail trips a day, each line's riders a day by number and
++ * name, and how it started (`?warmStart`) with its passes' ms by period and round */
++const FIGS = (t0) => {
++  const d = window.twDemand, v = d.view(), w = window.tw.world.value, names = new Map(w.save.lines.map((l) => [String(l.id), l.num + ' ' + l.name]));
++  const mine = d.log.filter((x) => x.arrivedAt >= t0), s = mine.findLast((x) => !d.client.fversions?.has(x.version)) ?? mine.at(-1);
++  return { version: s?.version ?? null, final: !!v.final, tripsPerDay: v.tripsPerDay, railTripsPerDay: v.railTripsPerDay, warm: s?.warm ?? null, warmStats: s?.warmStats ?? null,
++    periodMs: s?.periodMs ?? null, setupMs: s?.setupMs ?? null,
++    warmBytes: [...(d.client.warmKept?.values?.() ?? [])].reduce((t, r) => t + r.periods.reduce((u, p) => u + (p ? p.total.byteLength + p.free.reduce((x, [, f]) => x + f.byteLength, 0) : 0), 0), 0) || null, byLine: Object.fromEntries([...(v.lines ?? new Map())].map(([id, l]) => [names.get(String(id)) ?? String(id), l.ridersPerDay])) };
++};
++
+ /** the station removed by the fixed edit: the middle stop of the line with the most stops (ties: the lowest id) */
+ const PICK = () => {
+   const w = window.tw.world.value.save;
+@@ -450,6 +460,22 @@ async function runOnce(save, base, srv, log) {
+     rec.cpuLoad = { renderer: (cpu1.renderer ?? 0) - (cpu0.renderer ?? 0), gpu: (cpu1['gpu-process'] ?? 0) - (cpu0['gpu-process'] ?? 0),
+       byContext: Object.fromEntries(Object.entries(ctx1).map(([k, v]) => [k, v.cpu !== null && ctx0[k]?.cpu != null ? v.cpu - ctx0[k].cpu : v.cpu])) };
+     rec.ctxEnd = ctx1;
++    // T-3938 PERF_WARM=1 (a one-off with `?warmStart` and `?perfOff=periods`, never a ledger line): the save imported twice
++    // more, each solved again as in a new tab (`loadAgain`): first with no final kept (the control: workers and packs as
++    // warm as the warm start's, its figures the first import's to the bit), then started from the control's final
++    if (process.env.PERF_WARM) {
++      rec.figures = await page.evaluate(FIGS, t0);
++      rec.warmRuns = [];
++      for (const forget of [true, false]) {
++        const c0 = await procs.cpu();
++        const tN = await page.evaluate(({ data, PROBE, forget }) => { window.twDemand.client.loadAgain(forget); const b = Uint8Array.from(data).buffer; const t = performance.now(); (0, eval)('(' + PROBE + ')')({ t0: t, edit: null }); window.tw.client.post({ kind: 'import', bytes: b }, [b]); return t; }, { data: Array.from(bytes), PROBE: PROBE.toString(), forget });
++        await page.waitForFunction(() => window.__b?.marks?.playable !== undefined, undefined, { timeout: Number(process.env.PERF_TIMEOUT_S ?? save.timeoutS ?? 1200) * 1000, polling: 500 });
++        await page.waitForTimeout(2000);
++        const c1 = await procs.cpu();
++        rec.warmRuns.push({ forget, marks: await page.evaluate(() => window.__b.marks), counts: await page.evaluate(COUNTS, tN), cpu: r1((c1.renderer ?? 0) - (c0.renderer ?? 0)), figures: await page.evaluate(FIGS, tN) });
++        console.log('    ' + (forget ? 'control' : 'warm') + ': trips ' + r1(rec.warmRuns.at(-1).marks.final / 1000) + ' s, cpu ' + rec.warmRuns.at(-1).cpu + ' s, rail trips ' + Math.round(rec.warmRuns.at(-1).figures.railTripsPerDay));
++      }
++    }
+     // the fixed edit
+     const pick = await page.evaluate(PICK);
+     rec.edit = pick;

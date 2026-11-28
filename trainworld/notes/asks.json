@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "a-2026-11-28-2",
+    "title": "Map first on a load",
+    "text": "T-4230 measured: the demand packs opening beside the game's first state can nearly double it (3.4 s against 6.8 s on NYC, noisy). Open them a moment after the first state, so the map shows up sooner and trips arrive about 2-3 s later (a few percent of a load's trip wait)? The agent would try one worker at once and the rest after. Your call since it changes when trips appear.",
+    "since": "2026-11-28",
+    "by": "maps-d2"
+  },
+  {
+    "id": "a-2026-11-28-3",
+    "title": "Warm start: drop it?",
+    "text": "T-3938 measured: starting a load's crowding from earlier loads cut a one-worker NYC trip calculation 38% (47 of 124 s), but 15 of 92 big lines moved past 5% (NEC -18.7%, PATH +14.6%), figures would change with each reload, and a real load has no earlier loads unless saves store them (0.46 MB per NYC save). Desktop reloads already show figures at once from the cache. Drop it? Recommended yes; the prototype is kept as notes/T-3938-warmstart.patch.",
+    "since": "2026-11-28",
+    "by": "maps-d2"
+  }
+]

@@ -169,7 +169,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
-- T-4542 [P2] {L:edit-speed} Double up's price holds the game seconds per run
+- T-4542 [P2] {L:edit-speed} Double up's price holds the game seconds per run (taking, 2026-11-28, agent doubleup)
   - Context: Found in T-4541: on your 3,090-station save each run's Double up price is up to five trial edits, 0.2-4.8 s, asked whenever a pick holds double track and again after every edit. Edits and previews wait behind the run being priced.
   - Goal: A pick with 20 runs of double track adds under 1 s to an edit's wait on your save.
   - Other: notes/T-4541.md
@@ -216,7 +216,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 2 landed 11-25: stations and deletes on running lines' track are answered at the click, their trains bought right after (your yes). Your Asia save, four stations 0.3 s apart on a 3-line trunk: confirms 349, 271, 137, 81 ms. A click's own work is 9-21 ms; the rest waits on the worker's other pieces (T-4281).
   - Goal: Every station and track delete confirmed within 100 ms on your Asia save, every click of a run.
   - Other: DECISIONS T-4097; notes/T-4267.md; notes/T-4272.md
-- T-4363 [P3] {L:edit-speed} Patched rows differ from the state's in a Boston game
+- T-4363 [P3] {L:edit-speed} Patched rows differ from the state's in a Boston game (taking, 2026-11-28, agent patchrows)
   - Context: The dev check "T-4214 check: the patched rows differ from the state's" fired in Boston game runs: "edges 0: cost" after building lines (seen since T-4153 stage 5; guessed as ground repricing between patch and state) and, new on 11-25, "nodes 4: line" after stations; 11-26 "edges 6: cost" in a New York line build (T-4367).
   - Goal: The cause of each found; a real mismatch fixed, a harmless one no longer flagged.
   - Other: notes/T-4153.md "Stage 9"; notes/T-4214.md
@@ -363,10 +363,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4230 [P2] {L:loading} The clock worker's first state sooner on load (taking, 2026-11-28, agent firststate)
-  - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
-  - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
-  - Other: notes/T-4225.md
 - T-4191 [P3] {L:loading} Edits in a new game's first seconds open zones twice
   - Context: From T-4055 (11-24): an edit made while a new game's load hold is on opens its zones coarse, then the level check reopens them fine: an extra download and solve for nothing.
   - Goal: Those zones open once, at the level they end at.
@@ -541,10 +537,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
   - Other: Plan: a rail-only pass per part and a cache of zone rows. notes/T-2747.md
-- T-3938 [P3] {L:solve-speed} Warm-start crowding prototype behind a flag (taking, 2026-11-28, agent warmstart)
-  - Context: From T-3513, 11-21: a high-demand NYC edit can't reach 20 s exactly (6-8 crowding passes a worker at 4-6 s each). Starting each population's crowding rounds from its last solve's loads would cut passes, but figures would then depend on edit history; time and drift unmeasured. Changing convergence is your call once measured.
-  - Goal: Behind a dev flag, measured against the cold solve on NYC and NA: time saved and how far figures drift.
-  - Other: notes/T-3513.md
 - T-2757 [P2] {L:solve-speed} Questions wait after a worker memory restart
   - Context: After a memory restart (T-1205) every question waits for the whole re-solve, minutes on a big game. Each worker holds only its share of the day's periods, so one restarted worker cannot be skipped and a one-at-a-time restart still re-solves its share while questions need all of them. Looked at 2026-11-16, needs a design call.
   - Goal: Questions answer within a second of a restart, from the result already shown, with nothing in the figures changing.
@@ -624,7 +616,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
   - Other: notes/T-3630.md "Follow-ups"
-- T-3444 [P2] {L:track-rework} Track, platform and station model rework (taking, 2026-11-27, agent tracksync)
+- T-3444 [P2] {L:track-rework} Track, platform and station model rework
   - Context: Design agreed 11-21, revised 11-28 after Gemini's two reviews (notes/T-3444-design/README.md). About half of release 1 is built on tw/track: stages 1 to 4c, Add a track, stations off the track in the simulation. Master's 575 commits since 11-23 are being merged in. Release 1 from here about 40-70 h, plus 10-20 h of fixes.
   - Goal: Closes with the last of its stages; release 1 merges into master after the crash round and the Asia edit speed run (T-4519, T-4521).
   - Other: Your notes verbatim: notes/T-3444.md; the plan: notes/T-3444-design/10-build-plan.md. Requirements folded in 11-20 (T-2767, T-2701, T-763): notes/review-edit-speed-2026-11-20.md
@@ -648,7 +640,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4038: a single joined to a double whose tracks run ways of their own still takes its way from the running side (`join_away`, `join_for`), not from the joined track. Only meets a flip whose segment ends at a junction with a joined single. Reach: few players until they flip tracks.
   - Goal: The single reads the joined track's real way, with `way_lines` checking lines in the same edit.
   - Other: notes/T-4038.md
-- T-4037 [P2] {L:track-rework} {after:the tw/track sync} Stations placed without splitting track
+- T-4037 [P2] {L:track-rework} Stations placed without splitting track
   - Context: Your (b), 11-23: routes written on the track as stations cut it. Built on tw/track: g1, g2, and g3's edits that keep stations off the track right. Left: g3b's six groups of failing tests with that switched on, the branch review's station bugs, then the station tool switched (after T-4518's answer), and g4, the drawing.
   - Goal: The station tool places stations without cutting track on single, double and 4 tracks; figures equal to a split on the reference saves; undo exact.
   - Other: About 5-7.5 h. Design notes/T-4037-design.md; progress notes/T-4037.md (on tw/track); notes/T-3444-design/10-build-plan.md
@@ -666,7 +658,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: You, 11-27: yes, a click still picks between two stations. From T-4037 g3b: with stations off the track, a click picks the whole stretch from junction to junction, so making the part between two stations single, raised or one way would need a joint first. Today players pick between stations.
   - Goal: The stretch between two stations made single, raised or one way in one edit and one undo.
   - Other: About 1.5-2.5 h, before the station tool switches (T-4037). notes/T-4037.md "For Anita" (on tw/track)
-- T-4520 [P2] {L:track-rework} {after:the tw/track sync} Branch fixes from Gemini's read
+- T-4520 [P2] {L:track-rework} Branch fixes from Gemini's read (taking, 2026-11-28, agent trackfix)
   - Context: Gemini's read of tw/track, checked: Add a track on built two-way single puts its lines' way back on blueprint track, so they stop; a line left on a removed track saves bytes the game then refuses as newer; a flip's charge and undo against the per-track price; stations off the track in a frame conversion and on a removed piece.
   - Goal: Each with a cargo test; lines keep running until Construct; every save the branch writes opens.
   - Other: About 2-4 h. artifacts/trainworld/gemini/T-3444-branch-review.md findings 1-3, 11, 12; notes/T-3444-design/10-build-plan.md "Review 11-28"
@@ -1094,11 +1086,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your 11-27: single-train moves, a 90 s minimum gap between lines at shared stops and an auto-space option per line land in one release with the real-gap waits (T-4514). Design updated 11-28: about 29 h in 18 stages, T-4543 to T-4560, each landing switched off until T-4559.
   - Goal: All 18 stages landed and switched on; closes with T-4560.
   - Other: notes/T-4511.md
-- T-4545 [P2] {L:timetables} Move one train with its range and reasons (taking, 2026-11-28, agent shift3)
-  - Context: Stage 3 of 18 (T-4511). The edit that moves one train, with undo: as far as its train still makes its next departure and stays 1 min from its own line's trains, each limit with its reason.
-  - Goal: Both range ends refuse with their reason; no train enters or leaves service for a move in range; undo to the bit. 2-2.5 h.
-  - Other: notes/T-4511.md "Stages"
-- T-4546 [P2] {L:timetables} {after:T-4545} Retime room and floor for moved trains
+- T-4546 [P2] {L:timetables} Retime room and floor for moved trains (taking, 2026-11-28, agent shift4)
   - Context: Stage 4 of 18 (T-4511). Trains timed train by train (passing stations) lose the room a move used, and a moved train short of its 60 s stand runs its slot's timetable.
   - Goal: On the 180 km passing-track line a local moved later keeps its run's other timings and makes its next departure. 1-1.5 h.
   - Other: notes/T-4511.md "Stages"
