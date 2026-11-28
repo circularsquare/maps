@@ -5,6 +5,8 @@ Runs come from a scan of the Claude transcripts for `node|python ... checks/<fil
 Known-broken checks are marked in BROKEN below; edit it when one is fixed or newly found."""
 import os, re, sys, json, glob, subprocess, collections
 from datetime import datetime
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+import claude2  # maps root; the list of Claude config folders
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 TW = os.path.dirname(HERE)
@@ -13,19 +15,18 @@ REPO = os.path.dirname(TW)
 SINCE = sys.argv[1] if len(sys.argv) > 1 else '2026-11-01'
 
 # file -> why it fails or cannot finish (do not list a check that merely needs a game running)
-BROKEN = {
-    't2626-profit-estimate.mjs': 'too slow: did not finish in 280 s on 3 cores (2026-11-18)',
-    't1201-fare-rows.mjs': 'Money tab selector fixed 2026-11-18, still fails 8 of 11 lines: the fare rows moved (now Base fare, two stretches, Transfer fare, country scale) and its row indices and buttons are stale',
-    't2289-diagram-intercity.mjs': 'jpn fails at HEAD; tests the old unsheeted layout (T-3697)',
-    't2407-blocks.mjs': 'fails its movement and distance lines; old unsheeted layout (T-3697)',
-    't2162-diagram-names.mjs': 'fails its time limits on nyc and tyo, tyo misses one interchange name (T-3697)',
-}
+BROKEN = {}
 # retired checks (moved to checks/old/): name -> why, written at the end of INDEX.md
 RETIRED = {
     't3137-lanes-parity.mjs (+ t3137-parity-digest.json)': 'T-3904: compared the lanes model with a frozen pre-lanes baseline (master a5d6a81a, 2026-11-11) to prove the refactor changed nothing. 13 sections now differ (capacity rows have 5 lanes where the baseline has 3, guard pairs, junction inspectors, lines figures), from later sim work on purpose, so it can only be rebaselined into a snapshot that fails on every sim change. Its job was the stage gate; t3137-single-join, t3137-way-switch and t3297-mirror keep guarding the behaviour. The lanes_parity bin stays (t3297-mirror uses it)',
+    't2626-profit-estimate.mjs': 'Retired 2026-11-24: too slow (did not finish in 280 s on 3 cores, 2026-11-18)',
+    't1201-fare-rows.mjs': 'Retired 2026-11-24: stale UI selectors after Money tab fare rows moved (Base fare, two stretches, Transfer fare, country scale)',
+    't2289-diagram-intercity.mjs': 'Retired 2026-11-24: tested the old unsheeted diagram layout (T-3697)',
+    't2407-blocks.mjs': 'Retired 2026-11-24: tested the old unsheeted diagram layout (T-3697)',
+    't2162-diagram-names.mjs': 'Retired 2026-11-24: failed time limits on nyc/tyo and missed an interchange name under the old unsheeted layout (T-3697)',
 }
 # helpers a check imports, or data a check reads: not checks themselves
-HELPERS = {'t2407-draw.py', 't1177-data.mjs', 't1966-layout.mjs', 'lib.mjs', 'static-serve.mjs', 'token_usage.py'}
+HELPERS = {'t1177-data.mjs', 't1966-layout.mjs', 'lib.mjs', 'static-serve.mjs', 'token_usage.py'}
 FIRST_LINE = {}  # file -> text, for files with no header comment
 
 def kind_of(rel):
@@ -93,8 +94,7 @@ for ln in log.splitlines():
 RUN = re.compile(r'(?:node|python(?:\.exe)?|\.cmd)[^\n"]{0,80}?checks[/\\]{1,2}([\w.-]+\.(?:mjs|py|cmd))')
 cut = datetime.fromisoformat(SINCE).timestamp()
 runs = collections.Counter()
-root = os.path.expanduser(r'~\.claude\projects')
-for p in glob.glob(os.path.join(root, '*maps*', '**', '*.jsonl'), recursive=True):
+for p in [q for root in claude2.project_dirs() for q in glob.glob(os.path.join(root, '*maps*', '**', '*.jsonl'), recursive=True)]:
     if os.path.getmtime(p) < cut: continue
     with open(p, encoding='utf-8', errors='replace') as fh:
         for line in fh:

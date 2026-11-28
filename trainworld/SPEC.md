@@ -85,17 +85,12 @@ loaded for viewing, while demand, the market and money are the same whatever is 
 lines; an edit re-solves only the clusters it touched, the others keep their figures [T-326,
 [docs/demand-runtime.md](docs/demand-runtime.md) "Clusters"].
 
-- **What is covered** (2026-10-22, about 800 zones): the US Northeast's nine city packs in one
-  regional market with the four counties between them (Anita, T-300: no ring round each city;
-  new US cities are paused); Toronto; Japan whole (seven metros and 38 prefecture zones); Europe
-  whole but for Russia, Belarus and Ukraine (held, Anita 2026-10-19; Moscow, Saint Petersburg and
-  Voronezh built); China's Jiangsu with Shanghai (T-897); and the sampler metros Mumbai, São Paulo,
-  Lagos (with three more Nigerian rows) and Seoul. Every place outside the US is tier 0, a
-  low-fidelity first pass on global sources with a country's own inputs where it has a module;
-  each country's sources and procedure are in [docs/data-register.md](docs/data-register.md), the
-  rules in [docs/demand-worldwide.md](docs/demand-worldwide.md). New rows come from the world plan
-  (`pipeline/world_plan.json`) through the unattended runner (`pipeline/world_run.py`,
-  [docs/world-run.md](docs/world-run.md)).
+- **What is covered**: over 4,000 zones worldwide (`app/src/game/registry.json`; per-country
+  sources and status in [docs/data-register.md](docs/data-register.md)). Every place outside the
+  US is tier 0, a low-fidelity first pass on global sources with a country's own inputs where it
+  has a module; the rules are in [docs/demand-worldwide.md](docs/demand-worldwide.md). New rows
+  come from the world plan (`pipeline/world_plan.json`) through the unattended runner
+  (`pipeline/world_run.py`, [docs/world-run.md](docs/world-run.md)).
 - **Cells** are H3 resolution 9 (about 0.1 km²); sparse ones merge [T-044, T-466, T-510]: a res-8
   parent under 2,500 trip ends a weekday becomes one cell, in busier parents touching children under
   1,250 each merge, a cell under 1,250 left alone joins a touching merged cell of its zone

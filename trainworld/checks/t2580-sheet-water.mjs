@@ -9,11 +9,13 @@
 // `far` is New York with a line added out to Binghamton, a network reaching far past its first zones (T-2591).
 //   node trainworld/checks/t2580-sheet-water.mjs [nyc,jpn,far]
 import { readFileSync } from 'node:fs';
-import { openSave, waterOf, masksOf, app as A } from './diagram-saves.mjs';
+import { openSave, waterOf, masksOf, app as A, CarrySolver } from './diagram-saves.mjs';
 import { loadApp } from './lib.mjs';
 
-const L = await loadApp(`export { rubberSheet, massAt, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLines, sheetMap, sheetLayout, riverCellM, SHEET_LINES, carryMap, cutLand } from '@app/src/diagram/sheetLines.ts';
+const L = await loadApp(`export { rubberSheet, massAt, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLines, sheetMap, sheetLayout, riverCellM, SHEET_LINES, carryMap, cutLand, setCarrySolver } from '@app/src/diagram/sheetLines.ts';
+export { wasmCarrySolver } from '@app/src/diagram/carryWasm.ts';
 export { realWater } from '@app/src/diagram/waterReal.ts'; export { inRings, stationZones } from '@app/src/diagram/borders.ts'; export { toMerc01 } from '@app/src/map/geo.ts';`);
+L.setCarrySolver(L.wasmCarrySolver(CarrySolver));
 const TW = new URL('../', import.meta.url);
 const which = (process.argv[2] ?? 'nyc,jpn').split(',');
 /** stair runs allowed per 1000 pitches of coast or border (before T-2580 New York had 82) */

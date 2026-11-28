@@ -10,12 +10,14 @@
 // river, and the times.
 //   node trainworld/checks/t3358-river-banks.mjs [lon,nyc,hon]
 import { readFileSync } from 'node:fs';
-import { openSave, SAVES, masksOf, app as A } from './diagram-saves.mjs';
+import { openSave, SAVES, masksOf, app as A, CarrySolver } from './diagram-saves.mjs';
 import { loadApp } from './lib.mjs';
 
-const L = await loadApp(`export { rubberSheet, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLayout, riverCellM, SHEET_LINES } from '@app/src/diagram/sheetLines.ts';
+const L = await loadApp(`export { rubberSheet, sheetZoneBox } from '@app/src/diagram/sheet.ts'; export { sheetLayout, riverCellM, SHEET_LINES, setCarrySolver } from '@app/src/diagram/sheetLines.ts';
+export { wasmCarrySolver } from '@app/src/diagram/carryWasm.ts';
 export { riverCourses, nearestOn, roundPath, crossCount, bendsOf } from '@app/src/diagram/riverRoute.ts';
 export { realWater } from '@app/src/diagram/waterReal.ts'; export { toMerc01 } from '@app/src/map/geo.ts';`);
+L.setCarrySolver(L.wasmCarrySolver(CarrySolver));
 const TW = new URL('../', import.meta.url), REAL = new URL('data/packs/real/', TW);
 SAVES.lon ??= { file: new URL('lon.save', REAL), lon: -0.12, lat: 51.5 };
 SAVES.hon ??= { file: new URL('hon.save', REAL), lon: 114.17, lat: 22.3 };

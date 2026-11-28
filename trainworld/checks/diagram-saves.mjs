@@ -3,7 +3,8 @@
 // corridors.ts' beside table, then the diagram graph. Shared by the t2159 and t2160 checks.
 import { existsSync, readFileSync, openSync, readSync, closeSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
-import init, { TrackApi } from '../app/src/wasm/track/sim.js';
+import init, { TrackApi, CarrySolver } from '../app/src/wasm/track/sim.js';
+export { CarrySolver };
 import { loadApp, REAL_SAVE } from './lib.mjs';
 
 export const app = await loadApp(`export { diagramGraph, bandEdges } from '@app/src/diagram/graph.ts';
