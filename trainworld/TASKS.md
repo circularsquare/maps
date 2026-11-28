@@ -162,9 +162,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: A player, 11-22: a line with 21 one-way platforms is "extremely laggy", once 40 minutes for the stops to register. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Tree onewaylag has a memo making stop_tiers 2.3x faster (uncommitted). Notes/T-4045.md.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
-- T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them (taking, 2026-11-27, agent busundo)
-  - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
-  - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
@@ -586,9 +583,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4375 [P3] {L:map-look} Station circles missing on an Android phone
   - Context: A player on 0.4.7.1 (tw-feedback 1795782306-1df30531, 11-27), Chrome 145 on a Qualcomm Adreno 650, 8 lines, says station circles aren't shown on mobile. No picture, no zoom given. Reach: few, since most phones would show it.
   - Goal: Cause found on an emulated phone at the player's zoom, or closed as not reproducible.
-- T-4376 [P3] {L:map-look} No sound for days for one player (taking, 2026-11-27, agent nosound)
-  - Context: A Japanese player on 0.4.7.1 (tw-feedback 1795779886-f61e0c7e, 11-27), Chrome 158 on Windows, 109 lines, hears nothing for days. Could be the Sound switch, volume 0, a browser muted site or audio never starting after a reload. Reach: few.
-  - Goal: Sound starts after the first click in a fresh game on Chrome, or the cause is found.
 - T-4328 [P3] {L:map-look} {after:players still blocked after 0.4.6.1} OpenFreeMap through our own address as a last route
   - Context: You, 11-25: "lets just wait to see whether it still leaves players blocked yeah, i think that plus the alert should be sufficient". Draft done (Worker, cost, an email to OpenFreeMap first); used only when both addresses fail. A possible case: on 11-25 afternoon one player (0.4.6, software graphics) saw a plain brown Map mode with satellite fine (tw-feedback 1795642752).
   - Goal: A blocked player's roads and water load through data.anita.garden/ofm; nobody else uses it.
@@ -604,9 +598,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4228 [P3] {L:map-look} Profit view leaves some track uncoloured
   - Context: Player report 11-21 (board g150): in the profit view some areas show no profit with trains running. Reach: few, one report.
   - Goal: Every segment trains run on gets a profit colour.
-- T-4229 [P3] {L:map-look} Station names stay after zooming in (taking, 2026-11-27, agent labelstay)
-  - Context: Player report 11-20 (board g170): after zooming in once, station names stay on screen. Reach: few, one report.
-  - Goal: Station names follow the map at every zoom.
 - T-3744 [P3] {L:fares} Fare per stop made
   - Context: You, 2026-11-19, from players: a fare for each stop the train makes, so set below zero an express that stops less costs more; "i guess you'd probably always make this negative so maybe we flip the sign but then idk how we'd describe it"; floor the fare at the base fare. Unknown whether other games do it.
   - Goal: A short design (wording, sign, how a ride's stops are counted, other games) for you, then built in the advanced fares panel.
@@ -1102,9 +1093,6 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Since T-4514 a stretch lines share waits by the real gaps between their trains, but nothing shows a player that wait or what evening them would save. Drafted in notes/T-4511.md "Readout", about 1-1.5 h.
   - Goal: A line under the board's station picker with the average wait there, its hover the evenly spaced wait.
   - Other: notes/T-4511.md
-- T-4514 [P2] {L:demand-ideas} Waits on shared stretches from the real gaps (taking, 2026-11-27, agent realgaps)
-  - Context: You, 11-27: yes. Lines sharing a stretch are counted as perfectly even today, so evening interlined trains earns nothing; from the real gaps (sum of squared gaps over twice their sum), bunched lines lose riders until evened. Design in notes/T-4511.md "Interlining".
-  - Goal: Implemented with an NYC trip-figure diff shown to you before landing; under 1 ms per service change.
 - T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows
   - Context: Your pad, 11-25: most players won't care about every mode as niche ones come (cable cars, monorail, maglev, maybe planes). Your design: a gear on the construct panel to hide or show modes; by default it shows today's (bus and ferry), with checkboxes for cable cars and monorail.
   - Goal: That gear and its setting, kept per player; a mode switched off and never built shows up nowhere, build menus included (you, 11-27). Needed before the next mode ships.
@@ -1234,8 +1222,9 @@ Anita's TODO.md short term, filed 2026-10-27 (night).
 - T-3862 [P4] {L:real-networks} Make a custom fake city
   - Context: Your TODO.md, 11-20, from player suggestions: "make custom fake city". Design for you first.
 Anita's playtest of buses along roads, 2026-10-26 (night), Shenzhen, Bus 13.
-- T-1447 [P3] {L:track-drawing} Copy and paste blueprints between saves
-  - Context: You said yes.
+- T-1447 [P2] {L:track-drawing} Copy a selection into another save as a blueprint (taking, 2026-11-27, agent copysel)
+  - Context: You, 11-27 (players ask): select with the Select tool, a Copy button opens a version of the save menu listing your other saves, and the selection goes into the picked save as a blueprint, constructed there with money. Tooltip: "Copy selection into another save as a blueprint".
+  - Goal: A short design (how the target save takes it without being open, ids, levels, the track rework's format), then built.
 - T-3860 [P4] {L:track-drawing} Building demolition cost
   - Context: Your TODO.md, 11-20, from player suggestions: "building demolition cost". Design for you first.
 Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
@@ -1390,10 +1379,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
-- T-4534 [P2] {L:small-fixes} Patched rows check still trips on edge cost (taking, 2026-11-27, agent edgecost2)
-  - Context: After T-4506's fix, the T-4214 dev check logged "the patched rows differ from the state's: edges 0: cost" on the first route of a new NYC game, built near Pittsburgh while that area's ground was still loading (T-4368's run, 11-28).
-  - Goal: The check stays quiet for track built where the ground is still loading.
-  - Other: notes/T-4506.md, notes/T-4368.md "Found on the way"
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.

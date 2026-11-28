@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c030",
+      "text": "fixed station building names left behind on the map after zooming",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4229",
+      "by": "labelstay",
+      "at": "2026-11-28T03:09:25Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    },
+    {
       "id": "c029",
       "text": "fixed a selected city showing no trips to other places before they were calculated",
       "edited": null,
