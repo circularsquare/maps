@@ -403,7 +403,7 @@ Full design, numbers and sources: `notes/T-008.md`.
   what a train's does at the same speed; real trams brake harder, about 1.2-1.3 m/s² in service), and uses
   the tram fleet (`fleet_tram`, "Tram cars owned" in the Money tab, `fleetTram` in the save header), US$2M a car, running costs as
   a train's. Demand counts a tram car as 0.75 of a car (docs/demand-worldwide.md).
-- **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap, 0.6x the
+- **Street tram track** (T-2927, `TrackKind::StreetTram`): tram track on streets, 0.1x at ground, 60 km/h cap at ground (raised or sunk it is priced as tram track and takes tram track's 75 km/h cap, T-4438), 0.6x the
   upkeep of ground rail, a quarter of what hills add (T-3004) and half what water adds (T-2928). It may run at ground level over water (T-3106, "Water, bridges and ramps"). With Tram picked, Snap to
   streets (on by default, remembered; Ctrl flips it while held, and in the
   tram tool with the switch on, Ctrl pauses the snap and the segment is free, T-3608) lays it, the streets a tram may follow tinted green over the map while it is on

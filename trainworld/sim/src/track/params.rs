@@ -485,6 +485,13 @@ impl TrackKind {
         self.spec().v_cap_kmh / 3.6
     }
 
+    /// Top speed of this kind of track along an alignment with height breakpoints `vert`, m/s: street
+    /// tram track keeps its 60 km/h only at grade; raised or sunk it is priced as tram track and
+    /// takes tram track's cap (T-4438, Anita 2026-11-27).
+    pub fn v_cap_on(self, vert: &[[f64; 2]]) -> f64 {
+        if self == TrackKind::StreetTram && super::roads::off_ground(vert) { TrackKind::Tram.v_cap() } else { self.v_cap() }
+    }
+
     pub fn is_hsr(self) -> bool {
         self == TrackKind::HighSpeed
     }
@@ -770,6 +777,17 @@ mod kind_tests {
             assert!(s.road_crossings && s.ramps_over && s.family == 0);
         }
         assert_eq!((r.upkeep, h.upkeep), (1.0, HSR_COST));
+    }
+
+    #[test]
+    fn street_tram_keeps_60_only_at_grade() {
+        let st = TrackKind::StreetTram;
+        let (flat, up, down, ramp) = ([[0.0, 0.0], [100.0, 0.0]], [[0.0, 7.0], [100.0, 7.0]], [[0.0, -7.0], [100.0, -7.0]], [[0.0, 0.0], [100.0, 7.0]]);
+        assert_eq!((st.v_cap_on(&flat) * 3.6).round(), 60.0);
+        assert_eq!((st.v_cap_on(&ramp) * 3.6).round(), 60.0);
+        assert_eq!((st.v_cap_on(&up) * 3.6).round(), 75.0);
+        assert_eq!((st.v_cap_on(&down) * 3.6).round(), 75.0);
+        assert_eq!((TrackKind::Regular.v_cap_on(&up) * 3.6).round(), 160.0);
     }
 
     #[test]

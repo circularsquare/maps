@@ -565,3 +565,20 @@ fn tram_track_takes_crossovers_priced_as_tram_track() {
     assert!((crossover_cost(0, false, TrackKind::StreetTram) - 0.25 * 75.0 * 0.1).abs() < 1e-9);
     assert!((crossover_cost(0, false, TrackKind::Regular) - 0.25 * 37.5).abs() < 1e-9);
 }
+
+/// T-4438: street tram track is capped at 60 km/h at ground; raised it is priced as tram track and runs at 75.
+#[test]
+fn street_tram_runs_75_when_raised_and_60_at_ground() {
+    let run = |level: f64| {
+        let mut a = api();
+        a.set_route_kind(2);
+        let ends = [0.0, 0.0, 0.0, 0.0, level, 0.0, 0.0, 1500.0, 0.0, level];
+        assert_eq!(a.add_route(&ends, &[], 2, false), 0, "{}", a.issues());
+        let net = &a.w.net;
+        let edges = live(&a);
+        assert!(edges.iter().all(|&e| net.edge_kind[e as usize] == TrackKind::StreetTram));
+        edges.iter().map(|&e| (net.v_cap(e) * 3.6).round()).fold(f64::INFINITY, f64::min)
+    };
+    assert_eq!(run(0.0), 60.0);
+    assert_eq!(run(1.0), 75.0);
+}

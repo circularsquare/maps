@@ -13,8 +13,8 @@ import { Row } from "../widgets";
 
 import { LIMIT_MIN as MIN, nextLimit } from "../../game/pieceLimit";
 
-/** The top speed of a piece's kind of track, km/h (the sim's `TrackKind::v_cap`). */
-export const kindTop = (e: TrackEdge) => (e.kind ? TRACK_SPECS[e.kind === 4 ? "busway" : e.kind === 2 ? "streetTram" : "tram"].vCapKmh : e.hsr ? 320 : 160);
+/** The top speed of a piece's kind of track, km/h (the sim's `TrackKind::v_cap_on`): street tram track keeps 60 only at grade (T-4438). */
+export const kindTop = (e: TrackEdge) => (e.kind === 2 && (e.levelMin >= 1 || e.levelMax <= -1) ? TRACK_SPECS.tram.vCapKmh : e.kind ? TRACK_SPECS[e.kind === 4 ? "busway" : e.kind === 2 ? "streetTram" : "tram"].vCapKmh : e.hsr ? 320 : 160);
 
 /** What a piece keeps when `kmh` is asked (the sim's `piece_limit`): a limit at or over its top is none (T-3525). */
 const kept = (e: TrackEdge, kmh: number) => (kmh <= 0 || kmh >= kindTop(e) ? 0 : Math.max(MIN, kmh));

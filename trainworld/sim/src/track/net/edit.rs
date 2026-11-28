@@ -69,7 +69,11 @@ impl Network {
     /// The speed limit an edge puts on every piece of it, m/s: its kind's (`v_kind_cap`) under the
     /// player's limit on it (T-3405).
     pub fn v_cap(&self, e: u32) -> f64 {
-        let cap = self.v_kind_cap(e);
+        self.v_cap_on(e, self.edge_vert(e))
+    }
+    /// `v_cap` for the edge with height breakpoints `vert` (an edge being derived has not stored them yet).
+    pub fn v_cap_on(&self, e: u32, vert: &[[f64; 2]]) -> f64 {
+        let cap = self.v_kind_cap_on(e, vert);
         match self.edge_limit[e as usize] {
             0 => cap,
             lim => cap.min(lim as f64 / 3.6),
@@ -78,7 +82,11 @@ impl Network {
     /// The speed limit of an edge's kind of track, m/s: `V_CROSSOVER` on a crossover, 320 km/h on
     /// high-speed track, 160 on other rail, the tram kinds' own (T-817).
     pub fn v_kind_cap(&self, e: u32) -> f64 {
-        if self.edge_crossover[e as usize] { V_CROSSOVER } else { self.edge_kind[e as usize].v_cap() }
+        self.v_kind_cap_on(e, self.edge_vert(e))
+    }
+    /// street tram track raised or sunk takes tram track's cap (`TrackKind::v_cap_on`, T-4438).
+    pub fn v_kind_cap_on(&self, e: u32, vert: &[[f64; 2]]) -> f64 {
+        if self.edge_crossover[e as usize] { V_CROSSOVER } else { self.edge_kind[e as usize].v_cap_on(vert) }
     }
     /// A line's trains' top speed, m/s: high-speed trains or ordinary ones (T-817), trams at the tram
     /// track's 75 km/h wherever they run (T-3889).

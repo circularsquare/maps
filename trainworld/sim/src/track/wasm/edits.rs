@@ -398,7 +398,7 @@ impl TrackApi {
         if !r.before.is_empty() {
             let f = self.w.net.fit(&r.before);
             render_samples(&f.pieces, &f.vert, &mut out);
-            speeds.extend(render_speeds(&f.pieces, &f.vert, r.kind.v_cap(), geom::ramps().old));
+            speeds.extend(render_speeds(&f.pieces, &f.vert, r.kind.v_cap_on(&f.vert), geom::ramps().old));
             speeds.push(joint_speed);
         }
         out.extend(main);
@@ -407,7 +407,7 @@ impl TrackApi {
             let f = self.w.net.fit(&r.after);
             speeds.push(joint_speed);
             render_samples(&f.pieces, &f.vert, &mut out);
-            speeds.extend(render_speeds(&f.pieces, &f.vert, r.kind.v_cap(), geom::ramps().old));
+            speeds.extend(render_speeds(&f.pieces, &f.vert, r.kind.v_cap_on(&f.vert), geom::ramps().old));
         }
         self.preview_lanes = vec![lane_of(r.tracks); speeds.len()];
         self.preview_speeds = speeds;
@@ -683,7 +683,7 @@ impl TrackApi {
         let ramps: Vec<(f64, f64, f64)> = geom::ramp_limits(&f.vert, net.edge_ramps(id).old).collect();
         let mut out = vec![!net.edge_thru[id as usize].is_empty() as u8 as f64];
         // T-1898: high-speed track's curves are labelled up to its own cap, not 160
-        let top = d.kind.v_cap();
+        let top = d.kind.v_cap_on(&f.vert);
         for (i, p) in d.pis.iter().enumerate() {
             let rad = f.radius.get(i + 1).copied().unwrap_or(0.0);
             let (mx, my) = if rad > 0.0 && !f.pieces.is_empty() { let (x, y, _) = geom::pos_at(&f.pieces, f.vert_s[i + 1]); (x, y) } else { (p.x, p.y) };
@@ -763,7 +763,7 @@ impl TrackApi {
         for (verts, kind, _, rs) in &shapes {
             let f = geom::with_ramps(*rs, || self.w.net.fit(verts));
             out.push(verts.len() as f64);
-            vertex_rows(&f, verts, &mut out, kind.v_cap(), rs.old);
+            vertex_rows(&f, verts, &mut out, kind.v_cap_on(&f.vert), rs.old);
             let mut pts = vec![];
             render_samples(&f.pieces, &f.vert, &mut pts);
             out.push((pts.len() / 3) as f64);
@@ -938,16 +938,18 @@ impl TrackApi {
         let mut out = vec![ok, cost, f.len, verts.len() as f64, mult];
         let old = geom::ramps().old;
         if shape.is_empty() {
-            vertex_rows(&f, verts, &mut out, kind.v_cap(), old);
+            vertex_rows(&f, verts, &mut out, kind.v_cap_on(&f.vert), old);
         } else {
-            vertex_rows(&self.w.net.fit(verts), verts, &mut out, kind.v_cap(), old);
+            let g = self.w.net.fit(verts);
+            vertex_rows(&g, verts, &mut out, kind.v_cap_on(&g.vert), old);
         }
         render_samples(&f.pieces, &f.vert, &mut out);
-        self.preview_speeds = render_speeds(&f.pieces, &f.vert, kind.v_cap(), old);
+        let cap = kind.v_cap_on(&f.vert);
+        self.preview_speeds = render_speeds(&f.pieces, &f.vert, cap, old);
         self.preview_lanes = vec![lane_of(tracks); self.preview_speeds.len()];
         self.preview_ramps.clear();
         if !f.pieces.is_empty() {
-            for (a, b, v) in geom::ramp_stretches(&geom::limits(&f.pieces, &f.vert, old, kind.v_cap())) {
+            for (a, b, v) in geom::ramp_stretches(&geom::limits(&f.pieces, &f.vert, old, cap)) {
                 let (x, y, _) = geom::pos_at(&f.pieces, (a + b) / 2.0);
                 self.preview_ramps.extend([x, y, (v * 3.6).round()]);
             }

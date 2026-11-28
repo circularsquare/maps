@@ -25,7 +25,8 @@ const kindOf = (e: TrackEdge): 0 | 1 | 2 | 3 | 4 => (e.hsr ? 1 : ((e.kind ?? 0) 
 
 /** `kmh` as the piece keeps it (the sim's `piece_limit`): none at or over its top speed, never under the floor */
 function keptLimit(e: TrackEdge, kmh: number): number {
-  const top = e.kind ? TRACK_SPECS[e.kind === 4 ? "busway" : e.kind === 2 ? "streetTram" : "tram"].vCapKmh : e.hsr ? 320 : 160;
+  // a street tram piece keeps a limit up to tram track's cap, as it may run raised (the sim's `piece_limit`, T-4438)
+  const top = e.kind ? TRACK_SPECS[e.kind === 4 ? "busway" : "tram"].vCapKmh : e.hsr ? 320 : 160;
   return kmh <= 0 || kmh >= top ? 0 : Math.max(LIMIT_MIN, kmh);
 }
 

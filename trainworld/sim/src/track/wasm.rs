@@ -2303,13 +2303,13 @@ pub fn ghost_tangent(x: f64, y: f64, dir: f64, tx: f64, ty: f64, level: i8, scal
     let made: Vec<usize> = (1..verts.len() - 1).collect();
     design_radii(&mut verts, &made, cap, scaled);
     let f = geom::fit_in(&verts, scaled);
-    let speeds = render_speeds(&f.pieces, &f.vert, kind.v_cap(), geom::ramps().old);
+    let speeds = render_speeds(&f.pieces, &f.vert, kind.v_cap_on(&f.vert), geom::ramps().old);
     let end = f.pieces.last().map_or(dir, |p| p.th0 + p.k * p.plen);
     let c = circle.unwrap_or([f64::NAN; 3]);
     let mut out = vec![end, c[0], c[1], c[2], speeds.len() as f64];
     out.extend(speeds.iter().map(|&v| v as f64));
     out.extend([1.0, f64::NAN, f.len, verts.len() as f64, f64::NAN]);
-    vertex_rows(&f, &verts, &mut out, kind.v_cap(), geom::ramps().old);
+    vertex_rows(&f, &verts, &mut out, kind.v_cap_on(&f.vert), geom::ramps().old);
     render_samples(&f.pieces, &f.vert, &mut out);
     out
 }

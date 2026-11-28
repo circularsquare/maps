@@ -783,7 +783,7 @@ impl TrackApi {
             self.preview_speeds.push(joint);
             self.preview_lanes.push(255);
             render_samples(&f.pieces, &f.vert, &mut out);
-            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, kind.v_cap(), false));
+            self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, kind.v_cap_on(&f.vert), false));
             self.preview_lanes.resize(self.preview_speeds.len(), 255);
         }
         // T-3092: each flyover's crossing leg, after a step with no track; T-3168: its slowest
@@ -796,7 +796,7 @@ impl TrackApi {
                 self.preview_speeds.push(-1.0);
                 self.preview_lanes.push(0);
                 render_samples(&f.pieces, &f.vert, &mut out);
-                self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, cap, false));
+                self.preview_speeds.extend(render_speeds(&f.pieces, &f.vert, if cap == TrackKind::StreetTram.v_cap() { TrackKind::StreetTram.v_cap_on(&f.vert) } else { cap }, false));
                 self.preview_lanes.resize(self.preview_speeds.len(), 0);
                 let mut rows = vec![];
                 vertex_rows(&f, leg, &mut rows, cap, false);

@@ -79,7 +79,7 @@ impl Network {
             self.edge_cost[i] = self.edge_price(i, &f.vert, &wet, &ground, &cross);
             self.edge_terrain[i] = self.terrain_spans.replace(self.edge_terrain[i], &ground);
             self.edge_roads[i] = self.road_spans.replace(self.edge_roads[i], &cross);
-            let cap = self.v_cap(e);
+            let cap = self.v_cap_on(e, &f.vert);
             self.edge_time[i] = geom::run_time(&f.pieces, &f.vert, self.edge_ramp[i] == 0, cap).max(1e-3);
             if was.is_none_or(|(p, v, len, time)| p != f.pieces || v != f.vert || len != f.len || time != self.edge_time[i]) {
                 refit.push(e);

@@ -189,7 +189,8 @@ pub struct EdgeData {
 /// The speed limit a piece of `kind` keeps when asked for `kmh` (T-3405): none on a crossover, for 0,
 /// or at or over the kind's top speed (T-3525); else at least `EDGE_LIMIT_MIN`.
 pub fn piece_limit(kmh: u16, kind: TrackKind, crossover: bool) -> u16 {
-    let top = (kind.v_cap() * 3.6).round() as u16;
+    // street tram track raised or sunk runs at tram track's cap, so a limit is kept up to that (T-4438)
+    let top = ((if kind == TrackKind::StreetTram { TrackKind::Tram } else { kind }).v_cap() * 3.6).round() as u16;
     if crossover || kmh == 0 || kmh >= top { 0 } else { kmh.max(EDGE_LIMIT_MIN) }
 }
 
