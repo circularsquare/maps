@@ -1133,7 +1133,7 @@ async function handleMessage(msg: ToClock) {
     if (msg.game !== game || !nameOwedStations(api!, msg.ticket, msg.name, game)) return;
     saves.dirty = saves.edited = true; saves.editAt = Date.now();
     const patch = mapPatch(api!);
-    send({ kind: "named", ...(patch ? { patch } : {}) });
+    send({ kind: "outside", ...(patch ? { patch } : {}) });
     later({ net: false, name: true, service: false, trips: false, early: false, at: performance.now() }, keep, () => {}, null, 0);
   } else if (msg.kind === "clock") {
     putClk({ t: msg.t, rate: msg.rate, at: msg.at });

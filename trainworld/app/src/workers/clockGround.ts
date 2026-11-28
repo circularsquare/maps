@@ -9,6 +9,7 @@ import { trackFrameKind, SAVE_DAMAGED } from "./saveFile";
 import { RoadFeed } from "./roadFeed";
 import { scheduleSnapshot } from "./clockDemand";
 import { sendStateOutside, stale } from "./clockFollowUp";
+import { patchOutside } from "./clockPatch";
 import { api, emptyTrack, frame, midLoad, putFrame, send, syncFrame } from "./clockState";
 
 // ---------------------------------------------------------------- water masks on demand (T-302)
@@ -98,6 +99,7 @@ export async function ensureMasks(ids: Iterable<string>, streets = true): Promis
     const r = g.r;
     if (r) { api!.add_pack_water(r.cell, r.x0, r.y0, r.w, r.h, r.rows, r.runs, r.lon, r.lat); added++; }
   });
+  if (added && api) patchOutside(api);
   return added;
 }
 
@@ -194,6 +196,7 @@ export async function ensureBlocks(keys: Iterable<number>): Promise<void> {
   const a = api;
   if (!a) return;
   const before = a.blueprint_cost();
+  let laid = 0;
   todo.forEach((k, n) => {
     const g = got[n];
     if (!g) return;
@@ -206,6 +209,7 @@ export async function ensureBlocks(keys: Iterable<number>): Promise<void> {
         return;
       }
       blocksIn.add(k);
+      laid++;
     }
     if (viewBlocks.has(k) && !tintSent.has(k)) {
       tintSent.add(k);
@@ -213,6 +217,7 @@ export async function ensureBlocks(keys: Iterable<number>): Promise<void> {
     }
   });
   trimBlocks();
+  if (laid) patchOutside(a);
   if (Math.abs(a.blueprint_cost() - before) > 1e-9) sendStateOutside();
 }
 
@@ -422,7 +427,7 @@ export function worldWaterIntoModel(): Promise<void> {
   return worldWaterFetch.then((b) => {
     if (worldWaterIn || !api) return;
     // a server that answers a missing file with a page gives no mask either
-    if (b) api.add_world_water(new Uint8Array(b));
+    if (b) { api.add_world_water(new Uint8Array(b)); patchOutside(api); }
     worldWaterIn = true;
   }, () => {});
 }
@@ -481,6 +486,7 @@ export const roadFeed = new RoadFeed(() => {
 }, () => {
   const before = roadsBefore;
   roadsBefore = null;
+  if (api) patchOutside(api);
   if (api && before !== null && Math.abs(api.blueprint_cost() - before) > 1e-9) sendStateOutside();
   // the ghost asks again
   send({ kind: "roads" });

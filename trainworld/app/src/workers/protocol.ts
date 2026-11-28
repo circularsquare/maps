@@ -1056,8 +1056,9 @@ export type FromClock =
    * `ms`: the worker's time on the edit by step (T-229, for `?debug=1`); `node` after addBuilding: the building's id */
   /** T-4145: an edit applied, sent before anything else it sends (rows, state, answer): what the map and panels can
    * show of it until the first network (or rows) after this message (notes/T-4145.md) */
-  /** T-4214: stations named after their edit (`stationName`), with the clickable map's patch when it can be patched */
-  | { kind: "named"; patch?: MapPatch }
+  /** T-4214: a change outside an edit, with the clickable map's patch when it can be patched: stations named after their
+   * edit (`stationName`), ground that re-priced track the page holds patched (T-4506, clockPatch.ts `patchOutside`) */
+  | { kind: "outside"; patch?: MapPatch }
   | { kind: "applied"; seq: number; word: EditWord; /** T-4170: no network follows (a service edit, a rename, a fare or loan edit) */ noNet?: true; /** T-4214: the clickable map's patch, when the edit can be patched */ patch?: MapPatch }
   | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
   | {

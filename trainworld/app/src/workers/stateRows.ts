@@ -404,6 +404,9 @@ export class StateRows {
   private ord: [boolean, boolean, boolean] = [false, false, false];
   private readAll = true;
   private reading = false;
+  /** T-4506: rows a patch read (`touchedRows`) since the last read began: the page may hold them patched, and a change
+   * outside an edit to the records they name is patched again (clockPatch.ts `patchOutside`) */
+  patchedSince = false;
   /** T-4291: the lists as the last read left them, patched by id: the edges and the model's nodes (unfolded) in id order,
    * the nodes after the names are folded, and the bus stops' nodes after them */
   private edgeList: ClockEdge[] = [];
@@ -554,6 +557,7 @@ export class StateRows {
    * the regions an edit dirtied since the last read, or with a focus past `FOCUS_BUDGET` those in it first. */
   begin(a: TrackApi, focus?: Focus) {
     this.commit();
+    this.patchedSince = false;
     const li = a.lines_info();
     a.set_line_stamps(StateRows.bounded);
     const touched = a.take_touched(), changed = a.take_changed_lines();
@@ -1065,6 +1069,7 @@ export class StateRows {
    * the names the next read folds for them, and the stations not among `nodeIds` whose shown names that read moves come
    * after the nodes (`patchNames`). */
   touchedRows(a: TrackApi, env: RowEnv, edgeIds: Uint32Array, nodeIds: Uint32Array, ups: Map<number, number> = upgradesOf(a)): { edges: ClockEdge[]; nodes: ClockNode[] } {
+    this.patchedSince = true;
     const edges: ClockEdge[] = [], live: ClockNode[] = [];
     /** the touched edges' ends now, null when gone (a platform line is laid along the edges at its node) */
     const changed = new Map<number, readonly [number, number] | null>(Array.from(edgeIds, (id) => [id, null]));

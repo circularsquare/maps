@@ -2089,8 +2089,9 @@ export class ClockClient {
         this.tripsAt = performance.now();
         this.onTrips(msg.epoch, msg.version, msg.trips, msg.board, msg.ends, msg.nexts, msg.bays);
         break;
-      case "named":
-        // T-4214 stage A: stations named after their edit: the tools' map takes their rows (the state's names follow)
+      case "outside":
+        // T-4214 stage A: stations named after their edit, and (T-4506) ground that re-priced track: the tools' map takes
+        // their rows (the state's follow)
         if (!(msg.patch && this.takePatch(msg.patch, this.orderOf(msg)))) this.patchLog.push({ order: this.orderOf(msg), p: null });
         break;
       case "applied": {

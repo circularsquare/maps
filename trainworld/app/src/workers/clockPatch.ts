@@ -12,6 +12,7 @@ import { anchor } from "../map/geo";
 import type { MapPatch, PatchLine } from "./protocol";
 import { drawnEdgeNow, rowEnv, rowsCanGo, stateRows } from "./clockMain";
 import { posted } from "./clockPost";
+import { send } from "./clockState";
 
 /** past this many records an edit's patch is not sent: the page waits for the network as before (a big Rebuild) */
 export const PATCH_MAX = 2000;
@@ -30,6 +31,7 @@ export function mapPatch(api: TrackApi): MapPatch | undefined {
   if (typeof lines === "string") return void (patchMiss = lines);
   const edgeIds = t.subarray(1, 1 + ne), nodeIds = t.subarray(1 + ne);
   const { edges, nodes } = stateRows.touchedRows(api, rowEnv, edgeIds, nodeIds);
+  laidCost = new Map(edges.map((e) => [e.id, e.cost]));
   const liveE = new Set(edges.map((e) => e.id)), liveN = new Set(nodes.map((n) => n.id));
   return {
     edges, nodes,
@@ -83,3 +85,23 @@ const same = (a: ArrayLike<number>, b: ArrayLike<number>) => {
 
 /** why the last `mapPatch` gave none ("" when it gave one), for the edit's answer */
 export let patchMiss = "";
+
+/** each edge's price as the last patch gave it */
+let laidCost = new Map<number, number>();
+
+/** T-4506: after ground lands outside an edit (a road tile, a terrain block, a water mask re-price the track over it),
+ * the patch again when the price of an edge the page holds patched since the last state read moved, so the page's
+ * map and its patches hold it as the next state will read it. None while no patch read rows since that read (the
+ * next state brings the change), nor when no patched edge's price moved (a road tile beside the new track). */
+export function patchOutside(api: TrackApi) {
+  if (!stateRows.patchedSince) return;
+  const t = api.peek_touched();
+  if (t[0] !== ALL) {
+    const ei = api.edges_info_of(t.subarray(1, 1 + t[0]));
+    let moved = false;
+    for (let i = 0; i < ei.length && !moved; i += 10) moved = laidCost.get(ei[i]) !== ei[i + 6];
+    if (!moved) return;
+  }
+  const patch = mapPatch(api);
+  send({ kind: "outside", ...(patch ? { patch } : {}) });
+}
