@@ -29,7 +29,7 @@
 // only draws where it is spent. The two meet at a station, drawn there as on two tracks
 // (terminalBays.ts `singleSplitEnds`, its track split there, T-3212, and `terminalEnds` for a line's ends). `?perfOff=singleWait` turns it off.
 
-import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, trainFrame, type NetworkBuffers } from "./network";
+import { PASS_OUTER, PASS_STRIDE, TRAM_MARK, arriveS, carsOf, profileS, trainFrame, trainFrameInto, type NetworkBuffers } from "./network";
 import { BAY_STRIDE, TURNBACK_M, bayP } from "./terminalBays";
 
 /** T-2980: the place a trip leaving a dead end starts from, as arriving trains number them (its own
@@ -163,6 +163,12 @@ export class TrainGuard {
   private boxes: Float32Array | null = null;
   /** per line, this frame: 1 its box is in or near the view, 0 not, 2 not looked at yet */
   private seen = new Uint8Array(0);
+  /** T-4370: `update`'s working arrays, kept from frame to frame: made anew each frame they were most of what the page
+   * allocated while trains ran, garbage Safari collects late (a phone's tab is killed at a fixed size) */
+  private scratch = { cand: [] as number[], cs: [] as number[], half: [] as number[], tauOf: [] as number[], sNew: [] as number[], keys: [] as number[], lists: [] as number[][], outs: [] as number[][], order: [] as number[], fr: [] as number[], frame: { geo: 0, gr: 0, d: 0 } };
+  /** each track's registrations this frame (`push`), for the network `regsNet` */
+  private regs = new Map<number, number[]>();
+  private regsNet: NetworkBuffers | null = null;
   /** checks: when an array, each hold for a place at a line's end is noted in it (T-2980) */
   placeLog: unknown[] | null = null;
   /** checks: when an array, each train let over at CONFLICT_WAIT_MAX is noted in it */
@@ -424,8 +430,9 @@ export class TrainGuard {
     const uTime = f.time - f.epoch;
     const T = n.pathTable, E = n.pathEntry, PF = n.pathFrom, PL = n.pathLen, meta = n.meta;
     // the candidates: trip, offset along its run now, half its length
-    const cand: number[] = [], cs: number[] = [], half: number[] = [];
-    const tauOf: number[] = [];
+    const sc = this.scratch;
+    const cand = sc.cand, cs = sc.cs, half = sc.half, tauOf = sc.tauOf;
+    cand.length = cs.length = half.length = tauOf.length = 0;
     const nTrips = f.trips.length / 2;
     const lo = -VIEW_MARGIN_PX, hiX = f.w + VIEW_MARGIN_PX, hiY = f.h + VIEW_MARGIN_PX;
     // a guarded line whose box is off the view has no train to look at (1 in view, 0 off, 2 not
@@ -440,8 +447,8 @@ export class TrainGuard {
         seen[line] = 1;
         if (f.project && box) {
           let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-          for (const [bx, by] of [[box[line * 4], box[line * 4 + 1]], [box[line * 4 + 2], box[line * 4 + 1]], [box[line * 4], box[line * 4 + 3]], [box[line * 4 + 2], box[line * 4 + 3]]]) {
-            const q = f.project(bx, by);
+          for (let k = 0; k < 4; k++) {
+            const q = f.project(box[line * 4 + (k & 1 ? 2 : 0)], box[line * 4 + (k & 2 ? 3 : 1)]);
             x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]);
           }
           // (a corner behind the camera projects to nonsense: kept)
@@ -464,7 +471,7 @@ export class TrainGuard {
       const s = profileS(n, p, tau);
       // (a line on single track in view has all its trains looked at: the one coming the other way
       // onto a stretch in view is often far out of it, T-3202)
-      const { geo, d } = trainFrame(n, p, s);
+      const { geo, d } = trainFrameInto(n, p, s, sc.frame);
       if (f.project && !(this.singles && (this.singleOn.has(line) || this.singleOn.has(geo)))) {
         // the nearest sample of the row it is drawn along is near enough for the view
         const first = n.lineTable[geo * 4], count = n.lineTable[geo * 4 + 1], step = n.lineTable[geo * 4 + 3];
@@ -501,11 +508,16 @@ export class TrainGuard {
     // (where it was or is, the further back) to just past its front: the coordinate on a track is
     // from the edge's first node in the direction of travel, so a candidate's coordinate there is
     // its offset along its run plus `off`.
-    const regs = new Map<number, number[]>();
-    const sNew = cs.slice();
+    if (this.regsNet !== n) { this.regs.clear(); sc.keys.length = 0; this.regsNet = n; }
+    const regs = this.regs, keys = sc.keys;
+    for (const key of keys) regs.get(key)!.length = 0;
+    keys.length = 0;
+    const sNew = sc.sNew;
+    sNew.length = 0;
+    for (let c = 0; c < cs.length; c++) sNew.push(cs[c]);
     for (let c = 0; c < cand.length; c++) {
       // (a return run on its own way back takes that way's entries, as a run 0, T-3250)
-      const i = cand[c], p = f.trips[i * 2], line = profileLine(p), { geo, gr: run } = trainFrame(n, p, 0);
+      const i = cand[c], p = f.trips[i * 2], line = profileLine(p), { geo, gr: run } = trainFrameInto(n, p, 0, sc.frame);
       // on a line here for its conflicts alone (it shares no track), a train standing out its turn
       // at the end of its run holds no one: the next one, late from a wait, would queue behind it
       // there and pass its lateness on to the one after, and so on (lags to the 20-minute cap)
@@ -526,21 +538,26 @@ export class TrainGuard {
         const key = run === 0 ? E[k] : E[k] ^ 1;
         // where the entry starts along this run
         const start = run === 0 ? PF[k] : L - PF[k] - len;
-        push(regs, key, c, -start, len);
+        push(regs, keys, key, c, -start, len);
       }
     }
     // order each track's candidates by where their fronts were (no overtaking on screen), then hold
     // each behind the backs of those ahead that are on it and have not cleared it
-    const lists: number[][] = [];
-    for (const v of regs.values()) {
+    const lists = sc.lists, order = sc.order, fr = sc.fr;
+    lists.length = 0;
+    for (const key of keys) {
+      const v = regs.get(key)!;
       if (v.length < 2 * REG) continue;
-      const m = v.length / REG, order = Array.from({ length: m }, (_, j) => j);
-      const fr = order.map((j) => {
+      const m = v.length / REG;
+      order.length = fr.length = 0;
+      for (let j = 0; j < m; j++) {
+        order.push(j);
         const c = v[j * REG], was = prevS[cand[c]];
-        return (Number.isNaN(was) ? cs[c] : Math.min(was, cs[c])) + v[j * REG + 1] + half[c];
-      });
+        fr.push((Number.isNaN(was) ? cs[c] : Math.min(was, cs[c])) + v[j * REG + 1] + half[c]);
+      }
       order.sort((x, y) => fr[y] - fr[x] || v[x * REG] - v[y * REG]);
-      const out: number[] = [];
+      const out = sc.outs[lists.length] ??= [];
+      out.length = 0;
       for (const j of order) for (let q = 0; q < REG; q++) out.push(v[j * REG + q]);
       lists.push(out);
     }
@@ -1071,13 +1088,15 @@ export class TrainGuard {
 /** Numbers per registration on a track: candidate, offset to its coordinate there, the track's length. */
 const REG = 3;
 
-function push(regs: Map<number, number[]>, key: number, c: number, off: number, zone: number) {
-  const v = regs.get(key);
-  if (v) {
-    // a run over the same edge twice (out and back on one track) counts its nearer pass
-    for (let j = 0; j < v.length; j += REG) if (v[j] === c) return;
-    v.push(c, off, zone);
-  } else regs.set(key, [c, off, zone]);
+/** `regs` keeps its arrays from frame to frame (emptied, not dropped); `keys` lists the tracks in the order this
+ * frame first met them, the order a new map each frame gave */
+function push(regs: Map<number, number[]>, keys: number[], key: number, c: number, off: number, zone: number) {
+  let v = regs.get(key);
+  if (!v) regs.set(key, (v = []));
+  // a run over the same edge twice (out and back on one track) counts its nearer pass
+  if (!v.length) keys.push(key);
+  else for (let j = 0; j < v.length; j += REG) if (v[j] === c) return;
+  v.push(c, off, zone);
 }
 
 /** The first index in [lo, hi) whose value is above `x`. */

@@ -3904,9 +3904,14 @@ export function backBaseOf(table: ArrayLike<number>, meta: ArrayLike<number>): n
 /** Where profile `p`'s train `s` m along its run is drawn: the line table's row (`geo`, its line or
  * its return run's own slot), the run it is drawn as (`gr`) and the offset along that row. */
 export function trainFrame(n: Pick<NetworkBuffers, "lineTable" | "meta">, p: number, s: number): { geo: number; gr: number; d: number } {
+  return trainFrameInto(n, p, s, { geo: 0, gr: 0, d: 0 });
+}
+/** `trainFrame` written into `out` (T-4370: the train guard asks it of every train in view each frame) */
+export function trainFrameInto<T extends { geo: number; gr: number; d: number }>(n: Pick<NetworkBuffers, "lineTable" | "meta">, p: number, s: number, out: T): T {
   const line = profileLine(p), run = profileRun(p);
   const slot = run === 1 ? backSlotOf(n.lineTable, n.meta, line) : -1;
-  return slot >= 0 ? { geo: slot, gr: 0, d: s } : { geo: line, gr: run, d: run === 0 ? s : n.meta[p * 4 + 3] - s };
+  if (slot >= 0) { out.geo = slot; out.gr = 0; out.d = s; } else { out.geo = line; out.gr = run; out.d = run === 0 ? s : n.meta[p * 4 + 3] - s; }
+  return out;
 }
 
 /** A line's train as drawn, m: its cars at 20 m, a bus or boat as the train shader has it. */

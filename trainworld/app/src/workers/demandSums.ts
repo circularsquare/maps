@@ -752,16 +752,38 @@ export interface PackedDays {
 
 /** `views` packed; `layout` and the period count `periods` give every array's length. */
 export function packDays(views: DayViews[], layout: DayInput["layout"], periods: number): PackedDays {
-  const f32: number[] = [], f64: number[] = [], idx: number[] = [], stationIds: string[] = [];
+  // T-4370: every array's length counted first and the numbers written in place. Pushed into plain arrays they were
+  // held as doubles (a Float32 twice over) with each array's growth on top: on a phone's edit, the sums worker's
+  // biggest allocation, garbage that Safari keeps for a while.
+  let n32 = 0, n64 = 0, nIdx = 0;
+  for (const d of views) {
+    const { lines, stations, purposes } = d.view;
+    for (const { id } of layout) {
+      const l = lines.get(id)!;
+      n64 += 2 + l.boardings.length + l.fareX!.length + l.baseX!.length;
+      for (let q = 0; q < periods; q++) n32 += l.loads[q].length + l.board![q].length + l.alight![q].length + l.arrive![q].length;
+    }
+    nIdx += stations.size;
+    for (const [, p] of purposes ?? []) {
+      for (const { id } of layout) {
+        const l = p.lines.get(id)!;
+        n64 += 1 + l.boardings.length;
+        for (let q = 0; q < periods; q++) n32 += l.loads[q].length;
+      }
+      nIdx += p.stations.size;
+    }
+  }
+  const f32 = new Float32Array(n32), f64 = new Float64Array(n64 + 3 * nIdx), idx = new Int32Array(nIdx), stationIds: string[] = [];
+  let a = 0, b = 0, c = 0;
   const index = new Map<string, number>();
-  const put32 = (a: Float32Array) => { for (let i = 0; i < a.length; i++) f32.push(a[i]); };
-  const put64 = (a: ArrayLike<number>) => { for (let i = 0; i < a.length; i++) f64.push(a[i]); };
+  const put32 = (x: Float32Array) => { f32.set(x, a); a += x.length; };
+  const put64 = (x: ArrayLike<number>) => { for (let i = 0; i < x.length; i++) f64[b++] = x[i]; };
   const stationsOf = (m: Map<string, StationDemand>) => {
     for (const [id, v] of m) {
       let k = index.get(id);
       if (k === undefined) index.set(id, (k = stationIds.length)), stationIds.push(id);
-      idx.push(k);
-      f64.push(v.boardings, v.alightings, v.transfers ?? -1);
+      idx[c++] = k;
+      f64[b++] = v.boardings; f64[b++] = v.alightings; f64[b++] = v.transfers ?? -1;
     }
     return m.size;
   };
@@ -769,7 +791,7 @@ export function packDays(views: DayViews[], layout: DayInput["layout"], periods:
     const { lines, stations, purposes, ...view } = d.view;
     for (const { id } of layout) {
       const l = lines.get(id)!;
-      f64.push(l.ridersPerDay, l.fullestPct);
+      f64[b++] = l.ridersPerDay; f64[b++] = l.fullestPct;
       put64(l.boardings);
       put64(l.fareX!);
       put64(l.baseX!);
@@ -780,7 +802,7 @@ export function packDays(views: DayViews[], layout: DayInput["layout"], periods:
     for (const [key, p] of purposes ?? []) {
       for (const { id } of layout) {
         const l = p.lines.get(id)!;
-        f64.push(l.ridersPerDay);
+        f64[b++] = l.ridersPerDay;
         put64(l.boardings);
         for (let q = 0; q < periods; q++) put32(l.loads[q]);
       }
@@ -789,9 +811,8 @@ export function packDays(views: DayViews[], layout: DayInput["layout"], periods:
     const cities = [...d.cities].map(([id, c]): PackedDays["days"][number]["cities"][number] => [id, { tripsPerDay: c.tripsPerDay, railTripsPerDay: c.railTripsPerDay, trainShareByPeriod: c.trainShareByPeriod, split: c.split }]);
     return { view, stations: nStations, purposes: ps, cities, intercity: d.intercity };
   });
-  return { f32: Float32Array.from(f32), f64: Float64Array.from(f64), idx: Int32Array.from(idx), stationIds, days };
+  return { f32, f64, idx, stationIds, days };
 }
-
 /** `packDays`' views as they were. */
 export function unpackDays(p: PackedDays, layout: DayInput["layout"], periods: number): DayViews[] {
   let a = 0, b = 0, c = 0;
