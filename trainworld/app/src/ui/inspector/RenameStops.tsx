@@ -10,6 +10,7 @@ import { t as tr } from "../../i18n";
 import { complexOf } from "../../game/complexView";
 import { edit, stationNames, stationsById, world } from "../../game/world";
 import { setListHot } from "../../map/hovered";
+import { composing } from "../keys";
 
 interface RenameRow {
   /** what the typing is kept by: an unbound station's id, or its complex's bound stations */
@@ -78,7 +79,7 @@ export function RenameStops({ order, colour, onClose }: { order: readonly string
     });
   };
   const key = (k: number, e: KeyboardEvent) => {
-    if (e.isComposing || e.keyCode === 229) return;
+    if (composing(e)) return;
     if (e.key === "Enter") {
       e.preventDefault();
       const next = box(k + 1);
@@ -90,7 +91,7 @@ export function RenameStops({ order, colour, onClose }: { order: readonly string
   };
   // Esc closes the boxes and nothing more, from a box or a button: the panel and the selection stay
   const esc = (e: KeyboardEvent) => {
-    if (e.key !== "Escape" || e.isComposing) return;
+    if (e.key !== "Escape" || composing(e)) return;
     e.preventDefault();
     e.stopPropagation();
     onClose();

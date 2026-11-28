@@ -347,6 +347,30 @@ export function busPlaceOf(w: WorldView, id: number): BusPlace | null {
   return at === undefined ? null : p.places[at];
 }
 
+/** each plain bus stop's place: the train station it goes by, else the place's index */
+const rowPlaces = new WeakMap<BusPlaces, Map<string, string | number>>();
+
+/** The group view's row key for a stop (`stationKey` a station's): a bus stop with no station goes by its place, so
+ * the lines stopping there share a row; a place with a train station in it by that station (one a bus stops at
+ * first), so it shares the station's row. Row keys only: each line keeps its own stop ids for editing and boardings. */
+export function placeRowKey(places: BusPlaces, stationKey: (id: string) => string): (id: string) => string {
+  let at = rowPlaces.get(places);
+  if (!at) {
+    const m = (at = new Map());
+    places.places.forEach((p, i) => {
+      const by = p.stops.find((s) => s.station >= 0);
+      const station = by ? String(by.station) : p.stations[0];
+      for (const s of p.stops) if (s.station < 0) m.set(String(s.id), station ?? i);
+    });
+    rowPlaces.set(places, m);
+  }
+  const m = at;
+  return (id) => {
+    const v = m.get(id);
+    return v === undefined ? stationKey(id) : typeof v === "number" ? `bus-place:${v}` : stationKey(v);
+  };
+}
+
 /** `bus::STATION_REACH_M`: a train station this near a route is a stop of it. */
 const STATION_REACH_M = 200;
 /** A route passing this near one of a new route's crossing stops is the route it crosses there, m. */

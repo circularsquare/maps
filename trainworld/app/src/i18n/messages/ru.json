@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "Зоны",
   "lineMoney.fares": "Тарифы {amount}",
   "lineMoney.net": "Итого {amount}",
-  "lineMoney.running": "Движение поездов {amount}",
   "lineMoney.title": "{revenue} и {expenses}",
   "lineProfile.along": "От станции {stop}: {distance}",
   "lineProfile.crosses": "{dir, select, up {{count, plural, one {{lines} пересекает выше на {height}} few {{lines} пересекают выше на {height}} many {{lines} пересекают выше на {height}} other {{lines} пересекают выше на {height}}}} down {{count, plural, one {{lines} пересекает ниже на {height}} few {{lines} пересекают ниже на {height}} many {{lines} пересекают ниже на {height}} other {{lines} пересекают ниже на {height}}}} other {{count, plural, one {{lines} пересекает на том же уровне} few {{lines} пересекают на том же уровне} many {{lines} пересекают на том же уровне} other {{lines} пересекают на том же уровне}}}}",

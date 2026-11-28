@@ -5,6 +5,7 @@ import type { ComponentChildren, RefObject } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { Icon } from "./widgets";
 import { t } from "../i18n";
+import { composing } from "./keys";
 
 /** Shows the dialog modally while `open` and gives focus back to what had it when it closes.
  * `again` changing closes and opens it afresh. */
@@ -31,7 +32,7 @@ export function Modal({ open, onClose, title, cls = "", head, children }: { open
   return <dialog class={"saves-panel " + cls} ref={dialog} aria-label={title}
     onCancel={(e) => { e.preventDefault(); onClose(); }}
     onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); onClose(); } }}>
+    onKeyDown={(e) => { e.stopPropagation(); if (e.key === "Escape") { e.preventDefault(); if (!composing(e)) onClose(); } }}>
     <div class="saves-inner">
       <div class="saves-head">
         <h2>{title}</h2>

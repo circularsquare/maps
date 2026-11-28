@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "Zones",
   "lineMoney.fares": "Tarifes {amount}",
   "lineMoney.net": "Net {amount}",
-  "lineMoney.running": "Trens en servei {amount}",
   "lineMoney.title": "{revenue} i {expenses}",
   "lineProfile.along": "{distance} des de l’inici ({stop})",
   "lineProfile.crosses": "{dir, select, up {{count, plural, one {{lines} hi passa {height} per sobre} other {{lines} hi passen {height} per sobre}}} down {{count, plural, one {{lines} hi passa {height} per sota} other {{lines} hi passen {height} per sota}}} other {{count, plural, one {{lines} s’hi creua al mateix nivell} other {{lines} s’hi creuen al mateix nivell}}}}",

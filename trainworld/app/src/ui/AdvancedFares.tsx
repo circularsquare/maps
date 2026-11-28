@@ -28,6 +28,7 @@ import { useModalDialog } from "./Modal";
 import { advancedFares, fareAdding, FareButtons, FareGraph, FareNodeRows } from "./FareGraph";
 import { BusFareRow, chargedAt, fareCity, FareEffect, fareKindsInUse, fareRef, FerryFareRows, HsrFareRow, placeMultiple, placeName, stepMultiple, TransferFareRow } from "./MoneyTab";
 import { Check, Icon, Segmented, Stepper } from "./widgets";
+import { composing } from "./keys";
 
 /** The panel's own drag preview: its country's scale may differ from the dock's graph's. */
 const panelPreview = signal<FareNode[] | null>(null);
@@ -111,7 +112,7 @@ function FareAreas({ f, scale }: { f: Fares; scale: number }) {
               <span class="fr-what">
                 <input class="af-name" value={a.name} aria-label={t("advancedFares.areaLabel")} maxLength={80}
                   onChange={(e) => renameArea(a.id, e.currentTarget.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }} />
+                  onKeyDown={(e) => { if (!composing(e) && e.key === "Enter") e.currentTarget.blur(); }} />
               </span>
               <button class="btn text mini" onClick={() => paint(a.id)}><Icon.brush />{t("advancedFares.paint")}</button>
               <span class="group">

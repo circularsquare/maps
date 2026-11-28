@@ -15,7 +15,7 @@ import { CAR_M, CRUSH_PER_CAR, PLATFORM_MAX_M, RATED_PER_CAR, type CrowdedStretc
 import { describeIssues } from "../../game/issues";
 import { complexOf } from "../../game/complexView";
 import { DEMAND_INDEX, loopHalves, planStopsOf, type LineInput, type LineStats, type StationInput } from "../../game/types";
-import { display, lineDraft, purposeFilter, relatedLines, selection, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
+import { display, lineDraft, purposeFilter, relatedLines, selection, setDisplay, shownDayPhrase, tool, TRAM_PLATFORM } from "../../game/ui";
 import { purposeName } from "../../game/purposes";
 import { dailyRiders } from "../../map/trackHover";
 import { CROWD_LOAD_FROM, CROWD_LOAD_STRONG, FULL_FLOOR } from "../../map/rendererShaders";
@@ -696,6 +696,7 @@ function RailLineInspector({ id }: { id: string }) {
   const held = heldAnswer?.held ?? [], limits = heldAnswer?.limits ?? NO_LIMITS;
   if (l && heldAnswer) noteHeadwayLimits(l.id, limits.map((x) => x?.s ?? 0));
   const marks = useClockQuery(l ? { what: "lineMarks", line: l.num } : null, [l?.num, w?.version], marksFrom) ?? [];
+  const showMarks = display.value.stopMarks;
   const { kind, periods } = useLinePeriods(id, l);
   // T-646: while stops are edited, the stations the line passes between stops, and the gaps whose
   // passed stations are shown as stops to add, waiting for Add or Cancel
@@ -972,7 +973,7 @@ function RailLineInspector({ id }: { id: string }) {
         </span>
         <StopTransfers l={l} i={i} drawn={drawn} extra={bullets} tall={tall} noSelf={!!row} />
         <StopToday line={l.id} i={row ? row.occ : i} />
-        <RouteMarks marks={flip ? marks.filter((m) => m.gap === i - 1).reverse() : marks.filter((m) => m.gap === i)} />
+        {showMarks && <RouteMarks marks={flip ? marks.filter((m) => m.gap === i - 1).reverse() : marks.filter((m) => m.gap === i)} />}
         {editingStops && !partly && row?.turn && (
           <button class="btn icon mini" data-tip={tr("lineInspector.openLoop")} aria-label={tr("lineInspector.openLoop")} onClick={() => void stopEdit({ op: "openLoop", line: l.num })}>
             <Icon.uturn />
@@ -1034,6 +1035,12 @@ function RailLineInspector({ id }: { id: string }) {
           <button class={"btn icon mini related-toggle" + (related ? " on" : "")} data-tip={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")}
             aria-label={tr(related ? "lineInspector.hideRelated" : "lineInspector.showRelated")} aria-pressed={related} onClick={() => (relatedLines.value = !relatedLines.value)}>
             <Icon.related />
+          </button>
+        )}
+        {marks.length > 0 && !renaming && (
+          <button class={"btn icon mini related-toggle" + (showMarks ? " on" : "")} data-tip={tr(showMarks ? "lineInspector.hideMarks" : "lineInspector.showMarks")}
+            aria-label={tr(showMarks ? "lineInspector.hideMarks" : "lineInspector.showMarks")} aria-pressed={showMarks} onClick={() => setDisplay("stopMarks", !showMarks)}>
+            <Icon.routeMarks />
           </button>
         )}
         {!editingStops && !renaming && l.stops.length > 0 && (
@@ -1129,7 +1136,7 @@ function RailLineInspector({ id }: { id: string }) {
       {st.status !== "broken" && l.stops.length >= 2 && <LineImprovements l={l} version={w.version} vehicle={vehicleOf(st)} />}
       {st.status !== "broken" && l.stops.length >= 2 && <LineProfile l={l} version={w.version} />}
       {st.status !== "broken" && <LineFare l={l} />}
-      {st.status === "running" && <LineMoney num={l.num} />}
+      {st.status === "running" && <LineMoney num={l.num} vehicle={vehicleOf(st)} />}
     </>
   );
 }

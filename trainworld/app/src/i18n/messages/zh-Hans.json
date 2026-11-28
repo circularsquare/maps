@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "按区域",
   "lineMoney.fares": "票款收入{amount}",
   "lineMoney.net": "净额{amount}",
-  "lineMoney.running": "运行费用{amount}",
   "lineMoney.title": "{revenue}和{expenses}",
   "lineProfile.along": "距{stop}{distance}",
   "lineProfile.crosses": "{dir, select, up {{count, plural, other {{lines}在上方{height}处交叉}}} down {{count, plural, other {{lines}在下方{height}处交叉}}} other {{count, plural, other {{lines}平面交叉}}}}",

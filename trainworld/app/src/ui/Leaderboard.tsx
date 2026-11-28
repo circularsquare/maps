@@ -21,6 +21,7 @@ import { Modal } from "./Modal";
 import { CommunityButton } from "./Community";
 import { Named } from "./Flag";
 import { Icon, Segmented } from "./widgets";
+import { composing } from "./keys";
 
 export const WORLD = "points";
 export const COUNTRY = "country_";
@@ -113,6 +114,7 @@ export function CityPick({ boardKey, mine, all, countries, more, onPick }: { boa
       onBlur={() => setText(null)}
       onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); }}
       onKeyDown={(e) => {
+        if (composing(e)) return;
         if (e.key === "ArrowDown" && items.length) { e.preventDefault(); setCursor((cursor + 1) % items.length); }
         else if (e.key === "ArrowUp" && items.length) { e.preventDefault(); setCursor((cursor + items.length - 1) % items.length); }
         else if (e.key === "Enter" && items.length) { e.preventDefault(); pick(items[Math.min(cursor, items.length - 1)].key); }

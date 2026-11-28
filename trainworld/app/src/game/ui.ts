@@ -129,6 +129,8 @@ export interface DisplaySettings {
   chartOtherLines: boolean;
   /** T-4510: the schedule window's Offset column, for nudging a row's departures; off by default */
   scheduleOffsets: boolean;
+  /** the line panel's stops diagram marks its flat junctions and crossings (T-629) */
+  stopMarks: boolean;
   /** T-2838, T-3630: trips between cities are calculated (the market opens); per browser, since it is about the
    * device: on by default on a computer, off on a phone or tablet. Read at each solve, so it applies from the next
    * one; the start menu's ticked box is what a game opened there gets. */
@@ -193,6 +195,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   bindNew: false,
   chartOtherLines: true,
   scheduleOffsets: false,
+  stopMarks: true,
   intercityTrips: !mobileDevice(),
   coarseDemand: mobileDevice(),
   modeShapes: { ...MODE_SHAPES },

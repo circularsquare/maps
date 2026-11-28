@@ -41,7 +41,7 @@ fn watchdog() {
 use trainworld_sim::track::wasm::TrackApi;
 
 thread_local! {
-    static LAST: RefCell<String> = RefCell::new(String::new());
+    static LAST: RefCell<String> = const { RefCell::new(String::new()) };
 }
 
 struct Rng(u64);

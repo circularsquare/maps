@@ -705,6 +705,8 @@ body.resizing, body.resizing * { user-select: none; }
 .badge-edit { display: inline-flex; padding: 0; border: 0; background: transparent; cursor: pointer; flex: none; font: inherit; }
 .badge-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .line-list-actions, .line-stop-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+/* the name filter under the Lines and Stations lists' buttons (ui/listParts.tsx `ListFind`) */
+.list-find { display: block; margin-bottom: 8px; }
 .line-identity input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--rule); }
 .line-stop-actions { justify-content: flex-start; margin-top: 12px; }
 .top-speed .val .btn { margin-left: 8px; }
@@ -1097,7 +1099,7 @@ rect.now { fill-opacity: .45; }
 .h .related-toggle, .h .rename-toggle { align-self: center; margin-left: 6px; color: var(--muted); width: 22px; min-width: 22px; height: 22px; }
 .h .related-toggle svg, .h .rename-toggle svg { width: 19px; height: 19px; }
 .h .related-toggle:hover, .h .rename-toggle:hover { color: var(--text); }
-.h .related-toggle + .rename-toggle { margin-left: 2px; }
+.h .related-toggle + .related-toggle, .h .related-toggle + .rename-toggle { margin-left: 2px; }
 .h .btn.related-toggle.on { background: var(--tint); color: var(--text); }
 .related { position: relative; }
 .related-draw { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 1; }

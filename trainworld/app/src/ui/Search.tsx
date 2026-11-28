@@ -19,7 +19,7 @@ import { ask, selection, tool } from "../game/ui";
 import type { LineInput } from "../game/types";
 import { world } from "../game/world";
 import { live } from "../map/live";
-import { keyIsTheirs } from "./keys";
+import { composing, keyIsTheirs } from "./keys";
 import { locateLine, locateStation, playerMovedCamera } from "./locate";
 import { goToCity } from "./Cities";
 import { Chip } from "./widgets";
@@ -153,6 +153,7 @@ export function Search() {
     goTo(hit);
   };
   const onKey = (e: KeyboardEvent) => {
+    if (composing(e)) return;
     if (e.key === "Escape") {
       e.preventDefault();
       close();

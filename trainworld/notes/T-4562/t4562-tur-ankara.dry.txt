@@ -1,0 +1,16 @@
+retire sic: Sincan (766,148) -> ank
+retire sic: Kahramankazan (59,808) -> ank
+retire sic: Etimesgut (753,021) -> ank
+retire sic: Ayaş (13,615) -> ank
+retire sic: Güdül (12,435) -> ank
+set ank: {'source': {'ucdb': [4921, 4822], 'fua': [3650, 3607], 'remnants': {'task': 'T-1191', 'units': ['54988432B88316498186109', '54988432B89555629027377', '54988432B18647546937138', '54988432B38814369243914', '54988432B10964336547790', '54988432B74694372837116', '54988432B80355579984190', '54988432B48404533288068', '54988432B84973807429467', '54988432B91293750640231']}}}
+ank: bbox [32.242, 38.368, 33.571, 40.545] -> [31.949, 38.368, 33.571, 40.545]
+ank Ankara: people 4,560,524 -> 6,165,551; units 17 -> 22; pieces 1 -> 1; hull 0.80 -> 0.76
+   neighbours before {'kse': 0.31, 'cnm': 0.19, 'sic': 0.18, '(no row)': 0.12, 'plt': 0.11, 'kon': 0.06, 'aks': 0.03, 'blm': 0.02}
+   neighbours after  {'kse': 0.26, 'blm': 0.23, 'plt': 0.18, 'cnm': 0.17, '(no row)': 0.1, 'kon': 0.05, 'aks': 0.03}
+
+checks (T-4364 dry.py):
+ank Ankara: plan people 6,165,551, game about 5,750,712, 19,145 km2, hull 0.76 (before 0.80, main piece 0.76) pass; pop_vs_fua about 1.18 (5,750,712 over 4,857,317 in Ankara, Sincan) pass; ring none
+sic Sincan: retired into ank; zone_successors sic -> ank
+waves: ank
+build: 1 rows, recorded steps 6 core-min (ank 6.5); retired ['sic']; then the TUR join (see notes/T-4364/joins.txt)

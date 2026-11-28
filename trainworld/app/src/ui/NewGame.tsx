@@ -19,6 +19,7 @@ import realNetworks from "../game/realNetworks.json";
 import { patientFetch } from "../workers/patientFetch";
 import { startRightHand } from "../game/runningSide";
 import { homeCountry } from "../game/flags";
+import { composing } from "./keys";
 
 /** The suggested starts (T-728), easy starts (T-2690); Guangzhou for Toronto, for a start outside the West with
  * many cities near it (Anita, 2026-11-06). */
@@ -232,6 +233,7 @@ export function NewGameSheet({ onStart, onBack, heading = true }: { onStart: (sp
         <FindInput type="text" class="new-game-find" onClear={() => pick(null)} aria-label={t("newGame.findCity")} placeholder={t("newGame.findCity")} value={text} maxLength={60}
           onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (start && !START_CITIES.includes(start)) setStart(null); setLocated(null); }}
           onKeyDown={(e) => {
+            if (composing(e)) return;
             if (e.key === "ArrowDown" && hits.length) { e.preventDefault(); setCursor((cursor + 1) % hits.length); }
             else if (e.key === "ArrowUp" && hits.length) { e.preventDefault(); setCursor((cursor + hits.length - 1) % hits.length); }
             else if (e.key === "Enter" && hits.length) { e.preventDefault(); pick(hits[cursor].city.id); }

@@ -4,6 +4,7 @@
 // page only through Preact's text and the canvas's fillText, never as HTML.
 
 import { FindInput } from "./FindInput";
+import { composing } from "./keys";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { CITIES, zoneCountry } from "../game/cities";
 import realmsJson from "../game/realms.json";
@@ -351,7 +352,7 @@ function Browse() {
       {view === "random" && <button type="button" class="btn text cm-shuffle" onClick={() => setSeed(newSeed())}>{t("community.shuffle")}</button>}
       {searchOn && view !== "bookmarked" && <FindInput type="search" wrap="cm-search" class="new-game-find" onClear={() => setTyped("")} maxLength={SEARCH_MAX} placeholder={t("community.search")} aria-label={t("community.search")}
         value={typed} onInput={(e) => setTyped((e.target as HTMLInputElement).value)}
-        onKeyDown={(e) => { if (e.key === "Escape" && typed) { e.preventDefault(); e.stopPropagation(); setTyped(""); } }} />}
+        onKeyDown={(e) => { if (e.key === "Escape" && !composing(e) && typed) { e.preventDefault(); e.stopPropagation(); setTyped(""); } }} />}
     </div>
     {linkError && <p class="acct-msg bad">{linkError}</p>}
     {error ? <p class="acct-msg bad">{error}</p>

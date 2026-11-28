@@ -19,6 +19,7 @@ import { t } from "../../i18n";
 import { tipMutedLine } from "../tip";
 import { useToday } from "../../game/today";
 import { DEMAND_INDEX, type LineInput, type LineStats } from "../../game/types";
+import { vehicleOf } from "../../game/vehicle";
 import { ask, display, lineDraft, selection, tool } from "../../game/ui";
 import { live } from "../../map/live";
 import { editBusRoute, editFerryRoute, toggleEditStops } from "../../game/lineActions";
@@ -515,7 +516,7 @@ export function BusInspector({ id }: { id: string }) {
 
       {l.stops.length >= 2 && <RoundTrip num={l.num} st={st} lev={lev} stops={l.stops.length} standing={standing} />}
       <LineFare l={l} />
-      {st.status === "running" && <LineMoney num={l.num} />}
+      {st.status === "running" && <LineMoney num={l.num} vehicle={vehicleOf(st)} />}
     </>
   );
 }

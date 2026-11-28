@@ -15,6 +15,7 @@ import { Chip, Icon, ShapePicker } from "../widgets";
 import { lineMode, modeShape, setLineShape, shapeOf } from "../../game/lineShapeState";
 import { LineGroup } from "./LineGroup";
 import { NameEdit } from "./NameEdit";
+import { composing } from "../keys";
 
 /** T-672: dragging a colour shows it at once (`setPreview`), and the line on the map follows with
  * one edit every 0.2 s at most; letting go sends the last colour. */
@@ -70,7 +71,7 @@ function useSymbolBox(l: LineInput | undefined) {
     value: draft ?? l?.letter ?? "",
     onInput: (e: { currentTarget: HTMLInputElement }) => { typed.current++; setDraft(e.currentTarget.value); },
     onBlur: commit,
-    onKeyDown: (e: { key: string }) => { if (e.key === "Enter") commit(); },
+    onKeyDown: (e: KeyboardEvent) => { if (!composing(e) && e.key === "Enter") commit(); },
   };
 }
 

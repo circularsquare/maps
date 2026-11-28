@@ -29,6 +29,7 @@ import { demandView, lineFiguresIn } from "../../game/demand";
 import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, nextHeadway, pairRows, refusedForCash, restHeadwayStep, restRowTphShown, rowCount, rowHeadwayShown, rowTrainsShown, rowWeekendShown, knock, setHours, setRowAuto, setRowCount, setRowHeadway, setRowWeekendCount, setRowWeekendShare, setWeekendShareAll, stepRowCount, stepRowHeadway, stepRowWeekendCount, stepRowWeekendHeadway, trainCap, typeRowWeekendHeadway, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
 import { Icon, Row, Segmented, shakeEl, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
+import { composing } from "../keys";
 import { nudgeKey, nudgesSeen, pendingNudge, stepNudge } from "../../game/nudge";
 
 /** A demand level's name, capitalised: "High". */
@@ -552,6 +553,7 @@ function HoursBox({ l, st, n, r, onShort }: { l: LineInput; st: LineStats; n: nu
         : <input class="v typing" ref={open} value={draft} aria-label={label}
           onInput={(e) => setDraft(e.currentTarget.value)} onBlur={commit}
           onKeyDown={(e) => {
+            if (composing(e)) return;
             if (e.key === "Enter") commit();
             if (e.key === "Escape") { done.current = true; setDraft(null); }
           }} />}
@@ -634,7 +636,7 @@ export function PastDay({ l, st, periods, kind, extra }: { l: LineInput; st: Lin
         <Row label={t("schedule.riders")}>{count(shown ?? d.riders)}</Row>
         {!pending && extra}
         {profitKnown(l) ? (
-          <li data-tip={lineMoneyTip(d.dayFares, run, upkeepToday(l, st), v === "boat" ? "boats" : v === "tram" ? "trams" : v === "bus", dayNote(l, st))}>
+          <li data-tip={lineMoneyTip(d.dayFares, run, upkeepToday(l, st), v, dayNote(l, st))}>
             <span class="grow">{t("schedule.profit")}</span>
             <span class="val"><Money dollars={d.dayFares - run - upkeepToday(l, st)} /></span>
           </li>

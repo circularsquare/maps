@@ -13,8 +13,10 @@ import { boatOf } from "../../game/boats";
 import { busStopsById, edit, setLineFare, stationsById, world } from "../../game/world";
 import { shown as pendingShown } from "../../game/pending";
 import type { LineInput } from "../../game/types";
+import type { Vehicle } from "../../game/vehicle";
 import { t, tNumber, tRich } from "../../i18n";
 import { barTop, FareCostBars, type BarCol } from "../MoneyHistory";
+import { runningRow } from "../MoneyText";
 import { Icon, Segmented, Stepper } from "../widgets";
 
 const H = 64, DAYS = 30, CAP_SHOWN_MS = 5000;
@@ -77,7 +79,7 @@ export function LineFare({ l }: { l: LineInput }) {
   );
 }
 
-export function LineMoney({ num }: { num: number }) {
+export function LineMoney({ num, vehicle }: { num: number; vehicle: Vehicle }) {
   const m = moneyState.value;
   const v = m?.lineDays?.[String(num)];
   if (!m || !v) return null;
@@ -93,7 +95,7 @@ export function LineMoney({ num }: { num: number }) {
   const cols: BarCol[] = [];
   for (let d = from; d < today; d++) {
     const [fares, running] = byDay.get(d) ?? [0, 0];
-    cols.push({ fares, costs: running, tip: [dateName(d), t("lineMoney.fares", { amount: usd(fares) }), t("lineMoney.running", { amount: usd(-running) }), t("lineMoney.net", { amount: usd(fares - running) })].join("\n") });
+    cols.push({ fares, costs: running, tip: [dateName(d), t("lineMoney.fares", { amount: usd(fares) }), runningRow(vehicle, usd(-running)), t("lineMoney.net", { amount: usd(fares - running) })].join("\n") });
   }
   return (
     <>

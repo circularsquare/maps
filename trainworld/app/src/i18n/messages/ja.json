@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "ゾーン制",
   "lineMoney.fares": "運賃収入 {amount}",
   "lineMoney.net": "差引 {amount}",
-  "lineMoney.running": "運行費 {amount}",
   "lineMoney.title": "{revenue}と{expenses}",
   "lineProfile.along": "{stop}から{distance}",
   "lineProfile.crosses": "{dir, select, up {{count, plural, other {{lines}が{height}上で交差}}} down {{count, plural, other {{lines}が{height}下で交差}}} other {{count, plural, other {{lines}と平面交差}}}}",

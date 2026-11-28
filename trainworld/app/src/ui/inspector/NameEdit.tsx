@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { touchInput } from "../../map/touch";
 import { t } from "../../i18n";
 import { Icon } from "../widgets";
-import { keyIsTheirs } from "../keys";
+import { composing, keyIsTheirs } from "../keys";
 
 export function NameEdit({ name, onRename, prompt = false, onPrompted, control, hotkey, clearable = false, children }: {
   name: string;
@@ -96,6 +96,7 @@ export function NameEdit({ name, onRename, prompt = false, onPrompted, control, 
           onInput={(e) => setDraft(e.currentTarget.value)}
           onBlur={() => commit(!control)}
           onKeyDown={(e) => {
+            if (composing(e)) return;
             if (e.key === "Enter") commit(true);
             if (e.key === "Escape") {
               done.current = true;

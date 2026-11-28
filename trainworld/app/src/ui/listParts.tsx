@@ -1,8 +1,13 @@
-// Parts the Lines and Stations tabs share: the scope toggle, the distance column, the name order.
+// Parts the Lines and Stations tabs share: the scope toggle, the name filter, the distance column, the name order.
 
+import type { Signal } from "@preact/signals";
+import { signal } from "@preact/signals";
 import { shortDistance } from "../game/format";
 import { cityById, viewedZone } from "../game/cities";
 import { listScope, scopeEmpty } from "../game/listScope";
+import { normalise } from "../game/nameMatch";
+import { FindInput, SearchIcon } from "./FindInput";
+import { composing } from "./keys";
 import { Icon } from "./widgets";
 import { t } from "../i18n";
 import { tPlace } from "../i18n/places";
@@ -28,6 +33,33 @@ export function ScopeToggle({ tip }: { tip?: string }) {
         <Icon.globe />
       </button>
     </div>
+  );
+}
+
+/** What each list is filtered by, as typed. Kept while the tab is closed, so going back to a station
+ * picked from a filtered list finds the list as it was. */
+export const linesFind = signal(""), stationsFind = signal("");
+
+/** Whether `name` holds the typed filter `q` (already `normalise`d), read as the search box reads names: case,
+ * accents and punctuation aside ("alcala" finds "Alcalá"), spaces optional. */
+export function nameHas(name: string, q: string): boolean {
+  let n = normed.get(name);
+  if (n === undefined) {
+    if (normed.size > 50_000) normed.clear();
+    normed.set(name, (n = normalise(name)));
+  }
+  return n.includes(q) || n.replace(/ /g, "").includes(q.replace(/ /g, ""));
+}
+/** names as `normalise` reads them, kept: a typed filter reads every row's name on each render */
+const normed = new Map<string, string>();
+
+/** The box over a list that keeps the rows whose name holds what is typed, alongside the scope, the gear's
+ * filters and the sort; Esc empties it. */
+export function ListFind({ text }: { text: Signal<string> }) {
+  return (
+    <FindInput type="search" wrap="list-find" class="new-game-find" icon={<SearchIcon />} onClear={() => (text.value = "")} aria-label={t("listParts.find")}
+      maxLength={60} spellcheck={false} value={text.value} onInput={(e) => (text.value = (e.currentTarget as HTMLInputElement).value)}
+      onKeyDown={(e) => { if (e.key === "Escape" && !composing(e) && text.peek()) { e.stopPropagation(); text.value = ""; } }} />
   );
 }
 

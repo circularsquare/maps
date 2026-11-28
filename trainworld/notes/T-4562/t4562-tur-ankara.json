@@ -1,0 +1,51 @@
+{
+ "task": "T-4562",
+ "iso": "TUR",
+ "label": "Ankara takes in Sincan (open-source PR 46)",
+ "view": [
+  31.85,
+  39.35,
+  33.7,
+  40.6
+ ],
+ "retire": {
+  "sic": "ank"
+ },
+ "names": {
+  "aliases": {
+   "ank": [
+    "Sincan"
+   ]
+  }
+ },
+ "why": "Sincan (sic, five districts west of Ankara: Sincan, Etimesgut, Kahramankazan and two remnants) retired into Ankara: Etimesgut and Sincan are Ankara's western built-up edge, so the line between them ran through the city (open-source PR 46, ykaydogdu)",
+ "set": {
+  "ank": {
+   "source": {
+    "ucdb": [
+     4921,
+     4822
+    ],
+    "fua": [
+     3650,
+     3607
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "54988432B88316498186109",
+      "54988432B89555629027377",
+      "54988432B18647546937138",
+      "54988432B38814369243914",
+      "54988432B10964336547790",
+      "54988432B74694372837116",
+      "54988432B80355579984190",
+      "54988432B48404533288068",
+      "54988432B84973807429467",
+      "54988432B91293750640231"
+     ]
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,158 @@
+retire sic: Sincan (766,148) -> ank
+retire sic: Kahramankazan (59,808) -> ank
+retire sic: Etimesgut (753,021) -> ank
+retire sic: Ayaş (13,615) -> ank
+retire sic: Güdül (12,435) -> ank
+set ank: {'source': {'ucdb': [4921, 4822], 'fua': [3650, 3607], 'remnants': {'task': 'T-1191', 'units': ['54988432B88316498186109', '54988432B89555629027377', '54988432B18647546937138', '54988432B38814369243914', '54988432B10964336547790', '54988432B74694372837116', '54988432B80355579984190', '54988432B48404533288068', '54988432B84973807429467', '54988432B91293750640231']}}}
+ank: bbox [32.242, 38.368, 33.571, 40.545] -> [31.949, 38.368, 33.571, 40.545]
+aay Alanya: people 731,198 -> 731,198; units 4 -> 4; pieces 1 -> 1; hull 0.52 -> 0.52
+adm Adıyaman merkez: people 576,110 -> 576,110; units 8 -> 8; pieces 1 -> 1; hull 0.77 -> 0.77
+adp Adapazarı: people 1,210,702 -> 1,210,702; units 16 -> 16; pieces 1 -> 1; hull 0.78 -> 0.78
+afy Afyonkarahisar (Merkez İlçe): people 651,504 -> 651,504; units 17 -> 17; pieces 1 -> 1; hull 0.76 -> 0.76
+agm Ağrı merkez: people 1,418,208 -> 1,418,208; units 27 -> 27; pieces 1 -> 1; hull 0.71 -> 0.71
+akd Akdeniz: people 1,232,311 -> 1,232,311; units 11 -> 11; pieces 1 -> 1; hull 0.81 -> 0.81
+aks Aksaray merkez: people 757,228 -> 757,228; units 16 -> 16; pieces 1 -> 1; hull 0.76 -> 0.76
+ank Ankara: people 4,560,524 -> 6,165,551; units 17 -> 22; pieces 1 -> 1; hull 0.80 -> 0.76
+   neighbours before {'kse': 0.31, 'cnm': 0.19, 'sic': 0.18, '(no row)': 0.12, 'plt': 0.11, 'kon': 0.06, 'aks': 0.03, 'blm': 0.02}
+   neighbours after  {'kse': 0.26, 'blm': 0.23, 'plt': 0.18, 'cnm': 0.17, '(no row)': 0.1, 'kon': 0.05, 'aks': 0.03}
+anl Antalya: people 1,898,334 -> 1,898,334; units 11 -> 11; pieces 1 -> 1; hull 0.67 -> 0.67
+ate Altıeylül: people 1,666,353 -> 1,666,353; units 22 -> 22; pieces 2 -> 2; hull 0.66 -> 0.66 (smaller: [['Marmara']])
+atk Antakya: people 1,124,736 -> 1,124,736; units 6 -> 6; pieces 1 -> 1; hull 0.75 -> 0.75
+ato Altınordu: people 902,973 -> 902,973; units 34 -> 34; pieces 1 -> 1; hull 0.64 -> 0.64
+bdm Bodrum: people 962,237 -> 962,237; units 12 -> 12; pieces 1 -> 1; hull 0.60 -> 0.60
+bfr Bafra: people 405,154 -> 405,154; units 12 -> 12; pieces 1 -> 1; hull 0.66 -> 0.66
+blm Bolu Merkez: people 438,331 -> 438,331; units 11 -> 11; pieces 1 -> 1; hull 0.73 -> 0.73
+bnz Bingöl merkez: people 874,083 -> 874,083; units 17 -> 17; pieces 1 -> 1; hull 0.64 -> 0.64
+btm Batman Merkez: people 729,435 -> 729,435; units 6 -> 6; pieces 1 -> 1; hull 0.73 -> 0.73
+bur Bursa: people 2,758,695 -> 2,758,695; units 10 -> 10; pieces 1 -> 1; hull 0.82 -> 0.82
+cnk Çanakkale merkez: people 520,456 -> 520,456; units 10 -> 10; pieces 3 -> 3; hull 0.67 -> 0.67 (smaller: [['Imbros'], ['Bozcaada']])
+cnm Çankırı merkez: people 170,860 -> 170,860; units 7 -> 7; pieces 1 -> 1; hull 0.64 -> 0.64
+cok Çorum merkez: people 1,276,709 -> 1,276,709; units 34 -> 34; pieces 1 -> 1; hull 0.77 -> 0.77
+dir Diyarbakir: people 1,290,303 -> 1,290,303; units 6 -> 6; pieces 1 -> 1; hull 0.84 -> 0.84
+duz Düzce merkez: people 431,303 -> 431,303; units 8 -> 8; pieces 1 -> 1; hull 0.81 -> 0.81
+dve Develi: people 294,073 -> 294,073; units 13 -> 13; pieces 1 -> 1; hull 0.68 -> 0.68
+edi Edirne merkez: people 723,348 -> 723,348; units 12 -> 12; pieces 1 -> 1; hull 0.72 -> 0.72
+efe Efeler: people 1,221,723 -> 1,221,723; units 17 -> 17; pieces 1 -> 1; hull 0.76 -> 0.76
+elz Elazığ merkez: people 737,561 -> 737,561; units 13 -> 13; pieces 1 -> 1; hull 0.71 -> 0.71
+erg Ereğli: people 1,186,257 -> 1,186,257; units 17 -> 17; pieces 1 -> 1; hull 0.84 -> 0.84
+gai Gaziantep: people 2,403,736 -> 2,403,736; units 11 -> 11; pieces 1 -> 1; hull 0.68 -> 0.68
+ilk İlkadım: people 1,356,497 -> 1,356,497; units 13 -> 13; pieces 1 -> 1; hull 0.75 -> 0.75
+ino İnegöl: people 699,932 -> 699,932; units 10 -> 10; pieces 1 -> 1; hull 0.78 -> 0.78
+ipe İpekyolu: people 1,817,573 -> 1,817,573; units 18 -> 18; pieces 1 -> 1; hull 0.81 -> 0.81
+isn İskenderun: people 956,406 -> 956,406; units 9 -> 9; pieces 1 -> 1; hull 0.59 -> 0.59
+isr Isparta merkez: people 718,533 -> 718,533; units 21 -> 21; pieces 1 -> 1; hull 0.59 -> 0.59
+ist Istanbul: people 14,692,235 -> 14,692,235; units 41 -> 41; pieces 3 -> 3; hull 0.67 -> 0.67 (smaller: [['Maltepe', 'Üsküdar', 'Ümraniye', 'Kartal', 'Tuzla', 'Pendik', 'Sancaktepe', 'Çekmeköy', 'Beykoz', 'Sultanbeyli', 'Ataşehir', 'Kadıköy', 'Darıca', 'Gebze', 'Çayırova', 'Dilovası'], ['Prince Islands']])
+izm Izmir: people 3,072,817 -> 3,072,817; units 19 -> 19; pieces 1 -> 1; hull 0.54 -> 0.54
+kce Kocaeli: people 1,194,214 -> 1,194,214; units 9 -> 9; pieces 1 -> 1; hull 0.65 -> 0.65
+kik Kilis (merkez): people 143,656 -> 143,656; units 2 -> 2; pieces 1 -> 1; hull 0.58 -> 0.58
+kmn Karaman merkez: people 274,167 -> 274,167; units 7 -> 7; pieces 1 -> 1; hull 0.73 -> 0.73
+kon Konya: people 2,007,298 -> 2,007,298; units 16 -> 16; pieces 1 -> 1; hull 0.75 -> 0.75
+kpk Kapaklı: people 943,998 -> 943,998; units 7 -> 7; pieces 1 -> 1; hull 0.79 -> 0.79
+ksa Kastamonu merkez: people 366,019 -> 366,019; units 18 -> 18; pieces 1 -> 1; hull 0.79 -> 0.79
+kse Kırşehir merkez: people 575,925 -> 575,925; units 8 -> 8; pieces 1 -> 1; hull 0.65 -> 0.65
+kuy Kütahya merkez: people 588,674 -> 588,674; units 12 -> 12; pieces 1 -> 1; hull 0.85 -> 0.85
+kys Kayseri: people 1,215,275 -> 1,215,275; units 3 -> 3; pieces 1 -> 1; hull 0.71 -> 0.71
+kzl Kızıltepe: people 868,093 -> 868,093; units 10 -> 10; pieces 1 -> 1; hull 0.71 -> 0.71
+msm Muş merkez: people 540,342 -> 540,342; units 11 -> 11; pieces 1 -> 1; hull 0.74 -> 0.74
+nix Niğde (merkez): people 475,715 -> 475,715; units 6 -> 6; pieces 1 -> 1; hull 0.78 -> 0.78
+odu Odunpazarı: people 986,763 -> 986,763; units 10 -> 10; pieces 1 -> 1; hull 0.82 -> 0.82
+ons Onikişubat: people 1,150,460 -> 1,150,460; units 8 -> 8; pieces 1 -> 1; hull 0.82 -> 0.82
+orh Ortahisar: people 1,297,477 -> 1,297,477; units 44 -> 44; pieces 1 -> 1; hull 0.52 -> 0.52
+osi Osmaniye (merkez): people 619,682 -> 619,682; units 6 -> 6; pieces 1 -> 1; hull 0.68 -> 0.68
+pld Palandöken: people 737,597 -> 737,597; units 17 -> 17; pieces 1 -> 1; hull 0.81 -> 0.81
+plt Polatlı: people 139,124 -> 139,124; units 2 -> 2; pieces 1 -> 1; hull 0.64 -> 0.64
+pmu Pamukkale: people 1,090,143 -> 1,090,143; units 19 -> 19; pieces 1 -> 1; hull 0.78 -> 0.78
+sey Seyhan: people 943,518 -> 943,518; units 12 -> 12; pieces 1 -> 1; hull 0.73 -> 0.73
+slh Salihli: people 1,003,908 -> 1,003,908; units 13 -> 13; pieces 1 -> 1; hull 0.77 -> 0.77
+slr Şanlıurfa: people 1,470,044 -> 1,470,044; units 6 -> 6; pieces 1 -> 1; hull 0.78 -> 0.78
+sly Süleymanpaşa: people 585,785 -> 585,785; units 10 -> 10; pieces 1 -> 1; hull 0.69 -> 0.69
+spx Silopi: people 686,130 -> 686,130; units 7 -> 7; pieces 1 -> 1; hull 0.73 -> 0.73
+srz Siirt (merkez): people 421,955 -> 421,955; units 7 -> 7; pieces 1 -> 1; hull 0.79 -> 0.79
+sva Sivas merkez: people 583,133 -> 583,133; units 5 -> 5; pieces 1 -> 1; hull 0.76 -> 0.76
+sve Nizip: people 1,108,701 -> 1,108,701; units 10 -> 10; pieces 1 -> 1; hull 0.50 -> 0.50
+syi Seydikemer: people 330,509 -> 330,509; units 5 -> 5; pieces 1 -> 1; hull 0.81 -> 0.81
+tba Torbalı: people 265,525 -> 265,525; units 4 -> 4; pieces 1 -> 1; hull 0.75 -> 0.75
+tom Tokat merkez: people 483,240 -> 483,240; units 12 -> 12; pieces 1 -> 1; hull 0.76 -> 0.76
+tsu Tarsus: people 480,386 -> 480,386; units 1 -> 1; pieces 1 -> 1; hull 0.78 -> 0.78
+usa Uşak merkez: people 415,937 -> 415,937; units 6 -> 6; pieces 1 -> 1; hull 0.84 -> 0.84
+yae Yalova merkez: people 531,509 -> 531,509; units 8 -> 8; pieces 1 -> 1; hull 0.78 -> 0.78
+yes Yeşilyurt: people 814,638 -> 814,638; units 11 -> 11; pieces 1 -> 1; hull 0.67 -> 0.67
+yum Yumurtalık: people 539,202 -> 539,202; units 3 -> 3; pieces 1 -> 1; hull 0.58 -> 0.58
+yun Yunusemre: people 1,257,376 -> 1,257,376; units 11 -> 11; pieces 1 -> 1; hull 0.75 -> 0.75
+
+checks (T-4364 dry.py):
+aay Alanya: plan people 731,198, game about 806,717, 5,830 km2, hull 0.52 (before 0.52, main piece 0.52) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+adm Adıyaman merkez: plan people 576,110, game about 576,454, 6,585 km2, hull 0.77 (before 0.77, main piece 0.77) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+adp Adapazarı: plan people 1,210,702, game about 1,094,374, 4,826 km2, hull 0.78 (before 0.78, main piece 0.78) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+afy Afyonkarahisar (Merkez İlçe): plan people 651,504, game about 756,555, 13,868 km2, hull 0.76 (before 0.76, main piece 0.76) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+agm Ağrı merkez: plan people 1,418,208, game about 1,194,561, 32,777 km2, hull 0.71 (before 0.71, main piece 0.71) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+akd Akdeniz: plan people 1,232,311, game about 1,768,712, 13,289 km2, hull 0.81 (before 0.81, main piece 0.81) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+aks Aksaray merkez: plan people 757,228, game about 760,429, 13,321 km2, hull 0.76 (before 0.76, main piece 0.76) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+ank Ankara: plan people 6,165,551, game about 5,750,712, 19,145 km2, hull 0.76 (before 0.80, main piece 0.76) pass; pop_vs_fua about 1.18 (5,750,712 over 4,857,317 in Ankara, Sincan) pass; ring none
+anl Antalya: plan people 1,898,335, game about 1,764,567, 8,360 km2, hull 0.67 (before 0.67, main piece 0.67) pass (no worse than before less 0.05); pop_vs_fua about 1.62 (1,764,567 over 1,087,977 in Antalya) FAIL; ring none
+ate Altıeylül: plan people 1,666,353, game about 1,452,479, 17,368 km2, hull 0.66 (before 0.66, main piece 0.71) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 OVER by 166,353 (a hand edit may; a zones rerun would not make it); ring none
+atk Antakya: plan people 1,124,736, game about 991,921, 2,472 km2, hull 0.75 (before 0.75, main piece 0.75) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+ato Altınordu: plan people 902,973, game about 1,201,779, 11,814 km2, hull 0.64 (before 0.64, main piece 0.64) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+bdm Bodrum: plan people 962,237, game about 988,349, 10,615 km2, hull 0.60 (before 0.60, main piece 0.60) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+bfr Bafra: plan people 405,154, game about 415,904, 7,725 km2, hull 0.66 (before 0.66, main piece 0.66) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring none
+blm Bolu Merkez: plan people 438,331, game about 436,563, 13,067 km2, hull 0.73 (before 0.73, main piece 0.73) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring none
+bnz Bingöl merkez: plan people 874,083, game about 746,991, 16,491 km2, hull 0.64 (before 0.64, main piece 0.64) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+btm Batman Merkez: plan people 729,435, game about 649,206, 4,573 km2, hull 0.73 (before 0.73, main piece 0.73) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+bur Bursa: plan people 2,758,695, game about 2,547,564, 4,519 km2, hull 0.82 (before 0.82, main piece 0.82) pass; pop_vs_fua about 1.36 (2,547,564 over 1,868,115 in Bursa) warn; ring none
+cnk Çanakkale merkez: plan people 520,456, game about 507,091, 8,571 km2, hull 0.67 (before 0.67, main piece 0.83) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+cnm Çankırı merkez: plan people 170,860, game about 167,482, 5,862 km2, hull 0.64 (before 0.64, main piece 0.64) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring none
+cok Çorum merkez: plan people 1,276,709, game about 1,286,151, 31,256 km2, hull 0.77 (before 0.77, main piece 0.77) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+dir Diyarbakir: plan people 1,290,303, game about 1,352,983, 6,129 km2, hull 0.84 (before 0.84, main piece 0.84) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+duz Düzce merkez: plan people 431,303, game about 405,013, 2,613 km2, hull 0.81 (before 0.81, main piece 0.81) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+dve Develi: plan people 294,073, game about 291,023, 14,619 km2, hull 0.68 (before 0.68, main piece 0.68) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring: wraps kys (hull 0.86, border 0.73) (already before)
+edi Edirne merkez: plan people 723,353, game about 658,741, 8,925 km2, hull 0.72 (before 0.72, main piece 0.72) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+efe Efeler: plan people 1,221,723, game about 1,154,918, 8,101 km2, hull 0.76 (before 0.76, main piece 0.76) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+elz Elazığ merkez: plan people 737,561, game about 651,427, 10,989 km2, hull 0.71 (before 0.71, main piece 0.71) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+erg Ereğli: plan people 1,186,257, game about 1,039,052, 9,335 km2, hull 0.84 (before 0.84, main piece 0.84) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+gai Gaziantep: plan people 2,403,737, game about 2,557,179, 8,390 km2, hull 0.68 (before 0.68, main piece 0.68) pass (no worse than before less 0.05); pop_vs_fua about 1.64 (2,557,179 over 1,554,725 in Gaziantep) FAIL; ring none
+ilk İlkadım: plan people 1,356,497, game about 1,170,476, 7,159 km2, hull 0.75 (before 0.75, main piece 0.75) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+ino İnegöl: plan people 699,932, game about 644,527, 6,506 km2, hull 0.78 (before 0.78, main piece 0.78) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+ipe İpekyolu: plan people 1,817,573, game about 1,406,508, 27,827 km2, hull 0.81 (before 0.81, main piece 0.81) pass; floor 500,000 pass; cap 1,500,000 OVER by 317,573 (a hand edit may; a zones rerun would not make it); ring none
+isn İskenderun: plan people 956,406, game about 889,121, 3,078 km2, hull 0.59 (before 0.59, main piece 0.59) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+isr Isparta merkez: plan people 718,533, game about 739,196, 15,111 km2, hull 0.59 (before 0.59, main piece 0.59) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+ist Istanbul: plan people 14,692,235, game about 17,048,351, 4,425 km2, hull 0.67 (before 0.67, main piece 0.75) pass (no worse than before less 0.05); pop_vs_fua about 1.15 (17,048,351 over 14,791,739 in Istanbul) pass; ring none
+izm Izmir: plan people 3,072,817, game about 3,706,538, 4,778 km2, hull 0.54 (before 0.54, main piece 0.54) pass (no worse than before less 0.05); pop_vs_fua about 1.20 (3,706,538 over 3,094,412 in Izmir) pass; ring: wraps tba (hull 0.59, border 0.64) (already before)
+kce Kocaeli: plan people 1,194,214, game about 1,315,466, 3,604 km2, hull 0.65 (before 0.65, main piece 0.66) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+kik Kilis (merkez): plan people 143,656, game about 206,842, 847 km2, hull 0.58 (before 0.58, main piece 0.58) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring none
+kmn Karaman merkez: plan people 274,167, game about 281,433, 8,132 km2, hull 0.73 (before 0.73, main piece 0.73) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring none
+kon Konya: plan people 2,007,298, game about 1,951,950, 21,637 km2, hull 0.75 (before 0.75, main piece 0.75) pass; pop_vs_fua about 2.01 (1,951,950 over 972,562 in Konya) FAIL; ring none
+kpk Kapaklı: plan people 943,998, game about 1,004,748, 2,889 km2, hull 0.79 (before 0.79, main piece 0.79) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+ksa Kastamonu merkez: plan people 366,019, game about 365,407, 11,777 km2, hull 0.79 (before 0.79, main piece 0.79) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+kse Kırşehir merkez: plan people 575,925, game about 446,534, 8,638 km2, hull 0.65 (before 0.65, main piece 0.65) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+kuy Kütahya merkez: plan people 588,674, game about 579,529, 11,511 km2, hull 0.85 (before 0.85, main piece 0.85) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+kys Kayseri: plan people 1,215,275, game about 1,226,465, 2,601 km2, hull 0.71 (before 0.71, main piece 0.71) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring: wrapped by dve (hull 0.86, border 0.73)
+kzl Kızıltepe: plan people 868,093, game about 956,237, 8,627 km2, hull 0.71 (before 0.71, main piece 0.71) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+msm Muş merkez: plan people 540,342, game about 635,405, 13,596 km2, hull 0.74 (before 0.74, main piece 0.74) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+nix Niğde (merkez): plan people 475,715, game about 519,720, 8,477 km2, hull 0.78 (before 0.78, main piece 0.78) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+odu Odunpazarı: plan people 986,763, game about 878,172, 8,274 km2, hull 0.82 (before 0.82, main piece 0.82) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+ons Onikişubat: plan people 1,150,461, game about 1,096,737, 11,651 km2, hull 0.82 (before 0.82, main piece 0.82) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+orh Ortahisar: plan people 1,297,477, game about 1,697,096, 22,215 km2, hull 0.52 (before 0.52, main piece 0.52) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+osi Osmaniye (merkez): plan people 619,682, game about 584,022, 2,982 km2, hull 0.68 (before 0.68, main piece 0.68) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+pld Palandöken: plan people 737,597, game about 726,710, 21,333 km2, hull 0.81 (before 0.81, main piece 0.81) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+plt Polatlı: plan people 139,124, game about 140,326, 4,110 km2, hull 0.64 (before 0.64, main piece 0.64) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring none
+pmu Pamukkale: plan people 1,090,143, game about 1,069,326, 11,969 km2, hull 0.78 (before 0.78, main piece 0.78) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+sey Seyhan: plan people 943,518, game about 2,305,823, 11,000 km2, hull 0.73 (before 0.73, main piece 0.73) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+slh Salihli: plan people 1,003,908, game about 876,834, 8,420 km2, hull 0.77 (before 0.77, main piece 0.77) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+slr Şanlıurfa: plan people 1,470,044, game about 1,653,049, 11,074 km2, hull 0.78 (before 0.78, main piece 0.78) pass; floor 500,000 pass; cap 1,500,000 within; ring: wrapped by sve (hull 0.68, border 0.56)
+sly Süleymanpaşa: plan people 585,785, game about 537,072, 7,749 km2, hull 0.69 (before 0.69, main piece 0.69) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+spx Silopi: plan people 686,130, game about 568,700, 7,246 km2, hull 0.73 (before 0.73, main piece 0.73) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+srz Siirt (merkez): plan people 421,955, game about 334,381, 5,531 km2, hull 0.79 (before 0.79, main piece 0.79) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+sva Sivas merkez: plan people 583,134, game about 489,685, 10,018 km2, hull 0.76 (before 0.76, main piece 0.76) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+sve Nizip: plan people 1,108,701, game about 1,115,271, 9,949 km2, hull 0.50 (before 0.50, main piece 0.50) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring: wraps slr (hull 0.68, border 0.56) (already before)
+syi Seydikemer: plan people 330,509, game about 244,569, 6,277 km2, hull 0.81 (before 0.81, main piece 0.81) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+tba Torbalı: plan people 265,525, game about 419,432, 2,083 km2, hull 0.75 (before 0.75, main piece 0.75) pass (no worse than before less 0.05); floor 500,000 UNDER; cap 1,500,000 within; ring: wrapped by izm (hull 0.59, border 0.64)
+tom Tokat merkez: plan people 483,240, game about 597,967, 10,059 km2, hull 0.76 (before 0.76, main piece 0.76) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+tsu Tarsus: plan people 480,386, game about 381,037, 1,832 km2, hull 0.78 (before 0.78, main piece 0.78) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+usa Uşak merkez: plan people 415,937, game about 378,272, 5,579 km2, hull 0.84 (before 0.84, main piece 0.84) pass; floor 500,000 UNDER; cap 1,500,000 within; ring none
+yae Yalova merkez: plan people 531,509, game about 505,212, 1,703 km2, hull 0.78 (before 0.78, main piece 0.78) pass; floor 500,000 pass; cap 1,500,000 within; ring none
+yes Yeşilyurt: plan people 814,638, game about 755,199, 10,203 km2, hull 0.67 (before 0.67, main piece 0.67) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+yum Yumurtalık: plan people 539,202, game about 225,214, 2,716 km2, hull 0.58 (before 0.58, main piece 0.58) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+yun Yunusemre: plan people 1,257,376, game about 1,076,062, 9,933 km2, hull 0.75 (before 0.75, main piece 0.75) pass (no worse than before less 0.05); floor 500,000 pass; cap 1,500,000 within; ring none
+sic Sincan: retired into ank; zone_successors sic -> ank
+waves: aay,adm,adp,afy,agm,akd,aks,ank,anl,ate,atk,ato,bdm,bfr,blm,bnz,btm,bur,cnk,cnm,cok,dir,duz,dve,edi,efe,elz,erg,gai,ilk,ino,ipe,isn,isr,ist,izm,kce,kik,kmn,kon,kpk,ksa,kse,kuy,kys,kzl,msm,nix,odu,ons,orh,osi,pld,plt,pmu,sey,slh,slr,sly,spx,srz,sva,sve,syi,tba,tom,tsu,usa,yae,yes,yum,yun
+build: 72 rows, recorded steps 135 core-min (aay 1.4, adm 1.4, adp 1.7, afy 1.7, agm 2.1, akd 1.8, aks 1.7, ank 6.5, anl 5.2, ate 2.9, atk 1.2, ato 2.4, bdm 2.3, bfr 1.5, blm 1.7, bnz 1.4, btm 1.0, bur 5.2, cnk 1.4, cnm 1.0, cok 3.8, dir 1.1, duz 0.9, dve 1.4, edi 2.0, efe 1.7, elz 1.7, erg 1.5, gai 5.8, ilk 1.7, ino 1.4, ipe 5.2, isn 1.3, isr 1.9, ist 4.1, izm 5.8, kce 1.5, kik 0.7, kmn 0.9, kon 2.2, kpk 1.5, ksa 1.2, kse 1.1, kuy 1.3, kys 1.2, kzl 1.3, msm 1.2, nix 1.0, odu 1.3, ons 1.6, orh 2.0, osi 1.1, pld 1.1, plt 0.8, pmu 1.7, sey 2.4, slh 1.6, slr 1.4, sly 1.7, spx 0.9, srz 0.9, sva 1.1, sve 1.4, syi 0.9, tba 1.2, tom 1.5, tsu 1.2, usa 1.0, yae 0.9, yes 1.8, yum 1.2, yun 2.2); retired ['sic']; then the TUR join (see notes/T-4364/joins.txt)

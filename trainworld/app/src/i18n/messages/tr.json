@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "Bölge",
   "lineMoney.fares": "Biletler {amount}",
   "lineMoney.net": "Net {amount}",
-  "lineMoney.running": "Tren işletmesi {amount}",
   "lineMoney.title": "{revenue} ve {expenses}",
   "lineProfile.along": "{stop} istasyonundan {distance}",
   "lineProfile.crosses": "{dir, select, up {{count, plural, one {{lines} {height} yukarıda kesişir} other {{lines} {height} yukarıda kesişir}}} down {{count, plural, one {{lines} {height} aşağıda kesişir} other {{lines} {height} aşağıda kesişir}}} other {{count, plural, one {{lines} aynı seviyede kesişir} other {{lines} aynı seviyede kesişir}}}}",

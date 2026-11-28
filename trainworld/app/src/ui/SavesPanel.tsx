@@ -34,6 +34,7 @@ import { NewGameSheet } from "./NewGame";
 import { t, tDate, tList } from "../i18n";
 import { openFailText } from "../game/openFailures";
 import { tPlace } from "../i18n/places";
+import { composing } from "./keys";
 
 /** The saves panel is open. */
 export const savesOpen = signal(false);
@@ -182,6 +183,7 @@ function NameField({ slot, onDone }: { slot: SaveSlot; onDone: () => void }) {
   };
   return <input ref={field} type="text" class="save-name-field" aria-label={t("savesPanel.nameLabel")} maxLength={80}
     onKeyDown={(e) => {
+      if (composing(e)) return;
       if (e.key === "Enter") { e.preventDefault(); finish(true); }
       else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); finish(false); }
     }}

@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../i18n";
+import { composing } from "./keys";
 
 type Hsv = [number, number, number];
 
@@ -131,7 +132,7 @@ export function ColourPicker({ value, presets = [], onPreview, onCommit }: {
         <input class="cpick-hex" aria-label={t("colourPicker.hex")} spellcheck={false} maxLength={7} value={draft ?? hex}
           onInput={(e) => setDraft(e.currentTarget.value)}
           onBlur={(e) => { if (draft !== null) typed(e.currentTarget.value.trim()); }}
-          onKeyDown={(e) => { if (e.key === "Enter") { typed(e.currentTarget.value.trim()); e.currentTarget.blur(); } }} />
+          onKeyDown={(e) => { if (!composing(e) && e.key === "Enter") { typed(e.currentTarget.value.trim()); e.currentTarget.blur(); } }} />
       </div>
       {presets.length > 0 && (
         <div class="cpick-presets">

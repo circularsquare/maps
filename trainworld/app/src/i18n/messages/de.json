@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "Zonen",
   "lineMoney.fares": "Fahrpreise {amount}",
   "lineMoney.net": "Netto {amount}",
-  "lineMoney.running": "Zugbetrieb {amount}",
   "lineMoney.title": "{revenue} und {expenses}",
   "lineProfile.along": "{distance} ab {stop}",
   "lineProfile.crosses": "{dir, select, up {{count, plural, one {{lines} kreuzt {height} höher} other {{lines} kreuzen {height} höher}}} down {{count, plural, one {{lines} kreuzt {height} tiefer} other {{lines} kreuzen {height} tiefer}}} other {{count, plural, one {{lines} kreuzt auf gleicher Höhe} other {{lines} kreuzen auf gleicher Höhe}}}}",

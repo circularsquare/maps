@@ -26,6 +26,13 @@ function isTextField(t: EventTarget | null): boolean {
   return t instanceof HTMLElement && t.isContentEditable;
 }
 
+/** Is this key part of an IME composition (picking a candidate, say), so it belongs to the IME and
+ * not to the field's own Enter/Escape/arrow handling? Safari sends the keydown that ends the
+ * composition with isComposing already false, but keyCode 229, so both are checked. */
+export function composing(e: KeyboardEvent): boolean {
+  return e.isComposing || e.keyCode === 229;
+}
+
 /** Does the element with focus use this key itself, so the game should leave it alone? */
 export function keyIsTheirs(e: KeyboardEvent): boolean {
   const t = e.target;

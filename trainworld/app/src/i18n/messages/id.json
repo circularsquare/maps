@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "Zona",
   "lineMoney.fares": "Tarif {amount}",
   "lineMoney.net": "Bersih {amount}",
-  "lineMoney.running": "Biaya operasi kereta {amount}",
   "lineMoney.title": "{revenue} dan {expenses}",
   "lineProfile.along": "{distance} dari {stop}",
   "lineProfile.crosses": "{dir, select, up {{count, plural, other {{lines} melintas {height} di atas}}} down {{count, plural, other {{lines} melintas {height} di bawah}}} other {{count, plural, other {{lines} melintas sebidang}}}}",

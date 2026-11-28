@@ -9,6 +9,7 @@ import { normalise } from "../game/search";
 import { t } from "../i18n";
 import { Icon } from "./widgets";
 import "./flag.css";
+import { composing } from "./keys";
 
 /** The flag's picture, its name in the hover; nothing for no flag or a code this page does not know. `small` beside
  * small grey text. */
@@ -145,6 +146,7 @@ function FlagPicker({ anchor, current, onPick, onClose }: { anchor: { current: H
       value={text} autocomplete="off" spellcheck={false}
       onInput={(e) => { setText((e.target as HTMLInputElement).value); setCursor(0); if (list.current) list.current.scrollTop = 0; }}
       onKeyDown={(e) => {
+        if (composing(e)) return;
         if (e.key === "ArrowDown" && items.length) { e.preventDefault(); move((cursor + 1) % items.length); }
         else if (e.key === "ArrowUp" && items.length) { e.preventDefault(); move((cursor + items.length - 1) % items.length); }
         else if (e.key === "Enter" && items.length) { e.preventDefault(); onPick(items[Math.min(cursor, items.length - 1)].code); }

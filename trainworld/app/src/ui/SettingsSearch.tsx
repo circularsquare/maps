@@ -4,6 +4,7 @@
 // `.slider { display: flex }` beats `[hidden]`).
 
 import { FindInput, SearchIcon } from "./FindInput";
+import { composing } from "./keys";
 import type { RefObject } from "preact";
 import { useEffect, useLayoutEffect, useState } from "preact/hooks";
 import { normalise } from "../game/search";
@@ -143,7 +144,7 @@ export function SettingsSearch({ list }: { list: RefObject<HTMLElement | null> }
     <>
       <FindInput type="search" wrap="settings-find" class="new-game-find" icon={<SearchIcon />} onClear={() => setQuery("")} aria-label={t("settingsSearch.placeholder")}
         maxLength={60} spellcheck={false} value={query} onInput={(e) => setQuery((e.currentTarget as HTMLInputElement).value)}
-        onKeyDown={(e) => { if (e.key === "Escape" && query) { e.stopPropagation(); setQuery(""); } }} />
+        onKeyDown={(e) => { if (e.key === "Escape" && !composing(e) && query) { e.stopPropagation(); setQuery(""); } }} />
       <div class="settings-find-rule" />
       {none && <p class="muted settings-none">{t("settingsSearch.none")}</p>}
     </>

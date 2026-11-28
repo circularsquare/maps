@@ -1441,7 +1441,6 @@
   "lineMoney.fareZones": "구역제",
   "lineMoney.fares": "요금 {amount}",
   "lineMoney.net": "순액 {amount}",
-  "lineMoney.running": "열차 운행 {amount}",
   "lineMoney.title": "{revenue}·{expenses}",
   "lineProfile.along": "{stop}에서 {distance}",
   "lineProfile.crosses": "{dir, select, up {{count, plural, other {{lines} 노선이 {height} 위로 교차}}} down {{count, plural, other {{lines} 노선이 {height} 아래로 교차}}} other {{count, plural, other {{lines} 노선이 같은 높이로 교차}}}}",

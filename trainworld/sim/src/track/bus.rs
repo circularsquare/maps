@@ -958,12 +958,6 @@ impl Pace {
     }
 }
 
-/// A plain bus's moving speed on local streets where the car's run at `car` (`street_bus_kmh_at` at the plain floor).
-#[cfg_attr(not(test), allow(dead_code))]
-fn street_bus_kmh(car: f64, trunk: bool) -> f64 {
-    street_bus_kmh_at(car, trunk, BUS_LANE_KMH)
-}
-
 /// T-4257: what the drawing tool weighs roads by before any street grid is known: a plain bus's moving speed, km/h,
 /// on local streets, on a trunk road or motorway, and on a constructed busway, where the car's local streets run at
 /// `CAR_TOWN_KMH` (what `Pace::speed_runs` takes with no grid). The same functions as `Pace`, so the tool's idea of a

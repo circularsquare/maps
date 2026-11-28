@@ -2005,6 +2005,7 @@ impl TrackWorld {
     /// Apply an edit with no services, undo or (unless `checked`) checks, to plan a follow-on edit
     /// against the edited track (T-733). Returns the inverse, for `unsketch`; a checked sketch
     /// with problems is rolled back.
+    #[cfg(feature = "track-api")]
     pub(crate) fn sketch(&mut self, op: Op, checked: bool) -> Result<Op, Vec<Issue>> {
         let (inv, t, der) = self.apply_and_derive(op)?;
         let issues = if checked { self.check(&t, &der) } else { vec![] };
@@ -2014,6 +2015,7 @@ impl TrackWorld {
         self.unsketch(inv);
         Err(issues)
     }
+    #[cfg(feature = "track-api")]
     pub(crate) fn unsketch(&mut self, inv: Op) {
         let _ = self.apply_and_derive(inv);
     }

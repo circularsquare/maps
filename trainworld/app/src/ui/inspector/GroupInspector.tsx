@@ -10,6 +10,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { demandAt, lineSeconds } from "../../game/clock";
 import { trainsNowAt } from "../../game/lineRunning";
 import { stopKey } from "../../game/complexView";
+import { busPlaces, placeRowKey } from "../../game/busLinks";
 import { BAR, CHIP, CHIP_GAP, CHIP_W, groupLayout, pathPlaces, PITCH, type GroupLayout } from "../../game/groupLayout";
 import { bulletDraw, bulletText } from "../bullet";
 import { shapeOf } from "../../game/lineShapeState";
@@ -24,7 +25,7 @@ import { today, useToday } from "../../game/today";
 import { count } from "../../game/format";
 import { DEMAND_INDEX, planStopsOf, type LineInput, type WorldView } from "../../game/types";
 import { selection } from "../../game/ui";
-import { edit, stationNames, stationsById, world } from "../../game/world";
+import { busStopsById, edit, stationNames, stopsById, world } from "../../game/world";
 import { drawnReversed } from "../../game/northUp";
 import { scrollerOf } from "../scroller";
 import type { EditOp } from "../../workers/protocol";
@@ -36,6 +37,7 @@ import { TwoRows } from "./LineInspector";
 import { GroupChartButton } from "./SchedulePanel";
 import { t, tSeries } from "../../i18n";
 import { mobileDevice } from "../../workers/deviceMemory";
+import { composing } from "../keys";
 
 /** A stop pill's height in a named row with no crossing bars, a tick's height, px. */
 const PILL = 9, TICK = 3;
@@ -114,6 +116,12 @@ export function GroupInspector({ group }: { group: number }) {
   if (!w || !ls || !byNum) return <p class="muted">{t("groupInspector.none")}</p>;
   const names = stationNames(w);
   const nm = (s: string) => names.get(s) ?? "";
+  // a row is a station complex, or a bus place where several lines' stops are one stop for demand (`busPlaces`)
+  const rowKey = placeRowKey(busPlaces(w), stopKey);
+  const openStop = (id: string) => {
+    const b = busStopsById(w).get(id);
+    selection.value = b ? { kind: "busStop", stop: id, at: [b.lng, b.lat] } : { kind: "station", station: id };
+  };
   const name = groupName(byNum, group);
   const rename = (n: string) => void edit({ op: "groupName", group, name: n });
   // T-1813: the bullet's text and colour set by hand, sent together
@@ -135,16 +143,16 @@ export function GroupInspector({ group }: { group: number }) {
   for (const o of w.save.lines) {
     if (inGroup.has(o.id)) continue;
     const at = new Map<string, number>();
-    o.stops.forEach((s, k) => { const key = stopKey(s); at.set(key, (at.get(key) ?? 0) + (d.get(o.id)?.stops[k] ?? 0)); });
+    o.stops.forEach((s, k) => { const key = rowKey(s); at.set(key, (at.get(key) ?? 0) + (d.get(o.id)?.stops[k] ?? 0)); });
     for (const [key, n] of at) (outside.get(key) ?? outside.set(key, []).get(key)!).push({ l: o, n });
   }
   const across = (key: string) => (outside.get(key) ?? []).sort((a, b) => b.n - a.n).map((x) => x.l);
 
   // T-3474: the diagram is each line's plan, which its cells edit (`passed` is the plan's too)
-  const ins = ls.map((l) => ({ num: l.num, places: pathPlaces(planStopsOf(l), w.lineStats[l.id]?.passed ?? [], stopKey) }));
+  const ins = ls.map((l) => ({ num: l.num, places: pathPlaces(planStopsOf(l), w.lineStats[l.id]?.passed ?? [], rowKey) }));
   const keys = [...new Set(ins.flatMap((x) => x.places.map((p) => p.key)))];
   const crossN = new Map(keys.map((k) => [k, (outside.get(k) ?? []).length]));
-  const at = stationsById(w);
+  const at = stopsById(w);
   const ups = ls.map((l) => { const p = planStopsOf(l); return drawnReversed(at.get(p[0]), at.get(p[p.length - 1]), p.length > 2 && p[0] === p[p.length - 1]); });
   // T-2016: each line's bullet width, so a two-character pill sits as snugly beside its neighbours
   const chipW = ls.map((l) => { const b = bulletText(l.letter, "sm"); return b ? bulletDraw(b, shapeOf(l.id)).w : CHIP_W; });
@@ -210,7 +218,7 @@ export function GroupInspector({ group }: { group: number }) {
       {editing && (
         <div class="line-identity" data-group-edit>
           <label>{t("groupInspector.bullet")} <input aria-label={t("groupInspector.bulletLabel")} value={symbol ?? look.symbol} placeholder={groupLabel(name)}
-            onInput={(e) => setSymbol(e.currentTarget.value)} onBlur={commitSymbol} onKeyDown={(e) => { if (e.key === "Enter") commitSymbol(); }} />
+            onInput={(e) => setSymbol(e.currentTarget.value)} onBlur={commitSymbol} onKeyDown={(e) => { if (!composing(e) && e.key === "Enter") commitSymbol(); }} />
             {look.colour && <button class="btn icon mini" data-tip={t("groupInspector.backToColour")} aria-label={t("groupInspector.backToColour")} onClick={(e) => { e.preventDefault(); setLook({ colour: null }); }}><Icon.cycle /></button>}
           </label>
           <ColourPicker value={preview ?? groupBullet(byNum, group, (id) => today.value.get(id)?.riders ?? 0).colour} presets={LINE_PALETTE} onPreview={setPreview} onCommit={(hex) => { setPreview(hex); setLook({ colour: hex }); }} />
@@ -335,7 +343,7 @@ export function GroupInspector({ group }: { group: number }) {
               const chips = xs.slice(0, tall ? TALL_MAX : STOP_CHIPS), rest = xs.slice(chips.length);
               return (
                 <div class={"group-name" + (cells.some((c) => c.stop) ? "" : " muted")} style={{ top: row.y - row.h / 2 + "px", height: row.h + "px" }} data-tip={rowTip(r)}>
-                  <span class="grow" onClick={() => (selection.value = { kind: "station", station: cells[0].station })}>{[...new Set(cells.map((c) => nm(c.station)))].join(" / ")}</span>
+                  <span class="grow" onClick={() => openStop(cells[0].station)}>{[...new Set(cells.map((c) => nm(c.station)))].join(" / ")}</span>
                   {tall
                     ? <TwoRows lines={chips} />
                     : chips.map((o) => <Chip line={o} size="sm" />)}

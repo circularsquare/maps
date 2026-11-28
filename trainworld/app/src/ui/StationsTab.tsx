@@ -10,7 +10,7 @@ import { complexes } from "../game/complexView";
 import { membersOf } from "../game/complexes";
 import { complexTitle, leadOf } from "../game/complexLead";
 import type { EditOp } from "../workers/protocol";
-import { listedLines, edit } from "../game/world";
+import { listedLines, edit, stationsById } from "../game/world";
 import { display, selection, shownDayPhrase, stationSort, uiScale, type StationUseMode } from "../game/ui";
 import { listWorld, scopedLists } from "../game/listScope";
 import { accountVersion } from "../game/boarding";
@@ -18,10 +18,12 @@ import { stationsToday, today, todayLoaded, useToday } from "../game/today";
 import { Chip, Icon, SortHead } from "./widgets";
 import { GroupPill } from "./GroupPill";
 import { locateStation } from "./locate";
-import { byNear, natural, Near, ScopeToggle } from "./listParts";
+import { byNear, ListFind, nameHas, natural, Near, ScopeToggle, stationsFind } from "./listParts";
 import { stationLineOrder, type StationLineOrder } from "./stationLines";
 import { byHand, handOrder, setHandOrder } from "../game/handOrder";
 import { t } from "../i18n";
+import { composing } from "./keys";
+import { normalise } from "../game/nameMatch";
 
 /** how far a row is dragged before it counts as a drag, not a click (px) */
 const DRAG_PX = 6;
@@ -236,7 +238,12 @@ export function StationsTab() {
   const tod = today.value;
   const lineOrder = stationLineOrder(w, sc.lineDist);
   const sortRowLines = (ls: readonly LineInput[]) => lineOrder.sortLines(ls, (l) => tod.get(l.id)?.riders ?? 0);
-  const st = inOrder(stationRows(sc.stations, w.save.stations, listedLines(w), sc.stationDist, apart.value, sortRowLines));
+  const scoped = stationRows(sc.stations, w.save.stations, listedLines(w), sc.stationDist, apart.value, sortRowLines);
+  // the name filter: a row whose name or a member station's holds what is typed, and the selected one, as the scope keeps it
+  const q = normalise(stationsFind.value);
+  const byId = stationsById(w);
+  const named = (r: StationRow) => nameHas(r.name, q) || r.members.some((id) => nameHas(byId.get(id)?.name ?? "", q)) || (sel?.kind === "station" && r.members.includes(sel.station));
+  const st = inOrder(q ? scoped.filter(named) : scoped);
   // T-1813: a row dragged into the gap above or below another goes there; the order then covers
   // every station, the viewed place's or not
   const dropRow = (d: Drag) => {
@@ -289,7 +296,8 @@ export function StationsTab() {
           <button class={"btn icon" + (apart.value ? " on" : "")} aria-pressed={apart.value} aria-label={t("stationsTab.apart")} data-tip={t("stationsTab.apart")} onClick={() => (apart.value = !apart.value)}><Icon.interchange /></button>
         </span>
       </div>
-      {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? t("stationsTab.none") : t("stationsTab.noneHere")}</p>}
+      {w.save.stations.length > 0 && <ListFind text={stationsFind} />}
+      {st.length === 0 && <p class="muted">{w.save.stations.length === 0 ? t("stationsTab.none") : scoped.length ? t("stationsTab.noMatch") : t("stationsTab.noneHere")}</p>}
       {st.length > 0 && <SortHead sort={stationSort} hand={hand.length ? () => setHandOrder("stations", []) : undefined} cols={[
         { key: "name", label: t("stationsTab.name"), tip: t("stationsTab.sortName"), first: 1 },
         { key: "riders", label: t("stationsTab.riders"), tip: t("stationsTab.sortRiders", { what: ridersWhat }), first: -1, cls: "w-num" },
@@ -303,7 +311,7 @@ export function StationsTab() {
               <input class="name-edit grow" value={r.name} aria-label={t("stationsTab.stationName")} ref={(el) => { if (el && document.activeElement !== el) { el.focus(); el.select(); } }}
                 onClick={(e) => e.stopPropagation()} onDblClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}
                 onBlur={(e) => { const n = e.currentTarget.value.trim(); setRenamingStation(null); if (n && n !== r.name) void edit(rowName(r, n)); }}
-                onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") setRenamingStation(null); }} />
+                onKeyDown={(e) => { if (composing(e)) return; if (e.key === "Enter") e.currentTarget.blur(); if (e.key === "Escape") setRenamingStation(null); }} />
             ) : (
               // T-2786: a triple click renames (a double click snaps the camera)
               <span class={"grow" + (r.built ? "" : " muted")}><span onClick={(e) => { if (e.detail === 3) { e.stopPropagation(); setRenamingStation(r.lead.id); } }}>{r.name}</span></span>

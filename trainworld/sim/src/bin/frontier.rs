@@ -310,7 +310,7 @@ fn main() {
     for run in spec["runs"].as_array().unwrap() {
         let t1 = std::time::Instant::now();
         let name = format!("{} {} m {:?}", run["mode"], run["spacing_m"], run["headways"]);
-        let (a, id, spent) = match build(&city, run, line_km) {
+        let (mut a, id, spent) = match build(&city, run, line_km) {
             Ok(v) => v,
             Err(e) => {
                 eprintln!("{name}: {e}");
