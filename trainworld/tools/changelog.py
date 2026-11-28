@@ -1,19 +1,19 @@
 """The changelog for the next published update (T-3424).
 
 One JSON file per release under trainworld/changelog/. The unpublished one is next.json; publish renames it to
-<version>.json. An item: id (c001...; <tree>-1 inside an agent tree until finish moves it),text (what the agent wrote), edited (Anita's wording, or null), hidden,
+<version>.json. An item: id (c001...; <tree>-1 inside an agent tree until finish moves it),text (what the agent wrote), edited (Anita's wording, or null; the only field the "(edited)" mark and the board's "edited" label follow), reworded (an agent's reword through the reword command, or absent; shown in place of text, and Anita's edited wins over it), hidden,
 task, by, at, rev (counts changes, so a page saving over a newer change gets refused), area (its icon, T-3466: one of
 AREAS), fix (a bug fix: lighter text, after its area's other items), parent (the id of the group it sits under) and
 group (true for a group item, like "track bug fixes", that others sit under) and highlight (true on a top-level item or
 group that the game lists first, T-3591: for an update with more than about 20 shown items, 1-8 of the biggest
-changes for a player). The page shows edited if set, else
+changes for a player). The page shows edited if set, else reworded if set, else
 text. The order of items in the file is her order (the board's drag; new items go first); publish keeps the area
 grouping the game shows and uses her order within each area. A hidden item stays in the file and out of the game; a hidden group hides its items too.
 
     python trainworld/tools/changelog.py add "fixed trains drawn through each other on single track" --area track --fix --task T-3379 --by bugs1
     python trainworld/tools/changelog.py group "track bug fixes" --area track --fix
     python trainworld/tools/changelog.py set c002 [--area track] [--fix | --no-fix] [--under c055 | --under none]
-    python trainworld/tools/changelog.py reword c002 "<new line>"      (sets edited, as the board's edit does)
+    python trainworld/tools/changelog.py reword c002 "<new line>"      (sets reworded, not Anita's edited mark)
     python trainworld/tools/changelog.py hide c002 [--show]
     python trainworld/tools/changelog.py highlight c002 [--off]     (a top-level item or a group)
     python trainworld/tools/changelog.py move c002 [--before c005] [--under c010|none]   (no --before: last; --under
@@ -198,7 +198,7 @@ def delete_group(item_id, rev, path=NEXT):
 
 
 def update_item(item_id, fields, rev, path=NEXT):
-    """Her save: edited (string, or null to go back to the agent's text), hidden, highlight, area, fix, parent (a group's id
+    """Her save: edited (string, or null to go back to the agent's or reworded text), reworded (the reword command's; null clears), hidden, highlight, area, fix, parent (a group's id
     or null). Returns (status, item): 409 with the current item when rev is not the item's; ValueError on a bad
     area or parent."""
     with Locked(path):
@@ -208,11 +208,19 @@ def update_item(item_id, fields, rev, path=NEXT):
             return 404, None
         if item["rev"] != rev:
             return 409, item
+        if "reworded" in fields:
+            w = fields["reworded"]
+            if w is not None:
+                w = " ".join(str(w).split()) or None
+            if w is None or w == item["text"]:
+                item.pop("reworded", None)
+            else:
+                item["reworded"] = w
         if "edited" in fields:
             e = fields["edited"]
             if e is not None:
                 e = " ".join(str(e).split()) or None
-            item["edited"] = e if e != item["text"] else None
+            item["edited"] = e if e != (item.get("reworded") or item["text"]) else None
         if "hidden" in fields:
             item["hidden"] = bool(fields["hidden"])
         if "area" in fields:
@@ -256,7 +264,7 @@ def set_line(text, path=NEXT):
 
 
 def shown(item):
-    return item["edited"] or item["text"]
+    return item["edited"] or item.get("reworded") or item["text"]
 
 
 def rank(i):
@@ -446,11 +454,11 @@ def main():
         if code != 200:
             raise SystemExit("not saved (%d): try again" % code)
     elif r.cmd in ("reword", "hide"):
-        # same save as the board's edit: sets edited (the shown wording) or hidden, bumps rev, stamps changed
+        # reword sets reworded (shown, but not Anita's edited mark); hide sets hidden; both bump rev and stamp changed
         it = next((i for i in read()["items"] if i["id"] == r.id), None)
         if it is None:
             raise SystemExit("no item " + r.id)
-        fields = {"edited": r.text} if r.cmd == "reword" else {"hidden": not r.show}
+        fields = {"reworded": r.text} if r.cmd == "reword" else {"hidden": not r.show}
         code, _ = update_item(r.id, fields, it["rev"])
         if code != 200:
             raise SystemExit("not saved (%d): try again" % code)
@@ -479,7 +487,7 @@ def main():
             print("%s%s%s %s %s%s %s%s%s" % (
                 i["id"], " [hidden]" if i["hidden"] else "", " [highlight]" if i.get("highlight") else "", i.get("area") or "(no area)", "fix " if i.get("fix") else "",
                 i.get("task") or "-", "  " if i.get("parent") else "", "[group] " if i.get("group") else "", shown(i))
-                + ("  (edited)" if i["edited"] else ""))
+                + ("  (edited)" if i["edited"] else "  (reworded)" if i.get("reworded") else ""))
     elif r.cmd == "line":
         try:
             set_line(r.text)

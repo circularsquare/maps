@@ -1952,7 +1952,7 @@ async function loadChangelog() {
   if (view === 'changelog') renderChangelog();
 }
 
-function clShown(it) { return it.edited || it.text; }
+function clShown(it) { return it.edited || it.reworded || it.text; }
 
 // T-3466: what an item is about, in the game's order (app/src/ui/updates.ts AREAS); the names are the board's only
 const CL_AREAS = [['track', 'Track'], ['demand', 'Demand'], ['scheduling', 'Scheduling'], ['fares', 'Fares and money'],
@@ -2247,9 +2247,9 @@ function clItem(it) {
         CL.menu === id ? clMenu(it) : null),
       it.group ? el('span', { class: 'cl-task meta' }, 'group') : it.task ? el('span', { class: 'cl-task' }, rich(it.task)) : el('span', { class: 'cl-task meta' }, 'no task'),
       el('span', { class: 'cl-wrap' }, area, bv),
-      el('span', { class: 'cl-by' }, `added by ${it.by || 'an agent'}, ${when}`, it.edited ? ', reworded' : ''),
+      el('span', { class: 'cl-by' }, `added by ${it.by || 'an agent'}, ${when}`, it.edited ? ', edited' : it.reworded ? ', reworded by an agent' : ''),
       el('span', { class: 'cl-state' }, CL.status[id] || ''),
-      it.edited ? el('button', { class: 'icon-btn', type: 'button', title: `Use the agent's wording: ${it.text}`, 'aria-label': 'Use the agent\'s wording',
+      it.edited ? el('button', { class: 'icon-btn', type: 'button', title: `Use the ${it.reworded ? 'reworded' : 'agent\'s'} wording: ${it.reworded || it.text}`, 'aria-label': 'Use the agent\'s wording',
         onclick: () => { delete drafts[`cl:${id}`]; clSave(id, { edited: null }); } }, icon('undo')) : el('span', { class: 'icon-btn ghost' }),
       it.child ? el('span', { class: 'icon-btn ghost' })
         : el('button', { class: 'icon-btn star', type: 'button', 'aria-pressed': String(!!it.highlight),
@@ -2321,7 +2321,7 @@ function drawChangelog() {
   }
   const q = query();
   const all = CL.data.items;
-  const items = clOrdered(all).filter((i) => !q || (i.text + ' ' + (i.edited || '') + ' ' + (i.task || '')).toLowerCase().includes(q));
+  const items = clOrdered(all).filter((i) => !q || (i.text + ' ' + (i.reworded || '') + ' ' + (i.edited || '') + ' ' + (i.task || '')).toLowerCase().includes(q));
   const hid = all.filter((i) => i.hidden).length;
   const kids = [
     drawRoadmap(),
