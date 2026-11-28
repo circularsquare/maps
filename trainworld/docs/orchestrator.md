@@ -196,8 +196,8 @@ checks (smoke, perf_bench, strings) current meanwhile; after a big batch of land
 - Staging only some hunks of a file: `checks/keep_hunks.py`. Of a JSON file: parse the staged blob (`git show
   :<path>`) first; a line-level stage can put keys after the closing brace.
 - Files copied back after a source swap keep old mtimes, so cargo and wasm-pack skip the rebuild: touch them.
-- A world run's gates serve a frozen copy of app/ made at each chunk's start (T-2298): app/ and WASM landings need no
-  hold.
+- A world run's gates serve a frozen copy of app/ made at each chunk's start (T-2298); a landing holds
+  data/work/landing.lock until its WASM is rebuilt and the freeze waits for it (T-4571), so landings need no hold.
 - Run `date` before writing a time in the handoff (guesses run 1-2 h ahead). Two sessions can share a name: message by
   id.
 - Recount what a change touches before landing; an agent's estimate can miss it.

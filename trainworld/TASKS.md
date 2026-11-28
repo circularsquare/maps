@@ -121,7 +121,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Myanmar (59 of 60 rows), Laos (11) and Timor-Leste (4) shipped 2026-11-20. Bhamo (0.44M) is parked: its busiest square sits on a GHSL pile-up of 23,697 people in one village square in Mansi, not on a town.
   - Goal: Bhamo built with its people spread off that square (or held), then gated and joined.
   - Other: notes/T-1738.md section 16
-- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia and beyond
+- T-3764 [P3] {L:new-countries} Fill the gaps, Central Asia and beyond (taking, 2026-11-28, agent countrykz)
   - Context: You, 11-22: "maybe we can try doing georgia/armenia/azerbaijan and afghanistan". Done: Pakistan, Bangladesh, Georgia, Armenia, Azerbaijan, Afghanistan. Still missing, in notes: Central Asia with Mongolia (77M), the Levant and Yemen (63M), Nepal, Bhutan and Sri Lanka (52M), Africa beside built countries, Papua New Guinea and the Pacific.
   - Goal: Each batch built and joined, next Central Asia.
   - Other: notes/T-3764.md
@@ -157,7 +157,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Found by T-3623: Purwokerto's registry centre sits on Banjarnegara and Kozhikode's on Manjeri; an OSM area with no node inside it still sits at its box centre (New Cairo City).
   - Goal: Each zone's centre is on its named town; areas without a node get a centre inside them.
   - Other: notes/T-3623.md
-- T-3659 [P3] {L:solve-speed} Contributors' speed-up pull requests
+- T-3659 [P3] {L:solve-speed} Contributors' speed-up pull requests (taking, 2026-11-28, agent pr23)
   - Context: You, 2026-11-18: "there are some new PRs from caelum418 that have to do with speedups that we should look at the next time we look at this area of performance". PR 24 ported 11-20 (layout about twice as fast); its reply is drafted in notes/T-3659.md, to post after the next sync. Left: caelum418's 23 (intercity assignment), a hand port.
   - Goal: PR 23 measured on our saves, then ported with credit or closed with a reply you've seen; PR 24's reply posted.
   - Other: notes/T-3659.md
@@ -363,7 +363,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-24: "if merging directionally biases things, would it make sense to undo that bias?", then "if its mostly not one directional its fine ... p4". T-4158 saw lines move both ways (Belgrade 704 +34%, 66 -29%) but Auto bus lines lose 1.2% overall.
   - Goal: Net shift by kind of line and trip length on Detroit and Belgrade; a simple correction proposed to you only where it is clearly one way.
   - Other: notes/T-4158.md
-- T-4230 [P2] {L:loading} The clock worker's first state sooner on load
+- T-4230 [P2] {L:loading} The clock worker's first state sooner on load (taking, 2026-11-28, agent firststate)
   - Context: From T-4225 (11-24): no regression in 0.4.6. On New York the clock worker's first full state is 3.7 of the map's 5.5 s, about 68% of the wait (2.9 s building the map's draw data), and runs while the demand workers open the pack on the same cores.
   - Goal: Measure that state with and without the pack opening beside it, then propose a cheaper first build or a later pack open; about 2 h.
   - Other: notes/T-4225.md
@@ -480,10 +480,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4242 [P2] {L:timetables} {after:loads are faster} Weekend riders follow weekend trains
   - Context: You, 11-25: decide once loads are faster (it makes loads 45-55% longer where weekends differ). A player, 11-24: a short-turn copy with 0 weekday trains at midday and 2 on weekends runs, but almost nobody rides it. Weekend riders are scaled from the weekday solve (T-2335). You, 11-24: "p2 at least, its quite visible for some people."
   - Goal: A design for weekend riders that follow the weekend's own trains, with its cost in calculating time; to you before building.
-- T-4250 [P2] {L:route-choice} A short line beside a crowded long one stays empty (taking, 2026-11-27, agent smoothfade)
-  - Context: A player (11-25): relief line B near 60% while long line A stays over 130%. You said yes 11-27 to a smooth fade of the dearer line's share in place of the cliff. Gemini read the code: riders inside B split by frequency and keep A's full share until A is dearer by half B's headway, then drop to none; round 0's uncrowded split also keeps a quarter.
-  - Goal: Riders whose trip fits B move to it as A fills; NYC lines within 1% or the shift to you.
-  - Other: notes/T-4250.md (Gemini, not yet checked by a Claude agent)
 - T-4245 [P3] {L:timetables} Timetables for bus and ferry lines
   - Context: A player request (tw-feedback, 11-24). You, 11-24: "should be easy i think". The schedule panel's timetable is rail only: the sim keeps no trip timetable for bus and ferry lines, so the sim has to work one out first.
   - Goal: A bus or ferry line's schedule panel shows its timetable like a rail line's.
@@ -534,9 +530,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: docs/code-map.md is 707 lines and about 100 KB with 700 task ids, over the Read tool's cap, so no agent can read it whole though CLAUDE.md sends every agent there.
   - Goal: One line per file saying what it holds, task ids dropped, about a third of today's size.
 - T-3160 [P2] {L:memory} Phone memory on real-network starts (taking, 2026-11-27, agent phonemem)
-  - Context: On the Tokyo real-network start on an emulated iPhone the solving worker's WASM is now 261 MB (330 before stage 6, figures identical). Left: the page (about 200), the clock worker (170) and the worker's held results (142). You, 2026-11-16: "lots of people are unable to really play properly cuz tehy dont have enoguh ram. especially on phones."
-  - Goal: The next biggest of those cut, rail trips unchanged, measured on a production build on an emulated iPhone.
-  - Other: notes/T-3160.md, stage 6.
+  - Context: Stage 7: the commutes' station pairs at 16 bits; natively the Tokyo real-network start's solving worker peaks 20 MB lower, rail trips identical; not yet measured on a phone. Left: shared period graphs (up to 22 MB), clock timetables once for all kinds of day (7), the page. You, 11-16: "lots of people are unable to really play properly"
+  - Goal: Stage 7 measured on an emulated iPhone, and the next biggest of those cut, rail trips unchanged, on a production build.
+  - Other: notes/T-3160.md, stages 6-7.
 - T-4310 [P3] {L:memory} The bands' kept work as typed columns
   - Context: After T-4187 the bands' memo is the biggest drawing holder left in the clock worker on t9gksxmu: 27 MB in Node, about half that on a phone, mostly JS objects (each line's sample memo 5.8, recipes with their text keys 5.4, each edge's ribbons 3.6).
   - Goal: Those as typed columns, the drawn map identical, measured on t9gksxmu on an emulated iPhone.
@@ -545,7 +541,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: On North America a bubble answer still takes about 300 ms per worker (NYC 60 ms) after T-2747.
   - Goal: Bring the North America answer close to NYC.
   - Other: Plan: a rail-only pass per part and a cache of zone rows. notes/T-2747.md
-- T-3938 [P3] {L:solve-speed} Warm-start crowding prototype behind a flag
+- T-3938 [P3] {L:solve-speed} Warm-start crowding prototype behind a flag (taking, 2026-11-28, agent warmstart)
   - Context: From T-3513, 11-21: a high-demand NYC edit can't reach 20 s exactly (6-8 crowding passes a worker at 4-6 s each). Starting each population's crowding rounds from its last solve's loads would cut passes, but figures would then depend on edit history; time and drift unmeasured. Changing convergence is your call once measured.
   - Goal: Behind a dev flag, measured against the cold solve on NYC and NA: time saved and how far figures drift.
   - Other: notes/T-3513.md
@@ -663,14 +659,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4563 [P2] {L:checks} A stop hook hides the message meant for Anita
   - Context: You, 11-28: "when you send a message and then a stop hook happens, i can't read the message / it gets hidden, though i think its meant for me." The hook's note makes the orchestrator reply again, and focus view shows only that last reply.
   - Goal: A stop hook's note never buries the orchestrator's last message to you (the note waits for the next turn, or the reply repeats what it said).
-- T-4566 [P3] {L:station-placement} A station building with no track left can't be demolished
-  - Context: A phone player, 11-27 (g175): buildings don't resize by dragging, a long press removes one corner, and a building can't be demolished once its tracks are deleted, which leaves it stuck.
-  - Goal: A building left without track can be demolished on a phone.
-  - Other: notes/requests-sort-2026-11-28.md
-- T-4567 [P2] {L:route-choice} Riders walk farther to take an extra train leg (taking, 2026-11-27, agent walkleg)
-  - Context: Discord bug-reports, 11-27 (player arcades): riders walk farther to take a whole extra train leg, which looks quite wrong (you, 11-27: "prob worth looking into"). A French player, 11-27 (g205): riders change between far-apart stations, ignoring a closer station or a transfer tunnel; "did not do this before".
-  - Goal: The cause found; riders take the closer station or fewer legs where that is quicker, or the rule that sends them is named.
-  - Other: notes/requests-sort-2026-11-28.md
 - T-4568 [P3] {L:timetables} Headways from train count disagree between periods
   - Context: A French player, 11-27 (g183): on some lines the headway worked out from the train count differs between periods; "did not do this before". One report, maybe T-4238.
   - Other: notes/requests-sort-2026-11-28.md
@@ -1106,11 +1094,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your 11-27: single-train moves, a 90 s minimum gap between lines at shared stops and an auto-space option per line land in one release with the real-gap waits (T-4514). Design updated 11-28: about 29 h in 18 stages, T-4543 to T-4560, each landing switched off until T-4559.
   - Goal: All 18 stages landed and switched on; closes with T-4560.
   - Other: notes/T-4511.md
-- T-4544 [P2] {L:timetables} {after:T-4543} Single-train moves through the timetable
-  - Context: Stage 2 of 18 (T-4511). Each line gets a list of moved departures beside its pattern, which everything that reads the timetable applies; the 90 s gap and auto-space write to the same list.
-  - Goal: One departure moves and nothing else does; a game with no moves runs bit for bit as before. 2-2.5 h.
-  - Other: notes/T-4511.md "Stages"
-- T-4545 [P2] {L:timetables} {after:T-4544} Move one train with its range and reasons
+- T-4545 [P2] {L:timetables} Move one train with its range and reasons (taking, 2026-11-28, agent shift3)
   - Context: Stage 3 of 18 (T-4511). The edit that moves one train, with undo: as far as its train still makes its next departure and stays 1 min from its own line's trains, each limit with its reason.
   - Goal: Both range ends refuse with their reason; no train enters or leaves service for a move in range; undo to the bit. 2-2.5 h.
   - Other: notes/T-4511.md "Stages"

@@ -1,15 +1,15 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session 456cd30a-32f0-442b-89be-51ca3ca2e13e, name maps-d2, since 2026-11-28 03:54 UTC
-Updated: 2026-11-28 04:40 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
-diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word 11-27 22:42 her time: "lets also set core cap to 10 for a while").
+Updated: 2026-11-28 06:00 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word 11-28 00:05 her time: "we can raise core cap back to 14, and use a few more for country run if helpful").
 
 ## Next
 1. Work order (her 11-27): real bug fixes and regular chores first; solve speed and memory where possible; track rework toward the release 1 merge (before new modes); modes (T-4479-T-4498) after. Edit-speed work stops at 50 ms an action.
 2. Track rework: tracksync is merging master into tw/track (_track, levels to 44+, checklist in notes/T-3444-design/10-build-plan.md "The 11-28 sync"). Then T-4037 g3b (with T-4518: a click still picks between stations, her yes), then the release 1 list; crash round T-4519 and Asia edit bench T-4521 are gates before the merge.
-3. Train shifting (T-4511, stages T-4543-T-4560, about 29 h, each landing switched off until T-4559; her 11-27 yes): T-4543 landed 11-28, T-4544 next. T-4250 smooth fade (her yes) in tree smoothfade. PRs: six landed (T-4561), 41 and 42 held, 45/46 Turkey run is P3 (T-4562); the six's comments posted 11-28; close each with a link after the next open-source sync (notes/prs-2026-11-28.md).
+3. Train shifting (T-4511, stages T-4543-T-4560, each landing switched off until T-4559; her 11-27 yes): T-4543 and T-4544 landed 11-28, shift3 on T-4545. T-4250 smooth fade landed. PRs: six landed (T-4561), comments posted, close each with a link after the next open-source sync (notes/prs-2026-11-28.md); 41 and 42 held; 45/46 Turkey run P3 (T-4562); pr23 porting caelum418's PR 23 (T-3659). Leaderboard: builds.json re-listed (website 11594b3, her yes), deploy.py keeps 14 days (T-4570).
 4. Server deploy waits for "more things in": shonei-server 07f5a75 + 3a8e65c (save level 43 with weekend offsets), unpushed; ask when a publish nears. Owed: 1 edit_bench + 1 perf_bench NYC on master, batch Gemini review before release.
-5. Country run (her 11-27, slow): Uzbekistan running, PID 30372, 3 cores "countryrun", log artifacts/trainworld/countryrun-uz-run.log, plan notes/country-plan-2026-11-28.md (8 batches). It owns data/packs from its first gate register until the join: snap8800 with the freeze. Join waits to go with Kazakhstan (needs 6 cores). Her 11-27: pause after batch 4 (the Levant and Yemen). Stop: data/work/world_run/STOP.
+5. Country run (her 11-27, slow; stop after the Levant and Yemen): Uzbekistan gated 34, parked 7, no join yet; agent countrykz runs Kazakhstan onward with up to 6 cores (her 11-28), then the UZ+KZ join. ZONE_RULES entries in pipeline/world_plan.py are its to add (I told it; if the permission check still refuses, it goes to her). Landings now wait for gates by themselves (T-4571).
 6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
@@ -23,7 +23,6 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 - 11-27 17:08 her time: "lets just ideally remove all references to other games. i think that'd be best"; "its harmless to make this change and probably better to state the game in its own terms". Current docs done (743e8a373); the rest is T-4427.
 - 11-27 ~13:50 her time (to maps-2c, account 2): pushed master on her yes; Windows 11 upgrade coming (machine restarts; agents diskclean and win11guide running for it). Gemini for adversarial review only now that there are two Claude subs (DECISIONS). AWS raise to ~5 vCPU refused, wants usage history: use it now and then, e.g. country adds (docs/aws.md).
 - 11-27 11:26 her time: Gemini quota out; "oki we can move bus fix to sonnet. but mostly just pause starting new work". Core cap 10 "for a while".
-- 11-27 ~10:00: Claude runs out before Gemini, "so lets just use gemini for pretty much all new tasks. lets see how it goes."
 - 11-27 ~09:45: agents 2-8, Gemini agents counted; Gemini 5x plan, Neon as Opus, Hydrogen as Sonnet (DECISIONS). Load
   proposals "3 then 1", "just proposals so no need to treat them as gospel"; Discord 30-minute loads: assume low memory or big saves.
 - 11-27 ~10:00: core slider is high leverage now (T-3932, P1); light mode wouldn't help ("drawing is already very

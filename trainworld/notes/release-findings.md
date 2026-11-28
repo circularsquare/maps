@@ -6,3 +6,4 @@
 - T-1447: SavesPanel.tsx removeGroup and StartMenu.tsx DeleteAsk onYes call deleteClipsOf even when deleteVersions refused (the game stays, its waiting copied blueprint is gone silently); await the delete and clear clips only when it returned no refusal.
 - T-1447: slots.ts pastedClips is one list for the worker, not per slot: a paste whose autosave never ran (slot taken by another tab, writeBlock) is deleted by the next game's autosave, so that game loses its waiting blueprint; key the list by slot or empty it on leave.
 - T-1447: slots.ts autosave deletes the clip after the write with a fire-and-forget deleteClips; a page closed in that gap re-pastes at next load (overlap refuses it unless the player removed the pasted pieces meanwhile, then they come back).
+- T-4214 check (seen in T-4564): after building a route on a new India game the dev page logged "the patched rows differ from the state's: edges 2: cost".

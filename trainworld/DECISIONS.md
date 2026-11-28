@@ -49,7 +49,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-23 (Anita, T-4105): Train station stays the Station tool's default; Auto is one click away. Auto takes track, then a road or bus route within 12 px, a ferry route, water or shore, else a train station, so open ground near a street gives BRT.
 - 2026-11-21 (Anita, T-3999): A train or tram station can go on open ground again (reversing T-1820, at players' asking): first click one platform end, second its direction. The Station tool picks its kind, so open ground by a road never places BRT. notes/T-3999.md
 - 2026-11-19 (Anita, T-3814): Each station is bound to its complex's name or keeps its own; renaming a bound one renames the complex, reversing T-3288's rename of that station alone. New players default to independent naming. notes/T-3759.md
-- 2026-11-18 (Anita, T-3711): A one-way track's station is a one-way stop served once a round trip, placed in the stop list by the track; shift-clicked ones take the way with fewer turn-backs. Pairing two as one stop is not ruled out, only not a priority (her 11-27; PR 41 held). notes/T-3565.md
+- 2026-11-18 (Anita, T-3711): A one-way track's station is a one-way stop served once a round trip, placed in the stop list by the track; shift-clicked ones take the way with fewer turn-backs. Pairing two as one stop is not ruled out, just not a priority (11-27, PR 41 held). notes/T-3565.md
 - 2026-11-17 (Anita, T-3540, T-3332): A station with a platform on one track pays 0.6x station upkeep ("60% of a double platform station"): one-way stations and single-track stops without a passing loop. One track to both pays the difference; both to one is free.
 - 2026-11-10 (Anita, T-3107): Dead ends and through stations turn alike ("terminal = 30tph"): a turn holds one platform for max(turnaround + 60 s, 200 s), pooled over platforms with a terminal, one per pair without. Replaces the dead-end advantage and reversal limiter.
 - 2026-11-04 (Anita, T-2276): A change inside a station building discounts only its fixed change minutes, not its walk: discounting the walk too put the S shuttle up 83% via Times Sq (Anita: "yes only change minutes counting less sounds fine").
@@ -92,7 +92,9 @@ artifacts/trainworld/T-4120/.
 
 ## Demand
 
-- 2026-11-27 (Anita, T-4250): riders inside a relief line's stretch leave a crowded line on the same platforms by a smooth fade of its share, in place of the cliff at half the relief line's headway; the uncrowded round's weight stays. notes/T-4250.md
+- 2026-11-28 (T-4567): A market access list also keeps the best station of a line longer than any already listed (still at most 10), so an inter-city station stays listed once the metro reaches it. Lie: line length stands for how far a line goes. notes/T-4567.md
+- 2026-11-27 (Anita, T-4569): after a train change, long trips and cross-zone commutes may keep old figures until the 2-minute refresh; correct after it is fine. notes/T-4564.md
+- 2026-11-27 (Anita, T-4250): On one track and stops a dearer line keeps its trains-an-hour share while dearer by under half the combined headway and none from the cheaper line's headway minus that, fading straight between (was a cliff); the uncrowded round's weight stays. Lie: real gaps step. notes/T-4250.md
 - 2026-11-27 (Anita, T-4514): A trip served by several lines on a shared stretch waits by the real gaps in their combined departures, not as if perfectly even, so evening interlined lines earns riders. Single-train moves wait at P3 until players ask again. notes/T-4511.md
 - 2026-11-27 (T-4514): Real-gap waits come per period from each line's weekday departure nearest mid-period and its headway; a service takes its lines' largest factor. Lie: riders arrive at random (long headways are timed), and a bunched half hour inside an even rest counts as its period's share. notes/T-4514.md
 - 2026-11-24 (Anita, T-921): Commute zone pairs under 1 person a day are dealt in chunks of about 1 (`COMMUTE_CHUNK_DAY`, the one number to tune), was 0.1 trips a period. The lie: a station under 1,000 a day can move up to about 3.5%, as much as redrawing. notes/T-921.md
@@ -274,6 +276,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-28 (T-3160): The commutes' station pairs, read only by the station and place views, are kept as 16-bit half floats under one power-of-two scale: Tokyo's real-network start solves in 20 MB less (40 to 20). Lie: each pair within 1 part in 2,048; rail figures untouched. notes/T-3160.md
 - 2026-11-28 (T-1447): A copied selection waits in this browser and is pasted at the target game's next load, in the tab that saves it; the copying page never writes the target's slot, since only a loaded game has its network, water masks and undo. notes/T-1447.md
 - 2026-11-27 (T-4449): Retime plans a run's holds once and lays held hops from their start, offset by when the train takes them. Lie: last-bit differences in timetables (Asia: 12 of 5,253 rows move up to 0.024 s); NYC to the bit. notes/T-4449.md
 - 2026-11-27 (Anita, T-4267): Edit-speed work stops at 50 ms an action ("pause any edit speed work for actions that already take under 50ms"): a stage whose only target is an action already under 50 ms on her Asia save, as felt in the page, waits at P4. notes/T-4267.md
