@@ -661,6 +661,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4035: a station holds at most two platforms, each on one track (ids 2s and 2s+1 from its node), so an island serving two tracks or a station on 4 tracks can't be placed. T-4043 keeps platform ids tied to the node, so it doesn't cover this.
   - Goal: A station of two islands on 4 tracks saved, loaded and undone with every platform kept.
   - Other: About 1.5-3 h, before T-3963. notes/T-3444-design/10-build-plan.md
+- T-4563 [P2] {L:checks} A stop hook hides the message meant for Anita
+  - Context: You, 11-28: "when you send a message and then a stop hook happens, i can't read the message / it gets hidden, though i think its meant for me." The hook's note makes the orchestrator reply again, and focus view shows only that last reply.
+  - Goal: A stop hook's note never buries the orchestrator's last message to you (the note waits for the next turn, or the reply repeats what it said).
 - T-4518 [P2] {L:track-rework} Picking track between stations
   - Context: You, 11-27: yes, a click still picks between two stations. From T-4037 g3b: with stations off the track, a click picks the whole stretch from junction to junction, so making the part between two stations single, raised or one way would need a joint first. Today players pick between stations.
   - Goal: The stretch between two stations made single, raised or one way in one edit and one undo.
