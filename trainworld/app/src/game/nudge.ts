@@ -11,7 +11,8 @@ import { edit, world } from "./world";
 interface Pending { target: number; sent: number; busy: boolean; from: number }
 export const pendingNudge = signal<ReadonlyMap<string, Pending>>(new Map());
 
-export const nudgeKey = (id: LineId, row: number) => `${id}:${row}`;
+/** T-4510: weekend rows are nudged on their own, keyed apart. */
+export const nudgeKey = (id: LineId, row: number, weekend = false) => `${id}:${weekend ? "w" : ""}${row}`;
 
 function put(k: string, p: Partial<Pending> | null) {
   const was = pendingNudge.peek().get(k);
@@ -24,23 +25,23 @@ function put(k: string, p: Partial<Pending> | null) {
 
 /** Step row `row` of line `id` from the offset it shows (`now`, s) to `to`. Steps while an edit is out add up into
  * the next edit, sent when it lands; a refused one puts the row back to the world's. */
-export function stepNudge(id: LineId, row: number, now: number, to: number): void {
-  const k = nudgeKey(id, row);
+export function stepNudge(id: LineId, row: number, now: number, to: number, weekend = false): void {
+  const k = nudgeKey(id, row, weekend);
   const m = new Map(pendingNudge.peek());
   const p = m.get(k) ?? { target: now, sent: now, busy: false, from: Infinity };
   m.set(k, { ...p, target: to });
   pendingNudge.value = m;
-  if (!p.busy) void send(id, row, k);
+  if (!p.busy) void send(id, row, k, weekend);
 }
 
-async function send(id: LineId, row: number, k: string) {
+async function send(id: LineId, row: number, k: string, weekend: boolean) {
   put(k, { busy: true, from: Infinity });
   for (;;) {
     const p = pendingNudge.peek().get(k);
     if (!p) return;
     const by = p.target - p.sent;
     if (Math.abs(by) < 1e-6) break;
-    const a = await edit({ op: "nudgeRow", line: Number(id), row, by }, false, true);
+    const a = await edit({ op: "nudgeRow", line: Number(id), row, by, weekend }, false, true);
     if (!a.ok) return put(k, null);
     put(k, { sent: p.sent + by });
   }

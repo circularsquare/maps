@@ -725,6 +725,8 @@ impl TrackWorld {
                 let (p, s) = if own[l] { (from.0.get(l), from.1.get(l)) } else { (None, None) };
                 phase[l] = p.copied().unwrap_or_else(|| net.line_phase_of(l as u32));
                 split[l] = s.copied().unwrap_or_else(|| net.line_split_of(l as u32));
+                // T-4510: the slots a player held on weekends stay where they were held
+                net.overlay_rest_holds(l as u32, &mut phase[l]);
             }
         };
         let (mut phase, mut split) = (vec![], vec![]);
@@ -741,7 +743,9 @@ impl TrackWorld {
             std::mem::swap(&mut self.net.line_split, &mut split);
             // (the lattices read while placing are the weekends', in the weekdays' fields)
             self.net.rest_solved = false;
+            self.net.placing_rest = true;
             self.place_departures(&todo);
+            self.net.placing_rest = false;
             self.pin_twin_phases();
             self.net.rest_solved = true;
             std::mem::swap(&mut self.net.line_phase, &mut phase);

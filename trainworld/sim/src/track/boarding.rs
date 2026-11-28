@@ -742,6 +742,12 @@ impl Boarding {
                 }
             }
         }
+        // T-4510: and the slots held on weekends, which run their own times whatever the rates
+        if net.any_offset_rest(l as u32) {
+            for p in net.weekend_phase_of(l as u32) {
+                h.f(p as f64);
+            }
+        }
         // T-1925: the departure phases
         for p in net.line_phase_of(l as u32) {
             h.f(p as f64);

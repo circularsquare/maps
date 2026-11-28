@@ -258,8 +258,9 @@ and no track, platform or junction carries more trains than its capacity: a line
 waits at its ends [T-517]. A line's schedule panel shows its schedule beside a station's departures board and its
 timetable chart (a bus or ferry line's its schedule alone, weekends included, T-3703), and a line group's timetable
 of every station of its lines over its chart [T-3346 stage 1, T-4276; more modes to come, notes/T-3346.md]. There a
-rail line's weekday rows can be nudged earlier or later, up to half a headway, and keep those times through later
-edits [T-3742].
+rail line's rows can be nudged earlier or later, up to half a headway, weekdays and weekends each on their own,
+and keep those times through later edits [T-3742, T-4510]. The Offset column is hidden until a button in the
+window's header turns it on.
 The clock worker owns edits (with undo for reversible changes), capacity, fleet, costs, money and
 the boarding account. Fares are paid into the cash as trains pick up riders and running costs
 drain evenly [T-284], each hour's share following when riders travel and trains run, fares

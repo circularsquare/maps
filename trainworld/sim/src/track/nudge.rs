@@ -3,23 +3,26 @@
 //! itself, so every reader of the phase (departures, the drawn trains, the board, boarding, `timing::retime`, the
 //! spacing of other lines) runs the nudged times with nothing to settle. A line timed behind a slower one
 //! (`Capacity::follow_pairs`) holds no offset of its own: a nudge of either moves the slower line's (its anchor's),
-//! and every line timed with that one by the same seconds, so their passes and waits stay as sized. Weekends follow
-//! the weekdays: a line running other rates then has its weekend phase moved and held with them.
+//! and every line timed with that one by the same seconds, so their passes and waits stay as sized.
+//! T-4510: weekends are nudged on their own (`weekend` below): a weekend row's offset and phase are held apart
+//! (`Network::line_offset_rest`, `line_hold_rest`), read over whatever the weekend would run otherwise
+//! (`Network::weekend_phase_of`), so a line running its weekday departures on weekends has its own weekend phase
+//! only for the slots held, and a weekday nudge no longer moves the weekends.
 
 use super::net::{Issue, Network};
-use super::params::SLOTS;
+use super::params::{SLOTS, WEEKEND};
 use super::world::{Op, TrackWorld};
 
-/// One slot of a line as `Op::Nudge` sets it; a None field is left as it stands.
+/// One slot of a line as `Op::Nudge` sets it (on weekends when `weekend`); a None field is left as it stands.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NudgeSet {
     pub line: u32,
     pub slot: u8,
+    pub weekend: bool,
     /// the offset it is held at, s (`Network::line_offset`; Some(None): placed by the spacing again)
     pub offset: Option<Option<f32>>,
-    /// its departure phase on weekdays and on weekends (`line_phase`, `line_phase_rest`)
+    /// its departure phase (`line_phase`; on weekends the held one, `line_hold_rest`)
     pub phase: Option<f32>,
-    pub rest: Option<f32>,
 }
 
 /// An offset as shown and stepped: within half a headway `h` either way as set, else (the headway is shorter since)
@@ -61,6 +64,11 @@ fn group(pairs: &[(u32, u32)], l: u32) -> Vec<u32> {
     out
 }
 
+/// Line `l`'s held offset in slot `s` on weekdays, or on weekends.
+fn held_at(net: &Network, l: u32, s: usize, weekend: bool) -> Option<f32> {
+    if weekend { net.offset_rest_at(l, s) } else { net.offset_at(l, s) }
+}
+
 impl TrackWorld {
     /// The slots row `row` of line `l` (its rows in the day's order) sets the departures of: those whose
     /// timetable is that row's (`Network::place`).
@@ -75,33 +83,42 @@ impl TrackWorld {
         self.net.line_ok(l) && !self.net.is_twin(l) && self.svc.lines.get(l as usize).is_some_and(|x| x.running && !x.is_bus())
     }
 
+    /// Trains an hour of line `a` in slot `s` on the day asked.
+    fn tph_on_day(&self, a: u32, s: usize, weekend: bool) -> f64 {
+        if weekend { self.net.line_tph_on(a as usize, WEEKEND, s) as f64 } else { self.net.line_tph.get(a as usize).map_or(0.0, |t| t[s]) as f64 }
+    }
+
     /// T-3742: the edit that nudges row `row` of line `line` `by` seconds later (earlier when negative), within half
-    /// a headway of where the spacing placed it. Per slot of the row: the line's anchor (`anchor`) holds the offset,
-    /// and it and every line timed with it move by the same seconds. None where nothing moves (the end of the range,
-    /// no trains in the row).
-    pub fn nudge_op(&self, line: u32, row: usize, by: f64) -> Result<Option<Op>, Issue> {
+    /// a headway of where the spacing placed it, on weekdays or (T-4510) on weekends. Per slot of the row: the line's
+    /// anchor (`anchor`) holds the offset, and it and every line timed with it move by the same seconds (on weekends
+    /// each is held, as a line running its weekday departures there has no weekend phase to move otherwise). None where
+    /// nothing moves (the end of the range, no trains in the row).
+    pub fn nudge_op(&self, line: u32, row: usize, by: f64, weekend: bool) -> Result<Option<Op>, Issue> {
         if !self.nudgeable(line) { return Err(Issue::NoSuchLine { line }) }
         let net = &self.net;
         let mut set = vec![];
         for s in self.row_slots_of(line, row) {
             let pairs = self.svc.cap.follow_pairs(net, s);
             let a = anchor(&pairs, line);
-            let tph = net.line_tph.get(a as usize).map_or(0.0, |t| t[s]) as f64;
+            let tph = self.tph_on_day(a, s, weekend);
             if tph <= 0.0 { continue }
             let h = 3600.0 / tph;
-            let now = shown(net.offset_at(a, s).unwrap_or(0.0), h);
+            let now = shown(held_at(net, a, s, weekend).unwrap_or(0.0), h);
             let d = ((now + by).clamp(-0.5 * h, 0.5 * h) - now) as f32;
             if d.abs() < 1e-3 { continue }
-            for m in group(&pairs, a) {
-                let held = net.offset_at(m, s);
-                let offset = if m == a || held.is_some() {
+            // on weekends every line timed with it in any slot is held, so a timed pair keeps one `rest_on` and is not
+            // left averaged (`timing::retime`)
+            let timed = if weekend { net.slots().flat_map(|s2| self.svc.cap.follow_pairs(net, s2)).collect() } else { pairs.clone() };
+            for m in group(&timed, a) {
+                let held = held_at(net, m, s, weekend);
+                let offset = if m == a || held.is_some() || weekend {
                     let o = held.unwrap_or(0.0) + d;
                     Some((shown(o, h).abs() >= ZERO_S).then_some(o))
                 } else {
                     None
                 };
-                let rest = (net.runs_own_weekend(m as usize) && net.rest_solved).then(|| net.line_phase_rest.get(m as usize).map(|p| p[s] + d)).flatten();
-                set.push(NudgeSet { line: m, slot: s as u8, offset, phase: Some(net.line_phase_of(m)[s] + d), rest });
+                let from = if weekend { net.weekend_phase_of(m)[s] } else { net.line_phase_of(m)[s] };
+                set.push(NudgeSet { line: m, slot: s as u8, weekend, offset, phase: Some(from + d) });
             }
         }
         Ok((!set.is_empty()).then_some(Op::Nudge(set)))
@@ -110,16 +127,16 @@ impl TrackWorld {
     /// T-3742: what row `row` of line `line` shows for its offset: the offset of its anchor in its first slot that
     /// runs (wrapped, s), half that headway (the range either way, s; 0: no trains, nothing to nudge), whether it is
     /// held, and the other lines timed with it (they move with it). None for a line a nudge cannot move.
-    pub fn row_nudge(&self, line: u32, row: usize) -> Option<(f64, f64, bool, Vec<u32>)> {
+    pub fn row_nudge(&self, line: u32, row: usize, weekend: bool) -> Option<(f64, f64, bool, Vec<u32>)> {
         if !self.nudgeable(line) { return None }
         let net = &self.net;
         for s in self.row_slots_of(line, row) {
             let pairs = self.svc.cap.follow_pairs(net, s);
             let a = anchor(&pairs, line);
-            let tph = net.line_tph.get(a as usize).map_or(0.0, |t| t[s]) as f64;
+            let tph = self.tph_on_day(a, s, weekend);
             if tph <= 0.0 { continue }
             let h = 3600.0 / tph;
-            let held = net.offset_at(a, s);
+            let held = held_at(net, a, s, weekend);
             let others = group(&pairs, a).into_iter().filter(|&m| m != line).collect();
             return Some((held.map_or(0.0, |o| shown(o, h)), 0.5 * h, held.is_some(), others));
         }
@@ -136,17 +153,15 @@ pub(super) fn apply(n: &mut Network, set: Vec<NudgeSet>) -> Result<Op, Issue> {
     let mut back = Vec::with_capacity(set.len());
     for x in set {
         let (l, s) = (x.line as usize, x.slot as usize);
-        let mut b = NudgeSet { line: x.line, slot: x.slot, offset: None, phase: None, rest: None };
+        let mut b = NudgeSet { line: x.line, slot: x.slot, weekend: x.weekend, offset: None, phase: None };
+        let (offsets, phases) = if x.weekend { (&mut n.line_offset_rest, &mut n.line_hold_rest) } else { (&mut n.line_offset, &mut n.line_phase) };
         if let Some(o) = x.offset {
-            if n.line_offset.len() <= l { n.line_offset.resize(l + 1, [None; SLOTS]); }
-            b.offset = Some(std::mem::replace(&mut n.line_offset[l][s], o));
+            if offsets.len() <= l { offsets.resize(l + 1, [None; SLOTS]); }
+            b.offset = Some(std::mem::replace(&mut offsets[l][s], o));
         }
         if let Some(p) = x.phase {
-            if n.line_phase.len() <= l { n.line_phase.resize(l + 1, [0.0; SLOTS]); }
-            b.phase = Some(std::mem::replace(&mut n.line_phase[l][s], p));
-        }
-        if let Some(p) = x.rest {
-            if let Some(v) = n.line_phase_rest.get_mut(l) { b.rest = Some(std::mem::replace(&mut v[s], p)); }
+            if phases.len() <= l { phases.resize(l + 1, [0.0; SLOTS]); }
+            b.phase = Some(std::mem::replace(&mut phases[l][s], p));
         }
         back.push(b);
     }
@@ -156,9 +171,15 @@ pub(super) fn apply(n: &mut Network, set: Vec<NudgeSet>) -> Result<Op, Issue> {
 
 /// The held slots of line `l` released, as entries that hold them again (a removed line's, for its undo).
 pub(super) fn release(n: &mut Network, l: u32) -> Vec<NudgeSet> {
-    let Some(o) = n.line_offset.get_mut(l as usize) else { return vec![] };
-    let had = std::mem::replace(o, [None; SLOTS]);
-    (0..SLOTS).filter_map(|s| had[s].map(|x| NudgeSet { line: l, slot: s as u8, offset: Some(Some(x)), phase: None, rest: None })).collect()
+    let mut out = vec![];
+    for weekend in [false, true] {
+        let offsets = if weekend { &mut n.line_offset_rest } else { &mut n.line_offset };
+        let Some(o) = offsets.get_mut(l as usize) else { continue };
+        let had = std::mem::replace(o, [None; SLOTS]);
+        let phases = if weekend { n.line_hold_rest.get(l as usize).copied() } else { None };
+        out.extend((0..SLOTS).filter_map(|s| had[s].map(|x| NudgeSet { line: l, slot: s as u8, weekend, offset: Some(Some(x)), phase: phases.map(|p| p[s]) })));
+    }
+    out
 }
 
 /// The lines `op`'s nudges move, into `out`.

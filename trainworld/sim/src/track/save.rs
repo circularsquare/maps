@@ -113,7 +113,9 @@ use super::bus::keep::{KeepLink, KeptStop};
 /// (`BusRoute::first_off`): count, then line indexes; without it every start is one.
 /// A trailing `LOF1` block (T-3742, level 43, after `LAF1`) gives the slots of lines a player held at an offset from
 /// where the spacing placed them (`Network::line_offset`): count, then per slot the line index, the slot and the
-/// offset's f32 bits; without it none are held. The saved phases already include the offsets.
+/// offset's f32 bits; without it none are held. The saved phases already include the offsets. A slot of at least
+/// `SLOTS` is a weekend one (`Network::line_offset_rest`, slot minus `SLOTS`) and has one more value, its held
+/// phase's f32 bits (`line_hold_rest`), which `LWP1` does not carry.
 /// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
 /// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
 /// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
@@ -919,15 +921,21 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(off.len() as u64);
         for i in off { w.u(i as u64); }
     }
-    // T-3742: after LAF1, only where some line's departures are held at an offset
-    let held: Vec<(usize, usize, f32)> = lines.iter().enumerate().flat_map(|(i, &l)| (0..SLOTS).filter_map(move |s| net.offset_at(l, s).map(|o| (i, s, o)))).collect();
+    // T-3742: after LAF1, only where some line's departures are held at an offset. T-4510: and a weekend slot's, as the
+    // slot plus `SLOTS`, with its held phase's bits after the offset's
+    let held: Vec<(usize, usize, f32, Option<f32>)> = lines.iter().enumerate().flat_map(|(i, &l)| (0..SLOTS).flat_map(move |s| {
+        let day = net.offset_at(l, s).map(|o| (i, s, o, None));
+        let rest = net.offset_rest_at(l, s).map(|o| (i, s + SLOTS, o, Some(net.line_hold_rest.get(l as usize).map_or(0.0, |h| h[s]))));
+        [day, rest]
+    })).flatten().collect();
     if !held.is_empty() {
         w.0.extend_from_slice(b"LOF1");
         w.u(held.len() as u64);
-        for (i, s, o) in held {
+        for (i, s, o, p) in held {
             w.u(i as u64);
             w.u(s as u64);
             w.u(o.to_bits() as u64);
+            if let Some(p) = p { w.u(p.to_bits() as u64); }
         }
     }
     w.0
@@ -1697,10 +1705,20 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
         r.1 += 4;
         for _ in 0..r.u()? {
             let (i, s, o) = (r.u()? as usize, r.u()? as usize, f32::from_bits(r.u()? as u32));
+            // T-4510: a weekend slot has its held phase after the offset
+            let rest = s >= SLOTS;
+            let (s, p) = if rest { (s - SLOTS, f32::from_bits(r.u()? as u32)) } else { (s, 0.0) };
             // a slot this build does not work out is left to the spacing, as is a line not there
-            if i < n_lines && s < SLOTS && net.slot_worked(s) && o.is_finite() {
-                net.line_offset.resize(net.line_offset.len().max(i + 1), [None; SLOTS]);
-                net.line_offset[i][s] = Some(o);
+            if i < n_lines && s < SLOTS && net.slot_worked(s) && o.is_finite() && p.is_finite() {
+                if rest {
+                    net.line_offset_rest.resize(net.line_offset_rest.len().max(i + 1), [None; SLOTS]);
+                    net.line_hold_rest.resize(net.line_hold_rest.len().max(i + 1), [0.0; SLOTS]);
+                    net.line_offset_rest[i][s] = Some(o);
+                    net.line_hold_rest[i][s] = p;
+                } else {
+                    net.line_offset.resize(net.line_offset.len().max(i + 1), [None; SLOTS]);
+                    net.line_offset[i][s] = Some(o);
+                }
             }
         }
     }

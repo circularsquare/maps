@@ -1682,9 +1682,10 @@ impl Service {
         // times its weekend trains are drawn on (the weekdays'); any other its weekday pattern
         let own = rest_tph != tph;
         let (split_r, p_r, auto_r, pace_r) = if own {
-            (net.line_split_rest_of(l as u32), net.line_phase_rest_of(l as u32), net.weekend_auto(l), net.line_pace_rest_of(l as u32))
+            (net.line_split_rest_of(l as u32), net.weekend_phase_of(l as u32), net.weekend_auto(l), net.line_pace_rest_of(l as u32))
         } else {
-            (split, p, net.auto_of(l), net.line_pace_of(l as u32))
+            // T-4510: its weekday ones, over the slots held on weekends
+            (split, net.weekend_phase_of(l as u32), net.auto_of(l), net.line_pace_of(l as u32))
         };
         // T-4227: a slot its hours share between rows shares its weekend rate out by the weekend's
         // trains (`fleet_on`), so a row with none there on weekdays runs its weekend ones
@@ -1714,7 +1715,7 @@ impl Service {
         };
         let week = Lattice { tph, off, lead, shift: ls.shift, phase, rest_tph: tph, rest_off: off, rest_phase: phase, rest_on: false, cal: Cal::NONE, period_slot: net.period_slot(), hours: hours_of(&tph) };
         // T-3521: no line runs other trains on weekends: every day the weekdays' pattern, at no cost
-        if !net.rest_solved {
+        if !net.rest_solved && !net.any_offset_rest(l as u32) {
             return Some(self.joined(net, l, week));
         }
         let rest_off = std::array::from_fn(|lev| if net.slot_worked(lev) { off_at(lev, rest_tph[lev], &split_r, &spare_r) } else { 0.0 });
@@ -1726,7 +1727,7 @@ impl Service {
             match twin_of {
                 Some(q) if t > 0.0 => {
                     let pt = net.line_tph_on(q, WEEKEND, lev);
-                    let qp = if own { net.line_phase_rest_of(q as u32) } else { net.line_phase_of(q as u32) };
+                    let qp = net.weekend_phase_of(q as u32);
                     let pp = qp[lev] as f64 + if pt > 0.0 { 1800.0 / pt as f64 } else { 0.0 };
                     pp.rem_euclid(3600.0 / t as f64)
                 }

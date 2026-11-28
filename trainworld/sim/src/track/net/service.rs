@@ -113,6 +113,8 @@ impl Network {
         fix(&mut self.line_split_rest, &new, &gone, 0.5);
         fix(&mut self.line_pace_rest, &new, &gone, 0.0);
         fix(&mut self.line_offset, &new, &gone, None);
+        fix(&mut self.line_offset_rest, &new, &gone, None);
+        fix(&mut self.line_hold_rest, &new, &gone, 0.0);
         for kept in [&mut self.settle_kept, &mut self.settle_kept_rest] {
             kept.retain(|k| !gone.contains(&k.1));
             let add: Vec<_> = kept.iter().flat_map(|k| new.iter().filter(move |n| n.1 == k.1).map(move |n| (k.0, n.0, k.2, k.3, k.4))).collect();
@@ -366,7 +368,35 @@ impl Network {
     }
     /// T-3742: the offset line `l`'s departures in slot `s` are held at (`line_offset`), None where the spacing places them.
     pub fn offset_at(&self, l: u32, s: usize) -> Option<f32> {
-        self.line_offset.get(l as usize).and_then(|o| o[s])
+        let v = if self.placing_rest { &self.line_offset_rest } else { &self.line_offset };
+        v.get(l as usize).and_then(|o| o[s])
+    }
+    /// T-4510: `offset_at` for line `l`'s weekend departures (`line_offset_rest`).
+    pub fn offset_rest_at(&self, l: u32, s: usize) -> Option<f32> {
+        if self.placing_rest { return None }
+        self.line_offset_rest.get(l as usize).and_then(|o| o[s])
+    }
+    /// T-4510: whether any slot of line `l`'s weekends is held (`offset_rest_at`).
+    pub fn any_offset_rest(&self, l: u32) -> bool {
+        !self.placing_rest && self.line_offset_rest.get(l as usize).is_some_and(|o| o.iter().any(|x| x.is_some()))
+    }
+    /// T-4510: whether any line's weekends are held anywhere.
+    pub fn any_rest_holds(&self) -> bool {
+        !self.placing_rest && self.line_offset_rest.iter().any(|o| o.iter().any(|x| x.is_some()))
+    }
+    /// T-4510: line `l`'s departure phase on weekends as they run: where it has its own weekend (`runs_own_weekend`)
+    /// that phase, else the weekdays', and each slot held on weekends (`line_offset_rest`) at its held phase.
+    pub fn weekend_phase_of(&self, l: u32) -> [f32; SLOTS] {
+        let mut p = if self.runs_own_weekend(l as usize) { self.line_phase_rest_of(l) } else { self.line_phase_of(l) };
+        self.overlay_rest_holds(l, &mut p);
+        p
+    }
+    /// T-4510: the slots of `p` (a weekend phase of line `l`) that are held, put at their held phase.
+    pub fn overlay_rest_holds(&self, l: u32, p: &mut [f32; SLOTS]) {
+        if self.placing_rest { return }
+        if let (Some(o), Some(h)) = (self.line_offset_rest.get(l as usize), self.line_hold_rest.get(l as usize)) {
+            for s in 0..SLOTS { if o[s].is_some() { p[s] = h[s]; } }
+        }
     }
     /// T-3742: whether any slot of line `l` is held (`offset_at`).
     pub fn any_offset(&self, l: u32) -> bool {

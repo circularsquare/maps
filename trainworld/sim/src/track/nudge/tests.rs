@@ -35,7 +35,11 @@ fn two_on_one_track() -> (TrackWorld, Vec<u32>, u32, u32, u32) {
 }
 
 fn nudge(w: &mut TrackWorld, l: u32, row: usize, by: f64) -> bool {
-    match w.nudge_op(l, row, by).unwrap() {
+    nudge_on(w, l, row, by, false)
+}
+
+fn nudge_on(w: &mut TrackWorld, l: u32, row: usize, by: f64, weekend: bool) -> bool {
+    match w.nudge_op(l, row, by, weekend).unwrap() {
         Some(op) => { w.apply(op).unwrap(); true }
         None => false,
     }
@@ -53,7 +57,7 @@ fn a_nudge_moves_its_row_alone_and_holds_it() {
     assert_eq!(deps(&w, a, 0), a0, "the other line keeps its times");
     assert_eq!(w.net.line_phase_of(b)[LOW], night, "another row keeps its times");
     assert_eq!(w.net.offset_at(b, HIGH), Some(120.0));
-    assert_eq!(w.row_nudge(b, 0), Some((120.0, 300.0, true, vec![])));
+    assert_eq!(w.row_nudge(b, 0, false), Some((120.0, 300.0, true, vec![])));
     // undone to the bit, and done again
     w.undo().unwrap().unwrap();
     assert_eq!((0..w.net.line_count() as u32).map(|l| w.net.line_phase_of(l)).collect::<Vec<_>>(), phases);
@@ -77,14 +81,14 @@ fn a_nudge_stops_at_half_a_headway_and_zero_releases_it() {
     let (mut w, _, _, b, _) = two_on_one_track();
     let base = w.net.line_phase_of(b)[HIGH];
     assert!(nudge(&mut w, b, 0, 10_000.0));
-    assert_eq!(w.row_nudge(b, 0).unwrap().0, 300.0, "half the 10 min headway");
+    assert_eq!(w.row_nudge(b, 0, false).unwrap().0, 300.0, "half the 10 min headway");
     assert!(!nudge(&mut w, b, 0, 60.0), "nothing past the end of the range");
     assert!(nudge(&mut w, b, 0, -360.0));
-    assert_eq!(w.row_nudge(b, 0).unwrap().0, -60.0);
+    assert_eq!(w.row_nudge(b, 0, false).unwrap().0, -60.0);
     assert!(nudge(&mut w, b, 0, 60.0));
     assert_eq!(w.net.offset_at(b, HIGH), None, "back at 0 the row is released");
     assert!((w.net.line_phase_of(b)[HIGH] - base).abs() < 1e-3, "at its times before the first nudge");
-    assert!(w.nudge_op(b, 0, 0.0).unwrap().is_none());
+    assert!(w.nudge_op(b, 0, 0.0, false).unwrap().is_none());
 }
 
 /// Held rows come back from a save with their times; a removed line holds none, and its undo holds them again.
@@ -113,17 +117,56 @@ fn held_rows_last_through_a_save_and_a_removal_undone() {
     assert!(!super::super::save::encode(&fresh.net).windows(4).any(|x| x == b"LOF1"));
 }
 
-/// A line running other rates on weekends has its weekend row moved and held with the weekday one.
+/// Weekends are nudged on their own: a weekday nudge leaves the weekend row where it was, a weekend nudge moves only it,
+/// and it is held through the line's weekend edits, an undo and a save.
 #[test]
-fn weekends_follow_the_weekday_nudge() {
+fn weekends_have_their_own_offsets() {
     let (mut w, _, _, b, _) = two_on_one_track();
     w.apply(Op::Weekend { id: b, weekend: super::super::net::Weekend { share: 50, counts: None, headways: [0; 3] } }).unwrap();
     assert!(w.net.rest_solved && w.net.runs_own_weekend(b as usize));
-    let rest = w.net.line_phase_rest_of(b)[HIGH];
+    let rest = w.net.weekend_phase_of(b)[HIGH];
     nudge(&mut w, b, 0, 90.0);
-    assert!((w.net.line_phase_rest_of(b)[HIGH] - rest - 90.0).abs() < 1e-3);
+    assert!((w.net.weekend_phase_of(b)[HIGH] - rest).abs() < 1e-3, "a weekday nudge leaves the weekends");
+    assert_eq!(w.row_nudge(b, 0, true).unwrap().0, 0.0);
+    let day = w.net.line_phase_of(b);
+    assert!(nudge_on(&mut w, b, 0, -120.0, true));
+    assert_eq!(w.net.line_phase_of(b), day, "and a weekend one the weekdays");
+    assert!((w.net.weekend_phase_of(b)[HIGH] - rest + 120.0).abs() < 1e-3);
+    let (o, half, held, _) = w.row_nudge(b, 0, true).unwrap();
+    assert!(o == -120.0 && held && half > 0.0, "{o} {half} {held}");
+    assert_eq!(w.row_nudge(b, 0, false).unwrap().0, 90.0);
+    let at = w.net.weekend_phase_of(b)[HIGH];
     w.apply(Op::Weekend { id: b, weekend: super::super::net::Weekend { share: 60, counts: None, headways: [0; 3] } }).unwrap();
-    assert!((w.net.line_phase_rest_of(b)[HIGH] - rest - 90.0).abs() < 1e-3, "a weekend edit leaves it held");
+    assert!((w.net.weekend_phase_of(b)[HIGH] - at).abs() < 1e-3, "a weekend edit leaves it held");
+    w.undo().unwrap().unwrap();
+    w.undo().unwrap().unwrap();
+    assert_eq!(w.net.offset_rest_at(b, HIGH), None, "undone");
+    assert!((w.net.weekend_phase_of(b)[HIGH] - rest).abs() < 1e-3);
+}
+
+/// A line that runs its weekday departures on weekends gets a weekend phase of its own only once a weekend offset is set,
+/// then keeps it through its weekday edits, an undo and a save.
+#[test]
+fn a_weekday_pattern_line_has_its_own_weekend_phase_once_set() {
+    let (mut w, _, _, b, _) = two_on_one_track();
+    assert!(!w.net.rest_solved && !w.net.runs_own_weekend(b as usize));
+    assert!(!w.svc.lattice(&w.net, b as usize).unwrap().rest_on);
+    assert!(nudge_on(&mut w, b, 0, 90.0, true));
+    assert!(!w.net.rest_solved, "no line runs other rates on weekends");
+    let lat = w.svc.lattice(&w.net, b as usize).unwrap();
+    assert!(lat.rest_on && (lat.rest_phase[HIGH] - lat.phase[HIGH]).rem_euclid(600.0) > 1.0, "{:?} {:?}", lat.rest_phase, lat.phase);
+    let held = w.net.weekend_phase_of(b)[HIGH];
+    set_headway(&mut w, b, [6.0, 3.0, 2.0]);
+    assert_eq!(w.net.weekend_phase_of(b)[HIGH], held, "held through the line's edit");
+    let bytes = super::super::save::encode(&w.net);
+    let back = TrackWorld::new(super::super::save::decode(&bytes).unwrap());
+    assert_eq!(back.net.offset_rest_at(b, HIGH), w.net.offset_rest_at(b, HIGH));
+    assert_eq!(back.net.weekend_phase_of(b), w.net.weekend_phase_of(b));
+    assert_eq!(super::super::save::encode(&back.net), bytes);
+    // back at 0 the weekend follows the weekdays' again
+    assert!(nudge_on(&mut w, b, 0, -90.0, true));
+    assert!(!w.net.any_offset_rest(b));
+    assert!(!w.svc.lattice(&w.net, b as usize).unwrap().rest_on);
 }
 
 /// The anchor rule: an express timed through passing stations behind its local holds no offset of its own. A nudge
@@ -143,8 +186,17 @@ fn a_nudge_moves_a_timed_pair_together() {
     assert_eq!(w.net.offset_at(express, HIGH), None);
     assert!((gap(&w) - g0).abs() < 1e-3, "the express keeps its place behind the local");
     assert!(moved_by(&l0, &deps(&w, local, 0), 60.0) && moved_by(&x0, &deps(&w, express, 0), 60.0));
+    // a weekend nudge holds both lines, so the pair stays timed on both kinds of day
+    let after_week: Vec<_> = w.svc.lines[local as usize].runs[0].vars[HIGH].iter().map(|v| v.stop_holds.clone()).collect();
+    assert!(nudge_on(&mut w, express, 0, 60.0, true));
+    let on = |w: &TrackWorld, l: u32| w.svc.lattice(&w.net, l as usize).unwrap().rest_on;
+    assert!(on(&w, local) && on(&w, express), "both run their own weekend phase");
+    assert!(w.net.offset_rest_at(local, HIGH).is_some() && w.net.offset_rest_at(express, HIGH).is_some());
+    let again: Vec<_> = w.svc.lines[local as usize].runs[0].vars[HIGH].iter().map(|v| v.stop_holds.clone()).collect();
+    assert_eq!(again, after_week, "the pair is still timed train by train");
+    w.undo().unwrap().unwrap();
     for (l, other) in [(express, local), (local, express)] {
-        let (o, half, held, others) = w.row_nudge(l, 0).unwrap();
+        let (o, half, held, others) = w.row_nudge(l, 0, false).unwrap();
         assert!(o == 60.0 && (half - 300.0).abs() < 0.1 && held && others == vec![other], "{l}: {o} {half} {held} {others:?}");
     }
     let after: Vec<_> = w.svc.lines[local as usize].runs[0].vars[HIGH].iter().map(|v| v.stop_holds.clone()).collect();

@@ -1274,7 +1274,7 @@ async function handleMessage(msg: ToClock) {
       : q.what === "linesPeriods" ? linesPeriods(api, q.lines, q.day)
       : q.what === "today" ? today()
       : q.what === "lineHeld" ? (q.rows && api.line_period_count(q.line) > 3 ? api.line_row_held(q.line) : api.line_held(q.line))
-      : q.what === "lineNudges" ? api.line_nudges(q.line)
+      : q.what === "lineNudges" ? api.line_nudges(q.line, !!q.weekend)
       : q.what === "lineMarks" ? api.line_marks(q.line)
       : q.what === "lineRelated" ? api.line_related(q.line, complexOfNodes())
       // T-2603: the line's timetable chart, four numbers a trip (`TrackApi.line_trips`)

@@ -1595,11 +1595,16 @@ Greedy on
   trains run their slot's timetable (6.2), and the weekend service's run times differ only where the
   holds do (DECISIONS 2026-11-20). Saved in a trailing
   `LWP1` block with the weekend pacing (save level 32); a save without it places them on load.
-  **Nudged** (T-3742, notes/T-3742.md): a rail line's weekday row nudged in the schedule panel's Offset column (1 min
+  **Nudged** (T-3742, notes/T-3742.md): a rail line's row nudged in the schedule panel's Offset column (1 min
   a click, 15 s with Shift, 10 min with Ctrl, within half its headway either way; wrapped into that where the headway
   is shorter since) is held: its slots (`Network::line_offset`, in the undo history as `Op::Nudge`, saved in a trailing
-  `LOF1` block, save level 43) are never placed again, and their phases already include the offset, the weekend's
-  too on a line with its own weekend rates. Back at 0 the row is released and placed again at its line's next edit;
+  `LOF1` block, save level 43) are never placed again, and their phases already include the offset. Weekends are nudged
+  on their own (T-4510): a weekend row's offset and held phase are `Network::line_offset_rest` and `line_hold_rest`
+  (`LOF1` too: slot plus 5, the phase's bits after the offset), read over the phase the weekend would run otherwise
+  (`weekend_phase_of`: the line's own weekend phase, else its weekdays'), so a line running its weekday departures on
+  weekends has its own weekend phase only for the slots held, and a weekday nudge no longer moves the weekends. A
+  weekend nudge holds every line timed with the nudged one (any slot), so a timed pair keeps one `rest_on` and
+  `timing::retime` keeps timing it. Back at 0 the row is released and placed again at its line's next edit;
   a line removed holds none, its undo holding them again. A line timed behind a slower one (`Capacity::follow_pairs`)
   holds no offset: a nudge of either moves the slower line's (up the chain), and every line timed with it by the
   same seconds, so passes and waits stay as sized. A nudge settles nothing and asks for no demand solve: waits are by

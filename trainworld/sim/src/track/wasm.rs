@@ -557,7 +557,7 @@ impl TrackApi {
                 cal[id] = crate::track::service::Cal::from_days(&pairs);
             }
         }
-        self.w.svc.set_cal(cal, self.w.net.rest_solved);
+        self.w.svc.set_cal(cal, self.w.net.rest_solved || self.w.net.any_rest_holds());
     }
     /// A line's day in the boarding account for its panel (T-230, `Boarding::line_summary`), on
     /// a kind of day (T-260); empty before riders.

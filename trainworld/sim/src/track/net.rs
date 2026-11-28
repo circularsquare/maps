@@ -834,6 +834,15 @@ pub struct Network {
     /// `line_phase_rest`) already includes the offset, which is kept raw (wrapped by the headway only when shown). In
     /// the undo history (`Op::Nudge`); saved in `LOF1`.
     pub line_offset: Vec<[Option<f32>; SLOTS]>,
+    /// T-4510: `line_offset` for weekends: the offset a weekend row is held at, and in `line_hold_rest` the weekend
+    /// departure phase it is held at (`weekend_phase_of`: read over whatever the weekend would run otherwise, so a
+    /// line running its weekday departures on weekends has its own weekend phase only for the slots held). Held
+    /// through edits like the weekdays'; undone with `Op::Nudge`; saved in `LOF1` too.
+    pub line_offset_rest: Vec<[Option<f32>; SLOTS]>,
+    pub line_hold_rest: Vec<[f32; SLOTS]>,
+    /// While the weekends' departures are placed (`TrackWorld::place_weekend`): `offset_at` reads the weekend holds,
+    /// the spacing keeping those slots where they stand, and no weekend phase is read over the weekdays'.
+    pub placing_rest: bool,
     /// T-1925: `line_phase` is placed (a save carried it, or a load placed every line), so a
     /// reload keeps it rather than placing every line
     pub phases_placed: bool,

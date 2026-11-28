@@ -1494,12 +1494,12 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   leave a row under two hours (high on three rows under six) are refused: the box shakes with the refusal's knock
   and a red line under the row says "2 hours at least" for five seconds. The row now (bold) and the names' hovers
   follow the hours; the window's left side is 330 px wide, 430 px for a rail line's (its Offset column). **Offset**
-  (T-3742): a rail line's last column, a stepper in each Weekdays row ("+4 min", "−1m15s", "0 min", grey while the
+  (T-3742): a rail line's last column, a stepper in each Weekdays and Weekends row, hidden until the icon button (two opposite arrows) in the "Set by" header turns it on (hovers "Show offsets", "Hide offsets"; kept per player in `display.scheduleOffsets`, off by default) (T-4510) ("+4 min", "−1m15s", "0 min", grey while the
   row is not held); minus "1 min earlier", plus "1 min later", each with "Shift-click for 15 s, Ctrl-click for 10
   min" (track-and-service.md 6.3 "Departures"); past half the row's headway "Half a headway at most", refused with the
   knock and a shake; the value's hover on a line timed with others "Express is timed with this line and moves with
   it". The heading's hover "Departures earlier or later than the game would run them. The game won't move this row
-  while it's set." Weekend rows show the weekday row's value in grey, hover "Follows weekdays"; a row with no trains
+  while it's set." A weekend row's offset is its own; a row with no trains
   is empty. Each click is one undoable edit; clicks while one is out go as the next. A switch to fewer rows (the game's,
   this line's, or Same as game) first asks "Confirm?" with the rows it joins and what they run: "Morning, midday and
   afternoon will run 26 trains, the most of the three" (a headway line: "will run every 4 min, the shortest of the

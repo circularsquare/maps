@@ -867,10 +867,10 @@ impl TrackApi {
         self.run(op)
     }
     /// T-3742: nudge row `row` of line `id` (its rows in the day's order) `by` seconds later, earlier when negative,
-    /// within half its headway (`TrackWorld::nudge_op`): one undoable service edit that buys nothing. 0 when it went
+    /// within half its headway (`TrackWorld::nudge_op`), on weekends when `weekend` (T-4510): one undoable service edit that buys nothing. 0 when it went
     /// ahead or there was nothing to move.
-    pub fn nudge_row(&mut self, id: u32, row: u32, by: f64) -> u32 {
-        match self.w.nudge_op(id, row as usize, by) {
+    pub fn nudge_row(&mut self, id: u32, row: u32, by: f64, weekend: bool) -> u32 {
+        match self.w.nudge_op(id, row as usize, by, weekend) {
             Ok(Some(op)) => self.run(op),
             Ok(None) => 0,
             Err(e) => self.refuse(e),
@@ -878,12 +878,12 @@ impl TrackApi {
     }
     /// T-3742: each row of line `id`'s offset as its schedule shows it (`TrackWorld::row_nudge`), in the day's order:
     /// per row the offset (s), half its headway (the range either way, s; 0 where it runs nothing), 1 if held, the
-    /// count of other lines timed with it, then their ids. Empty for a line a nudge cannot move.
-    pub fn line_nudges(&self, id: u32) -> Vec<f64> {
+    /// count of other lines timed with it, then their ids; on weekends when `weekend` (T-4510). Empty for a line a nudge cannot move.
+    pub fn line_nudges(&self, id: u32, weekend: bool) -> Vec<f64> {
         let mut out = vec![];
         if !self.w.net.line_ok(id) { return out }
         for row in 0..self.w.net.row_slots(id as usize).len() {
-            let Some((offset, half, held, others)) = self.w.row_nudge(id, row) else { return vec![] };
+            let Some((offset, half, held, others)) = self.w.row_nudge(id, row, weekend) else { return vec![] };
             out.extend([offset, half, held as u8 as f64, others.len() as f64]);
             out.extend(others.iter().map(|&o| o as f64));
         }

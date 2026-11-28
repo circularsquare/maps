@@ -127,6 +127,8 @@ export interface DisplaySettings {
   transitModes: boolean;
   /** T-2660: the timetable chart draws other lines' trains where they share its track or cross it */
   chartOtherLines: boolean;
+  /** T-4510: the schedule window's Offset column, for nudging a row's departures; off by default */
+  scheduleOffsets: boolean;
   /** T-2838, T-3630: trips between cities are calculated (the market opens); per browser, since it is about the
    * device: on by default on a computer, off on a phone or tablet. Read at each solve, so it applies from the next
    * one; the start menu's ticked box is what a game opened there gets. */
@@ -190,6 +192,7 @@ const DEFAULT_DISPLAY: DisplaySettings = {
   // T-3814: a new player names stations independently (an existing one keeps on, below)
   bindNew: false,
   chartOtherLines: true,
+  scheduleOffsets: false,
   intercityTrips: !mobileDevice(),
   coarseDemand: mobileDevice(),
   modeShapes: { ...MODE_SHAPES },
