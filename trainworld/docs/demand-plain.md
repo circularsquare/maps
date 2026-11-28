@@ -139,7 +139,11 @@ only reach stations on it. The city panel counts these trips as "No route" until
   evenly.
 - Lines on the same track and the same stops (Anita, 2026-11-22, the 4 and 5 trains): the
   timetable spaces them evenly, so for people disembarking at the same stop they are one line,
-  and two lines every 10 minutes mean waiting 2.5 minutes, people splitting by trains an hour. Where
+  and two lines every 10 minutes mean waiting 2.5 minutes, people splitting by trains an hour. A
+  line there that costs more, by a fare or a crowded train, loses its people a few at a time
+  (Anita, 2026-11-27): someone takes its train unless the other line's next one comes soon enough
+  to make up the difference, so of two lines every 10 minutes, one 5 minutes dearer keeps a quarter
+  of the people, 7.5 minutes dearer none. Where
   one line skips a stop (the 4 beside the 6), stops at its own platform, or is a bus, they stay
   separate as above. On a shared trunk that splits into branches, people going past the split
   wait for their own branch's train at their own station (Anita, 2026-11-23): nobody rides the

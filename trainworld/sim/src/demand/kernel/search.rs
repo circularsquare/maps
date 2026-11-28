@@ -1654,13 +1654,15 @@ pub(super) struct Search<'a> {
     pub(super) pw: PoolWork,
     pub(super) shares: SharesBuild,
     /// T-4050: each line in `pl`'s route node; `pl` with the evenly spaced services taken as one
-    /// (`merge_even`), each line's place there, and their shares
+    /// (`merge_even`), each line's place there and its riders' weight in that entry (trains an hour,
+    /// summing to the entry's), and their shares
     pub(super) pk: Vec<u32>,
     pub(super) pm: Vec<(f32, f32)>,
     /// T-4514: each `pm` entry's trains an hour as they run, which its lines' riders split by; `pm`'s own are fewer
     /// where the service's real gaps make its wait longer than evenly spaced (`Graph::rn_gap`)
     pub(super) pmf: Vec<f32>,
     pub(super) pmap: Vec<u32>,
+    pub(super) pin: Vec<f32>,
     pub(super) shm: Vec<f32>,
     pub(super) pord: Vec<u32>,
     /// T-4050: per route node settled, where a rider on its train gets off, (station, stops ridden
@@ -1971,6 +1973,7 @@ impl Search<'_> {
             pmap: vec![],
             shm: vec![],
             pord: vec![],
+            pin: vec![],
             alight: if g.rn_even.is_empty() { vec![] } else { vec![(NONE, 0); nr] },
             sh: vec![],
             pw: PoolWork::default(),
@@ -2299,7 +2302,7 @@ impl Search<'_> {
         if want {
             for i in 0..self.pl.len() {
                 let m = self.pmap[i];
-                self.sh[i] = if m == NONE { 0.0 } else { self.shm[m as usize] * self.pl[i].1 / self.pmf[m as usize] };
+                self.sh[i] = if m == NONE { 0.0 } else { self.shm[m as usize] * self.pin[i] / self.pmf[m as usize] };
             }
         }
         out
@@ -2307,14 +2310,16 @@ impl Search<'_> {
 
     /// T-4050: the lines in `pl` whose departures are one evenly spaced service (`Graph::rn_even`)
     /// for riders who get off where they would (`alight`: the trip the lines serve alike) into one
-    /// entry of `pm`, as riders take evenly spaced trains (the common-lines rule): from the cheapest,
-    /// each next joins while its cost from boarding is below the service's so far (the mean of its
-    /// lines' by trains an hour, plus half their combined headway times `wait_f`); trains an hour
-    /// summed, so riders split by trains an hour. A line that does not join is never taken there
-    /// (`pmap` `NONE`): its trains come between the service's. Coupled lines whose riders get off
-    /// elsewhere (a stop on one branch) stay apart, as any. T-4514: two or more joined wait by their real
-    /// gaps (`Graph::rn_gap`, the largest of theirs): the service's trains an hour in `pm` over that factor, the
-    /// ones they run in `pmf`. False, `pm` untouched, when no two lines are one service.
+    /// entry of `pm`, as riders take evenly spaced trains. From the cheapest, each next line's trains
+    /// come between the service's so far (T-4250): a rider takes one unless the service's next train
+    /// comes soon enough to make up what it costs more, that gap spread evenly from half the combined
+    /// headway to the service's headway minus that (evenly spaced trains' steps, smoothed). So the
+    /// line keeps its trains-an-hour share while dearer by up to the low end, gets none from the high
+    /// end, and fades in a straight line between; its riders' weight goes to `pin`. A line given none
+    /// is never taken there (`pmap` `NONE`). Coupled lines whose riders get off elsewhere (a stop on
+    /// one branch) stay apart, as any. T-4514: two or more taken wait by their real gaps
+    /// (`Graph::rn_gap`, the largest of theirs): the service's trains an hour in `pm` over that factor,
+    /// the ones they run in `pmf`. False, `pm` untouched, when no two lines are one service.
     fn merge_even(&mut self, wait_f: f32, planned: bool) -> bool {
         let (g, s) = (self.g, self.s);
         let k = self.pl.len();
@@ -2342,6 +2347,8 @@ impl Search<'_> {
         }
         self.pm.clear();
         self.pmf.clear();
+        self.pin.clear();
+        self.pin.extend(self.pl.iter().map(|x| x.1));
         // each line's first line with its key, then its entry in `pm`
         self.pmap.clear();
         for i in 0..k {
@@ -2364,18 +2371,54 @@ impl Search<'_> {
                 continue;
             }
             ord.sort_unstable_by(|&a, &b| self.pl[a as usize].0.total_cmp(&self.pl[b as usize].0).then(a.cmp(&b)));
-            // (sums of cost x trains an hour, then the mean; the joined lines' largest factor on their wait)
-            let (mut df, mut sf, mut joined, mut gf) = (0f64, 0f64, 0u32, 1f32);
+            let spread = |f: f64| wait_spread(f as f32, wait_f, planned) as f64;
+            // the service so far as one line: cost x trains an hour, trains an hour; and its riders'
+            // weights summed; the joined lines' count and largest gap factor (T-4514)
+            let (mut df, mut sf, mut tot, mut joined, mut gf) = (0f64, 0f64, 0f64, 0u32, 1f32);
             for &j in ord.iter() {
-                let (d, f) = (self.pl[j as usize].0 as f64, self.pl[j as usize].1 as f64);
-                let joins = sf == 0.0 || d < df / sf + wait_spread(sf as f32, wait_f, planned) as f64 / 2.0;
-                if joins {
-                    (df, sf, joined) = (df + d * f, sf + f, joined + 1);
-                    if let Some(&x) = g.rn_gap.get(self.pk[j as usize] as usize) {
+                let j = j as usize;
+                let (d, f) = (self.pl[j].0 as f64, self.pl[j].1 as f64);
+                // trains an hour taken, and the service's before
+                let (mut take, s0) = (f, sf);
+                if sf > 0.0 {
+                    let (hs, ff) = (spread(sf), sf + f);
+                    let hh = spread(ff);
+                    let (ds, u) = (df / sf, (hs - hh) / 2.0);
+                    // the gaps' middle: where taking its trains as they come costs what the service
+                    // so far does (half the service's headway, unless a planned wait is capped)
+                    let mid = u * ff / f;
+                    let (lo, hi, x) = (mid - u, mid + u, d - ds);
+                    if x <= lo {
+                        (df, sf) = (df + d * f, ff);
+                    } else if x >= hi {
+                        take = 0.0;
+                    } else {
+                        take = f * (hi - x) / (hi - lo);
+                        // riders pay x, or the gap when it is shorter: E[min(x, gap)]
+                        let cost = ds + hh / 2.0 + f / ff * (x - (x - lo) * (x - lo) / (2.0 * (hi - lo)));
+                        sf += take;
+                        df = (cost - spread(sf) / 2.0) * sf;
+                    }
+                } else {
+                    (df, sf) = (d * f, f);
+                }
+                if take > 0.0 {
+                    joined += 1;
+                    if let Some(&x) = g.rn_gap.get(self.pk[j] as usize) {
                         gf = gf.max(x);
                     }
                 }
-                self.pmap[j as usize] = if joins { at } else { NONE };
+                // its share of the riders, take / (service's trains an hour + its own), as a weight
+                // beside the others' (trains an hour while no line has faded)
+                let w = if take == f && tot == s0 { f } else { take * tot / (s0 + f - take) };
+                self.pmap[j] = if take > 0.0 { at } else { NONE };
+                self.pin[j] = w as f32;
+                tot += w;
+            }
+            if tot != sf {
+                for &j in ord.iter() {
+                    self.pin[j as usize] = (self.pin[j as usize] as f64 * sf / tot) as f32;
+                }
             }
             let gf = if joined > 1 { gf as f64 } else { 1.0 };
             self.pm.push(((df / sf) as f32, (sf / gf) as f32));

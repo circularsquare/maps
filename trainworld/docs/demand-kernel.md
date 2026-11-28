@@ -144,20 +144,26 @@ levels:
    (`Graph::rn_even`), share that track with no stop between to pass at, and the timetable spaces
    such lines evenly ([track-and-service.md](track-and-service.md) "Spaced from other lines"). Where
    their riders get off at the same stop after the same number of stops (`Search::alight`), they
-   are one line in the pool (`Search::merge_even`, as riders take evenly spaced trains): from the
-   cheapest, each joins while its cost from boarding is below the service's so far (the lines'
-   mean by trains an hour plus half their combined headway times the wait weight); trains an hour
-   are summed and riders split by them; a line that does not join is never taken there. So two
-   lines every 10 minutes on one track and stops wait 2.5 minutes, every 10 and every 5 split a
-   third and two thirds. A line skipping a stop has another next stop and stays independent (the 4
-   beside the 6), as do lines at platforms of their own, and coupled lines whose riders get off
-   elsewhere (bound past the split, each branch's riders board their own as above). **The lie**
-   (DECISIONS 2026-11-22): lines at different rates cannot be spread exactly evenly (every 10 and
-   every 5 really wait about 1.9 minutes, not 1.67); the cost is continuous but a line's share is
-   not: one dearer (a fare, crowding) by less than half the other's headway keeps its trains-an-hour
-   share, by more it gets none, so crowding can move a line of a pair in and out between rounds;
-   riders past the split wait for their own line at their own station (no change onto the line
-   right behind their train, below).
+   are one line in the pool (`Search::merge_even`). From the cheapest, each next line's trains come
+   between the service's so far, and a rider takes one unless the service's next train comes soon
+   enough to make up what it costs more (Anita 2026-11-27, T-4250): that gap is taken as spread
+   evenly from half the combined headway to the service's headway minus that, times the wait
+   weight (for a planned wait between cities, centred where taking the line's trains as they come
+   costs what the service so far does). So a line dearer (a fare, crowding) by up to half the
+   combined headway keeps its trains-an-hour share, from the service's headway minus that it gets
+   none, and its share fades in a straight line between; riders pay the extra or the gap,
+   whichever is less, so the pool's cost rises smoothly and never above taking every train or none
+   of the dearer line's. Two lines every 10 minutes on one track and stops wait 2.5 minutes; every
+   10 and every 5 split a third and two thirds; of two every 10, one dearer by 5 minutes keeps a
+   quarter of the riders, by 7.5 none. A line skipping a stop has another next stop and stays
+   independent (the 4 beside the 6), as do lines at platforms of their own, and coupled lines whose
+   riders get off elsewhere (bound past the split, each branch's riders board their own as above).
+   **The lie** (DECISIONS 2026-11-27): lines at different rates cannot be spread exactly evenly
+   (every 10 and every 5 really wait about 1.9 minutes, not 1.67); on a timetable the gap behind a
+   dearer line's train comes in steps of the combined headway, not spread evenly (two lines every
+   10 minutes: always 5, so all of the dearer one's riders really leave it at once, 5 minutes
+   dearer); riders past the split wait for their own line at their own station (no change onto the
+   line right behind their train, below).
    **The service span** (T-842, Anita 2026-10-21: "demand should know the schedule, roughly").
    Riders differ in how long they would wait for the next train rather than go another way: the
    tolerance is spread log-uniformly from 30 minutes to 6 hours (half of riders take up to 1.7 h;

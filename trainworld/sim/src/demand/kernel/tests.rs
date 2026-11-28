@@ -1087,15 +1087,22 @@ fn lines_on_one_track_and_stops_are_evenly_spaced() {
     od[1] = 90.0;
     let loads = assign(&g, &sk, &od);
     assert!((loads.rn_board[0] - 30.0).abs() < 1e-3 && (loads.rn_board[4] - 60.0).abs() < 1e-3, "{:?}", loads.rn_board);
-    // one line dearer by a fare: taken while dearer by less than the other's half headway (5),
-    // else never (its trains come between the cheaper one's)
-    for (extra, want) in [(3.0, 2.0 + 1.5 + 2.5), (6.0, 2.0 + 5.0)] {
+    // one line dearer by a fare (T-4250): its trains leave 5 minutes after the other's, smoothed to
+    // a gap spread from 2.5 to 7.5; it keeps its half of the riders while dearer by up to 2.5, a
+    // quarter at 5, none from 7.5, and riders pay the fare or the gap, whichever is less
+    let gap = |x: f32| x - (x - 2.5) * (x - 2.5) / 10.0;
+    for (extra, want, dearer) in [(2.0, 2.0 + 1.0 + 2.5, 0.5), (3.0, 2.0 + 2.5 + gap(3.0) / 2.0, 0.45), (5.0, 2.0 + 2.5 + gap(5.0) / 2.0, 0.25), (6.0, 2.0 + 2.5 + gap(6.0) / 2.0, 0.15), (9.0, 2.0 + 5.0, 0.0)] {
         let mut g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &[6.0, 6.0], &[2.0, 2.0]), &p);
         g.rn_fare[4] = extra;
         let ones = vec![1.0; g.rn_ride.len()];
         set_crowding(&mut g, &ones);
-        let r = skims(&g, &p).r[1];
+        let sk = skims(&g, &p);
+        let r = sk.r[1];
         assert!((r - want).abs() < 1e-4, "dearer by {extra}: {r} against {want}");
+        let mut od = vec![0.0; 16];
+        od[1] = 100.0;
+        let b = assign(&g, &sk, &od).rn_board;
+        assert!((b[4] - 100.0 * dearer).abs() < 1e-3 && (b[0] + b[4] - 100.0).abs() < 1e-3, "dearer by {extra}: {:?}", b);
     }
     // the 4 and the 6: an express to 2 as fast as the local through 1, both every 10 minutes
     let six = skims(&build_graph(&common_test_net(&[&[0, 1, 2], &[0, 2]], &[6.0, 6.0], &[2.0, 4.0]), &p), &p);
@@ -1134,6 +1141,101 @@ fn a_shared_stretch_waits_by_its_real_gaps() {
     od[1] = 90.0;
     let loads = assign(&g, &sk, &od);
     assert!((loads.rn_board[0] - 45.0).abs() < 1e-3 && (loads.rn_board[6] - 45.0).abs() < 1e-3, "{:?}", loads.rn_board);
+}
+
+/// T-4250: a line on one track and stops getting dearer loses its riders by degrees, whatever the two
+/// lines' trains an hour: the cost rises steadily and never above taking every train or none of the
+/// dearer line's, and the dearer line's share falls with no step.
+#[test]
+fn a_dearer_line_on_one_track_fades_out() {
+    let p = common_test_params();
+    for tph in [[6.0f32, 6.0], [6.0, 10.0], [10.0, 6.0]] {
+        let (h0, both) = (60.0 / tph[0], 60.0 / (tph[0] + tph[1]));
+        let full = tph[1] / (tph[0] + tph[1]);
+        // the most a share may fall in a quarter minute: its trains-an-hour share over the gaps' spread
+        let most = 0.25 * full / (h0 - both) + 1e-4;
+        let (mut last_r, mut last) = (0.0f32, full);
+        for step in 0..=48 {
+            let extra = step as f32 * 0.25;
+            let mut g = build_graph(&common_test_net(&[&[0, 1], &[0, 1]], &tph, &[2.0, 2.0]), &p);
+            g.rn_fare[4] = extra;
+            let ones = vec![1.0; g.rn_ride.len()];
+            set_crowding(&mut g, &ones);
+            let sk = skims(&g, &p);
+            let mut od = vec![0.0; 16];
+            od[1] = 100.0;
+            let b = assign(&g, &sk, &od).rn_board;
+            let (r, share) = (sk.r[1], b[4] / 100.0);
+            let cliff = (2.0 + full * extra + both / 2.0).min(2.0 + h0 / 2.0);
+            assert!(r <= cliff + 1e-4, "{tph:?} dearer by {extra}: {r} over {cliff}");
+            assert!((b[0] + b[4] - 100.0).abs() < 1e-3, "{tph:?} dearer by {extra}: {b:?}");
+            if step > 0 {
+                assert!(r >= last_r - 1e-5 && r - last_r <= 0.25 + 1e-4, "{tph:?} dearer by {extra}: {last_r} -> {r}");
+                assert!(share <= last + 1e-5 && last - share <= most, "{tph:?} dearer by {extra}: {last} -> {share}");
+            }
+            (last_r, last) = (r, share);
+        }
+        assert!(last.abs() < 1e-6, "{tph:?}: {last}");
+    }
+}
+
+/// T-4250 (a player, 11-25: a relief line near 60% beside a long line over 130%): riders inside the
+/// short line's stretch move to it as the long line fills.
+#[test]
+fn a_short_line_beside_a_crowded_long_one_takes_its_riders() {
+    let p = common_test_params();
+    // A, 0-1-2 every 6 minutes; B, 0-1 every 10, on the same track and stops (route node 6 is B out of 0)
+    let mut g = build_graph(&common_test_net(&[&[0, 1, 2], &[0, 1]], &[10.0, 6.0], &[2.0, 2.0]), &p);
+    assert!(g.rn_even[0] != NONE && g.rn_even[0] == g.rn_even[6], "{:?}", g.rn_even);
+    // A's ride from 0 counts 3.25 times as crowded: dearer than B's by 4.5 minutes, under half B's
+    // headway, so before T-4250 A kept all of its 10 of 16
+    let mut fac = vec![1.0; g.rn_ride.len()];
+    fac[0] = 3.25;
+    set_crowding(&mut g, &fac);
+    let sk = skims(&g, &p);
+    let mut od = vec![0.0; 16];
+    od[1] = 100.0;
+    od[2] = 50.0;
+    let b = assign(&g, &sk, &od).rn_board;
+    // the gap behind an A train to the next B is spread from 1.875 to 8.125
+    let a = 10.0 / 16.0 * (8.125 - 4.5) / 6.25;
+    assert!((b[0] - (50.0 + 100.0 * a)).abs() < 1e-3 && (b[6] - 100.0 * (1.0 - a)).abs() < 1e-3, "{:?}", b);
+}
+
+/// T-4250: three lines on one track and stops, two dearer by a fare, come out the same whichever
+/// order the network lists them in.
+#[test]
+fn an_evenly_spaced_service_does_not_depend_on_line_order() {
+    let p = common_test_params();
+    // (trains an hour, fare): listed as given, then rotated
+    let lines = [(6.0f32, 0.0f32), (6.0, 2.5), (12.0, 1.0)];
+    let run = |order: [usize; 3]| {
+        let tph: Vec<f32> = order.iter().map(|&i| lines[i].0).collect();
+        let mut g = build_graph(&common_test_net(&[&[0, 1], &[0, 1], &[0, 1]], &tph, &[2.0, 2.0, 2.0]), &p);
+        for (k, &i) in order.iter().enumerate() {
+            g.rn_fare[4 * k] = lines[i].1;
+        }
+        let ones = vec![1.0; g.rn_ride.len()];
+        set_crowding(&mut g, &ones);
+        let sk = skims(&g, &p);
+        let mut od = vec![0.0; 16];
+        od[1] = 100.0;
+        let b = assign(&g, &sk, &od).rn_board;
+        let mut by_line = [0.0f32; 3];
+        for (k, &i) in order.iter().enumerate() {
+            by_line[i] = b[4 * k];
+        }
+        (sk.r[1], by_line)
+    };
+    let (r0, b0) = run([0, 1, 2]);
+    let (r1, b1) = run([2, 0, 1]);
+    assert!((r0 - r1).abs() < 1e-5, "{r0} {r1}");
+    assert!((b0.iter().sum::<f32>() - 100.0).abs() < 1e-3, "{b0:?}");
+    for i in 0..3 {
+        assert!((b0[i] - b1[i]).abs() < 1e-3, "{b0:?} {b1:?}");
+    }
+    // the dearest fades part way: some riders, fewer than its trains-an-hour share (25)
+    assert!(b0[1] > 0.0 && b0[1] < 25.0, "{b0:?}");
 }
 
 /// T-1281: a wait in a waiting room counts at 0.8 of its minutes, and changing there too; a park

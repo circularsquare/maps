@@ -751,7 +751,9 @@ notes/T-420.md has the tables.
   and a quarter the first train that comes (unless it is sure to arrive after the others would),
   each line's wait uniform over its headway and independent of the others'; lines on one track and
   stops with nowhere to pass are one evenly spaced service where their riders get off alike (T-4050:
-  two lines every 10 minutes wait 2.5 minutes, not 3.3; docs/demand-kernel.md 4). One rule for every
+  two lines every 10 minutes wait 2.5 minutes, not 3.3), and a dearer one there, by a fare or
+  crowding, loses its riders by degrees (T-4250: of two every 10 minutes, one 5 minutes dearer keeps
+  a quarter, 7.5 none; docs/demand-kernel.md 4). One rule for every
   place. Why it may not carry over: elsewhere real timetables also space lines that share only a
   platform or meet at a junction, and where riders check a live departure board or an app they
   know the next train, which this rule assumes they act on. Check: the split between an express and a local on
