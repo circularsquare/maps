@@ -191,7 +191,7 @@ export function goesAhead(m: ToClock, f: FollowUp): boolean {
 const OWN_STATE_OPS = new Set<EditOp["op"]>(["fares", "fareScale", "fareCityScale", "fareByCity", "fareHsr", "fareFerry", "fareBus", "fareTransfer", "fareLine", "fareZones", "fareRef", "borrow", "repay", "link", "addBuilding", "reshapeBuilding", "renameBuilding", "removeBuilding"]);
 /** T-1071, T-1073: an edit that changes only the service (a train count takes effect a moment ahead) */
 export function isServiceOp(op: EditOp): boolean {
-  return op.op === "setTrainCount" || op.op === "setHeadway" || op.op === "weekendShare" || op.op === "weekendCounts" || op.op === "weekendShareAll" || op.op === "setPeriods" || op.op === "setHours" || op.op === "setRowTrains" || op.op === "setRowHeadways" || op.op === "rowWeekend"
+  return op.op === "setTrainCount" || op.op === "setHeadway" || op.op === "weekendShare" || op.op === "weekendCounts" || op.op === "weekendShareAll" || op.op === "setPeriods" || op.op === "setHours" || op.op === "setRowTrains" || op.op === "setRowHeadways" || op.op === "rowWeekend" || op.op === "nudgeRow"
     || ((op.op === "undo" || op.op === "redo") && api!.step_is_service(op.op === "redo"));
 }
 /** T-3803: an edit came before follow-up `f`'s state went: the rows it built (or new ones) go as a rows state when an

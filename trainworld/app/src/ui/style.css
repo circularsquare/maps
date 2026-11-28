@@ -262,6 +262,9 @@ svg .stroke2 { stroke-width: 2; }
 .sp-title .sp-close { margin-left: auto; }
 .sp-body { display: flex; gap: 28px; align-items: flex-start; }
 .sp-left { flex: 0 0 330px; min-width: 0; }
+/* T-3742: a rail line's Offset column */
+.sp-left.sp-nudge { flex-basis: 430px; }
+table.sched td.sched-offset .stepper .v { min-width: 50px; }
 .sp-left .h:first-child { margin-top: 6px; }
 .sp-left .h.set-by { font-weight: 400; color: var(--muted); align-items: center; }
 .sp-left .h.set-by .right { margin-left: 12px; color: var(--text); }
@@ -293,7 +296,7 @@ svg .stroke2 { stroke-width: 2; }
 .sp-row.now .sp-hour { background: color-mix(in srgb, var(--accent) 22%, var(--bg)); }
 @media (max-width: 720px) {
   .sp-body { flex-direction: column; gap: 8px; }
-  .sp-left { flex: none; width: 100%; }
+  .sp-left, .sp-left.sp-nudge { flex: none; width: 100%; }
   .sp-right { width: 100%; }
 }
 /* T-3469: the timetable (TrainTable.tsx), as a printed one: a column per train, small type */

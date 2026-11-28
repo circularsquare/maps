@@ -143,6 +143,7 @@ impl Network {
             line_phase_rest: vec![],
             line_split_rest: vec![],
             line_pace_rest: vec![],
+            line_offset: vec![],
             phases_placed: false,
             period_slot: PERIOD_SLOT_3,
             slot_list: slot_list(PERIOD_SLOT_3),

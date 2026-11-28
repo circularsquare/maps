@@ -866,6 +866,29 @@ impl TrackApi {
         let op = self.high_rows(id, Op::Weekend { id, weekend }, |x| (x.weekend_counts, x.weekend_headways) = ([c[0]; 2], [headways[0]; 2]));
         self.run(op)
     }
+    /// T-3742: nudge row `row` of line `id` (its rows in the day's order) `by` seconds later, earlier when negative,
+    /// within half its headway (`TrackWorld::nudge_op`): one undoable service edit that buys nothing. 0 when it went
+    /// ahead or there was nothing to move.
+    pub fn nudge_row(&mut self, id: u32, row: u32, by: f64) -> u32 {
+        match self.w.nudge_op(id, row as usize, by) {
+            Ok(Some(op)) => self.run(op),
+            Ok(None) => 0,
+            Err(e) => self.refuse(e),
+        }
+    }
+    /// T-3742: each row of line `id`'s offset as its schedule shows it (`TrackWorld::row_nudge`), in the day's order:
+    /// per row the offset (s), half its headway (the range either way, s; 0 where it runs nothing), 1 if held, the
+    /// count of other lines timed with it, then their ids. Empty for a line a nudge cannot move.
+    pub fn line_nudges(&self, id: u32) -> Vec<f64> {
+        let mut out = vec![];
+        if !self.w.net.line_ok(id) { return out }
+        for row in 0..self.w.net.row_slots(id as usize).len() {
+            let Some((offset, half, held, others)) = self.w.row_nudge(id, row) else { return vec![] };
+            out.extend([offset, half, held as u8 as f64, others.len() as f64]);
+            out.extend(others.iter().map(|&o| o as f64));
+        }
+        out
+    }
     /// T-3521: run every line's weekends at `share` percent of its weekdays, counts set by hand
     /// dropped (`set_line_weekend_share`), as one undoable edit. A hidden twin follows its line.
     pub fn set_weekend_share_all(&mut self, share: u32) -> u32 {

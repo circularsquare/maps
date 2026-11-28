@@ -231,8 +231,8 @@ function LineBody({ l, st }: { l: LineInput; st: LineStats }) {
   const any = related.length > 0 || (!!links && (links.shared.size > 0 || links.passes.length > 0));
   return (
     <div class="sp-body">
-      <div class="sp-left">
-        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} weekends hours above={<Periods l={l} st={st} />} />
+      <div class="sp-left sp-nudge">
+        <Schedule l={l} st={st} period={periodAt(lineSeconds(st))} limits={limits} crowd={periods} label={t("schedulePanel.setBy")} weekends hours nudge above={<Periods l={l} st={st} />} />
         <Board key={l.num} l={l} st={st} />
       </div>
       <div class="sp-right">

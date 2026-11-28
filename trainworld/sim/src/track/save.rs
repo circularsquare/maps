@@ -111,6 +111,9 @@ use super::bus::keep::{KeepLink, KeptStop};
 /// (`Network::apart`): count, then node pairs in the dense ids, as `LNK1`; without it none are.
 /// A trailing `LAF1` block (T-4380, level 42, after `LAP1`) gives the by-hand bus lines whose route start is no stop
 /// (`BusRoute::first_off`): count, then line indexes; without it every start is one.
+/// A trailing `LOF1` block (T-3742, level 43, after `LAF1`) gives the slots of lines a player held at an offset from
+/// where the spacing placed them (`Network::line_offset`): count, then per slot the line index, the slot and the
+/// offset's f32 bits; without it none are held. The saved phases already include the offsets.
 /// A trailing `LBO1` block (T-4013, level 38) gives the lines with boarding-only or getting-off-only stops
 /// (`LineData::only`): count, then per line its index, its count and per stop its place in the line's stops and
 /// its kind (1 boarding only, 2 getting off only); without it every stop lets riders on and off.
@@ -126,13 +129,13 @@ const MAGIC_TWT6: &[u8; 4] = b"TWT6";
 
 /// T-1826: the trailing blocks this build reads, in the order they are written. A block it does not
 /// know stops the decoder, which then reports the bytes left over (`decode_read`).
-pub const BLOCKS: [&[u8; 4]; 45] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1", b"LBK1", b"LAP1", b"LAF1"];
+pub const BLOCKS: [&[u8; 4]; 46] = [b"LUI1", b"LNK1", b"LAU1", b"LHS1", b"LBS1", b"LBS2", b"LRT1", b"LGR1", b"LGL1", b"LOR1", b"LPH1", b"LSP1", b"LFR1", b"LFR2", b"LFR3", b"BLD1", b"LBD1", b"LBP1", b"LHO1", b"LMN1", b"LBH1", b"LOW1", b"LSL1", b"LPC1", b"LTW1", b"LPS1", b"LWE1", b"LOS1", b"LPD1", b"LHR1", b"LFZ1", b"LSN1", b"LFD1", b"LGN1", b"LRA1", b"LWP1", b"LFB1", b"LBR1", b"LBT1", b"LBQ1", b"LBO1", b"LBE1", b"LBK1", b"LAP1", b"LAF1", b"LOF1"];
 /// T-1826: the save level this build writes into the game header (`level`) and reads up to. Raised
 /// with every new block, every new field inside a header field (a new top-level header field is seen
 /// as unknown on its own) and every new meaning of existing bytes, so an older build knows a newer
 /// save even when it has nothing left over, and refuses to open it (T-4014). Saves from before it have none, read
 /// as 0. The app keeps a copy (`SAVE_LEVEL`, app/src/workers/saveFile.ts; `the_app_knows_this_level`).
-pub const LEVEL: u32 = 42;
+pub const LEVEL: u32 = 43;
 /// T-3759: the last level from before stations could be unbound from their complex's name; a typed
 /// station there showed its own name, so loading one makes such a station unbound (the app's pass).
 pub const OLD_BOUND_NAMES: u32 = 26;
@@ -916,6 +919,17 @@ pub fn encode(net: &Network) -> Vec<u8> {
         w.u(off.len() as u64);
         for i in off { w.u(i as u64); }
     }
+    // T-3742: after LAF1, only where some line's departures are held at an offset
+    let held: Vec<(usize, usize, f32)> = lines.iter().enumerate().flat_map(|(i, &l)| (0..SLOTS).filter_map(move |s| net.offset_at(l, s).map(|o| (i, s, o)))).collect();
+    if !held.is_empty() {
+        w.0.extend_from_slice(b"LOF1");
+        w.u(held.len() as u64);
+        for (i, s, o) in held {
+            w.u(i as u64);
+            w.u(s as u64);
+            w.u(o.to_bits() as u64);
+        }
+    }
     w.0
 }
 
@@ -1679,6 +1693,17 @@ fn decode_read_at(bytes: &[u8], level: u32) -> Result<(Network, usize), String> 
             }
         }
     }
+    if r.0.get(r.1..r.1 + 4) == Some(b"LOF1") {
+        r.1 += 4;
+        for _ in 0..r.u()? {
+            let (i, s, o) = (r.u()? as usize, r.u()? as usize, f32::from_bits(r.u()? as u32));
+            // a slot this build does not work out is left to the spacing, as is a line not there
+            if i < n_lines && s < SLOTS && net.slot_worked(s) && o.is_finite() {
+                net.line_offset.resize(net.line_offset.len().max(i + 1), [None; SLOTS]);
+                net.line_offset[i][s] = Some(o);
+            }
+        }
+    }
     for l in manual {
         fold_manual(&mut net, l);
     }
@@ -1937,7 +1962,7 @@ mod tests {
         for tag in &written {
             assert!(BLOCKS.iter().any(|b| &b[..] == tag.as_bytes()), "block {tag} is written but not in BLOCKS");
         }
-        assert_eq!((LEVEL, BLOCKS.len()), (42, 45), "a new block raises LEVEL: raise it, then update this pin");
+        assert_eq!((LEVEL, BLOCKS.len()), (43, 46), "a new block raises LEVEL: raise it, then update this pin");
     }
 
     /// T-4048 (level 41): the separated pairs' block follows the kept stops' (T-4080, level 40). A level 40 save

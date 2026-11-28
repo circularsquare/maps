@@ -189,7 +189,8 @@ fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; SLOTS]]) 
     };
     let mut moved = false;
     for lev in net.slots() {
-        if svc.spare(net, l as usize, lev) >= 1.0 && split[l as usize][lev] != want {
+        // T-3742: a slot the player nudged keeps where it stands
+        if svc.spare(net, l as usize, lev) >= 1.0 && split[l as usize][lev] != want && net.offset_at(l, lev).is_none() {
             split[l as usize][lev] = want;
             moved = true;
         }
@@ -268,7 +269,8 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
         let mut x = split[l as usize];
         for lev in net.slots() {
             let tph = lat.tph[lev] as f64;
-            if tph <= 0.0 {
+            // T-3742: a slot the player nudged is held: the others are placed around its times
+            if tph <= 0.0 || net.offset_at(l, lev).is_some() {
                 continue;
             }
             let h = 3600.0 / tph;

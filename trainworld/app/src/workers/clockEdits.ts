@@ -431,6 +431,8 @@ function applyInner(op: EditOp): Applied {
       return { r: a.set_line_row_headways(op.line, Uint32Array.from(op.seconds)) };
     case "rowWeekend":
       return { r: a.set_line_row_weekend(op.line, Uint32Array.from(op.counts), Uint32Array.from(op.headways)) };
+    case "nudgeRow":
+      return { r: a.nudge_row(op.line, op.row, op.by) };
     case "lineLook": {
       let colour = 0;
       if (op.colour === undefined) {

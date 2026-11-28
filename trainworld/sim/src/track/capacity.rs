@@ -1208,6 +1208,25 @@ impl Capacity {
         }
         out
     }
+
+    /// T-3742: the pairs `follow_targets` times together, as lines only, (faster, slower), both running at level
+    /// `lev`: without working out where (a plan's outcome is the costly part).
+    pub fn follow_pairs(&self, net: &Network, lev: usize) -> Vec<(u32, u32)> {
+        let runs = |l: u32| net.line_tph.get(l as usize).is_some_and(|t| t[lev] > 0.0);
+        let mut out = vec![];
+        for r in (0..self.res.len()).filter(|&r| matches!(self.tag[r], Tag::Follow { .. })) {
+            let us = self.users_of(r);
+            let Some(f) = us.iter().find(|u| u.owner) else { continue };
+            for u in us.iter().filter(|u| !u.owner && (u.stop == FOLLOW_TIMED || u.stop == FOLLOW_PASSING)) {
+                if u.line != f.line && runs(f.line) && runs(u.line) {
+                    out.push((f.line, u.line));
+                }
+            }
+        }
+        out.sort_unstable();
+        out.dedup();
+        out
+    }
 }
 
 /// Every resource and who uses it, from the lines' runs (paths, stops, free profiles).

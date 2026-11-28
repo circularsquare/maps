@@ -47,6 +47,9 @@ pub enum Op {
     Link { pair: [u32; 2], on: bool },
     /// T-4048: set whether two stations are kept apart from the distance rule (`Network::apart`).
     Apart { pair: [u32; 2], on: bool },
+    /// T-3742: hold slots of lines at an offset from where the spacing placed them, their departure phases set with it
+    /// (`nudge`): a service edit with nothing to settle or place.
+    Nudge(Vec<super::nudge::NudgeSet>),
     Batch(Vec<Op>),
 }
 
@@ -299,6 +302,8 @@ struct Ahead {
     switch: Option<(u32, [bool; SLOTS])>,
     /// T-3542: the game's hours, which move every line (`reslot`)
     hours_game: bool,
+    /// T-3742: the lines the edit's nudges move (`nudge::lines_of`)
+    nudged: Vec<u32>,
 }
 
 /// T-3655: a line's fleet at a level: its headway, or a count line's trains (a headway line's trains follow from its
@@ -347,6 +352,7 @@ struct Back {
 fn op_lines(op: &Op) -> Option<Vec<u32>> {
     match op {
         Op::TrainCounts { id, .. } | Op::AutoTrains { id, .. } | Op::Weekend { id, .. } | Op::Extra { id, .. } => Some(vec![*id]),
+        Op::Nudge(v) => Some(v.iter().map(|x| x.line).collect()),
         Op::Batch(v) => v.iter().map(op_lines).collect::<Option<Vec<_>>>().map(|v| v.concat()),
         _ => None,
     }
@@ -1737,7 +1743,7 @@ impl TrackWorld {
     pub fn step_is_service(&self, redo: bool) -> bool {
         fn only_counts(op: &Op) -> bool {
             match op {
-                Op::TrainCounts { .. } | Op::AutoTrains { .. } | Op::Weekend { .. } | Op::Rows { .. } | Op::Extra { .. } | Op::Hours { .. } => true,
+                Op::TrainCounts { .. } | Op::AutoTrains { .. } | Op::Weekend { .. } | Op::Rows { .. } | Op::Extra { .. } | Op::Hours { .. } | Op::Nudge(_) => true,
                 Op::Batch(ops) => !ops.is_empty() && ops.iter().all(only_counts),
                 _ => false,
             }
@@ -2265,7 +2271,11 @@ impl TrackWorld {
             }
             _ => None,
         };
-        Ahead { had, worked, keys, keys_rest, switch, hours_game }
+        let mut nudged = vec![];
+        if let Some(op) = op { super::nudge::lines_of(op, &mut nudged); }
+        nudged.sort_unstable();
+        nudged.dedup();
+        Ahead { had, worked, keys, keys_rest, switch, hours_game, nudged }
     }
 
     /// The edit applied and derived; `checked`: refused for the problems it adds, nothing changed then. Problems
@@ -2467,7 +2477,15 @@ impl TrackWorld {
                 resources.push(r as u32);
             }
         }
-        Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc }
+        // T-3742: a nudge's lines run other times, with nothing to settle or place
+        let mut lines = direct;
+        if !a.nudged.is_empty() {
+            self.svc.note_changed(&a.nudged);
+            lines.extend(a.nudged.iter().filter(|&&l| self.net.line_ok(l)));
+            lines.sort_unstable();
+            lines.dedup();
+        }
+        Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines, service: svc }
     }
 
     /// Lines to rebuild after an edit: set directly, on track whose change they read (`Derived::moved`), stopping at a touched station, and the bus lines and
@@ -2867,7 +2885,14 @@ impl TrackWorld {
             }
             Op::Link { pair, on } => Op::Link { pair, on: n.set_pair(false, pair, on) },
             Op::Apart { pair, on } => Op::Apart { pair, on: n.set_pair(true, pair, on) },
-            Op::Line { id, data } => Op::Line { id, data: n.set_line(id, data)? },
+            Op::Line { id, data } => {
+                let gone = data.is_none();
+                let inv = Op::Line { id, data: n.set_line(id, data)? };
+                // T-3742: a line removed holds none of its rows; its undo holds them again
+                let held = if gone { super::nudge::release(n, id) } else { vec![] };
+                if held.is_empty() { inv } else { Op::Batch(vec![inv, Op::Nudge(held)]) }
+            }
+            Op::Nudge(set) => super::nudge::apply(n, set)?,
             Op::Keep { id, data } => Op::Keep { id, data: n.set_keep(id, data)? },
             Op::TrainCounts { id, trains, tph } => {
                 let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;

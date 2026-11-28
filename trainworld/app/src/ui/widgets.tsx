@@ -286,9 +286,10 @@ export function shakeEl(el: HTMLElement | null) {
  * refusal, shaken and knocked like a step's (T-3152). `text` is what the box
  * starts with, `tip` the value's hover. `onStep` returns false for a step refused (T-1844): the
  * stepper shakes and the refusal knock plays; a promise of false is an edit the worker refused. */
-export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void | boolean; tip?: string }; tipDown?: string; tipUp?: string; tipValue?: string }) {
-  const by = (e: MouseEvent) => (p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
-  const jump = p.jump && !mobileDevice() ? (p.jumpUnit ? t("widgets.jumpUnit", { unit: p.jumpUnit }) : t("widgets.jump")) : undefined;
+export function Stepper(p: { value: ComponentChildren; onStep: (d: number) => boolean | void | Promise<boolean>; wide?: boolean; label: string; jump?: boolean; jumpUnit?: string; type?: { text: string; set: (v: number) => void | boolean; tip?: string }; tipDown?: string; tipUp?: string; tipValue?: string; steps?: { by: [number, number, number]; tip: string } }) {
+  // T-3742: `steps`: a click's step, with Shift and with Ctrl, and the hover's line saying so
+  const by = (e: MouseEvent) => (p.steps ? p.steps.by[e.ctrlKey ? 2 : e.shiftKey ? 1 : 0] : p.jump ? (e.ctrlKey ? 20 : e.shiftKey ? 5 : 1) : 1);
+  const jump = mobileDevice() ? undefined : p.steps ? p.steps.tip : p.jump ? (p.jumpUnit ? t("widgets.jumpUnit", { unit: p.jumpUnit }) : t("widgets.jump")) : undefined;
   const tip = (own?: string) => (own && jump ? own + "\n" + jump : own ?? jump);
   const box = useRef<HTMLSpanElement>(null);
   // T-1844: a step that returns false was refused (a limit, or no money): the stepper shakes and the

@@ -16,9 +16,11 @@ If the round trip leaves time over, the extra trains wait at the ends, half at e
 
 **Spacing between lines.** Lines that share track or a platform are set a little apart, so their trains don't arrive together. Two lines at one gap on one track leave half a gap apart.
 
+**Nudging.** In a rail line's schedule window you can move a weekday row's departures earlier or later, up to half a gap either way. The game then keeps that row where you put it, and other lines are set around it. A line timed just behind it moves with it. Weekends follow the weekdays. Back at zero, the game sets the row again at the line's next change.
+
 **Changing the count.** Trains join and leave at the ends. A new train enters at a terminal, and a removed one finishes its trip first. Trains already running carry on where they were. The edit takes effect a moment after you click, so old and new service swap on one frame.
 
 **Cars.** Each line also sets its train length. A new line starts at 5 cars, or at the length you set last. A platform shorter than the train caps it ([full trains](full-trains.md)).
 
 Exact rule: `docs/track-and-service.md` "Scheduling", "Trains on a running line" and "Train length".
-In the code: **main** `sim/src/track/service.rs` `build_line` `sim/src/track/params.rs` `PERIOD_ROW` `WEEKEND_SHARE_MIN` `WEEKEND_SHARE_MAX` `sim/src/track/world.rs` `weekend_counts` `settle_weekend` `app/src/game/world.ts` `HEADWAY_MAX_S` `app/src/workers/saveFile.ts` `NEW_LINE_CARS`
+In the code: **main** `sim/src/track/service.rs` `build_line` `sim/src/track/params.rs` `PERIOD_ROW` `WEEKEND_SHARE_MIN` `WEEKEND_SHARE_MAX` `sim/src/track/world.rs` `weekend_counts` `settle_weekend` `sim/src/track/nudge.rs` `nudge_op` `app/src/game/world.ts` `HEADWAY_MAX_S` `app/src/workers/saveFile.ts` `NEW_LINE_CARS`

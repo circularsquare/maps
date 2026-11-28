@@ -29,6 +29,7 @@ import { demandView, lineFiguresIn } from "../../game/demand";
 import { AUTO_SLACK, autoTrainsFor, headwayFromMinutes, nextHeadway, pairRows, refusedForCash, restHeadwayStep, restRowTphShown, rowCount, rowHeadwayShown, rowTrainsShown, rowWeekendShown, knock, setHours, setRowAuto, setRowCount, setRowHeadway, setRowWeekendCount, setRowWeekendShare, setWeekendShareAll, stepRowCount, stepRowHeadway, stepRowWeekendCount, stepRowWeekendHeadway, trainCap, typeRowWeekendHeadway, world, MAX_TYPED_VEHICLES, WEEKEND_SHARE_STEP } from "../../game/world";
 import { Row, Segmented, shakeEl, Stepper } from "../widgets";
 import { demandPending, Spinner } from "../Spinner";
+import { nudgeKey, nudgesSeen, pendingNudge, stepNudge } from "../../game/nudge";
 
 /** A demand level's name, capitalised: "High". */
 export const demandLabel = (d: Demand): string => t("schedule.demandName", { demand: d });
@@ -327,9 +328,9 @@ function LevelName({ v, n, r, stops, flip, pending, ends, vehicle, hours }: { v:
  * place of "Schedule" (the schedule panel's "Set by", T-3346); `hours`: the Hours column (a rail line's
  * schedule window, T-3542); `weekends`: a Weekdays and a Weekends
  * section (the schedule panel's, T-3521; T-3542: the row now by the line's own hours, `period` unread); `above`: rows the schedule panel puts under the heading
- * (T-3542: the periods). */
-export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = true, copy, label, weekends = false, hours = false, above }: {
-  l: LineInput; st: LineStats; period: number; limits?: (Limit | null)[]; crowd?: Float64Array | null; canAuto?: boolean; copy?: ComponentChildren; label?: string; weekends?: boolean; hours?: boolean; above?: ComponentChildren;
+ * (T-3542: the periods); `nudge`: with `weekends`, the Offset column (a rail line's, T-3742). */
+export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = true, copy, label, weekends = false, hours = false, above, nudge = false }: {
+  l: LineInput; st: LineStats; period: number; limits?: (Limit | null)[]; crowd?: Float64Array | null; canAuto?: boolean; copy?: ComponentChildren; label?: string; weekends?: boolean; hours?: boolean; above?: ComponentChildren; nudge?: boolean;
 }) {
   const v = vehicleOf(st);
   const auto = rowHeadwayShown(l.id);
@@ -362,6 +363,7 @@ export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = tr
           {weekends && hours && <th>{t("schedule.hours")}</th>}
           <th>{manyCap(v)}</th>
           <th>{t("schedule.headway")}</th>
+          {weekends && nudge && <th><span data-tip={t("schedule.offsetTip")}>{t("schedule.offset")}</span></th>}
         </tr>
         {!weekends && f.rows.map((_, r) => {
           // T-1783: no dot on a row with no vehicles
@@ -374,7 +376,7 @@ export function Schedule({ l, st, limits = NO_LIMITS, crowd = null, canAuto = tr
             </tr>
           );
         })}
-        {weekends && <DaySections l={l} st={st} now={now} limits={limits} crowd={crowd} auto={auto} flip={flip} hours={hours} />}
+        {weekends && <DaySections l={l} st={st} now={now} limits={limits} crowd={crowd} auto={auto} flip={flip} hours={hours} nudge={nudge} />}
       </table>
       {weekends && <DefaultHeadways id={l.id} n={f.n} auto={rowHeadwayShown(l.id)} />}
     </>
@@ -405,9 +407,13 @@ const KIND_TITLE = { rail: "schedule.defaultTitle", tram: "schedule.defaultTitle
 /** T-3521: the schedule panel's table body: a Weekdays section and a Weekends section, each a row a
  * row of the line's (T-3542). Today's kind of day bolds its row now (`now`), as the line panel does, and has `crowd`'s dots;
  * the other section's dots are a weekday's or a Saturday's (the boarding account's kinds 0 and 1). */
-function DaySections({ l, st, now, limits, crowd, auto, flip, hours }: { l: LineInput; st: LineStats; now: number; limits: (Limit | null)[]; crowd: Float64Array | null; auto: readonly number[] | null; flip: boolean; hours: boolean }) {
-  const cols = hours ? 4 : 3;
+function DaySections({ l, st, now, limits, crowd, auto, flip, hours, nudge }: { l: LineInput; st: LineStats; now: number; limits: (Limit | null)[]; crowd: Float64Array | null; auto: readonly number[] | null; flip: boolean; hours: boolean; nudge: boolean }) {
+  const cols = (hours ? 4 : 3) + (nudge ? 1 : 0);
   const w = world.value, stops = l.stops.length;
+  // T-3742: each row's offset, read again with every state; a step shows at once and stays until a readout holds it
+  const v = w?.version ?? 0;
+  const nudges = useClockQuery(nudge ? { what: "lineNudges", line: l.num } : null, [l.num, v, nudge], (d) => ({ v, rows: rowNudges(d) }));
+  useEffect(() => { if (nudges) nudgesSeen(l.id, nudges.v); }, [nudges]);
   const today = rowIn(lineCountry(l.stops), Math.floor(lineSeconds(st) / 86400));
   const acct = accountVersion.value;
   const other = 1 - today;
@@ -438,6 +444,7 @@ function DaySections({ l, st, now, limits, crowd, auto, flip, hours }: { l: Line
                 <td><LevelName v={p} n={f.n} r={lev} stops={stops} flip={flip} ends={endNames(l)} vehicle={vehicleOf(st)} pending={dot && !p && demandPending.value} hours={hoursOf(st)} /></td>
                 {hours && <td>{row === 0 && <HoursBox l={l} st={st} n={f.n} r={lev} onShort={(need) => setShort(need ? { r: lev, need } : null)} />}</td>}
                 {row === 0 ? <LevelCells l={l} st={st} lev={lev} auto={auto} limits={limits} /> : <WeekendCells l={l} st={st} lev={lev} auto={auto !== null} limits={limits} />}
+                {nudge && <OffsetCell l={l} lev={lev} n={nudges?.rows[lev]} weekend={row === 1} />}
               </tr>
               {row === 0 && short?.r === lev && <tr class="sched-short"><td colSpan={cols} class="bad">{t(short.need > 2 ? "schedule.hoursShortHigh" : "schedule.hoursShort", { count: short.need })}</td></tr>}
               </>
@@ -446,6 +453,54 @@ function DaySections({ l, st, now, limits, crowd, auto, flip, hours }: { l: Line
         </>
       ))}
     </>
+  );
+}
+
+// ---------------------------------------------------------------- offsets (T-3742)
+
+/** A row's offset as the track model reads it (`TrackApi.line_nudges`): s, half its headway (the range either way;
+ * 0 where it runs nothing), whether the row is held, and the other lines timed with it, which move with it. */
+interface RowNudge { offset: number; half: number; held: boolean; others: number[] }
+function rowNudges(d: Float64Array): RowNudge[] {
+  const out: RowNudge[] = [];
+  for (let i = 0; i + 4 <= d.length; i += 4 + d[i + 3]) out.push({ offset: d[i], half: d[i + 1], held: d[i + 2] > 0, others: Array.from(d.subarray(i + 4, i + 4 + d[i + 3])) });
+  return out;
+}
+/** A click's step, s: 1 min, with Shift 15 s, with Ctrl 10 min. */
+const NUDGE_STEPS: [number, number, number] = [60, 15, 600];
+/** "+4 min", "−1m15s", "0 min". */
+function offsetText(s: number): string {
+  const r = Math.round(s), a = Math.abs(r);
+  const v = a % 60 === 0 ? t("inspector.min", { n: tNumber(a / 60) }) : duration(a);
+  return r > 0 ? "+" + v : r < 0 ? "−" + v : v;
+}
+
+/** One row's Offset cell: on weekdays a stepper, each step one edit (`stepNudge`) within half the headway, the
+ * value's hover naming the lines timed with this one; on weekends the weekday row's, greyed. Empty on a row with
+ * no trains. */
+function OffsetCell({ l, lev, n, weekend }: { l: LineInput; lev: number; n: RowNudge | undefined; weekend: boolean }) {
+  if (!n || n.half <= 0) return <td />;
+  const p = pendingNudge.value.get(nudgeKey(l.id, lev));
+  const now = p?.target ?? n.offset;
+  if (weekend) return <td class="sched-offset"><span class="muted" data-tip={t("schedule.offsetWeekend")}>{offsetText(now)}</span></td>;
+  const end = n.half - 0.5;
+  const step = (d: number) => {
+    const to = Math.max(-n.half, Math.min(n.half, now + d));
+    if (Math.abs(to - now) < 0.5) return false;
+    stepNudge(l.id, lev, now, to);
+    return true;
+  };
+  const lines = world.value?.save.lines;
+  const names = n.others.map((o) => lines?.find((x) => x.num === o)?.name).filter((x): x is string => !!x);
+  return (
+    <td class="sched-offset">
+      <Stepper value={<span class={n.held || p ? undefined : "muted"}>{offsetText(now)}</span>} label={t("schedule.offsetLabel")}
+        steps={{ by: NUDGE_STEPS, tip: t("schedule.offsetSteps") }}
+        tipDown={now <= -end ? t("schedule.offsetEnd") : t("schedule.offsetEarlier")}
+        tipUp={now >= end ? t("schedule.offsetEnd") : t("schedule.offsetLater")}
+        tipValue={names.length ? t("schedule.offsetTimed", { lines: tList(names), count: names.length }) : undefined}
+        onStep={step} />
+    </td>
   );
 }
 

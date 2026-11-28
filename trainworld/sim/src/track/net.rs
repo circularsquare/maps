@@ -829,6 +829,11 @@ pub struct Network {
     /// T-3584: `line_pace` of the weekends (`TrackWorld::settle_weekend`), saved in `LWP1`; empty:
     /// the weekdays'.
     pub line_pace_rest: Vec<[f32; SLOTS]>,
+    /// T-3742: by line id, the offset (s) a player nudged each slot's departures by from where the spacing placed them,
+    /// None where not held. A held slot is never placed again (`spacing::place`): its `line_phase` (and on weekends
+    /// `line_phase_rest`) already includes the offset, which is kept raw (wrapped by the headway only when shown). In
+    /// the undo history (`Op::Nudge`); saved in `LOF1`.
+    pub line_offset: Vec<[Option<f32>; SLOTS]>,
     /// T-1925: `line_phase` is placed (a save carried it, or a load placed every line), so a
     /// reload keeps it rather than placing every line
     pub phases_placed: bool,

@@ -112,6 +112,7 @@ impl Network {
         fix(&mut self.line_phase_rest, &new, &gone, 0.0);
         fix(&mut self.line_split_rest, &new, &gone, 0.5);
         fix(&mut self.line_pace_rest, &new, &gone, 0.0);
+        fix(&mut self.line_offset, &new, &gone, None);
         for kept in [&mut self.settle_kept, &mut self.settle_kept_rest] {
             kept.retain(|k| !gone.contains(&k.1));
             let add: Vec<_> = kept.iter().flat_map(|k| new.iter().filter(move |n| n.1 == k.1).map(move |n| (k.0, n.0, k.2, k.3, k.4))).collect();
@@ -362,6 +363,14 @@ impl Network {
     /// T-1925: a line's departure phase per level, seconds (`line_phase`; 0 where none is set).
     pub fn line_phase_of(&self, l: u32) -> [f32; SLOTS] {
         self.line_phase.get(l as usize).copied().unwrap_or([0.0; SLOTS])
+    }
+    /// T-3742: the offset line `l`'s departures in slot `s` are held at (`line_offset`), None where the spacing places them.
+    pub fn offset_at(&self, l: u32, s: usize) -> Option<f32> {
+        self.line_offset.get(l as usize).and_then(|o| o[s])
+    }
+    /// T-3742: whether any slot of line `l` is held (`offset_at`).
+    pub fn any_offset(&self, l: u32) -> bool {
+        self.line_offset.get(l as usize).is_some_and(|o| o.iter().any(|x| x.is_some()))
     }
     /// T-2973: the headway a count line keeps to run in step at a merge per level (`line_pace`).
     pub fn line_pace_of(&self, l: u32) -> [f32; SLOTS] {

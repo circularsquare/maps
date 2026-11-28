@@ -1594,7 +1594,16 @@ Greedy on
   so the weekday pattern of every line is left to the bit. The run times are the weekdays': weekend
   trains run their slot's timetable (6.2), and the weekend service's run times differ only where the
   holds do (DECISIONS 2026-11-20). Saved in a trailing
-  `LWP1` block with the weekend pacing (save level 32); a save without it places them on load. Riders' waits
+  `LWP1` block with the weekend pacing (save level 32); a save without it places them on load.
+  **Nudged** (T-3742, notes/T-3742.md): a rail line's weekday row nudged in the schedule panel's Offset column (1 min
+  a click, 15 s with Shift, 10 min with Ctrl, within half its headway either way; wrapped into that where the headway
+  is shorter since) is held: its slots (`Network::line_offset`, in the undo history as `Op::Nudge`, saved in a trailing
+  `LOF1` block, save level 43) are never placed again, and their phases already include the offset, the weekend's
+  too on a line with its own weekend rates. Back at 0 the row is released and placed again at its line's next edit;
+  a line removed holds none, its undo holding them again. A line timed behind a slower one (`Capacity::follow_pairs`)
+  holds no offset: a nudge of either moves the slower line's (up the chain), and every line timed with it by the
+  same seconds, so passes and waits stay as sized. A nudge settles nothing and asks for no demand solve: waits are by
+  headway, and a stop's first and last trains, which move by up to the offset, reach demand at the line's next edit. Riders' waits
   are by headway, so demand does not move; it cannot keep an express from catching a local far down a
   long stretch (its slower running above and the display guard keep it trailing). When the pattern changes (a new period, or an edit) a new
   departure closer than half a headway after the old pattern's last one is left out, so trains

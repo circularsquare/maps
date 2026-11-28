@@ -20,6 +20,7 @@
 //! - `related`: the lines related to a line (T-1168): where they meet it, spans beside it, crossings.
 //! - `roads`: roads that ground-level track crosses (T-1929), and their crossing cost.
 //! - `spacing`: each line's departure phase against the lines it shares track or a platform with (T-1925).
+//! - `nudge`: rows of a line held at an offset from where the spacing placed them (T-3742).
 //! - `streets`: the car's street speed by place, for a bus's speed (T-1577).
 //! - `span`: each stop's service span for demand (T-842): the share of a period's riders with a
 //!   train due within their tolerance.
@@ -50,6 +51,7 @@ pub mod lanes;
 pub mod localtime;
 pub mod names;
 pub mod net;
+pub mod nudge;
 pub mod overtake;
 pub mod params;
 pub mod perdir;
