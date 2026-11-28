@@ -195,16 +195,6 @@ fn cycle(hs: f64, hf: f64) -> f64 {
     (CYCLE_MAX_S / hs).floor().max(1.0) * hs
 }
 
-struct Train {
-    slow: bool,
-    t0: f64,
-    arr: f64,
-    dep: f64,
-    measured: bool,
-    /// Per point, how long it waited there for faster trains (slower trains only).
-    wait: Vec<f64>,
-}
-
 impl Plan {
     /// T-4132: what `timing` reads of the plan, as bits (its cluster's key).
     pub fn key_into(&self, net: &Network, key: &mut Vec<u64>) {
@@ -261,13 +251,14 @@ impl Plan {
         let c = cycle(hs, hf);
         let mut best: Option<(f64, Outcome)> = None;
         let (mut costs, mut slow) = (Vec::with_capacity(PHASES), Vec::with_capacity(PHASES));
+        let mut tr = Trains::default();
         for k in 0..PHASES {
-            let (o, each) = self.sweep(hs, hf, hf * k as f64 / PHASES as f64, c);
+            let (o, most) = self.sweep(&mut tr, hs, hf, hf * k as f64 / PHASES as f64, c);
             let held = o.waits.iter().sum::<f64>() + o.behind;
             let cost = o.loss * tf + held * ts;
             costs.push(cost);
             // the slower train that waits longest, held as the mean is
-            slow.push(each.iter().map(|w| w.iter().sum::<f64>()).fold(0.0, f64::max) + o.behind);
+            slow.push(most + o.behind);
             if best.as_ref().map_or(true, |b| cost < b.0 - 1e-9) {
                 best = Some((cost, o));
             }
@@ -281,7 +272,10 @@ impl Plan {
         let (hs, hf) = (hs.min(HEADWAY_MAX_S), hf.min(HEADWAY_MAX_S));
         let o = self.best(3600.0 / hf, 3600.0 / hs, HEADWAY_MAX_S);
         let c = cycle(hs, hf);
-        self.sweep(hs, hf, o.offset, (3600.0 / c).ceil().max(1.0) * c)
+        let mut tr = Trains::default();
+        let (o, _) = self.sweep(&mut tr, hs, hf, o.offset, (3600.0 / c).ceil().max(1.0) * c);
+        let n = self.points.len();
+        (o, (0..tr.ns).filter(|&i| tr.measured[i]).map(|i| tr.wait[i * n..(i + 1) * n].to_vec()).collect())
     }
 
     /// One cycle of departures, the faster trains reaching the start `x` after the slower ones:
@@ -292,36 +286,60 @@ impl Plan {
     /// next one) or past one faster headway and the lead (T-3238: the next faster train then catches
     /// it as surely as this one did, so waiting longer only grows the round trip with the slower
     /// headway, and a line with fewer trains than such waits never settled, its rate halving each
-    /// round toward zero). The outcome over the trains reaching the start in `[0, c)`, after a warm-up.
-    fn sweep(&self, hs: f64, hf: f64, x: f64, c: f64) -> (Outcome, Vec<Vec<f64>>) {
+    /// round toward zero). The outcome over the trains reaching the start in `[0, c)`, after a warm-up, and
+    /// the most any of those slower trains waits in all (s); their waits stay in `tr`.
+    fn sweep(&self, tr: &mut Trains, hs: f64, hf: f64, x: f64, c: f64) -> (Outcome, f64) {
         let n = self.points.len();
         let warm = self.points[n - 1].slow[0] + 2.0 * hs.max(hf);
-        let mut tr: Vec<Train> = vec![];
+        tr.clear();
         for (slow, h, x0, stand) in [(true, hs, 0.0, self.start[0]), (false, hf, x, self.start[1])] {
             let first = ((-warm - x0) / h).floor() as i64;
             let last = ((c + warm - x0) / h).ceil() as i64;
             for i in first..last {
                 let t0 = x0 + i as f64 * h;
-                tr.push(Train { slow, t0, arr: t0, dep: t0 + stand, measured: i >= 0 && (i as f64) * h < c - 1e-6, wait: if slow { vec![0.0; n] } else { vec![] } });
+                tr.t0.push(t0);
+                tr.arr.push(t0);
+                tr.dep.push(t0 + stand);
+                tr.measured.push(i >= 0 && (i as f64) * h < c - 1e-6);
+            }
+            if slow {
+                tr.ns = tr.t0.len();
             }
         }
-        let mut order: Vec<usize> = (0..tr.len()).collect();
-        let mut fast: Vec<f64> = vec![];
+        let ns = tr.ns;
+        tr.wait.resize(ns * n, 0.0);
+        tr.order.extend(0..tr.t0.len() as u32);
         let (mut prev_s, mut prev_f) = (self.start[0], self.start[1]);
         for p in 0..n {
             let pt = self.points[p];
-            order.sort_by(|&a, &b| tr[a].dep.total_cmp(&tr[b].dep).then(tr[b].slow.cmp(&tr[a].slow)).then(tr[a].t0.total_cmp(&tr[b].t0)));
+            tr.sort(p == 0);
+            let (dep, arr) = (&mut tr.dep, &mut tr.arr);
+            let (stand_s, stand_f) = (pt.slow[1] - pt.slow[0], pt.fast[1] - pt.fast[0]);
+            let (fast, slows) = (&mut tr.fast, &mut tr.slows);
+            fast.clear();
+            slows.clear();
+            let mut sorted = true;
             let mut ahead: Option<(f64, bool)> = None;
-            for &i in &order {
-                let t = &mut tr[i];
-                let (free, stand) = if t.slow { (t.dep + pt.slow[0] - prev_s, pt.slow[1] - pt.slow[0]) } else { (t.dep + pt.fast[0] - prev_f, pt.fast[1] - pt.fast[0]) };
-                let arr = match ahead {
-                    Some((a, slow)) => free.max(a + if slow && !t.slow && pt.passing { PASS_CLEAR_S } else { self.spacing }),
+            for &i in &tr.order {
+                let i = i as usize;
+                let slow = i < ns;
+                let free = if slow { dep[i] + pt.slow[0] - prev_s } else { dep[i] + pt.fast[0] - prev_f };
+                let a = match ahead {
+                    Some((a, s)) => free.max(a + if s && !slow && pt.passing { PASS_CLEAR_S } else { self.spacing }),
                     None => free,
                 };
-                t.arr = arr;
-                t.dep = arr + stand;
-                ahead = Some((arr, t.slow));
+                arr[i] = a;
+                let d = a + if slow { stand_s } else { stand_f };
+                dep[i] = d;
+                ahead = Some((a, slow));
+                if pt.passing {
+                    if slow {
+                        slows.push(i as u32);
+                    } else {
+                        sorted &= fast.last().map_or(true, |l| l.total_cmp(&d).is_le());
+                        fast.push(d);
+                    }
+                }
             }
             if pt.passing {
                 let (b, q) = (self.points[self.next[p]], self.points[p + 1]);
@@ -329,42 +347,115 @@ impl Plan {
                 // T-2245: a slower train stepping out behind a faster one leaves late enough to be the
                 // spacing behind it at the next point, where it would otherwise be held on the line
                 let lead = PASS_CLEAR_S.max(q.fast[0] - pt.fast[1] + self.spacing - (q.slow[0] - pt.slow[1]));
-                fast.clear();
-                fast.extend(tr.iter().filter(|t| !t.slow).map(|t| t.dep));
-                fast.sort_by(f64::total_cmp);
-                for t in tr.iter_mut().filter(|t| t.slow) {
-                    let normal = t.dep;
-                    for &xa in &fast {
-                        if xa + lead <= t.dep {
+                let limit = (hs - self.spacing).min(hf + lead);
+                // (each train keeps at least the spacing behind the one ahead, so the faster ones leave in
+                // the order run, and so do the slower ones: the first faster one a slower train could wait
+                // for only moves on)
+                if !sorted {
+                    fast.sort_by(f64::total_cmp);
+                }
+                let (mut k, mut last) = (0, f64::NEG_INFINITY);
+                for &t in slows.iter() {
+                    let t = t as usize;
+                    let normal = dep[t];
+                    if !(normal >= last) {
+                        k = 0;
+                    }
+                    while k < fast.len() && fast[k] + lead <= normal {
+                        k += 1;
+                    }
+                    last = normal;
+                    let mut d = normal;
+                    for &xa in &fast[k..] {
+                        if xa + lead <= d {
                             continue;
                         }
-                        if xa + run_f >= t.dep + run_s + self.spacing || xa + lead - normal > (hs - self.spacing).min(hf + lead) {
+                        if xa + run_f >= d + run_s + self.spacing || xa + lead - normal > limit {
                             break;
                         }
-                        t.dep = xa + lead;
+                        d = xa + lead;
                     }
-                    t.wait[p] = t.dep - normal;
+                    dep[t] = d;
+                    tr.wait[t * n + p] = d - normal;
                 }
             }
             (prev_s, prev_f) = (pt.slow[1], pt.fast[1]);
         }
         let (end, end_s) = (self.points[n - 1].fast[0], self.points[n - 1].slow[0]);
         let (mut loss, mut nf) = (0.0f64, 0.0f64);
-        let (mut waits, mut ns, mut behind) = (vec![0.0f64; n], 0.0f64, 0.0f64);
-        let mut each = vec![];
-        for t in tr.iter().filter(|t| t.measured) {
-            if t.slow {
-                ns += 1.0;
-                waits.iter_mut().zip(&t.wait).for_each(|(a, w)| *a += w);
-                behind += t.arr - t.t0 - end_s - t.wait.iter().sum::<f64>();
-                each.push(t.wait.clone());
+        let (mut waits, mut nsm, mut behind, mut most) = (vec![0.0f64; n], 0.0f64, 0.0f64, 0.0f64);
+        for i in (0..tr.t0.len()).filter(|&i| tr.measured[i]) {
+            if i < ns {
+                let w = &tr.wait[i * n..(i + 1) * n];
+                nsm += 1.0;
+                waits.iter_mut().zip(w).for_each(|(a, w)| *a += w);
+                let sum = w.iter().sum::<f64>();
+                behind += tr.arr[i] - tr.t0[i] - end_s - sum;
+                most = most.max(sum);
             } else {
                 nf += 1.0;
-                loss += t.arr - t.t0 - end;
+                loss += tr.arr[i] - tr.t0[i] - end;
             }
         }
-        waits.iter_mut().for_each(|w| *w /= ns.max(1.0));
-        (Outcome { loss: loss / nf.max(1.0), waits, behind: behind / ns.max(1.0), offset: x, costs: vec![], slow: vec![], hf }, each)
+        waits.iter_mut().for_each(|w| *w /= nsm.max(1.0));
+        (Outcome { loss: loss / nf.max(1.0), waits, behind: behind / nsm.max(1.0), offset: x, costs: vec![], slow: vec![], hf }, most)
+    }
+}
+
+/// One sweep's trains, numbered as built (the slower ones first), in flat lists a `best` reuses over its
+/// phases.
+#[derive(Default)]
+struct Trains {
+    t0: Vec<f64>,
+    arr: Vec<f64>,
+    dep: Vec<f64>,
+    measured: Vec<bool>,
+    /// How many are slower; each one's wait at each point (s, a row of points each).
+    ns: usize,
+    wait: Vec<f64>,
+    /// By departure from the last point, slower ones first at the same time, then by start.
+    order: Vec<u32>,
+    /// At a passing point, the faster trains' departures, in order, and the slower trains in the order they leave.
+    fast: Vec<f64>,
+    slows: Vec<u32>,
+}
+
+impl Trains {
+    fn clear(&mut self) {
+        for v in [&mut self.t0, &mut self.arr, &mut self.dep, &mut self.wait, &mut self.fast] {
+            v.clear();
+        }
+        self.measured.clear();
+        self.order.clear();
+        self.slows.clear();
+        self.ns = 0;
+    }
+
+    /// Puts `order` in departure order. A stable sort, so the same as any other: the first point merges the
+    /// two lists of trains as built; after that a train moves past only the few it waits for or that stand
+    /// longer than it, a step or two.
+    fn sort(&mut self, first: bool) {
+        let (dep, t0, ns) = (&self.dep, &self.t0, self.ns as u32);
+        let cmp = |a: u32, b: u32| dep[a as usize].total_cmp(&dep[b as usize]).then_with(|| (b < ns).cmp(&(a < ns))).then_with(|| t0[a as usize].total_cmp(&t0[b as usize]));
+        if first {
+            self.order.sort_by(|&a, &b| cmp(a, b));
+            return;
+        }
+        let o = &mut self.order;
+        for i in 1..o.len() {
+            let x = o[i];
+            let mut j = i;
+            let dx = dep[x as usize];
+            // (a plain comparison where it settles the order: the same as `cmp` there)
+            while j > 0 && {
+                let d = dep[o[j - 1] as usize];
+                dx < d || !(dx > d) && cmp(x, o[j - 1]).is_lt()
+            } {
+                o[j] = o[j - 1];
+                j -= 1;
+            }
+            o[j] = x;
+        }
     }
 }
 

@@ -1,0 +1,210 @@
+diff --git a/trainworld/sim/src/track/overtake/tests.rs b/trainworld/sim/src/track/overtake/tests.rs
+index eec9ba317..079ea4412 100644
+--- a/trainworld/sim/src/track/overtake/tests.rs
++++ b/trainworld/sim/src/track/overtake/tests.rs
+@@ -271,3 +271,205 @@ fn a_rare_local_behind_a_frequent_express_settles() {
+     }
+     assert!(took < 5.0, "the settle took {took:.1} s");
+ }
++
++/// T-4504: `Plan::best` as it was before its sweep kept its trains in flat lists, kept to check the new one against.
++fn sweep_before(plan: &Plan, hs: f64, hf: f64, x: f64, c: f64) -> (Outcome, Vec<Vec<f64>>) {
++    struct Train {
++        slow: bool,
++        t0: f64,
++        arr: f64,
++        dep: f64,
++        measured: bool,
++        wait: Vec<f64>,
++    }
++    {
++        let n = plan.points.len();
++        let warm = plan.points[n - 1].slow[0] + 2.0 * hs.max(hf);
++        let mut tr: Vec<Train> = vec![];
++        for (slow, h, x0, stand) in [(true, hs, 0.0, plan.start[0]), (false, hf, x, plan.start[1])] {
++            let first = ((-warm - x0) / h).floor() as i64;
++            let last = ((c + warm - x0) / h).ceil() as i64;
++            for i in first..last {
++                let t0 = x0 + i as f64 * h;
++                tr.push(Train { slow, t0, arr: t0, dep: t0 + stand, measured: i >= 0 && (i as f64) * h < c - 1e-6, wait: if slow { vec![0.0; n] } else { vec![] } });
++            }
++        }
++        let mut order: Vec<usize> = (0..tr.len()).collect();
++        let mut fast: Vec<f64> = vec![];
++        let (mut prev_s, mut prev_f) = (plan.start[0], plan.start[1]);
++        for p in 0..n {
++            let pt = plan.points[p];
++            order.sort_by(|&a, &b| tr[a].dep.total_cmp(&tr[b].dep).then(tr[b].slow.cmp(&tr[a].slow)).then(tr[a].t0.total_cmp(&tr[b].t0)));
++            let mut ahead: Option<(f64, bool)> = None;
++            for &i in &order {
++                let t = &mut tr[i];
++                let (free, stand) = if t.slow { (t.dep + pt.slow[0] - prev_s, pt.slow[1] - pt.slow[0]) } else { (t.dep + pt.fast[0] - prev_f, pt.fast[1] - pt.fast[0]) };
++                let arr = match ahead {
++                    Some((a, slow)) => free.max(a + if slow && !t.slow && pt.passing { PASS_CLEAR_S } else { plan.spacing }),
++                    None => free,
++                };
++                t.arr = arr;
++                t.dep = arr + stand;
++                ahead = Some((arr, t.slow));
++            }
++            if pt.passing {
++                let (b, q) = (plan.points[plan.next[p]], plan.points[p + 1]);
++                let (run_s, run_f) = (b.slow[0] - pt.slow[1], b.fast[0] - pt.fast[1]);
++                let lead = PASS_CLEAR_S.max(q.fast[0] - pt.fast[1] + plan.spacing - (q.slow[0] - pt.slow[1]));
++                fast.clear();
++                fast.extend(tr.iter().filter(|t| !t.slow).map(|t| t.dep));
++                fast.sort_by(f64::total_cmp);
++                for t in tr.iter_mut().filter(|t| t.slow) {
++                    let normal = t.dep;
++                    for &xa in &fast {
++                        if xa + lead <= t.dep {
++                            continue;
++                        }
++                        if xa + run_f >= t.dep + run_s + plan.spacing || xa + lead - normal > (hs - plan.spacing).min(hf + lead) {
++                            break;
++                        }
++                        t.dep = xa + lead;
++                    }
++                    t.wait[p] = t.dep - normal;
++                }
++            }
++            (prev_s, prev_f) = (pt.slow[1], pt.fast[1]);
++        }
++        let (end, end_s) = (plan.points[n - 1].fast[0], plan.points[n - 1].slow[0]);
++        let (mut loss, mut nf) = (0.0f64, 0.0f64);
++        let (mut waits, mut ns, mut behind) = (vec![0.0f64; n], 0.0f64, 0.0f64);
++        let mut each = vec![];
++        for t in tr.iter().filter(|t| t.measured) {
++            if t.slow {
++                ns += 1.0;
++                waits.iter_mut().zip(&t.wait).for_each(|(a, w)| *a += w);
++                behind += t.arr - t.t0 - end_s - t.wait.iter().sum::<f64>();
++                each.push(t.wait.clone());
++            } else {
++                nf += 1.0;
++                loss += t.arr - t.t0 - end;
++            }
++        }
++        waits.iter_mut().for_each(|w| *w /= ns.max(1.0));
++        (Outcome { loss: loss / nf.max(1.0), waits, behind: behind / ns.max(1.0), offset: x, costs: vec![], slow: vec![], hf }, each)
++    }
++}
++
++fn best_before(plan: &Plan, tf: f64, ts: f64, cap: f64) -> Outcome {
++    let sweep = |hs, hf, x, c| sweep_before(plan, hs, hf, x, c);
++    let n = plan.points.len();
++    if !(tf > 0.0 && ts > 0.0) {
++        return Outcome { loss: 0.0, waits: vec![0.0; n], behind: 0.0, offset: 0.0, costs: vec![], slow: vec![], hf: 0.0 };
++    }
++    let (hf, hs) = ((3600.0 / tf).min(cap), (3600.0 / ts).min(cap));
++    let c = cycle(hs, hf);
++    let mut best: Option<(f64, Outcome)> = None;
++    let (mut costs, mut slow) = (vec![], vec![]);
++    for k in 0..PHASES {
++        let (o, each) = sweep(hs, hf, hf * k as f64 / PHASES as f64, c);
++        let held = o.waits.iter().sum::<f64>() + o.behind;
++        let cost = o.loss * tf + held * ts;
++        costs.push(cost);
++        slow.push(each.iter().map(|w| w.iter().sum::<f64>()).fold(0.0, f64::max) + o.behind);
++        if best.as_ref().map_or(true, |b| cost < b.0 - 1e-9) {
++            best = Some((cost, o));
++        }
++    }
++    Outcome { costs, slow, hf, ..best.unwrap().1 }
++}
++
++/// Every figure of an outcome, as bits.
++pub(crate) fn outcome_bits(o: &Outcome) -> Vec<u64> {
++    [o.loss, o.behind, o.offset, o.hf].iter().chain(&o.waits).chain(&o.costs).chain(&o.slow).map(|x| x.to_bits()).chain([o.waits.len() as u64, o.costs.len() as u64]).collect()
++}
++
++/// `best` of `plan` at these rates and cap (s) against the one it replaced, to the bit.
++pub(crate) fn same_best(plan: &Plan, tf: f64, ts: f64, cap: f64) -> bool {
++    outcome_bits(&plan.best(tf, ts, cap)) == outcome_bits(&best_before(plan, tf, ts, cap))
++}
++
++/// T-4504: on a real save, every plan's `best` at each level's rates (as `outcome` reads them) against the one it
++/// replaced, to the bit, so every figure that reads a plan is unchanged. On request, on the save's track bytes
++/// (gunzipped, after its JSON header): `T4504_TRACK=<file> cargo test --profile agent best_on_a_real_save -- --ignored --nocapture`.
++#[test]
++#[ignore]
++fn best_on_a_real_save() {
++    use super::super::{save, world::TrackWorld};
++    let w = TrackWorld::new(save::decode(&std::fs::read(std::env::var("T4504_TRACK").unwrap()).unwrap()).unwrap());
++    let cap = &w.svc.cap;
++    let (mut plans, mut calls, mut waits) = (0, 0, 0);
++    for r in 0..cap.res.len() {
++        for plan in cap.plans_of(r) {
++            plans += 1;
++            for lev in w.net.slots().collect::<Vec<_>>() {
++                let (tf, ts) = (pattern_tph(&w.net, plan.fast.0, lev) as f64, pattern_tph(&w.net, plan.slow.0, lev) as f64);
++                let hc = plan.headway_cap(&w.net);
++                assert!(same_best(plan, tf, ts, hc), "line {} behind {} at level {lev}", plan.fast.0, plan.slow.0);
++                waits += plan.best(tf, ts, hc).waits.iter().any(|&x| x > 0.0) as usize;
++                calls += 1;
++            }
++        }
++    }
++    eprintln!("lines {}, resources {}, plans {plans}, {calls} level outcomes the same to the bit, {waits} with a slower train waiting", w.net.line_count(), cap.res.len());
++}
++
++/// A stretch of random shape: `n` points, either run stopping or passing at each, the slower one stepping
++/// aside at some of its stops, the faster run sometimes slower over a hop.
++fn random_plan(r: &mut impl FnMut() -> f64, n: usize) -> Plan {
++    let (mut s, mut f) = (0.0f64, 0.0f64);
++    let mut points = vec![];
++    for k in 0..n {
++        let hop = 60.0 + 600.0 * r();
++        s += hop * (1.05 + 0.6 * r());
++        f += hop * (0.6 + 0.6 * r());
++        let last = k + 1 == n;
++        let (ss, fs) = if last { (false, false) } else { (r() < 0.8, r() < 0.3) };
++        let slow = [s, if ss { s + 20.0 + 60.0 * r() } else { s }];
++        let fast = [f, if fs { f + 20.0 + 40.0 * r() } else { f }];
++        (s, f) = (slow[1], fast[1]);
++        points.push(Point { slow, fast, passing: ss && r() < 0.5, stop: if ss { k as i32 } else { -1 }, node: k as u32, at: s, fat: f });
++    }
++    if !points[..n - 1].iter().any(|p| p.passing) {
++        points[0].passing = true;
++    }
++    let next = (0..n).map(|p| (p + 1..n).find(|&q| points[q].passing).unwrap_or(n - 1)).collect();
++    let spacing = 40.0 + 200.0 * r();
++    Plan { fast: (0, 0), slow: (1, 0), start: [60.0 * r(), if r() < 0.5 { 0.0 } else { 40.0 * r() }], at: [0.0, 0.0], points, next, spacing, memo: Mutex::new(vec![]) }
++}
++
++/// T-4504: the sweep on flat lists of trains gives what the one before it did, to the bit, over stretches of
++/// every shape: short and long, rare slower lines behind frequent faster ones and the other way, capped
++/// headways, and `trains_at`'s hour of trains.
++#[test]
++fn best_is_the_same_as_before() {
++    let mut x = 0x2545_f491_4f6c_dd1du64;
++    let mut r = move || {
++        x ^= x << 13;
++        x ^= x >> 7;
++        x ^= x << 17;
++        (x >> 11) as f64 / (1u64 << 53) as f64
++    };
++    let rates = [0.25f64, 0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.5, 8.0, 10.0, 12.0, 15.0, 20.0, 24.0, 30.0];
++    let (mut cases, mut waited) = (0, 0);
++    for case in 0..2000 {
++        let n = 2 + (r() * if case % 10 == 0 { 40.0 } else { 14.0 }) as usize;
++        let plan = random_plan(&mut r, n);
++        let pick = |r: &mut dyn FnMut() -> f64| if r() < 0.7 { rates[(r() * rates.len() as f64) as usize] } else { 0.2 + 30.0 * r() };
++        let (tf, ts) = (pick(&mut r), pick(&mut r));
++        let cap = [HEADWAY_MAX_S, 3600.0, 1800.0, 900.0][(r() * 4.0) as usize];
++        assert!(same_best(&plan, tf, ts, cap), "case {case}: {tf}/h behind {ts}/h, cap {cap} s, {} points", plan.points.len());
++        waited += plan.best(tf, ts, cap).waits.iter().any(|&w| w > 0.0) as usize;
++        cases += 1;
++        if case % 50 == 0 {
++            let (hs, hf) = ((3600.0 / ts).min(HEADWAY_MAX_S), (3600.0 / tf).min(HEADWAY_MAX_S));
++            let (a, each) = plan.trains_at(hs, hf);
++            let o = best_before(&plan, 3600.0 / hf, 3600.0 / hs, HEADWAY_MAX_S);
++            let c = cycle(hs, hf);
++            let (b, each_b) = sweep_before(&plan, hs, hf, o.offset, (3600.0 / c).ceil().max(1.0) * c);
++            let bits = |e: &Vec<Vec<f64>>| e.iter().flatten().map(|x| x.to_bits()).collect::<Vec<u64>>();
++            assert!(outcome_bits(&a) == outcome_bits(&b) && each.len() == each_b.len() && bits(&each) == bits(&each_b), "case {case}: trains_at");
++        }
++    }
++    eprintln!("{cases} stretches, {waited} with a slower train waiting");
++    assert!(waited > cases / 4, "most cases have overtakes to check: {waited} of {cases}");
++}
