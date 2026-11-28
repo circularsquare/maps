@@ -80,6 +80,7 @@
     { "id": "armenia", "name": "Armenia", "countries": ["AM"] },
     { "id": "azerbaijan", "name": "Azerbaijan", "countries": ["AZ"] },
     { "id": "afghanistan", "name": "Afghanistan", "countries": ["AF"] },
+    { "id": "central-asia", "name": "Central Asia", "countries": ["UZ", "KZ"] },
     { "id": "gulf", "name": "Gulf states", "countries": ["AE", "QA", "BH", "KW", "OM"] },
     { "id": "in-north", "name": "North India", "units": { "IN": [
       "Jammu and Kashmir", "Ladakh", "Himachal Pradesh", "Punjab", "Chandigarh", "Haryana", "Delhi", "Rajasthan"] } },

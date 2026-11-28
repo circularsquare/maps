@@ -34286,6 +34286,430 @@
       {
         "name": "Huwei",
         "regionName": "Huwei region"
+      },
+      {
+        "name": "Tashkent",
+        "regionName": "Tashkent region"
+      },
+      {
+        "name": "Sharof Rashidov",
+        "regionName": "Sharof Rashidov region"
+      },
+      {
+        "name": "Andijan",
+        "regionName": "Andijan region"
+      },
+      {
+        "name": "Denau",
+        "regionName": "Denau region"
+      },
+      {
+        "name": "Urgench",
+        "regionName": "Urgench region"
+      },
+      {
+        "name": "Yangikurgan",
+        "regionName": "Yangikurgan region"
+      },
+      {
+        "name": "Namangan",
+        "regionName": "Namangan region"
+      },
+      {
+        "name": "Samarkand",
+        "regionName": "Samarkand region"
+      },
+      {
+        "name": "Sirdarya",
+        "regionName": "Sirdarya region"
+      },
+      {
+        "name": "Kamashi",
+        "regionName": "Kamashi region"
+      },
+      {
+        "name": "Shakhrixan",
+        "regionName": "Shakhrixan region"
+      },
+      {
+        "name": "Kurgantepa",
+        "regionName": "Kurgantepa region"
+      },
+      {
+        "name": "Khatirchi",
+        "regionName": "Khatirchi region"
+      },
+      {
+        "name": "Chirakchi",
+        "regionName": "Chirakchi region"
+      },
+      {
+        "name": "Gijduvan",
+        "regionName": "Gijduvan region"
+      },
+      {
+        "name": "Kushtepa",
+        "regionName": "Kushtepa region"
+      },
+      {
+        "name": "Kasan",
+        "regionName": "Kasan region"
+      },
+      {
+        "name": "Termez",
+        "regionName": "Termez region"
+      },
+      {
+        "name": "Buvayda",
+        "regionName": "Buvayda region"
+      },
+      {
+        "name": "Turtkul",
+        "regionName": "Turtkul region"
+      },
+      {
+        "name": "Fergana",
+        "regionName": "Fergana region"
+      },
+      {
+        "name": "Bukhara",
+        "regionName": "Bukhara region"
+      },
+      {
+        "name": "Payarik",
+        "regionName": "Payarik region"
+      },
+      {
+        "name": "Nukus",
+        "regionName": "Nukus region"
+      },
+      {
+        "name": "Altiarik",
+        "regionName": "Altiarik region"
+      },
+      {
+        "name": "Besharik",
+        "regionName": "Besharik region"
+      },
+      {
+        "name": "Karshi",
+        "regionName": "Karshi region"
+      },
+      {
+        "name": "Pastdargom",
+        "regionName": "Pastdargom region"
+      },
+      {
+        "name": "Kattakurgan",
+        "regionName": "Kattakurgan region"
+      },
+      {
+        "name": "Urgut",
+        "regionName": "Urgut region"
+      },
+      {
+        "name": "Khanka",
+        "regionName": "Khanka region"
+      },
+      {
+        "name": "Sherabad",
+        "regionName": "Sherabad region"
+      },
+      {
+        "name": "Akhangaran",
+        "regionName": "Akhangaran region"
+      },
+      {
+        "name": "Chust",
+        "regionName": "Chust region"
+      },
+      {
+        "name": "Pskent",
+        "regionName": "Pskent region"
+      },
+      {
+        "name": "Karakul",
+        "regionName": "Karakul region"
+      },
+      {
+        "name": "Tashkent",
+        "regionName": "Tashkent region"
+      },
+      {
+        "name": "Sharof Rashidov",
+        "regionName": "Sharof Rashidov region"
+      },
+      {
+        "name": "Andijan",
+        "regionName": "Andijan region"
+      },
+      {
+        "name": "Denau",
+        "regionName": "Denau region"
+      },
+      {
+        "name": "Urgench",
+        "regionName": "Urgench region"
+      },
+      {
+        "name": "Yangikurgan",
+        "regionName": "Yangikurgan region"
+      },
+      {
+        "name": "Namangan",
+        "regionName": "Namangan region"
+      },
+      {
+        "name": "Samarkand",
+        "regionName": "Samarkand region"
+      },
+      {
+        "name": "Sirdarya",
+        "regionName": "Sirdarya region"
+      },
+      {
+        "name": "Kamashi",
+        "regionName": "Kamashi region"
+      },
+      {
+        "name": "Shakhrixan",
+        "regionName": "Shakhrixan region"
+      },
+      {
+        "name": "Kurgantepa",
+        "regionName": "Kurgantepa region"
+      },
+      {
+        "name": "Khatirchi",
+        "regionName": "Khatirchi region"
+      },
+      {
+        "name": "Chirakchi",
+        "regionName": "Chirakchi region"
+      },
+      {
+        "name": "Gijduvan",
+        "regionName": "Gijduvan region"
+      },
+      {
+        "name": "Kushtepa",
+        "regionName": "Kushtepa region"
+      },
+      {
+        "name": "Kasan",
+        "regionName": "Kasan region"
+      },
+      {
+        "name": "Termez",
+        "regionName": "Termez region"
+      },
+      {
+        "name": "Buvayda",
+        "regionName": "Buvayda region"
+      },
+      {
+        "name": "Turtkul",
+        "regionName": "Turtkul region"
+      },
+      {
+        "name": "Fergana",
+        "regionName": "Fergana region"
+      },
+      {
+        "name": "Bukhara",
+        "regionName": "Bukhara region"
+      },
+      {
+        "name": "Payarik",
+        "regionName": "Payarik region"
+      },
+      {
+        "name": "Nukus",
+        "regionName": "Nukus region"
+      },
+      {
+        "name": "Altiarik",
+        "regionName": "Altiarik region"
+      },
+      {
+        "name": "Besharik",
+        "regionName": "Besharik region"
+      },
+      {
+        "name": "Karshi",
+        "regionName": "Karshi region"
+      },
+      {
+        "name": "Pastdargom",
+        "regionName": "Pastdargom region"
+      },
+      {
+        "name": "Kattakurgan",
+        "regionName": "Kattakurgan region"
+      },
+      {
+        "name": "Urgut",
+        "regionName": "Urgut region"
+      },
+      {
+        "name": "Khanka",
+        "regionName": "Khanka region"
+      },
+      {
+        "name": "Sherabad",
+        "regionName": "Sherabad region"
+      },
+      {
+        "name": "Akhangaran",
+        "regionName": "Akhangaran region"
+      },
+      {
+        "name": "Chust",
+        "regionName": "Chust region"
+      },
+      {
+        "name": "Pskent",
+        "regionName": "Pskent region"
+      },
+      {
+        "name": "Karakul",
+        "regionName": "Karakul region"
+      },
+      {
+        "name": "Almaty",
+        "regionName": "Almaty region"
+      },
+      {
+        "name": "Astana",
+        "regionName": "Astana region"
+      },
+      {
+        "name": "Shymkent",
+        "regionName": "Shymkent region"
+      },
+      {
+        "name": "Maktaaral`skiy",
+        "regionName": "Maktaaral`skiy region"
+      },
+      {
+        "name": "Bukhar-Zhyrauskiy",
+        "regionName": "Bukhar-Zhyrauskiy region"
+      },
+      {
+        "name": "Aqtau",
+        "regionName": "Aqtau region"
+      },
+      {
+        "name": "Aqtobe",
+        "regionName": "Aqtobe region"
+      },
+      {
+        "name": "Pavlodarskiy",
+        "regionName": "Pavlodarskiy region"
+      },
+      {
+        "name": "Turkestan",
+        "regionName": "Turkestan region"
+      },
+      {
+        "name": "Ulanskiy",
+        "regionName": "Ulanskiy region"
+      },
+      {
+        "name": "Qostanay",
+        "regionName": "Qostanay region"
+      },
+      {
+        "name": "Zhambylskiy",
+        "regionName": "Zhambylskiy region"
+      },
+      {
+        "name": "Taldyqorghan",
+        "regionName": "Taldyqorghan region"
+      },
+      {
+        "name": "Atyrau",
+        "regionName": "Atyrau region"
+      },
+      {
+        "name": "Qyzylorda",
+        "regionName": "Qyzylorda region"
+      },
+      {
+        "name": "Semipalatinskiy",
+        "regionName": "Semipalatinskiy region"
+      },
+      {
+        "name": "Kyzylzharskiy",
+        "regionName": "Kyzylzharskiy region"
+      },
+      {
+        "name": "Kordayskiy",
+        "regionName": "Kordayskiy region"
+      },
+      {
+        "name": "Enbekshikazakhskiy",
+        "regionName": "Enbekshikazakhskiy region"
+      },
+      {
+        "name": "Panfilovskiy",
+        "regionName": "Panfilovskiy region"
+      },
+      {
+        "name": "Talgarskiy",
+        "regionName": "Talgarskiy region"
+      },
+      {
+        "name": "Kazalinskiy",
+        "regionName": "Kazalinskiy region"
+      },
+      {
+        "name": "Ulytauskiy",
+        "regionName": "Ulytauskiy region"
+      },
+      {
+        "name": "Zhambylskiy",
+        "regionName": "Zhambylskiy region"
+      },
+      {
+        "name": "Urdzharskiy",
+        "regionName": "Urdzharskiy region"
+      },
+      {
+        "name": "Zerendinskiy",
+        "regionName": "Zerendinskiy region"
+      },
+      {
+        "name": "Zelenovskiy",
+        "regionName": "Zelenovskiy region"
+      },
+      {
+        "name": "Aktogayskiy",
+        "regionName": "Aktogayskiy region"
+      },
+      {
+        "name": "Astana",
+        "regionName": "Astana region"
+      },
+      {
+        "name": "Shymkent",
+        "regionName": "Shymkent region"
+      },
+      {
+        "name": "Aqtau",
+        "regionName": "Aqtau region"
+      },
+      {
+        "name": "Chirakchi",
+        "regionName": "Chirakchi region"
+      },
+      {
+        "name": "Pastdargom",
+        "regionName": "Pastdargom region"
+      },
+      {
+        "name": "Pastdargom",
+        "regionName": "Pastdargom region"
       }
     ],
     "rule": {
@@ -159044,6 +159468,1666 @@
       "country": "TW",
       "localTrips": 1519443.0,
       "realm": "taiwan"
+    },
+    {
+      "id": "tas",
+      "name": "Tashkent",
+      "origin": {
+        "lon": 69.2106,
+        "lat": 41.1947
+      },
+      "center": [
+        69.2106,
+        41.1947
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        68.784,
+        40.877,
+        69.764,
+        41.713
+      ],
+      "place": 8603,
+      "country": "UZ",
+      "localTrips": 13073489.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "srv",
+      "name": "Sharof Rashidov",
+      "kind": "zone",
+      "origin": {
+        "lon": 67.8301,
+        "lat": 40.1351
+      },
+      "center": [
+        67.8301,
+        40.1351
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.929,
+        39.466,
+        69.048,
+        40.878
+      ],
+      "place": 8604,
+      "country": "UZ",
+      "localTrips": 3875559.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "adj",
+      "name": "Andijan",
+      "kind": "zone",
+      "origin": {
+        "lon": 72.3484,
+        "lat": 40.754
+      },
+      "center": [
+        72.3484,
+        40.754
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        72.033,
+        40.538,
+        72.617,
+        41.092
+      ],
+      "place": 8605,
+      "country": "UZ",
+      "localTrips": 3736264.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "dba",
+      "name": "Denau",
+      "kind": "zone",
+      "origin": {
+        "lon": 67.904,
+        "lat": 38.2645
+      },
+      "center": [
+        67.904,
+        38.2645
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        67.235,
+        37.368,
+        68.429,
+        39.054
+      ],
+      "place": 8606,
+      "country": "UZ",
+      "localTrips": 3479224.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "ure",
+      "name": "Urgench",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.6266,
+        "lat": 41.5644
+      },
+      "center": [
+        60.6266,
+        41.5644
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        59.713,
+        41.194,
+        60.784,
+        42.372
+      ],
+      "place": 8607,
+      "country": "UZ",
+      "localTrips": 3469189.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "ynk",
+      "name": "Yangikurgan",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.6659,
+        "lat": 41.0417
+      },
+      "center": [
+        71.6659,
+        41.0417
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        71.359,
+        40.859,
+        72.253,
+        41.573
+      ],
+      "place": 8608,
+      "country": "UZ",
+      "localTrips": 3044789.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "nmn",
+      "name": "Namangan",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.618,
+        "lat": 41.0237
+      },
+      "center": [
+        71.618,
+        41.0237
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        71.027,
+        40.622,
+        71.803,
+        41.104
+      ],
+      "place": 8609,
+      "country": "UZ",
+      "localTrips": 2984211.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "sjk",
+      "name": "Samarkand",
+      "kind": "zone",
+      "origin": {
+        "lon": 67.0027,
+        "lat": 39.6702
+      },
+      "center": [
+        67.0027,
+        39.6702
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.567,
+        39.351,
+        67.322,
+        40.006
+      ],
+      "place": 8610,
+      "country": "UZ",
+      "localTrips": 2886508.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "sjl",
+      "name": "Sirdarya",
+      "kind": "zone",
+      "origin": {
+        "lon": 68.5054,
+        "lat": 40.8438
+      },
+      "center": [
+        68.5054,
+        40.8438
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        68.069,
+        40.133,
+        69.372,
+        41.099
+      ],
+      "place": 8611,
+      "country": "UZ",
+      "localTrips": 2788975.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kby",
+      "name": "Kamashi",
+      "kind": "zone",
+      "origin": {
+        "lon": 66.4652,
+        "lat": 38.8059
+      },
+      "center": [
+        66.4652,
+        38.8059
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.76,
+        37.989,
+        67.709,
+        39.166
+      ],
+      "place": 8612,
+      "country": "UZ",
+      "localTrips": 2539120.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "sxa",
+      "name": "Shakhrixan",
+      "kind": "zone",
+      "origin": {
+        "lon": 72.0571,
+        "lat": 40.7091
+      },
+      "center": [
+        72.0571,
+        40.7091
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        71.46,
+        40.587,
+        72.442,
+        41.033
+      ],
+      "place": 8613,
+      "country": "UZ",
+      "localTrips": 2032862.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kge",
+      "name": "Kurgantepa",
+      "kind": "zone",
+      "origin": {
+        "lon": 72.644,
+        "lat": 40.718
+      },
+      "center": [
+        72.644,
+        40.718
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        72.068,
+        40.367,
+        73.239,
+        40.922
+      ],
+      "place": 8614,
+      "country": "UZ",
+      "localTrips": 2495680.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kci",
+      "name": "Khatirchi",
+      "kind": "zone",
+      "origin": {
+        "lon": 65.6603,
+        "lat": 40.0367
+      },
+      "center": [
+        65.6603,
+        40.0367
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        64.563,
+        39.387,
+        66.802,
+        41.13
+      ],
+      "place": 8615,
+      "country": "UZ",
+      "localTrips": 2656999.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "gij",
+      "name": "Gijduvan",
+      "kind": "zone",
+      "origin": {
+        "lon": 64.6846,
+        "lat": 40.0993
+      },
+      "center": [
+        64.6846,
+        40.0993
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        63.659,
+        39.882,
+        65.403,
+        40.972
+      ],
+      "place": 8617,
+      "country": "UZ",
+      "localTrips": 2130880.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "ksp",
+      "name": "Kushtepa",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.752,
+        "lat": 40.4667
+      },
+      "center": [
+        71.752,
+        40.4667
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        71.348,
+        40.384,
+        72.226,
+        40.764
+      ],
+      "place": 8618,
+      "country": "UZ",
+      "localTrips": 2068594.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kbz",
+      "name": "Kasan",
+      "kind": "zone",
+      "origin": {
+        "lon": 65.7737,
+        "lat": 38.8593
+      },
+      "center": [
+        65.7737,
+        38.8593
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        64.272,
+        38.201,
+        66.101,
+        39.588
+      ],
+      "place": 8619,
+      "country": "UZ",
+      "localTrips": 2212632.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "trm",
+      "name": "Termez",
+      "kind": "zone",
+      "origin": {
+        "lon": 67.2956,
+        "lat": 37.2389
+      },
+      "center": [
+        67.2956,
+        37.2389
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.477,
+        37.163,
+        67.865,
+        37.809
+      ],
+      "place": 8620,
+      "country": "UZ",
+      "localTrips": 2389983.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "bva",
+      "name": "Buvayda",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.1374,
+        "lat": 40.5564
+      },
+      "center": [
+        71.1374,
+        40.5564
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        70.619,
+        40.297,
+        71.297,
+        40.777
+      ],
+      "place": 8621,
+      "country": "UZ",
+      "localTrips": 2322056.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "ttk",
+      "name": "Turtkul",
+      "kind": "zone",
+      "origin": {
+        "lon": 61.0222,
+        "lat": 41.5464
+      },
+      "center": [
+        61.0222,
+        41.5464
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        60.215,
+        40.935,
+        62.476,
+        43.133
+      ],
+      "place": 8622,
+      "country": "UZ",
+      "localTrips": 2094936.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "frg",
+      "name": "Fergana",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.8456,
+        "lat": 40.3591
+      },
+      "center": [
+        71.8456,
+        40.3591
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        70.929,
+        39.856,
+        72.112,
+        40.498
+      ],
+      "place": 8623,
+      "country": "UZ",
+      "localTrips": 1986735.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "bdt",
+      "name": "Bukhara",
+      "kind": "zone",
+      "origin": {
+        "lon": 64.4304,
+        "lat": 39.7684
+      },
+      "center": [
+        64.4304,
+        39.7684
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        62.115,
+        39.274,
+        64.813,
+        41.102
+      ],
+      "place": 8624,
+      "country": "UZ",
+      "localTrips": 2480712.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "pyk",
+      "name": "Payarik",
+      "kind": "zone",
+      "origin": {
+        "lon": 66.7516,
+        "lat": 39.8757
+      },
+      "center": [
+        66.7516,
+        39.8757
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.149,
+        39.719,
+        67.1,
+        40.641
+      ],
+      "place": 8625,
+      "country": "UZ",
+      "localTrips": 1920980.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "nuk",
+      "name": "Nukus",
+      "kind": "zone",
+      "origin": {
+        "lon": 59.621,
+        "lat": 42.4603
+      },
+      "center": [
+        59.621,
+        42.4603
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        58.597,
+        42.257,
+        60.014,
+        43.419
+      ],
+      "place": 8626,
+      "country": "UZ",
+      "localTrips": 2228459.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "atx",
+      "name": "Altiarik",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.4794,
+        "lat": 40.377
+      },
+      "center": [
+        71.4794,
+        40.377
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        71.008,
+        40.268,
+        71.664,
+        40.714
+      ],
+      "place": 8627,
+      "country": "UZ",
+      "localTrips": 1847650.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "bdv",
+      "name": "Besharik",
+      "kind": "zone",
+      "origin": {
+        "lon": 70.6108,
+        "lat": 40.4398
+      },
+      "center": [
+        70.6108,
+        40.4398
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        70.304,
+        40.159,
+        71.064,
+        40.652
+      ],
+      "place": 8628,
+      "country": "UZ",
+      "localTrips": 1506673.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kca",
+      "name": "Karshi",
+      "kind": "zone",
+      "origin": {
+        "lon": 65.7933,
+        "lat": 38.8326
+      },
+      "center": [
+        65.7933,
+        38.8326
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.116,
+        38.231,
+        66.088,
+        38.964
+      ],
+      "place": 8629,
+      "country": "UZ",
+      "localTrips": 1515390.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kku",
+      "name": "Kattakurgan",
+      "kind": "zone",
+      "origin": {
+        "lon": 66.2503,
+        "lat": 39.9025
+      },
+      "center": [
+        66.2503,
+        39.9025
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.168,
+        39.686,
+        66.487,
+        40.343
+      ],
+      "place": 8631,
+      "country": "UZ",
+      "localTrips": 1363753.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "urt",
+      "name": "Urgut",
+      "kind": "zone",
+      "origin": {
+        "lon": 67.2385,
+        "lat": 39.4203
+      },
+      "center": [
+        67.2385,
+        39.4203
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.836,
+        39.212,
+        67.548,
+        39.642
+      ],
+      "place": 8632,
+      "country": "UZ",
+      "localTrips": 1458309.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kcb",
+      "name": "Khanka",
+      "kind": "zone",
+      "origin": {
+        "lon": 60.7886,
+        "lat": 41.4742
+      },
+      "center": [
+        60.7886,
+        41.4742
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        60.355,
+        40.532,
+        62.443,
+        41.561
+      ],
+      "place": 8633,
+      "country": "UZ",
+      "localTrips": 1396836.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "sjm",
+      "name": "Sherabad",
+      "kind": "zone",
+      "origin": {
+        "lon": 67.0085,
+        "lat": 37.6715
+      },
+      "center": [
+        67.0085,
+        37.6715
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.47,
+        37.329,
+        67.543,
+        38.601
+      ],
+      "place": 8634,
+      "country": "UZ",
+      "localTrips": 1243244.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "akn",
+      "name": "Akhangaran",
+      "kind": "zone",
+      "origin": {
+        "lon": 70.0843,
+        "lat": 41.0057
+      },
+      "center": [
+        70.0843,
+        41.0057
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        69.39,
+        40.681,
+        71.293,
+        42.314
+      ],
+      "place": 8635,
+      "country": "UZ",
+      "localTrips": 1037220.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "cbv",
+      "name": "Chust",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.2312,
+        "lat": 40.9967
+      },
+      "center": [
+        71.2312,
+        40.9967
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        70.363,
+        40.624,
+        71.423,
+        41.49
+      ],
+      "place": 8636,
+      "country": "UZ",
+      "localTrips": 1355569.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "pse",
+      "name": "Pskent",
+      "kind": "zone",
+      "origin": {
+        "lon": 69.609,
+        "lat": 40.8438
+      },
+      "center": [
+        69.609,
+        40.8438
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        68.613,
+        40.583,
+        69.845,
+        41.158
+      ],
+      "place": 8637,
+      "country": "UZ",
+      "localTrips": 1022832.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kcc",
+      "name": "Karakul",
+      "kind": "zone",
+      "origin": {
+        "lon": 63.8526,
+        "lat": 39.5006
+      },
+      "center": [
+        63.8526,
+        39.5006
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        62.333,
+        38.941,
+        64.658,
+        40.406
+      ],
+      "place": 8638,
+      "country": "UZ",
+      "localTrips": 509798.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "alm",
+      "name": "Almaty",
+      "origin": {
+        "lon": 76.9557,
+        "lat": 43.2333
+      },
+      "center": [
+        76.9557,
+        43.2333
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        75.963,
+        42.885,
+        77.282,
+        44.803
+      ],
+      "place": 8639,
+      "country": "KZ",
+      "localTrips": 7870025.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "mkr",
+      "name": "Maktaaral`skiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 68.3224,
+        "lat": 40.7809
+      },
+      "center": [
+        68.3224,
+        40.7809
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        66.508,
+        40.55,
+        70.97,
+        43.077
+      ],
+      "place": 8642,
+      "country": "KZ",
+      "localTrips": 3479771.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "bkz",
+      "name": "Bukhar-Zhyrauskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 73.1526,
+        "lat": 49.7904
+      },
+      "center": [
+        73.1526,
+        49.7904
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        71.548,
+        49.105,
+        75.168,
+        51.328
+      ],
+      "place": 8643,
+      "country": "KZ",
+      "localTrips": 2879686.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "aqo",
+      "name": "Aqtobe",
+      "kind": "zone",
+      "origin": {
+        "lon": 57.1944,
+        "lat": 50.2775
+      },
+      "center": [
+        57.1944,
+        50.2775
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        53.582,
+        47.769,
+        60.059,
+        51.181
+      ],
+      "place": 8645,
+      "country": "KZ",
+      "localTrips": 2320896.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "pvl",
+      "name": "Pavlodarskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 76.9744,
+        "lat": 52.2741
+      },
+      "center": [
+        76.9744,
+        52.2741
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        73.375,
+        49.995,
+        79.378,
+        54.477
+      ],
+      "place": 8646,
+      "country": "KZ",
+      "localTrips": 2242287.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "tkt",
+      "name": "Turkestan",
+      "kind": "zone",
+      "origin": {
+        "lon": 68.2278,
+        "lat": 43.2971
+      },
+      "center": [
+        68.2278,
+        43.2971
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        64.906,
+        41.782,
+        69.85,
+        46.019
+      ],
+      "place": 8647,
+      "country": "KZ",
+      "localTrips": 1970179.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "uln",
+      "name": "Ulanskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 82.5781,
+        "lat": 49.9716
+      },
+      "center": [
+        82.5781,
+        49.9716
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        79.888,
+        47.779,
+        87.345,
+        51.034
+      ],
+      "place": 8648,
+      "country": "KZ",
+      "localTrips": 2038854.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "qos",
+      "name": "Qostanay",
+      "kind": "zone",
+      "origin": {
+        "lon": 63.6344,
+        "lat": 53.2113
+      },
+      "center": [
+        63.6344,
+        53.2113
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        59.963,
+        50.834,
+        66.432,
+        54.736
+      ],
+      "place": 8649,
+      "country": "KZ",
+      "localTrips": 2050124.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "zhm",
+      "name": "Zhambylskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 71.3949,
+        "lat": 42.9237
+      },
+      "center": [
+        71.3949,
+        42.9237
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        69.892,
+        42.302,
+        72.287,
+        44.508
+      ],
+      "place": 8650,
+      "country": "KZ",
+      "localTrips": 1880269.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "tld",
+      "name": "Taldyqorghan",
+      "kind": "zone",
+      "origin": {
+        "lon": 78.3539,
+        "lat": 45.0024
+      },
+      "center": [
+        78.3539,
+        45.0024
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        73.696,
+        43.805,
+        82.614,
+        47.35
+      ],
+      "place": 8651,
+      "country": "KZ",
+      "localTrips": 1670633.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "atu",
+      "name": "Atyrau",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.9384,
+        "lat": 47.1095
+      },
+      "center": [
+        51.9384,
+        47.1095
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        47.022,
+        45.727,
+        56.499,
+        49.251
+      ],
+      "place": 8652,
+      "country": "KZ",
+      "localTrips": 1556149.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "qyz",
+      "name": "Qyzylorda",
+      "kind": "zone",
+      "origin": {
+        "lon": 65.513,
+        "lat": 44.8273
+      },
+      "center": [
+        65.513,
+        44.8273
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        61.902,
+        43.487,
+        67.391,
+        47.05
+      ],
+      "place": 8653,
+      "country": "KZ",
+      "localTrips": 1398401.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "smy",
+      "name": "Semipalatinskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 80.244,
+        "lat": 50.4115
+      },
+      "center": [
+        80.244,
+        50.4115
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        76.531,
+        48.611,
+        83.049,
+        51.728
+      ],
+      "place": 8654,
+      "country": "KZ",
+      "localTrips": 1382052.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kyz",
+      "name": "Kyzylzharskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 69.1275,
+        "lat": 54.8698
+      },
+      "center": [
+        69.1275,
+        54.8698
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.932,
+        52.188,
+        74.067,
+        55.462
+      ],
+      "place": 8655,
+      "country": "KZ",
+      "localTrips": 1385471.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kdy",
+      "name": "Kordayskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 74.719,
+        "lat": 43.042
+      },
+      "center": [
+        74.719,
+        43.042
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        71.753,
+        42.391,
+        75.849,
+        44.669
+      ],
+      "place": 8656,
+      "country": "KZ",
+      "localTrips": 1190683.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "enb",
+      "name": "Enbekshikazakhskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 77.4342,
+        "lat": 43.361
+      },
+      "center": [
+        77.4342,
+        43.361
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        77.111,
+        43.083,
+        79.188,
+        43.904
+      ],
+      "place": 8657,
+      "country": "KZ",
+      "localTrips": 936270.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "pnf",
+      "name": "Panfilovskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 80.0048,
+        "lat": 44.1658
+      },
+      "center": [
+        80.0048,
+        44.1658
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        77.058,
+        42.192,
+        80.819,
+        44.861
+      ],
+      "place": 8658,
+      "country": "KZ",
+      "localTrips": 800478.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "tly",
+      "name": "Talgarskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 76.9918,
+        "lat": 43.2789
+      },
+      "center": [
+        76.9918,
+        43.2789
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        76.745,
+        42.953,
+        78.466,
+        44.391
+      ],
+      "place": 8659,
+      "country": "KZ",
+      "localTrips": 388555.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "kza",
+      "name": "Kazalinskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 62.1442,
+        "lat": 45.8435
+      },
+      "center": [
+        62.1442,
+        45.8435
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        59.004,
+        43.553,
+        63.434,
+        47.846
+      ],
+      "place": 8660,
+      "country": "KZ",
+      "localTrips": 457768.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "uly",
+      "name": "Ulytauskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 67.7037,
+        "lat": 47.803
+      },
+      "center": [
+        67.7037,
+        47.803
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        62.923,
+        45.981,
+        69.874,
+        49.957
+      ],
+      "place": 8661,
+      "country": "KZ",
+      "localTrips": 479165.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "zhl",
+      "name": "Zhambylskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 76.4123,
+        "lat": 43.1604
+      },
+      "center": [
+        76.4123,
+        43.1604
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        74.377,
+        42.842,
+        76.557,
+        44.883
+      ],
+      "place": 8662,
+      "country": "KZ",
+      "localTrips": 340214.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "urd",
+      "name": "Urdzharskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 81.6338,
+        "lat": 47.0908
+      },
+      "center": [
+        81.6338,
+        47.0908
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        80.048,
+        45.521,
+        85.73,
+        48.537
+      ],
+      "place": 8663,
+      "country": "KZ",
+      "localTrips": 404266.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "zer",
+      "name": "Zerendinskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 69.3829,
+        "lat": 53.2799
+      },
+      "center": [
+        69.3829,
+        53.2799
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.321,
+        50.366,
+        72.962,
+        53.703
+      ],
+      "place": 8664,
+      "country": "KZ",
+      "localTrips": 1572583.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "zee",
+      "name": "Zelenovskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.3702,
+        "lat": 51.2091
+      },
+      "center": [
+        51.3702,
+        51.2091
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        46.464,
+        48.049,
+        54.595,
+        51.795
+      ],
+      "place": 8665,
+      "country": "KZ",
+      "localTrips": 1580642.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "akg",
+      "name": "Aktogayskiy",
+      "kind": "zone",
+      "origin": {
+        "lon": 74.9784,
+        "lat": 46.8479
+      },
+      "center": [
+        74.9784,
+        46.8479
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        73.253,
+        45.982,
+        77.582,
+        48.945
+      ],
+      "place": 8666,
+      "country": "KZ",
+      "localTrips": 303479.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "ast",
+      "name": "Astana",
+      "origin": {
+        "lon": 71.4328,
+        "lat": 51.1609
+      },
+      "center": [
+        71.4328,
+        51.1609
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        68.645,
+        49.963,
+        74.291,
+        52.768
+      ],
+      "place": 8667,
+      "country": "KZ",
+      "localTrips": 4238359.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "shm",
+      "name": "Shymkent",
+      "origin": {
+        "lon": 69.5985,
+        "lat": 42.3152
+      },
+      "center": [
+        69.5985,
+        42.3152
+      ],
+      "zoom": 11.2,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        68.727,
+        41.985,
+        70.276,
+        43.567
+      ],
+      "place": 8668,
+      "country": "KZ",
+      "localTrips": 4575643.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "aqt",
+      "name": "Aqtau",
+      "kind": "zone",
+      "origin": {
+        "lon": 51.144,
+        "lat": 43.6623
+      },
+      "center": [
+        51.144,
+        43.6623
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        49.979,
+        41.228,
+        56.77,
+        46.539
+      ],
+      "place": 8669,
+      "country": "KZ",
+      "localTrips": 2317673.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "ckc",
+      "name": "Chirakchi",
+      "kind": "zone",
+      "origin": {
+        "lon": 66.8267,
+        "lat": 39.0639
+      },
+      "center": [
+        66.8267,
+        39.0639
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.789,
+        38.832,
+        67.688,
+        39.428
+      ],
+      "place": 8670,
+      "country": "UZ",
+      "localTrips": 1802197.0,
+      "realm": "central-asia"
+    },
+    {
+      "id": "psd",
+      "name": "Pastdargom",
+      "kind": "zone",
+      "origin": {
+        "lon": 66.6657,
+        "lat": 39.7148
+      },
+      "center": [
+        66.6657,
+        39.7148
+      ],
+      "zoom": 10.5,
+      "utcOffset": 5,
+      "market": -1,
+      "box": [
+        65.191,
+        39.256,
+        66.895,
+        39.936
+      ],
+      "place": 8672,
+      "country": "UZ",
+      "localTrips": 1238803.0,
+      "realm": "central-asia"
     }
   ]
 }

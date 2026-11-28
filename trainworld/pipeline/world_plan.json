@@ -17597,13 +17597,13 @@
    "order": 189,
    "id": "tas",
    "name": "Tashkent",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "UZB"
    ],
    "iso2": "UZ",
-   "people": 4729747,
+   "people": 4768242,
    "origin": [
     69.2106,
     41.1947
@@ -17635,7 +17635,9 @@
      "79887680B42148642049849",
      "79887680B36749064688690",
      "79887680B16922356170962",
-     "79887680B41064680481751"
+     "79887680B41064680481751",
+     "79887680B87118778033148",
+     "79887680B3865119870711"
     ]
    },
    "bbox": [
@@ -17653,7 +17655,33 @@
     ],
     "satellites": [
      2383
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "79887680B87118778033148",
+      "79887680B3865119870711"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 356.5,
+     "stations": 1.0,
+     "places": 3.2,
+     "routes": 50.0,
+     "merge": 1.0,
+     "everyday": 1.2
+    },
+    "built": "2026-11-27T23:06:38",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.00048828125"
+     ]
+    },
+    "gated": "2026-11-28T00:45:53",
+    "shipped": "2026-11-28T09:33:09"
    }
   },
   {
@@ -25413,7 +25441,7 @@
    "order": 286,
    "id": "alm",
    "name": "Almaty",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "KAZ"
@@ -25451,6 +25479,25 @@
     "fua": [
      2583
     ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 369.9,
+     "stations": 1.1,
+     "places": 2.8,
+     "routes": 46.1,
+     "merge": 1.1,
+     "everyday": 1.5
+    },
+    "built": "2026-11-28T01:50:44",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-28T02:18:02",
+    "shipped": "2026-11-28T09:33:10"
    }
   },
   {
@@ -38652,13 +38699,13 @@
    "order": 453,
    "id": "ast",
    "name": "Astana",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "KAZ"
    ],
    "iso2": "KZ",
-   "people": 1435073,
+   "people": 1547949,
    "origin": [
     71.4328,
     51.1609
@@ -38672,14 +38719,18 @@
    "module": null,
    "units": {
     "KAZ": [
-     "9891525B15592648176932"
+     "9891525B15592648176932",
+     "9891525B30379541145757",
+     "9891525B90656598279735",
+     "9891525B24357337483480",
+     "9891525B32188509788858"
     ]
    },
    "bbox": [
-    70.519,
-    50.434,
-    72.214,
-    51.647
+    68.801,
+    49.982,
+    74.28,
+    52.764
    ],
    "source": {
     "ucdb": [
@@ -38687,7 +38738,41 @@
     ],
     "fua": [
      1510
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "9891525B30379541145757",
+      "9891525B90656598279735",
+      "9891525B24357337483480",
+      "9891525B32188509788858"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 368.4,
+     "stations": 1.1,
+     "places": 2.4,
+     "routes": 38.1,
+     "merge": 1.3,
+     "everyday": 1.3
+    },
+    "built": "2026-11-28T01:50:32",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.6506744573303724",
+      "area_km2 48275.016173529795",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-28T02:08:44",
+    "gated": "2026-11-28T08:16:50",
+    "shipped": "2026-11-28T09:33:11"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-3764: the row's whole units (Astana city and the four Akmola districts round it, T-1191 remnants) hold more people than GHS-FUA's 2015 count (844,173), which only widens the playable area (as DECISIONS 2026-10-19)"
    }
   },
   {
@@ -41071,13 +41156,13 @@
    "order": 491,
    "id": "shm",
    "name": "Shymkent",
-   "status": "planned",
+   "status": "shipped",
    "region": "world",
    "countries": [
     "KAZ"
    ],
    "iso2": "KZ",
-   "people": 1650065,
+   "people": 1719636,
    "origin": [
     69.5985,
     42.3152
@@ -41092,14 +41177,15 @@
    "units": {
     "KAZ": [
      "9891525B8049816971735",
-     "9891525B68436750823948"
+     "9891525B68436750823948",
+     "9891525B44210110580275"
     ]
    },
    "bbox": [
-    69.246,
+    68.848,
     42.004,
-    70.131,
-    42.633
+    70.278,
+    43.551
    ],
    "source": {
     "ucdb": [
@@ -41110,7 +41196,37 @@
     ],
     "satellites": [
      2526
-    ]
+    ],
+    "remnants": {
+     "task": "T-1191",
+     "units": [
+      "9891525B44210110580275"
+     ]
+    }
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 366.0,
+     "stations": 1.1,
+     "places": 2.7,
+     "routes": 33.6,
+     "merge": 1.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-28T01:50:27",
+    "gate": {
+     "warn": [
+      "pop_vs_fua 1.658213046271275",
+      "top_school_cell_pupils 6095.38134765625"
+     ]
+    },
+    "parked": "2026-11-28T02:08:45",
+    "gated": "2026-11-28T08:16:51",
+    "shipped": "2026-11-28T09:33:13"
+   },
+   "gate_relax": {
+    "pop_vs_fua": "T-3764: the row's whole units (Shymkent city and the district round it with its satellite town) hold more people than GHS-FUA's 2015 count (928,397), which only widens the playable area (as DECISIONS 2026-10-19)"
    }
   },
   {
@@ -428866,6 +428982,4172 @@
     "gated": "2026-11-22T04:07:27",
     "shipped": "2026-11-22T04:42:40"
    }
+  },
+  {
+   "order": 6402,
+   "id": "srv",
+   "name": "Sharof Rashidov",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1464413,
+   "origin": [
+    67.8301,
+    40.1351
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B75726526377189",
+     "79887680B67251663283691",
+     "79887680B5401835148625",
+     "79887680B19323950575966",
+     "79887680B12051780015721",
+     "79887680B43682608044415",
+     "79887680B47043896675236",
+     "79887680B29992956990251",
+     "79887680B99021392156444",
+     "79887680B4064718832090",
+     "79887680B67219555279556",
+     "79887680B9171225127728",
+     "79887680B4215620522937"
+    ]
+   },
+   "bbox": [
+    66.973,
+    39.502,
+    69.014,
+    40.859
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sharof Rashidov",
+     "Bulungur",
+     "Gallyaaral",
+     "Zaаmin",
+     "Bakhmal",
+     "Zarbdar",
+     "Dustlik",
+     "Paxtakor",
+     "Arnasay",
+     "Mirzachul",
+     "Dzhizak city",
+     "Zafarabad",
+     "Yangiabad"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 352.9,
+     "stations": 0.9,
+     "places": 2.6,
+     "routes": 39.2,
+     "merge": 1.2,
+     "everyday": 1.1
+    },
+    "built": "2026-11-27T23:06:22",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:45:54",
+    "shipped": "2026-11-28T09:33:13"
+   }
+  },
+  {
+   "order": 6403,
+   "id": "adj",
+   "name": "Andijan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1427275,
+   "origin": [
+    72.3484,
+    40.754
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kyrgyzstan",
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B74226906580742",
+     "79887680B69641421993469",
+     "79887680B95216524949975",
+     "79887680B2052385520334"
+    ]
+   },
+   "bbox": [
+    72.057,
+    40.567,
+    72.573,
+    41.065
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Andijan",
+     "Asaka",
+     "Andijan city",
+     "Paxtaabad"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 346.6,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 27.9,
+     "merge": 0.9,
+     "everyday": 1.1
+    },
+    "built": "2026-11-27T23:06:04",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:45:55",
+    "shipped": "2026-11-28T09:33:14"
+   }
+  },
+  {
+   "order": 6404,
+   "id": "dba",
+   "name": "Denau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1358748,
+   "origin": [
+    67.904,
+    38.2645
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B8984486268693",
+     "79887680B82153546012261",
+     "79887680B83701806850214",
+     "79887680B75578252058464",
+     "79887680B9573461396891",
+     "79887680B11166150999612"
+    ]
+   },
+   "bbox": [
+    67.305,
+    37.389,
+    68.403,
+    39.033
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Denau",
+     "Sariasiya",
+     "Kumkurgan",
+     "Shurchi",
+     "Altinsay",
+     "Uzun"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 11.8,
+     "stations": 0.9,
+     "places": 1.9,
+     "routes": 23.8,
+     "merge": 1.2,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:06:48",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:45:56",
+    "shipped": "2026-11-28T09:33:15"
+   }
+  },
+  {
+   "order": 6405,
+   "id": "ure",
+   "name": "Urgench",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1356333,
+   "origin": [
+    60.6266,
+    41.5644
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B5155786713045",
+     "79887680B67856776963689",
+     "79887680B59227978445029",
+     "79887680B11316331959400",
+     "79887680B63967245583955",
+     "79887680B99792663535597",
+     "79887680B22803301231900",
+     "79887680B59806370896431",
+     "79887680B89988624723633"
+    ]
+   },
+   "bbox": [
+    59.737,
+    41.264,
+    60.759,
+    42.354
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Urgench",
+     "Khiva",
+     "Shavat",
+     "Amudarya",
+     "Koshkupir",
+     "Gurlen",
+     "Yangibazar",
+     "Khiva city",
+     "Urgench city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 13.0,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 21.5,
+     "merge": 0.9,
+     "everyday": 1.2
+    },
+    "built": "2026-11-27T23:07:04",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:45:57",
+    "shipped": "2026-11-28T09:33:17"
+   }
+  },
+  {
+   "order": 6406,
+   "id": "ynk",
+   "name": "Yangikurgan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1246675,
+   "origin": [
+    71.6659,
+    41.0417
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kyrgyzstan",
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B90500403808249",
+     "79887680B4348480109525",
+     "79887680B51859555841506",
+     "79887680B43665894395177",
+     "79887680B35727766671193",
+     "79887680B11323044548647"
+    ]
+   },
+   "bbox": [
+    71.383,
+    40.887,
+    72.228,
+    41.555
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Yangikurgan",
+     "Uychi",
+     "Kasansay",
+     "Chartak",
+     "Uchkurgan",
+     "Narin"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 13.0,
+     "stations": 1.2,
+     "places": 2.7,
+     "routes": 26.7,
+     "merge": 0.8,
+     "everyday": 1.0
+    },
+    "built": "2026-11-27T23:07:26",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:45:58",
+    "shipped": "2026-11-28T09:33:17"
+   }
+  },
+  {
+   "order": 6407,
+   "id": "nmn",
+   "name": "Namangan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1214546,
+   "origin": [
+    71.618,
+    41.0237
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B99414619772230",
+     "79887680B29549243080653",
+     "79887680B13123627114568",
+     "79887680B504113599955"
+    ]
+   },
+   "bbox": [
+    71.051,
+    40.641,
+    71.774,
+    41.125
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Namangan",
+     "Turakurgan",
+     "Namangan city",
+     "Mingbulak"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 11.0,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 16.9,
+     "merge": 0.8,
+     "everyday": 0.9
+    },
+    "built": "2026-11-27T23:07:22",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:45:59",
+    "shipped": "2026-11-28T09:33:19"
+   }
+  },
+  {
+   "order": 6408,
+   "id": "sjk",
+   "name": "Samarkand",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1198823,
+   "origin": [
+    67.0027,
+    39.6702
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B77379666017529",
+     "79887680B27058586610976",
+     "79887680B91755073573876",
+     "79887680B93322168569220"
+    ]
+   },
+   "bbox": [
+    66.591,
+    39.37,
+    67.298,
+    39.935
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Samarkand",
+     "Dzhambay",
+     "Akdarya",
+     "Samarkand city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 9.5,
+     "stations": 0.9,
+     "places": 2.2,
+     "routes": 16.3,
+     "merge": 1.0,
+     "everyday": 1.1
+    },
+    "built": "2026-11-27T23:07:37",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1098847577465861",
+      "top_school_cell_pupils 5636.39892578125"
+     ]
+    },
+    "gated": "2026-11-28T00:46:00",
+    "shipped": "2026-11-28T09:33:20"
+   }
+  },
+  {
+   "order": 6409,
+   "id": "sjl",
+   "name": "Sirdarya",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1075965,
+   "origin": [
+    68.5054,
+    40.8438
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan",
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B82422734608067",
+     "79887680B43594264952232",
+     "79887680B93724335665185",
+     "79887680B15135305398470",
+     "79887680B47457060484858",
+     "79887680B49500838680737",
+     "79887680B2941590396585",
+     "79887680B92810274159920",
+     "79887680B81197262322731",
+     "79887680B26381938594852",
+     "79887680B94622992244208"
+    ]
+   },
+   "bbox": [
+    68.101,
+    40.152,
+    69.363,
+    41.08
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sirdarya",
+     "Gulistan",
+     "Bekabad",
+     "Khavas",
+     "Bayaut",
+     "Mirzaabad",
+     "Saykhunabad",
+     "Akaltin",
+     "Sardoba",
+     "Gulistan city",
+     "Bekabad city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 18.0,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 35.3,
+     "merge": 1.0,
+     "everyday": 1.0
+    },
+    "built": "2026-11-27T23:08:23",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:01",
+    "shipped": "2026-11-28T09:33:20"
+   }
+  },
+  {
+   "order": 6410,
+   "id": "kby",
+   "name": "Kamashi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1053108,
+   "origin": [
+    66.4652,
+    38.8059
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B4185016404575",
+     "79887680B91386955898676",
+     "79887680B36641058684147",
+     "79887680B77871690978000",
+     "79887680B51602053820604"
+    ]
+   },
+   "bbox": [
+    65.798,
+    37.979,
+    67.704,
+    39.118
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kamashi",
+     "Shakhrisabz",
+     "Guzar",
+     "Yakkabag",
+     "Dehkanabad"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 11.3,
+     "stations": 1.0,
+     "places": 2.7,
+     "routes": 30.5,
+     "merge": 1.4,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:08:16",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6038.29296875"
+     ]
+    },
+    "gated": "2026-11-28T00:46:02",
+    "shipped": "2026-11-28T09:33:21"
+   }
+  },
+  {
+   "order": 6411,
+   "id": "sxa",
+   "name": "Shakhrixan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 1009744,
+   "origin": [
+    72.0571,
+    40.7091
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B98657239808063",
+     "79887680B50454088446008",
+     "79887680B88758805168239",
+     "79887680B83783750285082",
+     "79887680B29412867637503",
+     "79887680B97911252833963"
+    ]
+   },
+   "bbox": [
+    71.474,
+    40.628,
+    72.42,
+    41.015
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Shakhrixan",
+     "Izboskan",
+     "Altinkul",
+     "Balikchi",
+     "Boz",
+     "Ulugnar"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 11.0,
+     "stations": 1.0,
+     "places": 2.5,
+     "routes": 31.9,
+     "merge": 0.8,
+     "everyday": 1.0
+    },
+    "built": "2026-11-27T23:08:27",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:03",
+    "shipped": "2026-11-28T09:33:22"
+   }
+  },
+  {
+   "order": 6412,
+   "id": "kge",
+   "name": "Kurgantepa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 981448,
+   "origin": [
+    72.644,
+    40.718
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kyrgyzstan",
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B5008780353484",
+     "79887680B89624246820139",
+     "79887680B20673665411961",
+     "79887680B25262696508510",
+     "79887680B24137157284199"
+    ]
+   },
+   "bbox": [
+    72.166,
+    40.401,
+    73.132,
+    40.91
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kurgantepa",
+     "Markhamat",
+     "Khadjaabad",
+     "Bulakbashi",
+     "Djalalkuduk"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 11.2,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 23.4,
+     "merge": 0.9,
+     "everyday": 1.2
+    },
+    "built": "2026-11-27T23:08:58",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:04",
+    "shipped": "2026-11-28T09:33:23"
+   }
+  },
+  {
+   "order": 6413,
+   "id": "kci",
+   "name": "Khatirchi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 964317,
+   "origin": [
+    65.6603,
+    40.0367
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B3077995484164",
+     "79887680B67095237367046",
+     "79887680B28423618609803",
+     "79887680B23954211598190",
+     "79887680B30897386041175",
+     "79887680B50515464661087"
+    ]
+   },
+   "bbox": [
+    64.588,
+    39.406,
+    66.772,
+    41.019
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Khatirchi",
+     "Navbakhor",
+     "Nurata",
+     "Karmana",
+     "Kiziltepa",
+     "Navoi city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 37.7,
+     "stations": 1.4,
+     "places": 2.4,
+     "routes": 30.8,
+     "merge": 1.4,
+     "everyday": 1.4
+    },
+    "built": "2026-11-27T23:09:40",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5981.8359375"
+     ]
+    },
+    "gated": "2026-11-28T00:46:05",
+    "shipped": "2026-11-28T09:33:24"
+   }
+  },
+  {
+   "order": 6414,
+   "id": "ckc",
+   "name": "Chirakchi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 952658,
+   "origin": [
+    66.8267,
+    39.0639
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B89374870504997",
+     "79887680B27761464779200",
+     "79887680B15767509154771"
+    ]
+   },
+   "bbox": [
+    65.804,
+    38.822,
+    67.684,
+    39.409
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chirakchi",
+     "Kitab",
+     "Shakhrisabz city"
+    ],
+    "origin_was": [
+     66.5722,
+     39.0283
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-075058",
+    "built": "2026-11-28T08:02:32",
+    "steps": {
+     "build": 93.5,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 29.7,
+     "merge": 1.1,
+     "everyday": 1.5
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.7370232577079718",
+      "top_zone_jobs_share 0.1086110134673858"
+     ]
+    },
+    "gated": "2026-11-28T08:16:53",
+    "shipped": "2026-11-28T09:33:25"
+   }
+  },
+  {
+   "order": 6415,
+   "id": "gij",
+   "name": "Gijduvan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 950314,
+   "origin": [
+    64.6846,
+    40.0993
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B42366565573671",
+     "79887680B37320061840085",
+     "79887680B72546583413926"
+    ]
+   },
+   "bbox": [
+    63.683,
+    39.847,
+    65.383,
+    40.903
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Gijduvan",
+     "Shafirkan",
+     "Vabkent"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 13.0,
+     "stations": 1.3,
+     "places": 2.4,
+     "routes": 21.7,
+     "merge": 1.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:24:43",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8186591761720774",
+      "top_school_cell_pupils 6108.837890625"
+     ]
+    },
+    "gated": "2026-11-28T00:46:06",
+    "shipped": "2026-11-28T09:33:26"
+   }
+  },
+  {
+   "order": 6416,
+   "id": "ksp",
+   "name": "Kushtepa",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 950177,
+   "origin": [
+    71.752,
+    40.4667
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B56995537187313",
+     "79887680B41793707673960",
+     "79887680B62642842050546",
+     "79887680B59640879655565",
+     "79887680B77286395999691"
+    ]
+   },
+   "bbox": [
+    71.362,
+    40.418,
+    72.197,
+    40.755
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kushtepa",
+     "Kuva",
+     "Tashlak",
+     "Yazyavan",
+     "Margilan city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 9.2,
+     "stations": 1.0,
+     "places": 2.2,
+     "routes": 35.8,
+     "merge": 0.9,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:10:33",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1358298466214953"
+     ]
+    },
+    "gated": "2026-11-28T00:46:06",
+    "shipped": "2026-11-28T09:33:27"
+   }
+  },
+  {
+   "order": 6417,
+   "id": "kbz",
+   "name": "Kasan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 923170,
+   "origin": [
+    65.7737,
+    38.8593
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B27619716135754",
+     "79887680B94594709209403",
+     "79887680B29394566639719",
+     "79887680B34481827361029"
+    ]
+   },
+   "bbox": [
+    64.397,
+    38.53,
+    66.063,
+    39.516
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kasan",
+     "Kasbi",
+     "Mubarek",
+     "Mirishkar"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 10.7,
+     "stations": 0.9,
+     "places": 2.3,
+     "routes": 16.8,
+     "merge": 1.0,
+     "everyday": 1.1
+    },
+    "built": "2026-11-27T23:11:09",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13519337456441147",
+      "road_snap_median_m 347.2",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T00:46:07",
+    "shipped": "2026-11-28T09:33:28"
+   }
+  },
+  {
+   "order": 6418,
+   "id": "trm",
+   "name": "Termez",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 906587,
+   "origin": [
+    67.2956,
+    37.2389
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B61721126470320",
+     "79887680B28452062330935",
+     "79887680B13108405395902",
+     "79887680B78109356235747",
+     "79887680B32786671178541"
+    ]
+   },
+   "bbox": [
+    66.567,
+    37.185,
+    67.833,
+    37.795
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Termez",
+     "Dzharkurgan",
+     "Muzrabad",
+     "Angor",
+     "Termez city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 11.0,
+     "stations": 1.1,
+     "places": 1.8,
+     "routes": 11.5,
+     "merge": 0.9,
+     "everyday": 1.0
+    },
+    "built": "2026-11-27T23:11:38",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 6000.0"
+     ]
+    },
+    "gated": "2026-11-28T00:46:08",
+    "shipped": "2026-11-28T09:33:29"
+   }
+  },
+  {
+   "order": 6419,
+   "id": "bva",
+   "name": "Buvayda",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 903223,
+   "origin": [
+    71.1374,
+    40.5564
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B35623710055833",
+     "79887680B70026965799334",
+     "79887680B18672713259949",
+     "79887680B26065504827015"
+    ]
+   },
+   "bbox": [
+    70.658,
+    40.319,
+    71.249,
+    40.764
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Buvayda",
+     "Uchkuprik",
+     "Kokand city",
+     "Dangara"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 8.1,
+     "stations": 1.2,
+     "places": 2.1,
+     "routes": 14.9,
+     "merge": 0.8,
+     "everyday": 1.1
+    },
+    "built": "2026-11-27T23:12:08",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:09",
+    "shipped": "2026-11-28T09:33:29"
+   }
+  },
+  {
+   "order": 6420,
+   "id": "ttk",
+   "name": "Turtkul",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 880483,
+   "origin": [
+    61.0222,
+    41.5464
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B61567760278746",
+     "79887680B9862753118700",
+     "79887680B22143596455299"
+    ]
+   },
+   "bbox": [
+    60.24,
+    40.954,
+    62.408,
+    42.979
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Turtkul",
+     "Beruniy",
+     "Ellikkala"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 21.6,
+     "stations": 1.0,
+     "places": 2.4,
+     "routes": 21.0,
+     "merge": 0.9,
+     "everyday": 1.0
+    },
+    "built": "2026-11-27T23:12:59",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:10",
+    "shipped": "2026-11-28T09:33:30"
+   }
+  },
+  {
+   "order": 6421,
+   "id": "frg",
+   "name": "Fergana",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 851537,
+   "origin": [
+    71.8456,
+    40.3591
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kyrgyzstan",
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B63252769213541",
+     "79887680B52321906088540",
+     "79887680B62053175719936",
+     "79887680B20364300518134"
+    ]
+   },
+   "bbox": [
+    71.005,
+    39.883,
+    72.102,
+    40.495
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Fergana",
+     "Fergana city",
+     "Sokh",
+     "Kuvasay city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 23.4,
+     "stations": 0.9,
+     "places": 2.1,
+     "routes": 14.9,
+     "merge": 0.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-27T23:13:43",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:11",
+    "shipped": "2026-11-28T09:33:31"
+   }
+  },
+  {
+   "order": 6422,
+   "id": "bdt",
+   "name": "Bukhara",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 840820,
+   "origin": [
+    64.4304,
+    39.7684
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B68174345072699",
+     "79887680B67164743475948",
+     "79887680B12609316203717",
+     "79887680B25452666066533",
+     "79887680B41570808134522"
+    ]
+   },
+   "bbox": [
+    62.139,
+    39.293,
+    64.788,
+    41.044
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bukhara",
+     "Jondor",
+     "Rаmitan",
+     "Kagan city",
+     "Bukhara city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 14.2,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 19.8,
+     "merge": 0.8,
+     "everyday": 1.0
+    },
+    "built": "2026-11-27T23:14:23",
+    "gate": {
+     "warn": [
+      "top_school_cell_pupils 5746.76708984375"
+     ]
+    },
+    "gated": "2026-11-28T00:46:12",
+    "shipped": "2026-11-28T09:33:32"
+   }
+  },
+  {
+   "order": 6423,
+   "id": "pyk",
+   "name": "Payarik",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 819127,
+   "origin": [
+    66.7516,
+    39.8757
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B84985398573177",
+     "79887680B73801633322119",
+     "79887680B475609361313"
+    ]
+   },
+   "bbox": [
+    66.173,
+    39.738,
+    67.082,
+    40.669
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Payarik",
+     "Ishtikhan",
+     "Koshrabad"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 17.2,
+     "stations": 0.8,
+     "places": 2.1,
+     "routes": 31.0,
+     "merge": 1.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:15:19",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:13",
+    "shipped": "2026-11-28T09:33:33"
+   }
+  },
+  {
+   "order": 6424,
+   "id": "nuk",
+   "name": "Nukus",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 807139,
+   "origin": [
+    59.621,
+    42.4603
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B81962210104758",
+     "79887680B45163084066424",
+     "79887680B3643857389786",
+     "79887680B60420038747049",
+     "79887680B11359237520420",
+     "79887680B6584573429161",
+     "79887680B72468614432552"
+    ]
+   },
+   "bbox": [
+    58.644,
+    42.276,
+    59.989,
+    43.344
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Nukus",
+     "Khojeyli",
+     "Chimbay",
+     "Kegeyli",
+     "Kanlikul",
+     "Shumanay",
+     "Nukus city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 29.4,
+     "stations": 0.8,
+     "places": 1.7,
+     "routes": 15.1,
+     "merge": 0.8,
+     "everyday": 0.9
+    },
+    "built": "2026-11-27T23:16:10",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:14",
+    "shipped": "2026-11-28T09:33:34"
+   }
+  },
+  {
+   "order": 6425,
+   "id": "atx",
+   "name": "Altiarik",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 799432,
+   "origin": [
+    71.4794,
+    40.377
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B43666703114629",
+     "79887680B98811003326112",
+     "79887680B55536658077788"
+    ]
+   },
+   "bbox": [
+    71.036,
+    40.283,
+    71.643,
+    40.699
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Altiarik",
+     "Bagdad",
+     "Rishtan"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 6.7,
+     "stations": 0.9,
+     "places": 1.8,
+     "routes": 15.5,
+     "merge": 0.8,
+     "everyday": 1.2
+    },
+    "built": "2026-11-27T23:16:39",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10957262544735683"
+     ]
+    },
+    "gated": "2026-11-28T00:46:14",
+    "shipped": "2026-11-28T09:33:35"
+   }
+  },
+  {
+   "order": 6426,
+   "id": "bdv",
+   "name": "Besharik",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 652792,
+   "origin": [
+    70.6108,
+    40.4398
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B21144428059049",
+     "79887680B27601964839948",
+     "79887680B57578382028963"
+    ]
+   },
+   "bbox": [
+    70.332,
+    40.165,
+    71.047,
+    40.635
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Besharik",
+     "Uzbekistan",
+     "Furkat"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 8.2,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 12.2,
+     "merge": 0.9,
+     "everyday": 1.2
+    },
+    "built": "2026-11-27T23:17:07",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:15",
+    "shipped": "2026-11-28T09:33:36"
+   }
+  },
+  {
+   "order": 6427,
+   "id": "kca",
+   "name": "Karshi",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 603500,
+   "origin": [
+    65.7933,
+    38.8326
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B57210975668042",
+     "79887680B39289348705167",
+     "79887680B88652544593040"
+    ]
+   },
+   "bbox": [
+    65.135,
+    38.236,
+    66.072,
+    38.946
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Karshi",
+     "Nishan",
+     "Karshi city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 10.3,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 11.6,
+     "merge": 1.4,
+     "everyday": 1.5
+    },
+    "built": "2026-11-27T23:17:37",
+    "gate": {
+     "warn": [
+      "road_snap_median_m 304.1"
+     ]
+    },
+    "gated": "2026-11-28T00:46:16",
+    "shipped": "2026-11-28T09:33:37"
+   }
+  },
+  {
+   "order": 6428,
+   "id": "psd",
+   "name": "Pastdargom",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 601468,
+   "origin": [
+    66.6657,
+    39.7148
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B34073464647672",
+     "79887680B60529301489463"
+    ]
+   },
+   "bbox": [
+    65.204,
+    39.274,
+    66.92,
+    39.856
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pastdargom",
+     "Nurabad"
+    ],
+    "origin_was": [
+     66.9151,
+     39.6612
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-075058",
+    "built": "2026-11-28T08:02:34",
+    "steps": {
+     "build": 94.1,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 30.3,
+     "merge": 1.3,
+     "everyday": 1.5
+    },
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8199177098791163",
+      "top_zone_jobs_share 0.22202204256426358",
+      "top_school_cell_pupils 6090.4677734375",
+      "road_snap_median_m 353.8",
+      "fleet_range 1"
+     ]
+    },
+    "parked": "2026-11-28T08:15:42",
+    "gated": "2026-11-28T08:19:07",
+    "shipped": "2026-11-28T09:33:37"
+   },
+   "gate_relax": {
+    "top_zone_jobs_share": "T-3764: a one-town zone, its top cell in Juma's centre (66.662, 39.716, 0.4 km from the origin), not on a GHSL blob"
+   }
+  },
+  {
+   "order": 6429,
+   "id": "kku",
+   "name": "Kattakurgan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 601313,
+   "origin": [
+    66.2503,
+    39.9025
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B42303592957509",
+     "79887680B24658662729517",
+     "79887680B26985573212547",
+     "79887680B69055285128401"
+    ]
+   },
+   "bbox": [
+    65.142,
+    39.59,
+    66.491,
+    40.257
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kattakurgan",
+     "Narpay",
+     "Pakhtachi",
+     "Kattakurgan city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 11.8,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 11.7,
+     "merge": 0.8,
+     "everyday": 1.1
+    },
+    "built": "2026-11-27T23:18:51",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T00:46:17",
+    "shipped": "2026-11-28T09:33:38"
+   }
+  },
+  {
+   "order": 6430,
+   "id": "urt",
+   "name": "Urgut",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 594359,
+   "origin": [
+    67.2385,
+    39.4203
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/tajikistan",
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B70899429425762",
+     "79887680B65824401013757"
+    ]
+   },
+   "bbox": [
+    66.86,
+    39.23,
+    67.524,
+    39.623
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Urgut",
+     "Taylak"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 8.9,
+     "stations": 1.1,
+     "places": 2.0,
+     "routes": 18.1,
+     "merge": 1.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:19:26",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.15266307722775277",
+      "top_school_cell_pupils 6056.87109375"
+     ]
+    },
+    "gated": "2026-11-28T00:46:18",
+    "shipped": "2026-11-28T09:33:39"
+   }
+  },
+  {
+   "order": 6431,
+   "id": "kcb",
+   "name": "Khanka",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 591568,
+   "origin": [
+    60.7886,
+    41.4742
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B75905541481130",
+     "79887680B22974802062613",
+     "79887680B39463987044413",
+     "79887680B98987238414073"
+    ]
+   },
+   "bbox": [
+    60.378,
+    40.562,
+    62.418,
+    41.543
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Khanka",
+     "Khazarasp",
+     "Bagat",
+     "Yangiarik"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 13.5,
+     "stations": 1.4,
+     "places": 2.3,
+     "routes": 15.4,
+     "merge": 1.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:20:03",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10255732485966021",
+      "top_school_cell_pupils 5448.0166015625"
+     ]
+    },
+    "gated": "2026-11-28T00:46:19",
+    "shipped": "2026-11-28T09:33:40"
+   }
+  },
+  {
+   "order": 6432,
+   "id": "sjm",
+   "name": "Sherabad",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 570366,
+   "origin": [
+    67.0085,
+    37.6715
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B39986035389422",
+     "79887680B59449198277137",
+     "79887680B98909134943467"
+    ]
+   },
+   "bbox": [
+    66.518,
+    37.348,
+    67.564,
+    38.559
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Sherabad",
+     "Baysun",
+     "Kizirik"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 15.7,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 16.4,
+     "merge": 1.0,
+     "everyday": 1.0
+    },
+    "built": "2026-11-27T23:20:43",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8140278575307421",
+      "top_zone_jobs_share 0.11197738048514257"
+     ]
+    },
+    "gated": "2026-11-28T00:46:20",
+    "shipped": "2026-11-28T09:33:41"
+   }
+  },
+  {
+   "order": 6433,
+   "id": "akn",
+   "name": "Akhangaran",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 552303,
+   "origin": [
+    70.0843,
+    41.0057
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B39999061670418",
+     "79887680B98166747305726",
+     "79887680B47591797278473",
+     "79887680B68716596189274",
+     "79887680B16924900870232"
+    ]
+   },
+   "bbox": [
+    69.393,
+    40.692,
+    71.261,
+    42.288
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Akhangaran",
+     "Bostanlik",
+     "Parkent",
+     "Angren city",
+     "Akhangaran city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 23.4,
+     "stations": 1.3,
+     "places": 2.1,
+     "routes": 29.4,
+     "merge": 1.0,
+     "everyday": 1.2
+    },
+    "built": "2026-11-27T23:21:43",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.7702045023209793"
+     ]
+    },
+    "gated": "2026-11-28T00:46:21",
+    "shipped": "2026-11-28T09:33:42"
+   }
+  },
+  {
+   "order": 6434,
+   "id": "cbv",
+   "name": "Chust",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 539587,
+   "origin": [
+    71.2312,
+    40.9967
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B74841511889074",
+     "79887680B13435458352129"
+    ]
+   },
+   "bbox": [
+    70.349,
+    40.71,
+    71.398,
+    41.469
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Chust",
+     "Pap"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 10.7,
+     "stations": 1.2,
+     "places": 2.0,
+     "routes": 19.2,
+     "merge": 1.0,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:22:21",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.10622489692816893"
+     ]
+    },
+    "gated": "2026-11-28T00:46:22",
+    "shipped": "2026-11-28T09:33:43"
+   }
+  },
+  {
+   "order": 6435,
+   "id": "pse",
+   "name": "Pskent",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 450089,
+   "origin": [
+    69.609,
+    40.8438
+   ],
+   "tz": "Asia/Tashkent",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B75193688061986",
+     "79887680B87312828707789",
+     "79887680B71620655639392",
+     "79887680B42380635367979",
+     "79887680B10165721529704",
+     "79887680B75027378773615"
+    ]
+   },
+   "bbox": [
+    68.611,
+    40.557,
+    69.803,
+    41.139
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pskent",
+     "Chinaz",
+     "Kuyichirchik",
+     "Buka",
+     "Akkurgan",
+     "Almalik city"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 17.2,
+     "stations": 1.2,
+     "places": 3.1,
+     "routes": 29.0,
+     "merge": 1.8,
+     "everyday": 1.8
+    },
+    "built": "2026-11-27T23:23:18",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.12905738183345888"
+     ]
+    },
+    "gated": "2026-11-28T00:46:23",
+    "shipped": "2026-11-28T09:33:44"
+   }
+  },
+  {
+   "order": 6436,
+   "id": "kcc",
+   "name": "Karakul",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "UZB"
+   ],
+   "iso2": "UZ",
+   "people": 203723,
+   "origin": [
+    63.8526,
+    39.5006
+   ],
+   "tz": "Asia/Samarkand",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "UZB": [
+     "79887680B39876155507460",
+     "79887680B15595975584782"
+    ]
+   },
+   "bbox": [
+    62.359,
+    38.93,
+    64.664,
+    40.389
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Karakul",
+     "Alat"
+    ]
+   },
+   "run": {
+    "run_batch": "20261127-224249",
+    "steps": {
+     "build": 17.1,
+     "stations": 1.3,
+     "places": 2.6,
+     "routes": 15.4,
+     "merge": 1.1,
+     "everyday": 1.3
+    },
+    "built": "2026-11-27T23:24:00",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.14828467726500544"
+     ]
+    },
+    "gated": "2026-11-28T00:46:24",
+    "shipped": "2026-11-28T09:33:44"
+   }
+  },
+  {
+   "order": 6437,
+   "id": "mkr",
+   "name": "Maktaaral`skiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 1390371,
+   "origin": [
+    68.3224,
+    40.7809
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B45749482281835",
+     "9891525B88228936088900",
+     "9891525B55423514815526",
+     "9891525B23047987928012",
+     "9891525B88642868140489",
+     "9891525B34991844410441",
+     "9891525B62106585181407",
+     "9891525B91568049754123"
+    ]
+   },
+   "bbox": [
+    66.531,
+    40.569,
+    70.943,
+    43.036
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Maktaaral`skiy",
+     "Saryagashskiy",
+     "Tolebiyskiy",
+     "Ordabasynskiy",
+     "Kazygurtskiy",
+     "Tyul`kubaskiy",
+     "Chardarinskiy",
+     "Arysskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 49.3,
+     "stations": 1.4,
+     "places": 4.9,
+     "routes": 51.5,
+     "merge": 2.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-28T01:52:19",
+    "gate": {
+     "warn": [
+      "area_km2 40432.466859022126"
+     ]
+    },
+    "gated": "2026-11-28T02:18:03",
+    "shipped": "2026-11-28T09:33:45"
+   }
+  },
+  {
+   "order": 6438,
+   "id": "bkz",
+   "name": "Bukhar-Zhyrauskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 974064,
+   "origin": [
+    73.1526,
+    49.7904
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B60028498041579",
+     "9891525B21358957516429",
+     "9891525B82202485563630"
+    ]
+   },
+   "bbox": [
+    71.706,
+    49.123,
+    75.166,
+    51.289
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Bukhar-Zhyrauskiy",
+     "Abayskiy",
+     "Osakarovskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 37.6,
+     "stations": 1.3,
+     "places": 2.6,
+     "routes": 23.7,
+     "merge": 1.2,
+     "everyday": 1.3
+    },
+    "built": "2026-11-28T01:51:42",
+    "gate": {
+     "warn": []
+    },
+    "gated": "2026-11-28T02:18:03",
+    "shipped": "2026-11-28T09:33:46"
+   }
+  },
+  {
+   "order": 6439,
+   "id": "aqt",
+   "name": "Aqtau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 925185,
+   "origin": [
+    51.144,
+    43.6623
+   ],
+   "tz": "Asia/Aqtau",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B90361051378327",
+     "9891525B69533138221842",
+     "9891525B2667021511617",
+     "9891525B61118581798100",
+     "9891525B91607639772284"
+    ]
+   },
+   "bbox": [
+    49.994,
+    41.24,
+    56.707,
+    46.502
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Aqtau",
+     "Karakiyanskiy",
+     "Beyneuskiy",
+     "Manghystauskiy",
+     "Tupkaraganskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 61.5,
+     "stations": 1.1,
+     "places": 2.4,
+     "routes": 26.9,
+     "merge": 1.6,
+     "everyday": 1.2
+    },
+    "built": "2026-11-28T01:52:21",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8310211468274503",
+      "pop_vs_ghsl 0.841447725836446",
+      "area_km2 164655.1943538605",
+      "road_snap_median_m 987.3",
+      "osm_land_share 0.9079",
+      "fleet_range 2"
+     ]
+    },
+    "parked": "2026-11-28T02:08:47",
+    "gated": "2026-11-28T08:16:52",
+    "shipped": "2026-11-28T09:33:47"
+   },
+   "gate_relax": {
+    "water_points_in_water": "T-3764: the dry points lie in unnamed salt pans (sors) of the Mangystau desert in Karakiya and Mangystau districts and a salt lake by Fort-Shevchenko, OSM water without a name, seasonal"
+   }
+  },
+  {
+   "order": 6440,
+   "id": "aqo",
+   "name": "Aqtobe",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 825398,
+   "origin": [
+    57.1944,
+    50.2775
+   ],
+   "tz": "Asia/Aqtobe",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B31042919552642",
+     "9891525B77019336651831",
+     "9891525B5390352263066",
+     "9891525B75364407860375",
+     "9891525B37446052654763",
+     "9891525B45366613377645",
+     "9891525B3029562563142",
+     "9891525B9195242261928",
+     "9891525B49643131796470"
+    ]
+   },
+   "bbox": [
+    53.664,
+    47.788,
+    60.031,
+    51.159
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Aqtobe",
+     "Mugalzharskiy",
+     "Alginskiy",
+     "Khromtauskiy",
+     "Temirskiy",
+     "Martukskiy",
+     "Uilskiy",
+     "Khobdinskiy",
+     "Kargalinskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 43.2,
+     "stations": 1.0,
+     "places": 2.0,
+     "routes": 25.7,
+     "merge": 1.7,
+     "everyday": 1.2
+    },
+    "built": "2026-11-28T01:52:59",
+    "gate": {
+     "warn": [
+      "area_km2 100528.50178681583",
+      "road_snap_median_m 445.8",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:04",
+    "shipped": "2026-11-28T09:33:48"
+   }
+  },
+  {
+   "order": 6441,
+   "id": "pvl",
+   "name": "Pavlodarskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 760310,
+   "origin": [
+    76.9744,
+    52.2741
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B36736073999325",
+     "9891525B30775471295398",
+     "9891525B57881818520678",
+     "9891525B7015158273764",
+     "9891525B72314075363925",
+     "9891525B27254512620607",
+     "9891525B65214582738908",
+     "9891525B98229517012899",
+     "9891525B3395793098905",
+     "9891525B2073414560970",
+     "9891525B27284335503251",
+     "9891525B72174949992008"
+    ]
+   },
+   "bbox": [
+    73.44,
+    49.996,
+    79.351,
+    54.458
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Pavlodarskiy",
+     "Ekibastuz",
+     "Aksuskiy",
+     "Bayanaul`skiy",
+     "Kachirskiy",
+     "Sherbaktinskiy",
+     "Irtyshskiy",
+     "Zhelezinskiy",
+     "Aktogayskiy",
+     "Lebyazhinskiy",
+     "Uspenskiy",
+     "Mayskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 56.3,
+     "stations": 1.0,
+     "places": 2.5,
+     "routes": 44.2,
+     "merge": 2.8,
+     "everyday": 1.3
+    },
+    "built": "2026-11-28T01:54:09",
+    "gate": {
+     "warn": [
+      "area_km2 124381.58121092459",
+      "road_snap_median_m 410.2",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:05",
+    "shipped": "2026-11-28T09:33:49"
+   }
+  },
+  {
+   "order": 6442,
+   "id": "tkt",
+   "name": "Turkestan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 732984,
+   "origin": [
+    68.2278,
+    43.2971
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B79835173187971",
+     "9891525B74676052305742",
+     "9891525B84924581617307",
+     "9891525B85859186368254",
+     "9891525B1387468369569"
+    ]
+   },
+   "bbox": [
+    65.079,
+    41.764,
+    69.927,
+    45.958
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Turkestan",
+     "Shieliyskiy",
+     "Zhanakorganskiy",
+     "Suzakskiy",
+     "Otrarskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 43.0,
+     "stations": 1.2,
+     "places": 2.2,
+     "routes": 48.4,
+     "merge": 2.5,
+     "everyday": 1.2
+    },
+    "built": "2026-11-28T01:54:02",
+    "gate": {
+     "warn": [
+      "area_km2 114448.41712173285",
+      "drive_factor_median 2.0518667734879767",
+      "road_snap_median_m 843.8",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:06",
+    "shipped": "2026-11-28T09:33:49"
+   }
+  },
+  {
+   "order": 6443,
+   "id": "uln",
+   "name": "Ulanskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 691287,
+   "origin": [
+    82.5781,
+    49.9716
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B91590173027779",
+     "9891525B3707090472903",
+     "9891525B63367051987895",
+     "9891525B64741474874739",
+     "9891525B33209790854073",
+     "9891525B71087532878019",
+     "9891525B49183104731371",
+     "9891525B43029270255856"
+    ]
+   },
+   "bbox": [
+    80.156,
+    47.74,
+    87.313,
+    51.014
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ulanskiy",
+     "Zyryanovsk",
+     "Glubokovskiy",
+     "Leninogorsk",
+     "Zharminskiy",
+     "Kokpektinskiy",
+     "Kurchumskiy",
+     "Katon-Karagayskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 56.5,
+     "stations": 1.1,
+     "places": 2.5,
+     "routes": 38.6,
+     "merge": 2.1,
+     "everyday": 1.2
+    },
+    "built": "2026-11-28T01:54:43",
+    "gate": {
+     "warn": [
+      "area_km2 105226.16144994374",
+      "road_snap_median_m 305.5",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T02:18:06",
+    "shipped": "2026-11-28T09:33:50"
+   }
+  },
+  {
+   "order": 6444,
+   "id": "qos",
+   "name": "Qostanay",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 665243,
+   "origin": [
+    63.6344,
+    53.2113
+   ],
+   "tz": "Asia/Qostanay",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B22727597704873",
+     "9891525B78781143088389",
+     "9891525B64074841904953",
+     "9891525B29142320833271",
+     "9891525B51280099986304",
+     "9891525B27039214711297",
+     "9891525B26270475466361",
+     "9891525B55696019577443",
+     "9891525B88932935012165",
+     "9891525B50577405469950",
+     "9891525B14893672514077",
+     "9891525B60251523265063",
+     "9891525B13144525550794"
+    ]
+   },
+   "bbox": [
+    60.053,
+    50.832,
+    66.48,
+    54.712
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Qostanay",
+     "Taranovskiy",
+     "Auliekol`skiy",
+     "Zhitikarinskiy",
+     "Mendykarinskiy",
+     "Karabalykskiy",
+     "Karasuskiy",
+     "Fyodorovskiy",
+     "Uzunkol`skiy",
+     "Sarykol`skiy",
+     "Denisovskiy",
+     "Altynsarinskiy",
+     "Kamystinskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 52.3,
+     "stations": 1.2,
+     "places": 2.5,
+     "routes": 45.2,
+     "merge": 3.1,
+     "everyday": 1.1
+    },
+    "built": "2026-11-28T01:55:50",
+    "gate": {
+     "warn": [
+      "area_km2 104923.06178569788",
+      "road_snap_median_m 425.1",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:07",
+    "shipped": "2026-11-28T09:33:51"
+   }
+  },
+  {
+   "order": 6445,
+   "id": "zhm",
+   "name": "Zhambylskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 637757,
+   "origin": [
+    71.3949,
+    42.9237
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B62157809207251",
+     "9891525B60736101778825",
+     "9891525B13705604007606",
+     "9891525B28377598632345",
+     "9891525B49011564087565",
+     "9891525B50399930684689"
+    ]
+   },
+   "bbox": [
+    69.976,
+    42.339,
+    72.308,
+    44.433
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Zhambylskiy",
+     "Bayzakskiy",
+     "Zhualynskiy",
+     "Talasskiy",
+     "Zhamb.",
+     "Zhualy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 26.4,
+     "stations": 1.1,
+     "places": 1.9,
+     "routes": 24.5,
+     "merge": 1.4,
+     "everyday": 1.2
+    },
+    "built": "2026-11-28T01:55:08",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.13315925776126397",
+      "top_school_cell_pupils 6000.0",
+      "road_snap_median_m 419.9",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T02:18:07",
+    "shipped": "2026-11-28T09:33:52"
+   }
+  },
+  {
+   "order": 6446,
+   "id": "tld",
+   "name": "Taldyqorghan",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 621094,
+   "origin": [
+    78.3539,
+    45.0024
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B8942428750447",
+     "9891525B43212403616795",
+     "9891525B31721358968315",
+     "9891525B94411602981391",
+     "9891525B34969446984364",
+     "9891525B70442580955905",
+     "9891525B33487357631204",
+     "9891525B86925875973875"
+    ]
+   },
+   "bbox": [
+    73.804,
+    43.82,
+    82.588,
+    47.331
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Taldyqorghan",
+     "Alakolskiy",
+     "Karatal`skiy",
+     "Kerbulakskiy",
+     "Sarkandskiy",
+     "Koksuskiy",
+     "Aksuskiy",
+     "Balkhashskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 77.4,
+     "stations": 1.0,
+     "places": 2.1,
+     "routes": 48.0,
+     "merge": 3.3,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T01:56:58",
+    "gate": {
+     "warn": [
+      "area_km2 144581.54849620213",
+      "top_zone_jobs_share 0.14866824829343864",
+      "drive_factor_median 2.1503379159523",
+      "road_snap_median_m 714.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:08",
+    "shipped": "2026-11-28T09:33:53"
+   }
+  },
+  {
+   "order": 6447,
+   "id": "zer",
+   "name": "Zerendinskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 587144,
+   "origin": [
+    69.3829,
+    53.2799
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B55992449235040",
+     "9891525B48756499720859",
+     "9891525B2325773906172",
+     "9891525B83013347039658",
+     "9891525B99671027453568",
+     "9891525B36473427600822",
+     "9891525B4135647276886",
+     "9891525B43905311141395",
+     "9891525B71406304713623",
+     "9891525B49691587242628",
+     "9891525B7918129248045",
+     "9891525B43673993839483"
+    ]
+   },
+   "bbox": [
+    65.401,
+    50.316,
+    72.966,
+    53.689
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Zerendinskiy",
+     "Shuchinskiy",
+     "Atbasarskiy",
+     "Bulandynskiy",
+     "Akkol`skiy",
+     "Astrakhansiy",
+     "Esil`skiy",
+     "Sandyktauskiy",
+     "Zhaksynskiy",
+     "Enbekshil`derskiy",
+     "Zharkainskiy",
+     "Egindykol`skiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 42.0,
+     "stations": 0.8,
+     "places": 2.0,
+     "routes": 33.9,
+     "merge": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:12:35",
+    "gate": {
+     "warn": [
+      "area_km2 99187.93424695614",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T02:18:16",
+    "shipped": "2026-11-28T09:33:54"
+   }
+  },
+  {
+   "order": 6448,
+   "id": "zee",
+   "name": "Zelenovskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 538327,
+   "origin": [
+    51.3702,
+    51.2091
+   ],
+   "tz": "Asia/Oral",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B90796593834175",
+     "9891525B48409861981673",
+     "9891525B29412221680291",
+     "9891525B23938329626938",
+     "9891525B6552459074784",
+     "9891525B55146365406928",
+     "9891525B86846607343045",
+     "9891525B44961106732022",
+     "9891525B13412806462035",
+     "9891525B81394773974850"
+    ]
+   },
+   "bbox": [
+    46.497,
+    48.051,
+    54.581,
+    51.766
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Zelenovskiy",
+     "Burlinskiy",
+     "Akzhaikskiy",
+     "Taskalinskiy",
+     "Kaztalovskiy",
+     "Syrymskiy",
+     "Terektinskiy",
+     "Dzhanybekskiy",
+     "Urdinskiy",
+     "Chingirlauskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 47.3,
+     "stations": 0.8,
+     "places": 1.9,
+     "routes": 27.3,
+     "merge": 1.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:11:12",
+    "gate": {
+     "warn": [
+      "area_km2 120409.63362873015",
+      "road_snap_median_m 304.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T02:18:17",
+    "shipped": "2026-11-28T09:33:55"
+   }
+  },
+  {
+   "order": 6449,
+   "id": "atu",
+   "name": "Atyrau",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 522911,
+   "origin": [
+    51.9384,
+    47.1095
+   ],
+   "tz": "Asia/Atyrau",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B74968886197951",
+     "9891525B14689860230406",
+     "9891525B35609562121842",
+     "9891525B53075937326736",
+     "9891525B88921479030871",
+     "9891525B40189279728767",
+     "9891525B2129007545371",
+     "9891525B83767949590461"
+    ]
+   },
+   "bbox": [
+    47.05,
+    45.733,
+    56.473,
+    49.185
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Atyrau",
+     "Zhylyoyskiy",
+     "Kurmangazinskiy",
+     "Makhambetskiy",
+     "Inderskiy",
+     "Makatskiy",
+     "Kzylkoginskiy",
+     "Isatayskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 52.3,
+     "stations": 1.0,
+     "places": 2.7,
+     "routes": 35.0,
+     "merge": 1.5,
+     "everyday": 1.2
+    },
+    "built": "2026-11-28T01:58:34",
+    "gate": {
+     "warn": [
+      "area_km2 120298.81461851901",
+      "road_snap_median_m 702.8",
+      "osm_land_share 0.8642",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:09",
+    "shipped": "2026-11-28T09:33:55"
+   }
+  },
+  {
+   "order": 6450,
+   "id": "qyz",
+   "name": "Qyzylorda",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 493614,
+   "origin": [
+    65.513,
+    44.8273
+   ],
+   "tz": "Asia/Qyzylorda",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B77589368790240",
+     "9891525B2172576540475",
+     "9891525B78511175106534",
+     "9891525B29819169613225"
+    ]
+   },
+   "bbox": [
+    61.924,
+    43.487,
+    67.45,
+    47.012
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Qyzylorda",
+     "Karmakchinskiy",
+     "Terenozekskiy",
+     "Zhalagashskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 30.7,
+     "stations": 0.9,
+     "places": 1.7,
+     "routes": 21.0,
+     "merge": 1.3,
+     "everyday": 1.1
+    },
+    "built": "2026-11-28T01:59:33",
+    "gate": {
+     "warn": [
+      "area_km2 84779.84000262921",
+      "top_school_cell_pupils 6000.0",
+      "road_snap_median_m 541.2",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:09",
+    "shipped": "2026-11-28T09:33:56"
+   }
+  },
+  {
+   "order": 6451,
+   "id": "smy",
+   "name": "Semipalatinskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 469670,
+   "origin": [
+    80.244,
+    50.4115
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B31322588303916",
+     "9891525B3296579749596",
+     "9891525B58334758086532",
+     "9891525B20148854849737"
+    ]
+   },
+   "bbox": [
+    76.59,
+    48.607,
+    83.032,
+    51.692
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Semipalatinskiy",
+     "Shemonaikhinskiy",
+     "Borodulikhinskiy",
+     "Beskaragayskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 44.1,
+     "stations": 1.1,
+     "places": 2.2,
+     "routes": 24.1,
+     "merge": 1.0,
+     "everyday": 1.0
+    },
+    "built": "2026-11-28T02:00:48",
+    "gate": {
+     "warn": [
+      "area_km2 51726.32447799646",
+      "top_zone_jobs_share 0.12351746408937814",
+      "drive_factor_median 2.117000016612675",
+      "road_snap_median_m 481.1",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:10",
+    "shipped": "2026-11-28T09:33:57"
+   }
+  },
+  {
+   "order": 6452,
+   "id": "kyz",
+   "name": "Kyzylzharskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 449482,
+   "origin": [
+    69.1275,
+    54.8698
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B4175044781460",
+     "9891525B85189731955038",
+     "9891525B47834251469299",
+     "9891525B62975532975937",
+     "9891525B12497549856029",
+     "9891525B74289585516310",
+     "9891525B72514792366825",
+     "9891525B79097177662278",
+     "9891525B95333336171773",
+     "9891525B23450940169479",
+     "9891525B68466162825805",
+     "9891525B73231455923468",
+     "9891525B71815302785603"
+    ]
+   },
+   "bbox": [
+    65.997,
+    52.182,
+    74.048,
+    55.432
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kyzylzharskiy",
+     "Taiynshinskiy",
+     "Tselinniy",
+     "Ayyrtauskiy",
+     "Bulaevskiy",
+     "Esil`skiy",
+     "Zhambylskiy",
+     "Shal Akyna",
+     "Sovetskiy",
+     "Mamlyutskiy",
+     "Akzharskiy",
+     "Ualikhanovskiy",
+     "Timiryazevskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 49.0,
+     "stations": 0.8,
+     "places": 2.4,
+     "routes": 53.3,
+     "merge": 3.6,
+     "everyday": 1.0
+    },
+    "built": "2026-11-28T02:02:40",
+    "gate": {
+     "warn": [
+      "area_km2 98841.09333084301",
+      "top_zone_jobs_share 0.11885074783437047",
+      "road_snap_median_m 498.0",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:11",
+    "shipped": "2026-11-28T09:33:58"
+   }
+  },
+  {
+   "order": 6453,
+   "id": "kdy",
+   "name": "Kordayskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 432113,
+   "origin": [
+    74.719,
+    43.042
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B97715510859109",
+     "9891525B54238400016653",
+     "9891525B1707645989139",
+     "9891525B38388460911892"
+    ]
+   },
+   "bbox": [
+    71.815,
+    42.407,
+    75.814,
+    44.597
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kordayskiy",
+     "Shuskiy",
+     "Merkenskiy",
+     "Lugovskoy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 26.7,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 19.3,
+     "merge": 1.2,
+     "everyday": 0.8
+    },
+    "built": "2026-11-28T02:03:32",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "road_snap_median_m 495.6",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:11",
+    "shipped": "2026-11-28T09:33:59"
+   }
+  },
+  {
+   "order": 6454,
+   "id": "enb",
+   "name": "Enbekshikazakhskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 339232,
+   "origin": [
+    77.4342,
+    43.361
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B8054752834340"
+    ]
+   },
+   "bbox": [
+    77.243,
+    43.101,
+    79.162,
+    43.885
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Enbekshikazakhskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 15.6,
+     "stations": 0.8,
+     "places": 1.5,
+     "routes": 14.1,
+     "merge": 0.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:04:08",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "top_zone_jobs_share 0.13065503299182135",
+      "top_school_cell_pupils 6000.0",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T02:18:12",
+    "shipped": "2026-11-28T09:34:00"
+   }
+  },
+  {
+   "order": 6455,
+   "id": "pnf",
+   "name": "Panfilovskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 299881,
+   "origin": [
+    80.0048,
+    44.1658
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B22712804397208",
+     "9891525B83641090822540",
+     "9891525B30190790757225"
+    ]
+   },
+   "bbox": [
+    77.093,
+    42.202,
+    80.789,
+    44.831
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Panfilovskiy",
+     "Raiymbekskiy",
+     "Uygurskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 28.3,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 22.8,
+     "merge": 0.9,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:05:05",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.1116832303567299",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 983.1",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T02:18:12",
+    "shipped": "2026-11-28T09:34:00"
+   }
+  },
+  {
+   "order": 6456,
+   "id": "tly",
+   "name": "Talgarskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 233260,
+   "origin": [
+    76.9918,
+    43.2789
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B95340364678526"
+    ]
+   },
+   "bbox": [
+    76.774,
+    42.937,
+    78.33,
+    44.358
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Talgarskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 22.3,
+     "stations": 0.8,
+     "places": 2.0,
+     "routes": 15.7,
+     "merge": 0.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:05:49",
+    "gate": {
+     "warn": [
+      "pop_vs_plan 0.8011427833119061",
+      "top_zone_jobs_share 0.160479713814551"
+     ]
+    },
+    "gated": "2026-11-28T02:18:13",
+    "shipped": "2026-11-28T09:34:01"
+   }
+  },
+  {
+   "order": 6457,
+   "id": "kza",
+   "name": "Kazalinskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 168412,
+   "origin": [
+    62.1442,
+    45.8435
+   ],
+   "tz": "Asia/Qyzylorda",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan",
+    "asia/uzbekistan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B16415280148457",
+     "9891525B20568160586477"
+    ]
+   },
+   "bbox": [
+    59.018,
+    43.558,
+    63.23,
+    47.815
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Kazalinskiy",
+     "Aral`skiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 25.5,
+     "stations": 0.8,
+     "places": 1.4,
+     "routes": 12.5,
+     "merge": 0.7,
+     "everyday": 0.8
+    },
+    "built": "2026-11-28T02:06:32",
+    "gate": {
+     "warn": [
+      "university_rate 0.0",
+      "area_km2 94548.57711137016",
+      "top_zone_jobs_share 0.11656456886007131",
+      "road_snap_median_m 425.9",
+      "fleet_range 3"
+     ]
+    },
+    "gated": "2026-11-28T02:18:14",
+    "shipped": "2026-11-28T09:34:02"
+   }
+  },
+  {
+   "order": 6458,
+   "id": "uly",
+   "name": "Ulytauskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 161222,
+   "origin": [
+    67.7037,
+    47.803
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B78336617309794"
+    ]
+   },
+   "bbox": [
+    62.566,
+    45.936,
+    70.024,
+    49.866
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Ulytauskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 28.0,
+     "stations": 0.8,
+     "places": 1.8,
+     "routes": 17.4,
+     "merge": 1.0,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:07:24",
+    "gate": {
+     "warn": [
+      "area_km2 124898.86218601078",
+      "top_zone_jobs_share 0.163583783738402",
+      "top_school_cell_pupils 5360.2998046875",
+      "drive_factor_median 2.4366520830322917",
+      "road_snap_median_m 2845.4",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:14",
+    "shipped": "2026-11-28T09:34:03"
+   }
+  },
+  {
+   "order": 6459,
+   "id": "zhl",
+   "name": "Zhambylskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 147108,
+   "origin": [
+    76.4123,
+    43.1604
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B44828116774713"
+    ]
+   },
+   "bbox": [
+    74.492,
+    42.864,
+    76.553,
+    44.792
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Zhambylskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 19.5,
+     "stations": 1.0,
+     "places": 1.6,
+     "routes": 14.3,
+     "merge": 0.8,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:08:03",
+    "gate": {
+     "warn": [
+      "top_zone_jobs_share 0.11632024465086771",
+      "drive_factor_median 2.0841789734955687",
+      "road_snap_median_m 713.4",
+      "fleet_range 1"
+     ]
+    },
+    "gated": "2026-11-28T02:18:15",
+    "shipped": "2026-11-28T09:34:04"
+   }
+  },
+  {
+   "order": 6460,
+   "id": "urd",
+   "name": "Urdzharskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 139425,
+   "origin": [
+    81.6338,
+    47.0908
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B87505611212602",
+     "9891525B39771874668253",
+     "9891525B85756403891366"
+    ]
+   },
+   "bbox": [
+    79.93,
+    45.522,
+    85.703,
+    48.51
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Urdzharskiy",
+     "Tarbagatayskiy",
+     "Zaysanskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 25.3,
+     "stations": 0.8,
+     "places": 1.6,
+     "routes": 12.5,
+     "merge": 0.9,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:08:53",
+    "gate": {
+     "warn": [
+      "area_km2 57808.8799624694",
+      "top_zone_jobs_share 0.14712102850943362",
+      "road_snap_median_m 957.1",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:16",
+    "shipped": "2026-11-28T09:34:05"
+   }
+  },
+  {
+   "order": 6461,
+   "id": "akg",
+   "name": "Aktogayskiy",
+   "kind": "zone",
+   "status": "shipped",
+   "region": "world",
+   "countries": [
+    "KAZ"
+   ],
+   "iso2": "KZ",
+   "people": 101369,
+   "origin": [
+    74.9784,
+    46.8479
+   ],
+   "tz": "Asia/Almaty",
+   "utc_offset": 5,
+   "extracts": [
+    "asia/kazakhstan"
+   ],
+   "archetype": "D",
+   "module": null,
+   "units": {
+    "KAZ": [
+     "9891525B20883713747408"
+    ]
+   },
+   "bbox": [
+    73.303,
+    45.956,
+    77.625,
+    48.9
+   ],
+   "source": {
+    "zone": "T-723",
+    "unit_names": [
+     "Aktogayskiy"
+    ]
+   },
+   "run": {
+    "run_batch": "20261128-013110",
+    "steps": {
+     "build": 36.3,
+     "stations": 0.9,
+     "places": 1.4,
+     "routes": 9.4,
+     "merge": 0.7,
+     "everyday": 0.9
+    },
+    "built": "2026-11-28T02:09:50",
+    "gate": {
+     "warn": [
+      "area_km2 56961.07403424732",
+      "top_zone_jobs_share 0.1931776807055162",
+      "drive_factor_median 2.1503379159523",
+      "road_snap_median_m 2759.4",
+      "fleet_range 2"
+     ]
+    },
+    "gated": "2026-11-28T02:18:18",
+    "shipped": "2026-11-28T09:34:06"
+   }
   }
  ],
  "dropped": [
@@ -485605,6 +489887,477 @@
      "17698898B76183581414632",
      "17698898B8299812932572",
      "17698898B40293713134027"
+    ]
+   }
+  },
+  "UZB": {
+   "built": "2026-11-27",
+   "task": "T-788",
+   "rule": "free units at or over 20 people a km2 (or holding 400,000), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "79887680B51354655878923",
+     "name": "Karauzyak",
+     "people": 61726,
+     "per_km2": 11.3
+    },
+    {
+     "unit": "79887680B80838990154601",
+     "name": "Kungrad",
+     "people": 125637,
+     "per_km2": 1.7
+    },
+    {
+     "unit": "79887680B8314614924968",
+     "name": "Muynak",
+     "people": 25263,
+     "per_km2": 0.6
+    },
+    {
+     "unit": "79887680B8081809775743",
+     "name": "Takhtakupir",
+     "people": 31774,
+     "per_km2": 1.6
+    },
+    {
+     "unit": "79887680B40306907655933",
+     "name": "Uchkuduk",
+     "people": 12998,
+     "per_km2": 0.3
+    },
+    {
+     "unit": "79887680B53513489447097",
+     "name": "Kanimekh",
+     "people": 52907,
+     "per_km2": 5.6
+    },
+    {
+     "unit": "79887680B37906364425566",
+     "name": "Tamdi",
+     "people": 38791,
+     "per_km2": 0.9
+    },
+    {
+     "unit": "79887680B52998751839701",
+     "name": "Farish",
+     "people": 109684,
+     "per_km2": 10.3
+    },
+    {
+     "unit": "79887680B6404412845327",
+     "name": "Karaulbazar",
+     "people": 30351,
+     "per_km2": 13.1
+    },
+    {
+     "unit": "79887680B78868749126062",
+     "name": "Peshku",
+     "people": 160681,
+     "per_km2": 18.9
+    }
+   ],
+   "merges": [
+    "Kuvasay city (58) joins Fergana (biggest partner, shared border 5 km)",
+    "Akhangaran city (254) joins Akhangaran (biggest partner, shared border 3 km)",
+    "Navoi city (283) joins Karmana (biggest partner, shared border 20 km)",
+    "Almalik city (9,226) joins Pskent (biggest partner, shared border 18 km)",
+    "Nukus city (13,510) joins Nukus (biggest partner, shared border 26 km)",
+    "Kattakurgan city (14,174) joins Kattakurgan (biggest partner, shared border 15 km)",
+    "Bekabad city (14,602) joins Bekabad (biggest partner, shared border 11 km)",
+    "Angren city (18,630) joins Akhangaran (biggest partner, shared border 31 km)",
+    "Urgench city (19,951) joins Urgench (biggest partner, shared border 23 km)",
+    "Shumanay (26,612) joins Kanlikul (biggest partner, shared border 35 km)",
+    "Pakhtachi (29,431) joins Narpay (biggest partner, shared border 16 km)",
+    "Gulistan city (29,747) joins Gulistan (biggest partner, shared border 18 km)",
+    "Yangiabad (30,297) joins Zaаmin (biggest partner, shared border 56 km)",
+    "Termez city (33,523) joins Termez (biggest partner, shared border 17 km)",
+    "Zafarabad (34,801) joins Paxtakor (biggest partner that wraps nothing, shared border 24 km)",
+    "Khiva city (37,147) joins Khiva (biggest partner, shared border 13 km)",
+    "Akkurgan (40,559) joins Kuyichirchik (biggest partner, shared border 30 km)",
+    "Sardoba (42,428) joins Akaltin (biggest partner that wraps nothing, shared border 27 km)",
+    "Dzhizak city (42,722) joins Sharof Rashidov (biggest partner, shared border 27 km)",
+    "Karshi city (42,865) joins Karshi (biggest partner, shared border 19 km)",
+    "Mirzachul (44,952) joins Dustlik (biggest partner, shared border 30 km)",
+    "Arnasay (49,274) joins Dustlik (biggest partner, shared border 51 km)",
+    "Buka (49,906) joins Pskent (biggest partner, shared border 37 km)",
+    "Ulugnar (63,482) joins Balikchi (biggest partner, shared border 27 km)",
+    "Yangiarik (65,842) joins Khanka (biggest partner, shared border 22 km)",
+    "Alat (66,365) joins Karakul (biggest partner, shared border 50 km)",
+    "Bukhara city (66,555) joins Kagan city (biggest partner that wraps nothing, shared border 8 km)",
+    "Kanlikul (67,399) joins Khojeyli (biggest partner that wraps nothing, shared border 61 km)",
+    "Uzun (74,790) joins Denau (biggest partner that wraps nothing, shared border 34 km)",
+    "Zarbdar (77,646) joins Sharof Rashidov (biggest partner, shared border 31 km)",
+    "Saykhunabad (77,697) joins Sirdarya (biggest partner, shared border 52 km)",
+    "Sokh (78,670) joins Fergana (island, 25 km)",
+    "Margilan city (79,243) joins Kushtepa (biggest partner, shared border 15 km)",
+    "Mirzaabad (81,451) joins Gulistan (biggest partner, shared border 36 km)",
+    "Boz (82,236) joins Shakhrixan (biggest partner, shared border 34 km)",
+    "Kegeyli (82,636) joins Nukus (biggest partner, shared border 81 km)",
+    "Bayaut (84,525) joins Khavas (biggest partner, shared border 47 km)",
+    "Djalalkuduk (85,170) joins Kurgantepa (biggest partner, shared border 74 km)",
+    "Kiziltepa (85,241) joins Karmana (biggest partner, shared border 58 km)",
+    "Bagat (86,546) joins Khanka (biggest partner, shared border 50 km)",
+    "Yangibazar (87,004) joins Urgench (biggest partner, shared border 42 km)",
+    "Akaltin (87,957) joins Gulistan (biggest partner, shared border 46 km)",
+    "Narpay (90,669) joins Kattakurgan (biggest partner, shared border 49 km)",
+    "Paxtakor (90,735) joins Sharof Rashidov (biggest partner, shared border 65 km)",
+    "Bakhmal (96,860) joins Bulungur (biggest partner, shared border 56 km)",
+    "Nishan (98,273) joins Karshi (biggest partner, shared border 62 km)",
+    "Chinaz (105,973) joins Kuyichirchik (nearest centre, compact 0.66)",
+    "Kizirik (108,761) joins Sherabad (nearest centre that wraps nothing, partner 1.00)",
+    "Yazyavan (109,377) joins Kushtepa (nearest centre that wraps nothing, partner 1.00)",
+    "Dehkanabad (109,531) joins Guzar (nearest centre, partner 1.00)",
+    "Mirishkar (111,575) joins Kasbi (nearest centre, partner 1.00)",
+    "Nurabad (113,796) joins Pastdargom (nearest centre, partner 1.00)",
+    "Chimbay (115,160) joins Nukus (nearest centre, partner 1.00)",
+    "Fergana city (122,039) joins Fergana (nearest centre, partner 1.00)",
+    "Furkat (124,832) joins Uzbekistan (nearest centre, partner 1.00)",
+    "Vabkent (127,653) joins Gijduvan (nearest centre that wraps nothing, partner 1.00)",
+    "Gurlen (134,403) joins Shavat (nearest centre, partner 0.63)",
+    "Rаmitan (139,626) joins Jondor (nearest centre, partner 0.58)",
+    "Narin (139,812) joins Uychi (nearest centre, partner 0.62)",
+    "Parkent (145,189) joins Bostanlik (nearest centre, compact 0.66)",
+    "Altinsay (147,140) joins Denau (every join wraps; left to the ring cut)",
+    "Shurchi (147,885) joins Denau (nearest centre, partner 1.00)",
+    "Uchkurgan (149,375) joins Uychi (nearest centre, partner 1.00)",
+    "Koshkupir (149,544) joins Khiva (nearest centre, partner 0.59)",
+    "Dustlik (152,095) joins Sharof Rashidov (nearest centre, partner 1.00)",
+    "Angor (153,722) joins Muzrabad (nearest centre, partner 1.00)",
+    "Mubarek (153,858) joins Kasan (nearest centre that wraps nothing, partner 0.98)",
+    "Shakhrisabz city (157,274) joins Kitab (nearest centre, partner 1.00)",
+    "Amudarya (158,399) joins Shavat (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Samarkand city (161,462) joins Samarkand (nearest centre, partner 1.00)",
+    "Mingbulak (161,859) joins Turakurgan (nearest centre, partner 0.56)",
+    "Gallyaaral (164,182) joins Sharof Rashidov (nearest centre, partner 1.00)",
+    "Bulakbashi (164,519) joins Khadjaabad (nearest centre, partner 0.75)",
+    "Baysun (164,529) joins Sherabad (nearest centre, partner 0.91)",
+    "Koshrabad (167,526) joins Ishtikhan (nearest centre, partner 1.00)",
+    "Nurata (170,476) joins Navbakhor (every join wraps; left to the ring cut)",
+    "Khazarasp (173,627) joins Khanka (nearest centre, compact 0.38)",
+    "Altinkul (176,651) joins Shakhrixan (nearest centre, partner 0.70)",
+    "Bekabad (179,323) joins Khavas (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Akdarya (180,284) joins Samarkand (nearest centre, partner 1.00)",
+    "Namangan city (181,404) joins Namangan (nearest centre, partner 1.00)",
+    "Zaаmin (185,019) joins Sharof Rashidov (nearest centre, partner 1.00)",
+    "Dangara (187,422) joins Kokand city (nearest centre, partner 1.00)",
+    "Ellikkala (189,851) joins Beruniy (nearest centre, partner 0.83)",
+    "Khojeyli (193,476) joins Nukus (nearest centre, partner 1.00)",
+    "Kagan city (195,331) joins Bukhara (nearest centre, partner 1.00)",
+    "Markhamat (196,728) joins Khadjaabad (nearest centre, partner 1.00)",
+    "Paxtaabad (202,400) joins Andijan (every join wraps; left to the ring cut)",
+    "Pskent (203,127) joins Kuyichirchik (nearest centre, compact 0.66)",
+    "Karakul (203,723) joins Jondor (every join wraps; left to the ring cut)",
+    "Tashlak (208,047) joins Kushtepa (nearest centre, partner 1.00)",
+    "Chartak (215,017) joins Uychi (nearest centre that wraps nothing, partner 0.72)",
+    "Karmana (215,501) joins Navbakhor (every join wraps; left to the ring cut)",
+    "Yakkabag (219,369) joins Shakhrisabz (nearest centre, partner 0.85)",
+    "Izboskan (228,646) joins Shakhrixan (nearest centre, partner 0.73)",
+    "Kuva (230,033) joins Kushtepa (nearest centre, partner 0.94)",
+    "Rishtan (230,704) joins Bagdad (nearest centre, partner 0.95)",
+    "Dzharkurgan (230,879) joins Muzrabad (nearest centre, partner 1.00)",
+    "Balikchi (233,097) joins Shakhrixan (nearest centre, partner 0.83)",
+    "Andijan city (234,424) joins Andijan (nearest centre, partner 1.00)",
+    "Kumkurgan (240,639) joins Denau (nearest centre that wraps nothing, partner 1.00)",
+    "Kasansay (241,829) joins Yangikurgan (nearest centre, partner 0.59)",
+    "Dzhambay (244,617) joins Samarkand (nearest centre, partner 1.00)",
+    "Pap (248,376) joins Chust (nearest centre, partner 1.00)",
+    "Taylak (252,629) joins Urgut (nearest centre, partner 0.63)",
+    "Akhangaran (253,999) joins Bostanlik (nearest centre, compact 0.68)",
+    "Kamashi (254,680) joins Shakhrisabz (nearest centre, partner 1.00)",
+    "Uchkuprik (260,588) joins Buvayda (nearest centre, partner 0.72)",
+    "Besharik (264,363) joins Uzbekistan (nearest centre, partner 1.00)",
+    "Sirdarya (297,141) joins Gulistan (nearest centre, compact 0.69)",
+    "Khatirchi (298,292) joins Navbakhor (nearest centre, compact 0.70)",
+    "Kasbi (301,360) joins Kasan (nearest centre, partner 1.00)",
+    "Bulungur (303,856) joins Sharof Rashidov (nearest centre, compact 0.69)",
+    "Sariasiya (304,056) joins Denau (nearest centre, partner 1.00)",
+    "Altiarik (316,948) joins Bagdad (nearest centre, partner 0.50)",
+    "Guzar (333,395) joins Shakhrisabz (nearest centre, partner 1.00)",
+    "Payarik (336,440) joins Ishtikhan (nearest centre, compact 0.75)",
+    "Termez (356,562) joins Muzrabad (nearest centre, partner 1.00)",
+    "Khiva (358,452) joins Urgench (nearest centre, partner 1.00)",
+    "Kokand city (376,993) joins Buvayda (nearest centre, partner 1.00)",
+    "Turtkul (381,229) joins Beruniy (nearest centre, compact 0.62)",
+    "Shafirkan (384,340) joins Gijduvan (nearest centre, partner 1.00)",
+    "Turakurgan (394,682) joins Namangan (nearest centre, partner 1.00)",
+    "Asaka (398,943) joins Andijan (nearest centre, partner 1.00)",
+    "Khavas (404,154) joins Gulistan (nearest centre, partner 1.00)",
+    "Kurgantepa (434,727) joins Khadjaabad (nearest centre, partner 0.92)",
+    "Kuyichirchik (450,089) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Shavat (452,527) joins Urgench (nearest centre, partner 1.00)",
+    "Chirakchi (474,914) joins Kitab (nearest centre, partner 0.56)",
+    "Yangikurgan (493,309) joins Uychi (nearest centre, compact 0.70)",
+    "ring cut 1: Jondor wraps Bukhara, cut into Rаmitan (2 units) and Karakul (2)",
+    "Karakul (203,723) stays as it is: every join would wrap",
+    "Rаmitan (324,228) joins Bukhara (nearest centre, partner 0.99)"
+   ],
+   "remnants": {
+    "tas": [
+     "79887680B87118778033148",
+     "79887680B3865119870711"
+    ]
+   }
+  },
+  "KAZ": {
+   "built": "2026-11-28",
+   "task": "T-3764",
+   "rule": "free units at or over 0 people a km2 (or holding 400,000) with 100,000 people within 150 km of their centre (T-1191), grouped in their region until each zone holds 500,000 (or 100,000 over 100,000 km2): under 100,000 into the zone it travels with most, then a neighbour keeping both within 1,500,000 that is a travel partner (50% of its biggest partner's travel), else one making a compact zone (75% of its convex hull, or within 0.05 of the bigger part's) unless both hold an urban centre of 100,000 (T-1191), never between people centres over 150 km apart, partners first, each by nearest people centre, whose union wraps no zone, metro or pack (T-1140, T-1087); under 400,000 another region's passing neighbour when its own region has none; nothing passing, it stays; islands the most populous zone within 150 km (10 km from 100,000); then each zone still wrapping one cut across it and its halves regrouped; travel by gravity on GHSL people (20 km cells, within 200 km); unbuilt metros first take touching units under 100,000 whose biggest partner they are, when the grown metro wraps nothing new (T-1191)",
+   "kept": [],
+   "dead": [
+    {
+     "unit": "9891525B77452281688660",
+     "name": "Moyynkumskiy",
+     "people": 31551,
+     "within_reach": 54946
+    },
+    {
+     "unit": "9891525B89439479753564",
+     "name": "Sarysuskiy",
+     "people": 40786,
+     "within_reach": 34291
+    },
+    {
+     "unit": "9891525B58466533960922",
+     "name": "Amangel`dinskiy",
+     "people": 13793,
+     "within_reach": 68197
+    },
+    {
+     "unit": "9891525B26543365108500",
+     "name": "Arkalyk",
+     "people": 30457,
+     "within_reach": 62109
+    },
+    {
+     "unit": "9891525B54734218930608",
+     "name": "Dzhangil`dinskiy",
+     "people": 12254,
+     "within_reach": 20579
+    },
+    {
+     "unit": "9891525B36650340400030",
+     "name": "Naurzumskiy",
+     "people": 10158,
+     "within_reach": 83771
+    },
+    {
+     "unit": "9891525B17920128744537",
+     "name": "Karkaralinskiy",
+     "people": 37647,
+     "within_reach": 66011
+    },
+    {
+     "unit": "9891525B24166085071276",
+     "name": "Nurinskiy",
+     "people": 22393,
+     "within_reach": 47253
+    },
+    {
+     "unit": "9891525B92074395824295",
+     "name": "Shetskiy",
+     "people": 41567,
+     "within_reach": 30455
+    },
+    {
+     "unit": "9891525B79475728088691",
+     "name": "Zhanaarkinskiy",
+     "people": 46209,
+     "within_reach": 22831
+    },
+    {
+     "unit": "9891525B60983742718144",
+     "name": "Abayskiy",
+     "people": 13061,
+     "within_reach": 90425
+    },
+    {
+     "unit": "9891525B20116602637665",
+     "name": "Ayagozskiy",
+     "people": 65188,
+     "within_reach": 77768
+    },
+    {
+     "unit": "9891525B40089471305572",
+     "name": "Aytekebiyskiy",
+     "people": 26230,
+     "within_reach": 86996
+    },
+    {
+     "unit": "9891525B11861912196309",
+     "name": "Bayganinskiy",
+     "people": 24043,
+     "within_reach": 13248
+    },
+    {
+     "unit": "9891525B30451835729317",
+     "name": "Irgizskiy",
+     "people": 15844,
+     "within_reach": 19292
+    },
+    {
+     "unit": "9891525B29473032189270",
+     "name": "Shalkarskiy",
+     "people": 48987,
+     "within_reach": 67219
+    },
+    {
+     "unit": "9891525B46477269808436",
+     "name": "Dzhangalinskiy",
+     "people": 22778,
+     "within_reach": 97802
+    },
+    {
+     "unit": "9891525B14229558856766",
+     "name": "Karatobinskiy",
+     "people": 15159,
+     "within_reach": 82739
+    }
+   ],
+   "merges": [
+    "Zhualy (37) joins Talasskiy (biggest partner, shared border 37 km)",
+    "Zhamb. (275) joins Bayzakskiy (biggest partner, shared border 102 km)",
+    "Egindykol`skiy (7,334) joins Astrakhansiy (biggest partner, shared border 168 km)",
+    "Timiryazevskiy (10,073) joins Shal Akyna (biggest partner, shared border 127 km)",
+    "Mayskiy (10,266) joins Lebyazhinskiy (biggest partner, shared border 148 km)",
+    "Uspenskiy (10,556) joins Pavlodarskiy (biggest partner, shared border 104 km)",
+    "Kamystinskiy (11,934) joins Zhitikarinskiy (biggest partner, shared border 130 km)",
+    "Altynsarinskiy (12,252) joins Qostanay (biggest partner, shared border 152 km)",
+    "Aktogayskiy (12,317) joins Kachirskiy (biggest partner, shared border 97 km)",
+    "Ualikhanovskiy (12,715) joins Akzharskiy (biggest partner, shared border 133 km)",
+    "Zhelezinskiy (12,916) joins Irtyshskiy (biggest partner, shared border 102 km)",
+    "Chingirlauskiy (13,994) joins Burlinskiy (biggest partner, shared border 103 km)",
+    "Urdinskiy (15,354) joins Dzhanybekskiy (biggest partner, shared border 114 km)",
+    "Mamlyutskiy (15,369) joins Kyzylzharskiy (biggest partner, shared border 145 km)",
+    "Zharkainskiy (15,767) joins Zhaksynskiy (biggest partner, shared border 128 km)",
+    "Terektinskiy (15,876) joins Zelenovskiy (biggest partner, shared border 183 km)",
+    "Sovetskiy (16,369) joins Kyzylzharskiy (biggest partner, shared border 123 km)",
+    "Denisovskiy (16,985) joins Zhitikarinskiy (biggest partner, shared border 173 km)",
+    "Zhambylskiy (17,897) joins Kyzylzharskiy (biggest partner, shared border 127 km)",
+    "Sherbaktinskiy (17,957) joins Pavlodarskiy (biggest partner, shared border 194 km)",
+    "Kargalinskiy (18,090) joins Aqtobe (biggest partner, shared border 62 km)",
+    "Beskaragayskiy (18,437) joins Semipalatinskiy (biggest partner, shared border 150 km)",
+    "Syrymskiy (18,472) joins Burlinskiy (biggest partner, shared border 195 km)",
+    "Enbekshil`derskiy (18,990) joins Shuchinskiy (biggest partner, shared border 163 km)",
+    "Khobdinskiy (19,653) joins Martukskiy (biggest partner, shared border 81 km)",
+    "Sarykol`skiy (19,926) joins Qostanay (biggest partner, shared border 72 km)",
+    "Uilskiy (20,222) joins Martukskiy (biggest partner, shared border 100 km)",
+    "Uzunkol`skiy (20,296) joins Mendykarinskiy (biggest partner that wraps nothing, shared border 154 km)",
+    "Esil`skiy (20,623) joins Kyzylzharskiy (biggest partner, shared border 169 km)",
+    "Fyodorovskiy (21,790) joins Karabalykskiy (biggest partner that wraps nothing, shared border 197 km)",
+    "Lebyazhinskiy (22,454) joins Pavlodarskiy (biggest partner, shared border 224 km)",
+    "Karasuskiy (22,858) joins Auliekol`skiy (biggest partner, shared border 124 km)",
+    "Sandyktauskiy (23,346) joins Zerendinskiy (biggest partner, shared border 109 km)",
+    "Katon-Karagayskiy (23,559) joins Zyryanovsk (biggest partner, shared border 197 km)",
+    "Bayanaul`skiy (24,510) joins Ekibastuz (biggest partner, shared border 241 km)",
+    "Kurchumskiy (24,524) joins Kokpektinskiy (biggest partner, shared border 165 km)",
+    "Isatayskiy (25,222) joins Makhambetskiy (biggest partner, shared border 166 km)",
+    "Akzharskiy (26,175) joins Taiynshinskiy (biggest partner, shared border 88 km)",
+    "Shal Akyna (26,489) joins Kyzylzharskiy (biggest partner, shared border 246 km)",
+    "Bulaevskiy (26,610) joins Kyzylzharskiy (biggest partner, shared border 208 km)",
+    "Kaztalovskiy (29,506) joins Dzhanybekskiy (biggest partner, shared border 280 km)",
+    "Zaysanskiy (29,694) joins Tarbagatayskiy (biggest partner, shared border 123 km)",
+    "Esil`skiy (29,794) joins Zhaksynskiy (biggest partner, shared border 344 km)",
+    "Kzylkoginskiy (29,826) joins Makatskiy (biggest partner, shared border 137 km)",
+    "Osakarovskiy (30,271) joins Bukhar-Zhyrauskiy (biggest partner, shared border 264 km)",
+    "Kachirskiy (30,281) joins Irtyshskiy (biggest partner that wraps nothing, shared border 380 km)",
+    "Inderskiy (31,259) joins Makhambetskiy (biggest partner, shared border 259 km)",
+    "Akkol`skiy (31,593) joins Bulandynskiy (biggest partner, shared border 150 km)",
+    "Ayyrtauskiy (32,013) joins Tselinniy (biggest partner, shared border 272 km)",
+    "Borodulikhinskiy (33,828) joins Semipalatinskiy (biggest partner, shared border 170 km)",
+    "Balkhashskiy (36,013) joins Karatal`skiy (biggest partner, shared border 244 km)",
+    "Taskalinskiy (36,537) joins Zelenovskiy (biggest partner, shared border 128 km)",
+    "Zharminskiy (36,582) joins Ulanskiy (biggest partner, shared border 221 km)",
+    "Tupkaraganskiy (36,888) joins Aqtau (biggest partner, shared border 76 km)",
+    "Astrakhansiy (38,132) joins Bulandynskiy (biggest partner, shared border 135 km)",
+    "Akzhaikskiy (38,169) joins Zelenovskiy (biggest partner, shared border 330 km)",
+    "Temirskiy (38,289) joins Mugalzharskiy (biggest partner, shared border 327 km)",
+    "Zhalagashskiy (40,494) joins Karmakchinskiy (biggest partner that wraps nothing, shared border 480 km)",
+    "Shemonaikhinskiy (41,959) joins Semipalatinskiy (biggest partner that wraps nothing, shared border 80 km)",
+    "Khromtauskiy (43,351) joins Aqtobe (biggest partner, shared border 195 km)",
+    "Terenozekskiy (43,420) joins Qyzylorda (biggest partner, shared border 319 km)",
+    "Alginskiy (44,221) joins Aqtobe (biggest partner, shared border 208 km)",
+    "Aksuskiy (44,748) joins Taldyqorghan (biggest partner, shared border 196 km)",
+    "Koksuskiy (45,290) joins Taldyqorghan (biggest partner, shared border 92 km)",
+    "Karabalykskiy (45,499) joins Taranovskiy (biggest partner that wraps nothing, shared border 60 km)",
+    "Mendykarinskiy (45,685) joins Qostanay (biggest partner, shared border 297 km)",
+    "Sarkandskiy (47,108) joins Taldyqorghan (biggest partner, shared border 443 km)",
+    "Talasskiy (51,377) joins Zhualynskiy (biggest partner that wraps nothing, shared border 78 km)",
+    "Leninogorsk (51,459) joins Glubokovskiy (biggest partner, shared border 134 km)",
+    "Manghystauskiy (52,742) joins Aqtau (biggest partner, shared border 458 km)",
+    "Kokpektinskiy (53,036) joins Zyryanovsk (biggest partner, shared border 399 km)",
+    "Kurmangazinskiy (55,941) joins Makhambetskiy (biggest partner, shared border 229 km)",
+    "Kerbulakskiy (55,996) joins Taldyqorghan (biggest partner, shared border 297 km)",
+    "Atbasarskiy (57,233) joins Zerendinskiy (biggest partner, shared border 135 km)",
+    "Aksuskiy (60,111) joins Pavlodarskiy (biggest partner, shared border 249 km)",
+    "Dzhanybekskiy (60,404) joins Zelenovskiy (biggest partner, shared border 226 km)",
+    "Irtyshskiy (60,664) joins Pavlodarskiy (biggest partner, shared border 307 km)",
+    "Makatskiy (60,761) joins Atyrau (biggest partner, shared border 81 km)",
+    "Taiynshinskiy (63,371) joins Kyzylzharskiy (biggest partner, shared border 500 km)",
+    "Auliekol`skiy (64,497) joins Qostanay (biggest partner, shared border 327 km)",
+    "Tselinniy (66,598) joins Kyzylzharskiy (biggest partner, shared border 362 km)",
+    "Tarbagatayskiy (67,700) joins Urdzharskiy (biggest partner, shared border 154 km)",
+    "Zhaksynskiy (67,775) joins Zerendinskiy (biggest partner, shared border 294 km)",
+    "Otrarskiy (68,144) joins Turkestan (biggest partner, shared border 174 km)",
+    "Suzakskiy (69,240) joins Turkestan (biggest partner, shared border 119 km)",
+    "Zhitikarinskiy (69,686) joins Taranovskiy (biggest partner, shared border 221 km)",
+    "Zhylyoyskiy (72,132) joins Atyrau (biggest partner, shared border 302 km)",
+    "Uygurskiy (72,507) joins Panfilovskiy (biggest partner, shared border 148 km)",
+    "Martukskiy (72,826) joins Aqtobe (biggest partner, shared border 315 km)",
+    "Lugovskoy (78,128) joins Merkenskiy (biggest partner, shared border 279 km)",
+    "Alakolskiy (80,033) joins Taldyqorghan (biggest partner, shared border 555 km)",
+    "Zhanakorganskiy (82,411) joins Shieliyskiy (biggest partner, shared border 268 km)",
+    "Arysskiy (82,417) joins Ordabasynskiy (biggest partner, shared border 149 km)",
+    "Aral`skiy (82,894) joins Kazalinskiy (biggest partner, shared border 443 km)",
+    "Burlinskiy (85,584) joins Zelenovskiy (biggest partner, shared border 433 km)",
+    "Beyneuskiy (93,724) joins Aqtau (biggest partner, shared border 337 km)",
+    "Karatal`skiy (94,468) joins Taldyqorghan (biggest partner, shared border 544 km)",
+    "Raiymbekskiy (95,747) joins Panfilovskiy (biggest partner, shared border 168 km)",
+    "Abayskiy (97,647) joins Bukhar-Zhyrauskiy (biggest partner, shared border 226 km)",
+    "Aktogayskiy (101,369) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Chardarinskiy (101,750) joins Saryagashskiy (nearest centre, partner 0.60)",
+    "Shuchinskiy (103,913) joins Bulandynskiy (nearest centre that wraps nothing, partner 1.00)",
+    "Zhualynskiy (106,008) joins Zhambylskiy (every join wraps; left to the ring cut)",
+    "Mugalzharskiy (107,864) joins Aqtobe (nearest centre, partner 1.00)",
+    "Glubokovskiy (111,749) joins Ulanskiy (nearest centre, partner 1.00)",
+    "Shuskiy (113,875) joins Merkenskiy (nearest centre, partner 1.00)",
+    "Tyul`kubaskiy (127,038) joins Tolebiyskiy (nearest centre, compact 0.69)",
+    "Kazygurtskiy (134,188) joins Saryagashskiy (nearest centre, compact 0.76)",
+    "Bayzakskiy (134,728) joins Zhambylskiy (nearest centre, partner 1.00)",
+    "Urdzharskiy (139,425) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Zyryanovsk (142,391) joins Ulanskiy (nearest centre, partner 1.00)",
+    "Kordayskiy (146,254) joins Merkenskiy (nearest centre, compact 0.65)",
+    "Zhambylskiy (147,108) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Makhambetskiy (148,064) joins Atyrau (nearest centre, partner 1.00)",
+    "Karmakchinskiy (165,768) joins Qyzylorda (nearest centre, partner 1.00)",
+    "Kazalinskiy (168,412) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Shieliyskiy (170,515) joins Turkestan (nearest centre, none of its region passing, partner 1.00, another region)",
+    "Taranovskiy (177,312) joins Qostanay (nearest centre, partner 1.00)",
+    "Ekibastuz (182,320) joins Pavlodarskiy (nearest centre, partner 1.00)",
+    "Bulandynskiy (212,281) joins Zerendinskiy (nearest centre, partner 0.68)",
+    "Ordabasynskiy (227,066) joins Saryagashskiy (nearest centre, compact 0.71)",
+    "Talgarskiy (233,260) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Karakiyanskiy (277,518) joins Aqtau (nearest centre, partner 1.00)",
+    "Tolebiyskiy (292,403) joins Saryagashskiy (nearest centre, compact 0.72)",
+    "Panfilovskiy (299,881) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Maktaaral`skiy (334,133) joins Saryagashskiy (nearest centre, partner 1.00)",
+    "Enbekshikazakhskiy (339,232) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Merkenskiy (432,113) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Kyzylzharskiy (449,482) stays as it is: no zone beside it",
+    "Semipalatinskiy (469,670) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Qyzylorda (493,614) stays as it is: no neighbour is a partner or makes a compact zone",
+    "Fyodorovskiy: cut in pieces by a pack, which only a regroup of its zone mends (T-3012)",
+    "Shemonaikhinskiy: cut in pieces by a pack, which only a regroup of its zone mends (T-3012)"
+   ],
+   "remnants": {
+    "ast": [
+     "9891525B30379541145757",
+     "9891525B90656598279735",
+     "9891525B24357337483480",
+     "9891525B32188509788858"
+    ],
+    "shm": [
+     "9891525B44210110580275"
     ]
    }
   }

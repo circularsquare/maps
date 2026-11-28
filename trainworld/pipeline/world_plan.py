@@ -245,6 +245,25 @@ ZONE_RULES = {"CHN": {"floor": 1_000_000, "cap": 2_500_000, "min_density": 0.0, 
                       "task": "T-2111"},
               "CAN": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-1191"},
+              # Kazakhstan's towns and the corridors between on Canada's rule: steppe and desert districts with next to
+              # no one between the towns (country plan 2026-11-28)
+              "KAZ": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
+                      "reach": (150.0, 100_000), "join_km": 150.0, "plan_units": True, "task": "T-3764"},
+              # Mongolia's soums on the same rule at half its people: at 100,000 within 150 km, 185 of 339 soums were dead
+              # space, Choibalsan, Sainshand, Bayankhongor and Dalanzadgad among them; at 50,000, 70 (Uliastai, Altai)
+              "MNG": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
+                      "reach": (150.0, 50_000), "reach_from_people": True, "join_km": 150.0, "plan_units": True,
+                      "task": "T-3764"},
+              # Tajikistan's and Kyrgyzstan's districts with no density floor, as the Caucasus: at the default 20 a km2 the
+              # mountain districts were dead space (Tajikistan 11 of them, the Pamirs with Khorog; Kyrgyzstan 16 of 33:
+              # Naryn, Batken, Toktogul, Karakol's Ak-Suu) (T-3764)
+              "TJK": {"min_density": 0.0, "contiguous": True, "plan_units": True, "task": "T-3764"},
+              "KGZ": {"min_density": 0.0, "contiguous": True, "plan_units": True, "task": "T-3764"},
+              # Turkmenistan on Iraq's desert rule: at the default 20 a km2, 40 of 59 etraps were dead space (Bayramaly,
+              # Tejen, Turkmenbasy, Kerki, Serakhs) (T-3764)
+              "TKM": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True, "reach": (150.0, 100_000),
+                      "reach_from_people": True, "join_km": 150.0, "fua_whole": 500_000, "plan_units": True,
+                      "task": "T-3764"},
               # Canada's rule for the empty interior; the zones take the module's census people (T-1857)
               "AUS": {"floor": 500_000, "cap": 1_500_000, "min_density": 0.0, "contiguous": True,
                       "reach": (150.0, 100_000), "join_km": 150.0, "module": "australia", "task": "T-1857"},
