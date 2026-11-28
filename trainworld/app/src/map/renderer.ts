@@ -44,7 +44,7 @@ import { MARK_STRIDE } from "./markData";
 import { EPOCH_S, STAGE_WAIT_MS, TripArgs, LINE_PX, noBays, BAYS, StationGroups, DrawOptions, StrokeVao, TexName, plainWmul, fullAttr, STROKE_ATTRIBS, STILL_MAX_MS, StrokeLodState, NetworkLayers, TRAIN_MAX_MPS, CROWD_STEP_S, type StrokeBand } from "./rendererParts";
 export { EPOCH_S, laneState, passingState, CROWD_ZOOM, CONFLICT_ZOOM } from "./rendererParts";
 export type { StationGroups, DrawOptions, NetworkLayers } from "./rendererParts";
-import { texture, buffer, attrib, strokes, checkStrokes, checkFull, checkTextures, carryLod, dropLodOf, keepTexture, changedRows, unchangedRuns, writeSegs, writeSegRange, type KeptTex, type TexKind } from "./rendererStrokes";
+import { texture, buffer, attrib, strokes, checkStrokes, checkFull, checkTextures, carryLod, dropLodOf, keptBoxes, keepTexture, changedRows, unchangedRuns, writeSegs, writeSegRange, type KeptTex, type TexKind } from "./rendererStrokes";
 import { drawFrame, bindTrainTextures } from "./rendererDraw";
 
 // WebGL2 network renderer: track and line strokes (one instanced quad per polyline segment, a
@@ -729,14 +729,13 @@ export class NetworkRenderer {
     this.lines = strokes(this, n.lines, [], patch && oldLines ? { old: oldLines, runs: patch.lines } : null, { full: full.out, fullKept: full.kept, room: true });
     // a set keeps its simplified copies and culling boxes while none of its segments changed, and the culling boxes
     // of the chunks before its first change
-    const linesSame = this.lines === oldLines && !!patch && unchangedRuns(patch.lines, this.lines.count);
+    const linesSame = this.lines === oldLines && !!patch && unchangedRuns(patch.lines, this.lines.count, patch.oldLines);
     // (T-4274: their simplified copies carried through the edit once the marks and widths are set, below)
     const lod: [StrokeVao, StrokeVao, Int32Array | undefined, Strokes, boolean][] = [];
-    for (const [old, now, runs, src, isLines] of [[oldTrack, this.track, patch?.track, n.track, false], [oldLines, this.lines, patch?.lines, n.lines, true]] as const) {
+    for (const [old, now, runs, src, isLines, was] of [[oldTrack, this.track, patch?.track, n.track, false, patch?.oldTrack], [oldLines, this.lines, patch?.lines, n.lines, true, patch?.oldLines]] as const) {
       if (!old) continue;
-      if (old !== now || !runs || !unchangedRuns(runs, now.count)) {
-        const boxes = this.lodOf.get(old)?.boxes;
-        if (boxes && runs && this.keepGl && runs[0] === 0 && runs[2] === 0) now.boxesFrom = { boxes, upTo: runs[1] };
+      if (old !== now || !runs || !unchangedRuns(runs, now.count, was ?? -1)) {
+        now.boxesFrom = this.keepGl ? keptBoxes(old, this.lodOf.get(old)?.boxes, runs) : undefined;
         lod.push([old, now, runs, src, isLines]);
       }
       if (old !== now) for (const r of old.res ?? []) r.del();

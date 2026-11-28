@@ -380,9 +380,10 @@ const WMUL = STROKE_ATTRIBS.length, FULL = WMUL + 1;
 /** each buffer of a set of no segments */
 const EMPTY: (() => ArrayBufferView)[] = [() => new Float32Array(4), () => new Uint32Array(1), () => new Uint32Array(1), () => new Float32Array(1), () => new Float32Array(1), () => new Float32Array(1).fill(160), () => new Uint8Array(2).fill(255), () => new Int16Array(BAND_STRIDE), () => plainWmul(1), () => new Float32Array(2)];
 
-/** T-4262: whether a patch's runs make every segment of the old set again, where it was */
-export function unchangedRuns(runs: Int32Array, count: number): boolean {
-  return count === 0 ? runs.length === 0 : runs.length === 3 && runs[0] === 0 && runs[1] === count && runs[2] === 0;
+/** T-4262: whether a patch's runs make every segment of the old set (`was` of them) again, where it was; a set cut
+ * short at its end keeps the rest where it was, so is not (T-4508: its zoomed-out copies still held what was cut) */
+export function unchangedRuns(runs: Int32Array, count: number, was: number): boolean {
+  return count === was && (count === 0 ? runs.length === 0 : runs.length === 3 && runs[0] === 0 && runs[1] === count && runs[2] === 0);
 }
 
 export function checkStrokes(rnd: NetworkRenderer, name: string, v: StrokeVao | null, s: Strokes) {
@@ -639,6 +640,18 @@ export function bindAt(rnd: NetworkRenderer, v: StrokeVao, start: number) {
   set("a_wmul", v.wmulBuf, 3, gl.FLOAT, 12);
   set("a_full", v.fullBuf, 2, gl.FLOAT, 8);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
+
+/** T-4262: the culling boxes stroke set `now`, made from `old` by a patch's `runs` (none: uploaded whole), may keep
+ * (`StrokeVao.boxesFrom`): `old`'s own (`boxes`, its LOD state's), else what `old` was itself still to keep, up to
+ * the first segment either edit changed. Set at every network: since a set keeps its object through an edit (stage 2),
+ * one left over from an earlier edit would give the chunks this edit changed an older network's boxes (T-4508). */
+export function keptBoxes(old: StrokeVao, boxes: ChunkBoxes | null | undefined, runs: Int32Array | null | undefined): StrokeVao["boxesFrom"] {
+  const upTo = runs && runs.length >= 3 && runs[0] === 0 && runs[2] === 0 ? runs[1] : 0;
+  if (!upTo) return undefined;
+  if (boxes) return { boxes, upTo };
+  const was = old.boxesFrom;
+  return was ? { boxes: was.boxes, upTo: Math.min(was.upTo, upTo) } : undefined;
 }
 
 /** T-4262: stroke set `v`'s simplified copies, culling boxes and gathered instances dropped */
