@@ -209,6 +209,10 @@ pub struct TrackApi {
     bind_new: bool,
     /// T-3759: the last load was a save from before stations could be unbound (`take_old_names`).
     old_names: bool,
+    /// T-1447: picked pieces and stations the last `clip` left out.
+    clip_left: u32,
+    /// T-1447: what the last `paste` added and left out (`last_paste`).
+    pasted: Vec<u32>,
 }
 
 // T-2820: the last panic's message, as the demand module's (`demand::wasm`), for the clock worker's
@@ -511,6 +515,8 @@ impl TrackApi {
             trains_bought: vec![],
             bought_fleets: 0,
             settled_running: false,
+            clip_left: 0,
+            pasted: vec![],
         }
     }
 
@@ -1050,6 +1056,7 @@ mod onetrack;
 mod legs;
 mod touched;
 mod kept;
+mod copy;
 
 /// What buying the cars the running lines need beyond `fleet` costs, US$M.
 fn trains_to_buy(w: &TrackWorld, fleet: [u32; FLEETS]) -> f64 {
@@ -2651,6 +2658,8 @@ mod changed_tests;
 /// T-4299: the kept money against a whole rebuild after each kind of edit.
 #[cfg(test)]
 mod kept_tests;
+#[cfg(test)]
+mod copy_tests;
 
 /// T-1964: station placements across joints between pieces of track.
 #[cfg(test)]

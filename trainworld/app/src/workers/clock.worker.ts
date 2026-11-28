@@ -25,18 +25,18 @@ import { placeOutlines, readOutlinesForPlaces } from "../map/coarseOutlines";
 import { canvasReadsTrue } from "../map/canvasRead";
 import { UPGRADE, UPGRADE_BITS } from "../game/upgrades";
 import { saveNetKey } from "./demandCache";
-import { currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, isNewerError, SAVE_LEVEL, SAVE_NEWER, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, NO_CITIES, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, type NewGameSpec, type SlotSummary, type SaveHeader, cleanNewHeadways } from "./saveFile";
+import { currentZones, decodeSave, encodeSave, encodeSaveParts, refuseSaveBuffers, isThisWorld, isRetiredTrackFormat, isNewerError, SAVE_LEVEL, SAVE_NEWER, trackFrameKind, readStored, failReads, StorageReadError, SAVE_FORMAT, START_CASH, NEW_LINE_CARS, START_CLOCK, writeStored, listSlots, leaseSlot, ORIGINAL_SLOT, SAVE_DAMAGED, NO_CITIES, isDamagedError, unreadableKey, setNetworkCheck, markDamaged, rescueGood, BACKUP_STEPS, newGameName, slotName, backupSlot, takePending, sweepDeleted, WHOLE_PANEL, readClip, writeClip, deleteClips, type NewGameSpec, type SlotSummary, type SaveHeader, cleanNewHeadways } from "./saveFile";
 import { lineProfile } from "./lineProfile";
 import type { EditOp, RouteAsk, ToClock } from "./protocol";
 import { stampAll } from "./cloud";
 import { isMemoryFailure, loadFailKey } from "../game/loadText";
-import { autosave, bindSlots, CLOUD_RETRY_MS, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, NO_MEMORY_TO_SAVE, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
+import { autosave, bindSlots, CLOUD_RETRY_MS, pastedClips, cloudFlush, cloudKick, cloudUp, heldFrom, heldNew, hold, intoNewSlot, intoView, leave, letGoSlot, manageSlot, NO_MEMORY_TO_SAVE, noteUnsaved, pendingGame, publishSlots, saveConverted, saves } from "./slots";
 import { rowsFirst } from "./clockWordLines";
 import { bookCharge, buildSnapshot, busQuoteLL, complexOfNodes, editSteps, nameOnly, putPreviewAt, putXferSet, sameFloats, scheduleSnapshot, sendTrips, snapStations, stationsKey, stepBoarding, turnHour, xferSet } from "./clockDemand";
-import { apply, buildingQuoteAnswer, designOf, doubleUpAnswer, DROP_REFUSED, freeEnds, INSERT_REFUSED, issues, newLineShape, ORDER_REFUSED, paidFor, pisArr, rebuildQuoteAnswer, routeArgs, savedHidden, savedShapes } from "./clockEdits";
+import { apply, buildingQuoteAnswer, CLIP_GONE, CLIP_NEWER, CLIP_UNREADABLE, designOf, doubleUpAnswer, DROP_REFUSED, holdClip, freeEnds, INSERT_REFUSED, issues, newLineShape, ORDER_REFUSED, paidFor, pisArr, rebuildQuoteAnswer, routeArgs, savedHidden, savedShapes } from "./clockEdits";
 import { goneLineFares, loadFares, newLineFare, pinFareRef, startFares, tidyLineFares, tidyStationFares } from "./clockFares";
 import { EARLY_WAIT_MS, followTimer, followUp, goesAhead, guardedFollowUp, heldEdges, HOLD_MS, holdOn, isPreview, isServiceOp, jumpsAhead, keepUntilState, later, passesFollowUp, passesHeld, previewStaleSeq, putPreviewStaleSeq, sendStale, settleOwedNow, stale, standAside, startNow, stepThenRun, takeForced, waitsFollowUp, Waiting, whenStateWent } from "./clockFollowUp";
-import { putLoadMaskWait } from "./clockGround";
+import { masksForClip, putLoadMaskWait } from "./clockGround";
 import { blocksIn, blueprintPolylines, ensureBlocks, ensureMasks, ensureStreets, fetchWater, groundForBlueprint, masksComplete, masksIn, nodePoints, openNetwork, pumpBlocks, putPackBase, putTerrainBase, putViewBlocks, putViewZones, retryGroundNow, roadFeed, roadsUnder, routePoints, terrainIndexIntoModel, tintSent, VIEW_MARGIN_M, VIEW_SPAN_M, viewBlocks, viewZones, wakeStale, WaterRaster, withMasks, worldWaterIntoModel, zonesOfPoints } from "./clockGround";
 import { anchorMoves, drawnEdge, drawnLine, edgeDrawn, forget, forgetDrawn, game, hex, previewMarkRows, putAnchorMoves, putConvertedOnLoad, putShiftFrom, putShiftWas, putView, restart, rowsCanGo, sendHome, sendOpened, sendRows, sendState, SHIFT_REACH, shiftFrom, SHIFTS_EXACT } from "./clockMain";
 import { bookTrains, gameNow, lineDays, linesPeriods, loadLineDays, loadRegions, mergeLedger, putTodayGen, putTodayLast, regionEntries, regions, rounded, savedLineDays, savedRegions, sendCash, sendMoney, serviceLeadS, settle, today, todayGen, unsettleAfter } from "./clockMoney";
@@ -1005,6 +1005,13 @@ async function handleMessage(msg: ToClock) {
       }
       msg.op = r;
     }
+    // T-1447: a clip is read before its edit, only in the tab that saves the game, and the masks under it are in first
+    if (msg.op.op === "pasteClip") {
+      const c = await readClip(msg.op.key);
+      if (!c || !saves.activeLease) return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [c ? "ClipNotHere" : "ClipGone"], charge: 0 }); // i18n-ignore
+      holdClip(c);
+      await parkedOn(masksForClip(c.bytes));
+    }
     await parkedOn(worldWaterIntoModel());
     await parkedOn(masksFor(msg.op));
     if (msg.op.op === "construct" || msg.op.op === "constructAll" || msg.op.op === "constructLine" || msg.op.op === "rebuild") {
@@ -1035,7 +1042,13 @@ async function handleMessage(msg: ToClock) {
     // T-4272: trains owed services needed, bought as the edit began (their services worked out first)
     bookTrains(api.take_trains_bought());
     const moved = api.take_service_moved();
-    const { r, fault, line, node, skipped, charge: charged, trainCharge, why } = applied;
+    const { r, fault, line, node, skipped, charge: charged, trainCharge, why, pasted } = applied;
+    // T-1447: a pasted clip goes once a slot write holding the paste has gone through (slots.ts `autosave`); one that put
+    // nothing in or does not read goes now; one a newer build wrote waits
+    if (msg.op.op === "pasteClip") {
+      if (r === 0) pastedClips.push(msg.op.key);
+      else if (r !== CLIP_NEWER && r !== CLIP_GONE) void deleteClips([msg.op.key]);
+    }
     refusedLast = r === 0 ? -1 : msg.seq;
     if (msg.op.op === "route") routeEnded(msg.seq, r === 0 ? node : undefined);
     api.set_edit_lead(0); // a refused edit leaves it set
@@ -1045,7 +1058,7 @@ async function handleMessage(msg: ToClock) {
     // an op of two edits (T-1899) says what both charged
     const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
-    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : issues(), charge, line, node, paid: paidFor(op), skipped, ms: { apply: tB - tA, ...timing, ...forced, total: performance.now() - tA }, early, held }); // i18n-ignore
+    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : r === CLIP_NEWER ? ["ClipNewer"] : r === CLIP_UNREADABLE ? ["ClipUnreadable"] : r === CLIP_GONE ? ["ClipGone"] : issues(), charge, line, node, paid: paidFor(op), skipped, pasted, ms: { apply: tB - tA, ...timing, ...forced, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     placedNameless(api, msg.op, game);
     // T-4145: what the page can show of the edit, before its rows and network (a stop click's line path, T-4114)
@@ -1127,6 +1140,12 @@ async function handleMessage(msg: ToClock) {
     // a service edit's first step only before its state (T-3655)
     trips && api.has_riders() ? editSteps(service) : undefined,
     hold || stops, stops);
+  } else if (msg.kind === "copyTo") {
+    // T-1447: the pick as a clip waiting for game `origin`'s next load
+    const bytes = api.clip(new Uint32Array(msg.edges), new Uint32Array(msg.stations));
+    const left = api.clip_left_out();
+    const ok = bytes.length > 0 && await writeClip({ origin: msg.origin, from: msg.from, at: Date.now(), level: SAVE_LEVEL, bytes });
+    send({ kind: "copied", seq: msg.seq, ok, left });
   } else if (msg.kind === "stationName") {
     // T-4214: stations placed before their name came take it now, in the state their edit's follow-up sends (it goes ahead
     // of that state, `goesAhead`), or in a rows state of its own once that state went

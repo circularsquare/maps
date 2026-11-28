@@ -929,6 +929,18 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   (T-2037); one version is deleted from the card's list of other versions. T-1827 had kept deleted slots 30 days under `deleted:<ms>-<id>`;
   Anita removed it the same day, and `sweepDeleted` clears any such keys at every start. On the account,
   the server keeps a deleted game 7 days for an admin restore under a new id (T-3789); the browser never sees it.
+- **Copied selections** [T-1447; `Clip` in `workers/saveFile.ts`, `game/clips.ts`, `sim/src/track/wasm/copy.rs`;
+  notes/T-1447.md]: Copy here keeps the pick as `clip:<time>:<origin>` in the same store: the game it came from, the
+  save level and the network bytes the save writer wrote of it (`TrackApi::clip`: the picked pieces and stations, the
+  lines wholly on them and the links between them, put through the checked edit into an empty track model, every piece
+  blueprint, with no build days, fare zones, line groups or imported grade separation (`sep`); a station none of whose
+  track is picked is left out). A game of that origin opening in a tab that holds its slot pastes each clip, oldest
+  first, as one undoable edit (`pasteClip`, `TrackApi::paste`) once the masks under it are in: what the checks refuse
+  is left out by name and the rest tried again, and a line name or symbol the game uses already is stepped as Copy
+  line's. The clip is deleted once an autosave holding the paste is written (`pastedClips` in slots.ts), at once when
+  nothing went in or it does not read; one above this build's level, with a newer network magic or bytes this build
+  does not read (`clip_check`) waits. No other slot is written by a copy, clips are never uploaded, and a card's delete
+  of a whole game deletes its clips.
 - **Storage full or cleared while open** [T-1829]: a connection the browser closes (site data
   cleared, the database deleted from another page: `close` and `versionchange`) is forgotten, and
   every call that fails to open a transaction drops the connection and tries once more, so the

@@ -8,7 +8,7 @@ import { letterOf } from "../game/lineLetter";
 import { cloneName, cloneSymbol } from "../game/cloneNames";
 import { capTransfer, faresOf, FERRY_FARE_KEYS, kindFares, MEDIUM, tidyHsr, tidyTransfer } from "../game/fareCurve";
 import { FARE_BASELINE, FARE_E, keepOwn } from "../game/income";
-import { type SaveHeader } from "./saveFile";
+import { type Clip, type SaveHeader } from "./saveFile";
 import type { EditOp, PaidFor, PiInput, RouteAsk, RouteEnd, StationAt } from "./protocol";
 import { saves } from "./slots";
 import { addPorts, newLineRows, newLineWeekends, nextBusName, renameBusStop, renameComplex, renameStation, renameStations } from "./clockDemand";
@@ -52,7 +52,7 @@ function hsrShare(a: TrackApi, line: number): number {
   return all > 0 ? fast / all : 0;
 }
 
-export type Applied = { r: number; fault?: number[]; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number; why?: string[] };
+export type Applied = { r: number; fault?: number[]; line?: number; node?: number; skipped?: number; charge?: number; trainCharge?: number; why?: string[]; /** T-1447 */ pasted?: number[] };
 
 /** T-1899: a new line's stop edit (`edit`), its trains then high-speed when more than half its
  * route's km is high-speed track and ordinary otherwise. The type is set before the stops in the undo
@@ -321,6 +321,17 @@ function applyInner(op: EditOp): Applied {
       }
       return { r, line: id, charge, trainCharge };
     }
+    case "pasteClip": {
+      const c = clipInHand;
+      clipInHand = null;
+      if (!c) return { r: CLIP_GONE };
+      const check = TrackApi.clip_check(c.bytes, c.level);
+      if (check !== 0) return { r: check === 1 ? CLIP_NEWER : CLIP_UNREADABLE };
+      const r = a.paste(c.bytes, c.level);
+      const pasted = Array.from(a.last_paste());
+      if (r === 0) stepPastedNames(a, pasted);
+      return { r, pasted };
+    }
     case "copyLine": {
       const id = a.new_line_id();
       const existing = new Set<string>(), symbols = new Set<string>();
@@ -566,6 +577,39 @@ export function paidFor(op: EditOp): PaidFor | undefined {
   if (nodes.length) paid.nodes = nodes;
   if (edges.length) paid.edges = edges;
   return paid.line !== undefined || nodes.length || edges.length ? paid : undefined;
+}
+
+/** T-1447: a pasteClip's clip, read by the worker before the edit (`holdClip`) */
+let clipInHand: Clip | null = null;
+export function holdClip(c: Clip) { clipInHand = c; }
+/** `apply`'s answers for a pasteClip whose clip a newer build wrote, that does not read, or that is gone */
+export const CLIP_NEWER = -4, CLIP_UNREADABLE = -5, CLIP_GONE = -6;
+
+/** T-1447: a pasted line whose name or symbol the game already uses is stepped as Copy line steps it, in the paste's
+ * undo step. */
+function stepPastedNames(a: TrackApi, pasted: number[]) {
+  const ne = pasted[0], ns = pasted[1 + ne], nl = pasted[2 + ne + ns];
+  const mine = new Set(pasted.slice(3 + ne + ns, 3 + ne + ns + nl));
+  const names = new Set<string>(), symbols = new Set<string>();
+  const info = a.lines_info();
+  for (let i = 0; i < info.length; i += 22) {
+    if (mine.has(info[i])) continue;
+    const nm = a.line_name(info[i]);
+    names.add(nm);
+    symbols.add((a.line_symbol(info[i]) || letterOf(nm)).toLowerCase());
+  }
+  for (let i = 0; i < info.length; i += 22) {
+    const id = info[i];
+    if (!mine.has(id)) continue;
+    const nm = a.line_name(id), sym = a.line_symbol(id) || letterOf(nm);
+    const name = names.has(nm) ? cloneName(nm, names) : nm;
+    const symbol = symbols.has(sym.toLowerCase()) ? cloneSymbol(sym, symbols) : a.line_symbol(id);
+    names.add(name);
+    symbols.add((symbol || letterOf(name)).toLowerCase());
+    if (name === nm && symbol === a.line_symbol(id)) continue;
+    a.join_edit(true);
+    a.set_line_badge(id, name, info[i + 1], symbol);
+  }
 }
 
 /** `apply`'s answer for an insertStop with nowhere to go (the track model's own codes are >= 0) */

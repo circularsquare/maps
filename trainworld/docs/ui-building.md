@@ -926,7 +926,7 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   `TrackApi::double_up` for each run of picked double track (pieces joined where only two meet),
   one undoable edit a run, so it covers each run whole, junction to junction, even where only part
   is picked; its hover gives the summed price and the runs' count, or the first refusal, greyed
-  when none can; then Remove (key Delete or Backspace) and Clear. E acts on the pick with the Select tool only, so
+  when none can; then Copy ([below](#the-select-tool) "Copy"), Remove (key Delete or Backspace) and Clear. E acts on the pick with the Select tool only, so
   while plain selecting Disable's and Enable's hovers name no key [T-2397]; Delete and Esc act in both [T-3746]. The Build tab shows only "N disabled" while any blueprint is disabled, whatever the tool,
   and beside the blueprint total, in small muted type, what the disabled pieces would cost ("$1.54B
   disabled"; hover: the pieces and the exact sum, left out of the total, then "Double click to enable
@@ -1010,6 +1010,14 @@ is the pan and Shift+drag is MapLibre's zoom box, so a box needs a mode.
   left bare and a crossover whole. Blueprint goes at once (one undo) unless it is big (above);
   constructed asks first, as for one piece ("Remove 3.1 km of built track and 2 built stations?
   Nothing is refunded."), and one undo brings it back.
+- **Copy** [T-1447, Anita's design; `game/clips.ts`, `TrackApi::clip` and `paste` in `sim/src/track/wasm/copy.rs`;
+  notes/T-1447.md]: an icon and word before Remove, for either kind (hover "Copy selection into another save as a
+  blueprint"), opens the saved games panel as Copy to another game ([ui-panels.md](ui-panels.md) "Card actions"). The
+  picked track and stations, with the lines wholly on them, are added as blueprint the next time the game picked there
+  opens in this browser: one undoable edit, where they were on the map, then made the pick with the map moved to them
+  ("Blueprint added from "Tokyo"."; "3 pieces could not be added." for what the game refuses there). Built track
+  arrives as blueprint, so it is paid for when constructed there. What copies: [architecture.md](architecture.md)
+  "Copied selections".
 - Disabled is a state on the piece, saved with the game ([track-and-service.md](track-and-service.md)
   6.4). A selected disabled blueprint track says "Disabled" under "Blueprint" in its inspector
   (hover: "Will not be constructed unless enabled") [T-821, T-1242]. The Build tab's "N disabled" hovers which pieces will not be constructed. The piece's own Construct button (track and station inspectors) and a line's Construct build

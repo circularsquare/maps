@@ -11,7 +11,7 @@ import { choosing, diedSlot } from "../game/loading";
 import { display, dropMarket } from "../game/ui";
 import { FeedbackOpen } from "./FeedbackPanel";
 import { CoarseDemandCheck, CoresRow, IntercityCheck, UiScaleStepper } from "./SettingsTab";
-import { failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
+import { deleteClipsOf, failLists, listSlots, newGameName, StorageReadError, type SaveSlot } from "../workers/saveFile";
 import { backupChoice, CHOICE_PARAMS, exportSlot, fileChoice, type GameChoice } from "../workers/clockClient";
 import { groupHeads, groupVersions, type GameGroup, type Version } from "../workers/versions";
 import { saveRefusal } from "../game/memoryCheck";
@@ -286,7 +286,7 @@ function Menu({ slots: first0, unread: unread0, pick: pickGame, settling }: { sl
               {memWarn?.key === s.key && <MemoryWarn stations={memWarn.stations} died={s.key === died} onGo={() => { setMemWarn(null); void open(s.key); }} onCancel={() => setMemWarn(null)} />}
               <VersionsLine group={g} now={now} act={actions(g)} />
               {removing === g.origin && <div class="callout bad">
-                <DeleteAsk group={g} yesLabel={t("startMenu.deleteSave")} keepLabel={t("startMenu.keepIt")} yesClass="start-delete-yes" onYes={() => void remove(groupHeads(g))} onKeep={() => setRemoving(null)} />
+                <DeleteAsk group={g} yesLabel={t("startMenu.deleteSave")} keepLabel={t("startMenu.keepIt")} yesClass="start-delete-yes" onYes={() => { void remove(groupHeads(g)); void deleteClipsOf(g.origin); }} onKeep={() => setRemoving(null)} />
               </div>}
             </li>;
           })}

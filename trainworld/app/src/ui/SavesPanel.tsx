@@ -16,7 +16,8 @@ import { lastSaved } from "../game/money";
 import { storageKept } from "../game/saveSafety";
 import { choosing } from "../game/loading";
 import { exportGame, exportSlot, importGame, leaveToMenu, newGame, manageSaveSlot, savedByHand, saveSlotsState } from "../workers/clockClient";
-import { listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
+import { deleteClipsOf, listBackups, WHOLE_PANEL, type SaveSlot, type SlotBackup } from "../workers/saveFile";
+import { copying, copyPickTo } from "../game/clips";
 import { accountConfig, accountOpen, accountState, cloudContext, session } from "../game/account";
 import { accountList, accountOnly, addToAccount, cardOf, damagedAccount, deleteVersions, downloadAccountGame, downloadFailure, exportAccountGame, elsewhereAt, refreshAccountGames, restoreAccountBackup, restorePinned } from "../game/accountGames";
 import { estimateGB, gbText, overBudget } from "../game/memoryEstimate";
@@ -471,7 +472,7 @@ function Saves({ onNewGame }: { onNewGame: () => void }) {
     if (versions.some((v) => v.kind === "slot" && v.slot.key === saves.active)) manageSaveSlot("delete", saves.active);
     return why;
   };
-  const removeGroup = async (g: GameGroup) => setRemoved(await removeVersions(groupHeads(g)));
+  const removeGroup = async (g: GameGroup) => { setRemoved(await removeVersions(groupHeads(g))); void deleteClipsOf(g.origin); };
   return (
     <>
       {!saves.writable && saves.reason && !saves.viewing && <p class="callout bad">{saves.reason}</p>}
@@ -546,6 +547,66 @@ function AccountActions({ slot, onDelete }: { slot: SaveSlot; onDelete: () => vo
   </>);
 }
 
+// ---------------------------------------------------------------- T-1447: copying a selection into another game
+
+/** The copy mode: every game but the one being played, each with Copy here. */
+function CopyTo() {
+  const saves = saveSlotsState.value;
+  const ctx = useGamesOn();
+  void accountList.value;
+  const now = Date.now();
+  const groups = groupVersions(saves.slots, ctx ? accountOnly(saves.slots) : [], {}, saves.active, ctx ? accountList.value?.games ?? [] : [], damagedAccount.value)
+    .filter((g) => !(g.top.kind === "slot" && g.top.slot.key === saves.active));
+  return (
+    <>
+      <p class="small muted save-copy-lead">{t("copyPanel.lead")}</p>
+      {!groups.length && <p class="small muted">{t("copyPanel.none")}</p>}
+      <ul class="save-slots">
+        {groups.map((g) => {
+          const top = g.top, slot = top.kind === "slot" ? top.slot : cardOf(top.game);
+          return <li key={g.origin} data-origin={g.origin}>
+            {top.kind === "slot"
+              ? <SlotCard slot={slot} playing={false} now={now} writable={saves.writable} renaming={false} onRename={() => {}} onRenamed={() => {}} />
+              : <AccountCard slot={slot} now={now} />}
+            <div class="save-versions"><div class="save-foot"><CopyActions group={g} slot={slot} /></div></div>
+          </li>;
+        })}
+      </ul>
+    </>
+  );
+}
+
+/** Copy here, then what it did and Open. */
+function CopyActions({ group, slot }: { group: GameGroup; slot: SaveSlot }) {
+  const [state, setState] = useState<"" | "busy" | "done">("");
+  const [msg, setMsg] = useState("");
+  const account = group.top.kind === "account" ? group.top.game : null;
+  const guard = useMemoryGuard(account ? account.facts?.stations : slot.stations);
+  const copy = async () => {
+    setState("busy");
+    setMsg("");
+    const r = await copyPickTo(group.origin);
+    setState(r.ok ? "done" : "");
+    setMsg(!r.ok ? t("copyPanel.failed") : r.left ? t("copyPanel.copiedLeft", { count: r.left }) : t("copyPanel.copied"));
+  };
+  const open = () => guard.ask(async () => {
+    if (!account) { manageSaveSlot("open", slot.key); savesOpen.value = false; return; }
+    const key = await downloadAccountGame(account);
+    if (!key) { setMsg(downloadFailure(account.id, t("savesPanel.downloadFailed"))); return; }
+    manageSaveSlot("open", key);
+    savesOpen.value = false;
+  });
+  return (<>
+    <div class="save-actions">
+      {msg && <span class={"small" + (state === "done" ? " muted" : " bad")}>{msg}</span>}
+      {state === "done"
+        ? <button class="btn text save-open" data-tip={openTip()} onClick={open}>{t("savesPanel.open")}</button>
+        : <button class="btn text save-open" disabled={state === "busy"} onClick={() => void copy()}>{t("copyPanel.copyHere")}</button>}
+    </div>
+    {guard.warning}
+  </>);
+}
+
 /** T-988: a slot whose game is also on the account signed in. */
 function onAccount(slot: SaveSlot): boolean {
   const ctx = cloudContext();
@@ -563,11 +624,13 @@ export function SavesPanel() {
   const open = savesOpen.value;
   // T-728: New game shows the new game sheet in the panel's place
   const [sheet, setSheet] = useState(false);
-  useEffect(() => { if (!open) setSheet(false); }, [open]);
+  // T-1447: the Copy button opens the panel as the copy mode
+  const copyMode = copying.value !== null;
+  useEffect(() => { if (!open) { setSheet(false); copying.value = null; } }, [open]);
   useEffect(() => { if (open) { manageSaveSlot("refresh"); void refreshAccountGames(); void refreshMyShares(); } }, [open]);
   return (
-    <Modal open={open} onClose={() => (savesOpen.value = false)} title={sheet ? t("savesPanel.newGame") : t("savesPanel.title")} head={sheet ? null : <><CommunityButton /><HeadMark /></>}>
-      {sheet
+    <Modal open={open} onClose={() => (savesOpen.value = false)} title={copyMode ? t("copyPanel.title") : sheet ? t("savesPanel.newGame") : t("savesPanel.title")} head={sheet || copyMode ? null : <><CommunityButton /><HeadMark /></>}>
+      {copyMode ? <CopyTo /> : sheet
         ? <NewGameSheet heading={false} onBack={() => setSheet(false)} onStart={(game) => { newGame(game, "", startAtPicked()); savesOpen.value = false; }} />
         : <Saves onNewGame={() => setSheet(true)} />}
     </Modal>

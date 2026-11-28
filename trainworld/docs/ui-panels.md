@@ -1242,6 +1242,12 @@ This is separate from the refusal [T-1197], which judges a save by its zones and
   open; the card's red line (and the start menu's line) is "This game was saved on a newer game version. Reload the
   page to update." The same line is the card's red line and the account mark's hover when the account holds the game
   from a newer version, so this build does not upload over it.
+- **Copy to another game** [T-1447; `CopyTo` in `ui/SavesPanel.tsx`]: the selection bar's Copy opens the panel under
+  that title, with no head icons, New game or Open a file: a muted line, "The selection is added as blueprint the next
+  time you open that game in this browser.", then the card of every other game (the one being played left out, account
+  games included) with its picture and facts and one button, **Copy here**. Once copied the card reads "Copied" (or
+  "Copied. 2 pieces could not be copied.") and has Open, which opens the game as Open does. With no other game: "There
+  are no other saved games." Deleting a whole game (a card's bin) deletes what waits for it.
 - **Leave page?** [T-1826]: closing or reloading the page asks first (the browser's own question)
   only while a change the player made could not be saved: autosave off in this tab for any reason
   above, or a failed write.

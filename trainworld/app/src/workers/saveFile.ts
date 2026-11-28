@@ -890,6 +890,54 @@ export async function deleteSlot(key: string): Promise<void> {
   syncSeen.delete(key);
 }
 
+/** T-1447: a selection copied out of another game, waiting as blueprint for the next load of game `origin` in this
+ * browser (notes/T-1447.md): the source game's name, the save level it was written at and the network bytes
+ * `TrackApi.clip` wrote. Kept under `clip:<at>:<origin>`; never uploaded. */
+export interface Clip { origin: string; from: string; at: number; level: number; bytes: Uint8Array }
+const CLIP_PREFIX = "clip:";
+export async function writeClip(c: Clip): Promise<boolean> {
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    await req(s.put(c, `${CLIP_PREFIX}${c.at}:${c.origin}`));
+    await done;
+    return true;
+  } catch {
+    return false;
+  }
+}
+/** The clips waiting for game `origin`, oldest first, each with its key; none when storage cannot be read. */
+export async function listClips(origin: string): Promise<(Clip & { key: string })[]> {
+  try {
+    const keys = (await req((await store("readonly")).getAllKeys())).filter((k): k is string => typeof k === "string" && k.startsWith(CLIP_PREFIX));
+    const out: (Clip & { key: string })[] = [];
+    for (const key of keys) {
+      const v = await readApart<Clip>(key);
+      if (v && v !== UNREADABLE && v.origin === origin) out.push({ ...v, key });
+    }
+    return out.sort((a, b) => a.at - b.at);
+  } catch {
+    return [];
+  }
+}
+export async function readClip(key: string): Promise<Clip | null> {
+  const v = await readApart<Clip>(key).catch(() => undefined);
+  return v && v !== UNREADABLE ? v : null;
+}
+export async function deleteClips(keys: string[]): Promise<void> {
+  if (!keys.length) return;
+  try {
+    const s = await store("readwrite");
+    const done = committed(s.transaction);
+    for (const k of keys) s.delete(k);
+    await done;
+  } catch { /* storage unavailable: they wait for the next load, as unpasted */ }
+}
+/** T-1447: a game deleted whole takes the clips waiting for it along. */
+export async function deleteClipsOf(origin: string): Promise<void> {
+  await deleteClips((await listClips(origin)).map((c) => c.key));
+}
+
 // T-1827 kept deleted slots 30 days under `deleted:<ms>-<id>` (backups `backup:deleted:...`); Anita
 // removed it the same day (a deleted game should be gone for good). Anything it left is swept at start.
 const DELETED_PREFIX = "deleted:", DELETED_BACKUP = "backup:deleted:";

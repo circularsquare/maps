@@ -6,7 +6,7 @@
 import type { MessageKey } from "../i18n"; // type only: this worker sends keys, the page words them (docs/localization.md "Workers")
 import type { TrackApi } from "../wasm/track/sim";
 import { HOME_CITY } from "../game/cities";
-import { listSlots, writeSlot, SlotTakenError, renameSlot, leaseSlot, ORIGINAL_SLOT, OLD_FRAME_PREFIX, readStored, writeStored, listBackups, writeBackup, backupSlot, BACKUP_STEPS, slotName, writePending, readSync, writeSync, makeRoom, lastSync, type PendingLoad, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave } from "./saveFile";
+import { listSlots, writeSlot, SlotTakenError, renameSlot, leaseSlot, ORIGINAL_SLOT, OLD_FRAME_PREFIX, readStored, writeStored, listBackups, writeBackup, backupSlot, BACKUP_STEPS, slotName, writePending, readSync, writeSync, makeRoom, lastSync, deleteClips, type PendingLoad, type SlotBackup, type SlotLease, type SlotSummary, type StoredSave } from "./saveFile";
 import type { FromClock, ToClock } from "./protocol";
 import { claim, editedHere, editedThere, fetchGame, GAP_MS, lastListFailure, listGames, newGameId, onTokenGone, removeSlot, sendDeletes, settle as settleCloud, splitOff, tieNew, tiedTo, upload, writeFetched, type CloudContext } from "./cloud";
 import { editOf, syncedEditOf } from "./versions";
@@ -503,6 +503,9 @@ async function deletePlaying() {
   }
 }
 
+/** T-1447: clips pasted since the last slot write began, deleted once a write holding them has gone through */
+export const pastedClips: string[] = [];
+
 export function autosave(): Promise<boolean> {
   if (saves.saveInFlight) return saves.saveInFlight.then(ok => saves.dirty && ok ? autosave() : ok);
   const api = host.api();
@@ -519,6 +522,7 @@ export function autosave(): Promise<boolean> {
   const wasEdited = saves.edited;
   saves.byHandNext = false;
   saves.dirty = saves.edited = false;
+  const clipsIn = pastedClips.splice(0);
   saves.saveInFlight = (async () => {
     try {
       // T-3869: made and written again while it fails for want of memory, the page's demand workers replaced first
@@ -552,12 +556,14 @@ export function autosave(): Promise<boolean> {
       saves.seenEdit = saves.editAt;
       saves.saveFailure = undefined;
       send({ kind: "saved", at });
+      if (clipsIn.length) void deleteClips(clipsIn);
       await publishSlots();
       slotChanges?.postMessage({ key });
       return true;
     } catch (err) {
       saves.dirty = true;
       saves.edited ||= wasEdited;
+      pastedClips.unshift(...clipsIn);
       if (err instanceof SlotTakenError) {
         // another tab holds the slot now: autosave stays off here until a save by hand takes it back
         if (saves.activeLease === lease) { saves.activeLease = null; saves.leaseTaken = true; }

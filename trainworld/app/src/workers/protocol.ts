@@ -95,6 +95,8 @@ export type EditOp =
   | { op: "rebuild"; edges: EdgeId[]; stations: NodeId[]; level: Level | null; kind: 0 | 1 | 2 | 3; tracks: 0 | 1 | 2 }
   /** remove several pieces at once (T-829): undoable when all blueprint, else final */
   | { op: "removePieces"; edges: EdgeId[]; stations: NodeId[] }
+  /** T-1447: the clip stored under `key` (saveFile.ts `Clip`) added as blueprint, one undoable edit; answered with `pasted` */
+  | { op: "pasteClip"; key: string }
   | { op: "flying"; node: NodeId; flying: boolean }
   | { op: "stationUpgrade"; nodes: NodeId[]; bit: number; on: boolean }
   /** T-4214: `ticket`, a station sent at its click: `name` is "" and the name follows as "stationName" (workers/clockNames.ts) */
@@ -418,6 +420,9 @@ export type ToClock =
   /** T-2766, dev server only: set the cash, US$M, and with `fleet` own only the cars in use (a check's
    * refusal for want of money) */
   | { kind: "debugCash"; cash: number; fleet?: boolean }
+  /** T-1447: the picked track and stations copied into game `origin` as a clip, named after this game (`from`); answered
+   * with "copied" */
+  | { kind: "copyTo"; seq: number; origin: string; from: string; edges: EdgeId[]; stations: NodeId[] }
   /** the game as a file: answered with "exported" */
   | { kind: "export"; /** T-3115: for a Community share, not a download */ share?: true }
   /** load a save file (T-029); answered with "loaded". It and "newGame" start a slot named `name`
@@ -1060,7 +1065,7 @@ export type FromClock =
    * edit (`stationName`), ground that re-priced track the page holds patched (T-4506, clockPatch.ts `patchOutside`) */
   | { kind: "outside"; patch?: MapPatch }
   | { kind: "applied"; seq: number; word: EditWord; /** T-4170: no network follows (a service edit, a rename, a fare or loan edit) */ noNet?: true; /** T-4214: the clickable map's patch, when the edit can be patched */ patch?: MapPatch }
-  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[] }
+  | { kind: "edited"; seq: number; ok: boolean; issues: string[]; charge: number; line?: number; node?: number; paid?: PaidFor; skipped?: number; ms?: Record<string, number>; early?: boolean; held?: Float32Array[]; /** T-1447: a pasteClip's `TrackApi.last_paste` */ pasted?: number[] }
   | {
       kind: "preview";
       seq: number;
@@ -1182,6 +1187,8 @@ export type FromClock =
   /** the save file, for the player to keep: `bytes` for a share, else in `parts` (T-3869: never one buffer); `error`
    * (a message key) when it could not be made */
   | { kind: "exported"; bytes?: Uint8Array; parts?: Uint8Array[]; day: number; share?: true; error?: string }
+  /** T-1447: "copyTo" stored its clip (`ok`); `left`: picked pieces and stations left out of it */
+  | { kind: "copied"; seq: number; ok: boolean; left: number }
   /** T-3869: a save found no memory: the page replaces its demand workers, giving back what they hold, and answers
    * "roomMade" */
   | { kind: "room" }

@@ -140,6 +140,8 @@ export interface EditAnswer {
   node?: number;
   /** pieces an edgesLevel left out (T-815) */
   skipped?: number;
+  /** T-1447: a pasteClip's `TrackApi.last_paste` */
+  pasted?: number[];
   /** T-1407: answered before the edit's state, which `world` does not hold yet */
   early?: boolean;
   /** T-2404: an early answer whose state waits for the pointer's rest: the blueprint edges it made
@@ -769,6 +771,19 @@ let current: ClockClient | null = null;
 /** Download the game as a file (T-029). */
 export function exportGame() {
   current?.post({ kind: "export" });
+}
+/** T-1447: the picked track and stations copied into game `origin` as blueprint waiting for its next load, named after
+ * `from`; `left`: picked pieces and stations the copy left out. Not ok with no game, nothing copyable or no storage. */
+const copies = new Map<number, (a: { ok: boolean; left: number }) => void>();
+let copySeq = 0;
+export function copyTo(origin: string, from: string, edges: number[], stations: number[]): Promise<{ ok: boolean; left: number }> {
+  if (!current) return Promise.resolve({ ok: false, left: 0 });
+  const seq = ++copySeq;
+  return new Promise((done) => {
+    const late = setTimeout(() => copies.get(seq)?.({ ok: false, left: 0 }), 60_000);
+    copies.set(seq, (a) => { clearTimeout(late); copies.delete(seq); done(a); });
+    current!.post({ kind: "copyTo", seq, origin, from, edges, stations });
+  });
 }
 /** T-3115: the game in hand's save bytes, for a Community share; null with no game. */
 let shareExport: ((bytes: Uint8Array | null) => void) | null = null;
@@ -2032,6 +2047,9 @@ export class ClockClient {
       case "unsaved":
         askBeforeLeaving(msg.on);
         break;
+      case "copied":
+        copies.get(msg.seq)?.({ ok: msg.ok, left: msg.left });
+        break;
       case "exported": {
         if (msg.share) { shareExport?.(msg.bytes ?? null); break; }
         if (msg.error) { say(workerText(msg.error), true); break; }
@@ -2115,7 +2133,7 @@ export class ClockClient {
         // (an early answer's world comes with its state, T-1407)
         if (msg.ok && msg.charge > 0 && msg.early) this.earlyShares = { seq: msg.seq, line: msg.line, paid: msg.paid };
         else if (msg.ok && msg.charge > 0 && world.value) this.post({ kind: "chargeShares", seq: msg.seq, ...chargeShares(this.worldBefore, world.value, msg.line, msg.paid) });
-        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped, early: msg.early, held: msg.held });
+        f?.({ ok: msg.ok, issues: msg.issues, charge: msg.charge, line: msg.line, node: msg.node, skipped: msg.skipped, early: msg.early, held: msg.held, pasted: msg.pasted });
         break;
       }
       case "preview": {

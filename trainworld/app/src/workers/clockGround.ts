@@ -636,6 +636,14 @@ async function masksBeforeLoad(net: Uint8Array) {
   }
 }
 
+/** T-1447: before a clip is pasted, the masks of the zones its track meets, as any edit's (a clip in another frame is
+ * refused by the paste). */
+export async function masksForClip(net: Uint8Array) {
+  if (trackFrameKind(net) !== frame.kind) return;
+  const missing = zonesOfPoints(TrackApi.save_points(net)).filter((id) => !masksIn.has(id));
+  if (missing.length) await loadMasks(missing);
+}
+
 /** Put a network (in the world frame) in the track model, with the masks of the zones it meets. `level`: the
  * save level a player's game was written at (T-3647, `TrackApi.set_load_level`), absent for this build's. */
 export async function openNetwork(net: Uint8Array, level?: number) {
