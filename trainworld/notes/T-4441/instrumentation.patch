@@ -1,0 +1,553 @@
+diff --git a/trainworld/sim/src/track/mod.rs b/trainworld/sim/src/track/mod.rs
+index e49be7927..b0e3d570e 100644
+--- a/trainworld/sim/src/track/mod.rs
++++ b/trainworld/sim/src/track/mod.rs
+@@ -53,6 +53,7 @@ pub mod net;
+ pub mod overtake;
+ pub mod params;
+ pub mod perdir;
++pub mod ph;
+ pub mod profile;
+ pub mod related;
+ pub mod roads;
+diff --git a/trainworld/sim/src/track/ph.rs b/trainworld/sim/src/track/ph.rs
+new file mode 100644
+index 000000000..c4040804f
+--- /dev/null
++++ b/trainworld/sim/src/track/ph.rs
+@@ -0,0 +1,75 @@
++//! T-4441 measuring only (never lands): phase timers for the train work after a click, read through
++//! `TrackApi::take_phases`. Each name sums its time and counts its calls since the last take; a name met
++//! while the weekend settle runs (`set_weekend`) is kept apart, marked "we:".
++
++use std::cell::{Cell, RefCell};
++
++thread_local! {
++    static PH: RefCell<Vec<(&'static str, bool, f64, u32)>> = const { RefCell::new(Vec::new()) };
++    static WEEKEND: Cell<bool> = const { Cell::new(false) };
++}
++
++#[cfg(not(target_arch = "wasm32"))]
++pub fn now() -> f64 {
++    use std::sync::OnceLock;
++    use std::time::Instant;
++    static T0: OnceLock<Instant> = OnceLock::new();
++    T0.get_or_init(Instant::now).elapsed().as_secs_f64() * 1000.0
++}
++
++#[cfg(target_arch = "wasm32")]
++mod js {
++    use wasm_bindgen::prelude::*;
++    #[wasm_bindgen]
++    extern "C" {
++        #[wasm_bindgen(js_namespace = performance, js_name = now)]
++        pub fn ph_now() -> f64;
++    }
++}
++
++#[cfg(target_arch = "wasm32")]
++pub fn now() -> f64 {
++    js::ph_now()
++}
++
++/// Adds the time since `t0` to `name`.
++pub fn add(name: &'static str, t0: f64) {
++    put(name, now() - t0, 1);
++}
++
++/// Adds the time since `*tk` to `name` and restarts `*tk`.
++pub fn lap(name: &'static str, tk: &mut f64) {
++    let t = now();
++    put(name, t - *tk, 1);
++    *tk = now();
++}
++
++/// Adds `n` to `name`'s count with no time (a size: lines, rounds).
++pub fn count(name: &'static str, n: usize) {
++    put(name, 0.0, n as u32);
++}
++
++fn put(name: &'static str, d: f64, n: u32) {
++    let w = WEEKEND.with(|w| w.get());
++    PH.with(|p| {
++        let mut p = p.borrow_mut();
++        if let Some(e) = p.iter_mut().find(|e| e.0 == name && e.1 == w) {
++            e.2 += d;
++            e.3 += n;
++        } else {
++            p.push((name, w, d, n));
++        }
++    });
++}
++
++pub fn set_weekend(on: bool) {
++    WEEKEND.with(|w| w.set(on));
++}
++
++/// `name=ms*calls;...` since the last take, emptied.
++pub fn take() -> String {
++    PH.with(|p| {
++        let v = std::mem::take(&mut *p.borrow_mut());
++        v.iter().map(|(k, w, d, n)| format!("{}{k}={d:.3}*{n}", if *w { "we:" } else { "" })).collect::<Vec<_>>().join(";")
++    })
++}
+diff --git a/trainworld/sim/src/track/service.rs b/trainworld/sim/src/track/service.rs
+index db08855db..0f711e312 100644
+--- a/trainworld/sim/src/track/service.rs
++++ b/trainworld/sim/src/track/service.rs
+@@ -1245,6 +1245,7 @@ impl Service {
+         if !capacity && rebuilt.is_empty() && rescheduled.is_empty() {
+             return ServiceDirty::default();
+         }
++        let mut tk = super::ph::now();
+         let sorted = |v: &[u32]| {
+             let mut v = v.to_vec();
+             v.sort_unstable();
+@@ -1296,7 +1297,9 @@ impl Service {
+                 demand.push(l);
+             }
+         }
++        super::ph::lap("us.build_lines", &mut tk);
+         self.note_moved(net, rebuilt, &old_geo, touched.map(|t| t.0));
++        super::ph::lap("us.note_moved", &mut tk);
+         // Lines whose holds may have changed: all of them after the global pass; after the
+         // incremental one, the owners of resources rebuilt or re-solved, plus every rebuilt or
+         // rescheduled line.
+@@ -1316,7 +1319,9 @@ impl Service {
+                 path_edges.dedup();
+                 path_nodes.sort_unstable();
+                 path_nodes.dedup();
++                super::ph::lap("us.paths", &mut tk);
+                 let mut a = self.cap.update(net, &self.lines, &path_edges, &path_nodes, rescheduled);
++                super::ph::lap("us.cap_update", &mut tk);
+                 for &l in rebuilt.iter().chain(rescheduled) {
+                     if let Some(x) = a.get_mut(l as usize) {
+                         *x = true;
+@@ -1325,7 +1330,10 @@ impl Service {
+                 a
+             }
+         };
++        super::ph::count("us.affected", affected.iter().filter(|&&a| a).count());
++        super::ph::lap("us.cap_rest", &mut tk);
+         let holds = capacity::holds_for(&self.cap, &self.lines, touched.map(|_| &affected[..]));
++        super::ph::lap("us.holds_for", &mut tk);
+         for (l, ls) in self.lines.iter_mut().enumerate() {
+             if !ls.ok || !affected[l] {
+                 continue;
+@@ -1375,6 +1383,7 @@ impl Service {
+                 }
+             }
+         }
++        super::ph::lap("us.profiles", &mut tk);
+         // One step: lines sharing a resource with a line that changed.
+         let mut seed = vec![false; self.lines.len()];
+         for &l in rebuilt.iter().chain(rescheduled) {
+@@ -1396,6 +1405,7 @@ impl Service {
+         self.note_changed(rebuilt);
+         self.note_changed(rescheduled);
+         self.note_changed(&d.recomputed);
++        super::ph::lap("us.shared_changed", &mut tk);
+         d
+     }
+ 
+diff --git a/trainworld/sim/src/track/timing.rs b/trainworld/sim/src/track/timing.rs
+index ae7be064f..1a03fe8fc 100644
+--- a/trainworld/sim/src/track/timing.rs
++++ b/trainworld/sim/src/track/timing.rs
+@@ -229,14 +229,20 @@ pub fn retime(net: &Network, svc: &mut Service) {
+     }
+     #[cfg(not(target_arch = "wasm32"))]
+     let t0 = std::time::Instant::now();
++    let mut tk = super::ph::now();
+     let n = svc.lines.len();
+     let mut cl = clusters(svc);
++    super::ph::lap("rt.clusters", &mut tk);
++    super::ph::count("rt.n_clusters", cl.len());
++    super::ph::count("rt.lines_in_clusters", cl.iter().map(|c| c.lines.len()).sum());
+     let lats: Vec<Option<Lattice>> = {
+         let mut on = vec![false; n];
+         cl.iter().flat_map(|c| &c.lines).for_each(|&l| on[l as usize] = true);
+         (0..n).map(|l| if on[l] { svc.lattice(net, l).map(|x| weekday(&x)) } else { None }).collect()
+     };
++    super::ph::lap("rt.lattices", &mut tk);
+     let keys: Vec<Vec<u64>> = cl.iter_mut().map(|c| cluster_key(net, svc, c, &lats)).collect();
++    super::ph::lap("rt.keys", &mut tk);
+     let mut redo = vec![false; n];
+     let mut states: Vec<Vec<u64>> = cl.iter().map(|c| state(svc, &c.lines)).collect();
+     let mut stood: Vec<bool> = cl.iter().enumerate().map(|(i, c)| svc.timing_keys.get(&c.lines[0]).is_some_and(|(k, s)| *k == keys[i] && *s == states[i])).collect();
+@@ -246,9 +252,12 @@ pub fn retime(net: &Network, svc: &mut Service) {
+     if !svc.timing_keys.is_empty() {
+         check::skip_one(&mut stood);
+     }
++    super::ph::lap("rt.states", &mut tk);
+     for (c, _) in cl.iter().zip(&stood).filter(|x| !*x.1) {
+         c.lines.iter().for_each(|&l| redo[l as usize] = true);
+     }
++    super::ph::count("rt.clusters_redone", stood.iter().filter(|s| !**s).count());
++    super::ph::count("rt.lines_redone", redo.iter().filter(|&&r| r).count());
+     // a line in no cluster has no variants
+     let mut in_cl = vec![false; n];
+     cl.iter().flat_map(|c| &c.lines).for_each(|&l| in_cl[l as usize] = true);
+@@ -274,6 +283,7 @@ pub fn retime(net: &Network, svc: &mut Service) {
+         }
+         false
+     });
++    super::ph::lap("rt.clear_memo", &mut tk);
+     let mut built = Built { old, new: HashMap::new() };
+     // the waits and following losses of the clusters worked out again, each cluster's in its key's order
+     let res: Vec<usize> = cl.iter().zip(&stood).filter(|x| !*x.1).flat_map(|x| x.0.res.iter().copied()).collect();
+@@ -281,12 +291,16 @@ pub fn retime(net: &Network, svc: &mut Service) {
+         // (before the waits: a slower train waits for the faster ones as they run)
+         let lead = lead_in(net, svc, &lats, &mut built, &res);
+         install(svc, lead, &lats);
++        super::ph::lap("rt.lead_in", &mut tk);
+         let passing = passing_waits(net, svc, &lats, &mut built, &res);
+         install(svc, passing, &lats);
++        super::ph::lap("rt.passing", &mut tk);
+         // (before the following: a faster line timed behind a slower one reads its trains as they run)
+         floor(net, svc, &redo);
++        super::ph::lap("rt.floor", &mut tk);
+         let follow = following(net, svc, &lats, &mut built, &res);
+         install(svc, follow, &lats);
++        super::ph::lap("rt.following", &mut tk);
+     }
+     memo.extend(built.new);
+     svc.timing_memo = memo;
+@@ -303,6 +317,7 @@ pub fn retime(net: &Network, svc: &mut Service) {
+     svc.timing_keys = cl.iter().zip(keys).zip(states).map(|((c, k), s)| (c.lines[0], (k, s))).collect();
+     let moved: Vec<u32> = redone.iter().zip(&before).filter(|(&l, b)| svc.lines[l as usize].runs.iter().flat_map(|r| r.vars.iter()).ne(b.iter())).map(|x| *x.0).collect();
+     svc.note_changed(&moved);
++    super::ph::lap("rt.tail", &mut tk);
+     #[cfg(not(target_arch = "wasm32"))]
+     {
+         let has = |l: &u32| svc.lines[*l as usize].runs.iter().any(|r| r.vars.iter().any(|v| !v.is_empty()));
+diff --git a/trainworld/sim/src/track/wasm/edits.rs b/trainworld/sim/src/track/wasm/edits.rs
+index edcb777e6..816d11b5f 100644
+--- a/trainworld/sim/src/track/wasm/edits.rs
++++ b/trainworld/sim/src/track/wasm/edits.rs
+@@ -94,19 +94,27 @@ impl TrackApi {
+     /// waits in `owed_pending` for the next edit's result or `settle_owed`. Run first in every edit, undo, redo, trial
+     /// with services and reload, so each reads, pays and undoes as on the whole path.
+     pub(super) fn pay_owed(&mut self) {
++        use crate::track::ph;
++        let (t_po, mut tk) = (ph::now(), ph::now());
+         self.settled_running |= self.w.owes_trains();
+         let had = self.w.owes().then(|| {
+             let at = self.now;
+             let before = self.w.svc.before_edit(&self.w.net, at);
++            ph::lap("po.before_edit", &mut tk);
+             let had = line_car_value(&self.w);
++            ph::lap("po.car_value", &mut tk);
+             self.w.settle_owed();
++            ph::lap("po.settle_owed", &mut tk);
+             self.w.svc.note_changes(&self.w.net, &before, at);
++            ph::lap("po.note_changes", &mut tk);
+             had
+         });
+         // (or what a path that did not come here first worked out: no trains noted then, `settle_owed_here`)
+-        let Some(d) = self.w.take_owed_done() else { return };
++        let Some(d) = self.w.take_owed_done() else { ph::add("po.total", t_po); return };
++        let mut tk = ph::now();
+         let fleet = self.fleet;
+         let need = cars_needed(&self.w);
++        ph::lap("po.cars_needed", &mut tk);
+         let trains: f64 = (0..FLEETS).map(|k| need[k].saturating_sub(fleet[k]) as f64 * CAR_PRICES[k]).sum();
+         if trains > 0.0 {
+             self.cash -= trains;
+@@ -122,6 +130,13 @@ impl TrackApi {
+             Some(p) => crate::track::world::merge_dirty(p, d),
+             None => self.owed_pending = Some(d),
+         }
++        ph::lap("po.after", &mut tk);
++        ph::add("po.total", t_po);
++    }
++
++    /// T-4441 measuring only: the phase timers since the last call, `name=ms*calls;...`.
++    pub fn take_phases(&mut self) -> String {
++        crate::track::ph::take()
+     }
+ 
+     /// T-4272: the services answered edits owe, worked out (`pay_owed`): the clock worker's first step after their
+diff --git a/trainworld/sim/src/track/world.rs b/trainworld/sim/src/track/world.rs
+index ec7712dbc..b3b8e4af1 100644
+--- a/trainworld/sim/src/track/world.rs
++++ b/trainworld/sim/src/track/world.rs
+@@ -5,6 +5,7 @@
+ use super::capacity::ResKind;
+ use super::net::{path_edge, EdgeData, Extra, Issue, LineData, Network, NodeData, StationData, Weekend};
+ use super::params::*;
++use super::ph;
+ use super::service::{Service, ServiceDirty};
+ use super::twin::Twin;
+ 
+@@ -824,15 +825,23 @@ impl TrackWorld {
+     /// otherwise (an edit) only the lines off their fleet are (T-1787). Then count lines meeting at
+     /// a merge are put in step (T-2973) and settled again, until they hold.
+     fn settle_train_counts(&mut self, full: bool) -> Vec<u32> {
++        let mut tk = ph::now();
+         let mut affected = self.settle_unpaced(full);
++        ph::lap("stc.unpaced", &mut tk);
+         for _ in 0..PACE_ROUNDS {
+-            if !self.pace_merges(false) {
++            let pm = self.pace_merges(false);
++            ph::lap("stc.pace_merges", &mut tk);
++            if !pm {
+                 break;
+             }
+             affected.extend(self.settle_unpaced(full));
++            ph::lap("stc.unpaced", &mut tk);
+         }
+         self.pace_in.iter_mut().flatten().for_each(|p| p.fresh = false);
++        ph::set_weekend(true);
+         affected.extend(self.settle_weekend(full));
++        ph::lap("stc.weekend", &mut tk);
++        ph::set_weekend(false);
+         affected.sort_unstable();
+         affected.dedup();
+         affected
+@@ -1085,7 +1094,10 @@ impl TrackWorld {
+         let mut affected = vec![];
+         let first = self.net.line_trains.clone();
+         for round in 0..AUTO_ROUNDS {
++            let t_ac = ph::now();
+             let moved = self.auto_counts(round + 1 == AUTO_ROUNDS);
++            ph::add("su.auto_counts", t_ac);
++            ph::count("su.auto_rounds", 1);
+             affected.extend(self.settle_counts(full));
+             if !moved && round > 0 { break; }
+         }
+@@ -1093,7 +1105,10 @@ impl TrackWorld {
+         // trains it leaves waiting are trimmed from them as from any other line
+         self.settle_edited.clear();
+         // counts the full track would keep waiting at the ends are not bought
+-        if self.trim_auto() { affected.extend(self.settle_counts(full)); }
++        let t_ta = ph::now();
++        let trimmed = self.trim_auto();
++        ph::add("su.trim_auto", t_ta);
++        if trimmed { affected.extend(self.settle_counts(full)); }
+         affected.extend((0..self.net.line_count() as u32).filter(|&l| self.net.line_trains[l as usize] != first[l as usize]));
+         affected.sort_unstable(); affected.dedup(); affected
+     }
+@@ -1348,10 +1363,14 @@ impl TrackWorld {
+ 
+     /// The settle on the counts in `line_trains` (the weekends' too, `settle_weekend`).
+     fn settle_counts(&mut self, full: bool) -> Vec<u32> {
++        let (t_sc, mut tk) = (ph::now(), ph::now());
+         self.net.rates_settled = true;
+         let ids: Vec<u32> = (0..self.net.line_count() as u32)
+             .filter(|&l| self.net.line_ok(l) && self.net.line_trains[l as usize].is_some() && self.svc.lines[l as usize].ok).collect();
+         if ids.is_empty() { return vec![]; }
++        ph::count("sc.calls", 1);
++        ph::count("sc.ids", ids.len());
++        ph::count("sc.scope", self.settle_scope.as_ref().map_or(0, |s| s.iter().filter(|&&b| b).count()));
+         // a loop's trains split evenly between its two directions: an odd count rounds up (T-798)
+         for &id in &ids {
+             if self.svc.lines[id as usize].paired() {
+@@ -1376,7 +1395,9 @@ impl TrackWorld {
+         let mut seen: std::collections::VecDeque<(Vec<[f32; SLOTS]>, Vec<[f64; SLOTS]>, Vec<[Swing; SLOTS]>)> = Default::default();
+         let mut stop_at: Option<usize> = None;
+         let mut last_rates: Option<Vec<[f32; SLOTS]>> = None;
++        ph::lap("sc.start", &mut tk);
+         for round in 0..SETTLE_ROUNDS {
++            ph::count("sc.rounds", 1);
+             let trips: Vec<[f64; SLOTS]> = ids.iter().map(|&id| self.svc.lines[id as usize].round_trip).collect();
+             let rates: Vec<[f32; SLOTS]> = ids.iter().map(|&id| self.net.line_tph[id as usize]).collect();
+             match stop_at {
+@@ -1393,11 +1414,13 @@ impl TrackWorld {
+                     }
+                 }
+             }
++            ph::lap("sc.prep", &mut tk);
+             let mut active = [false; SLOTS];
+             let mut off = vec![[false; SLOTS]; ids.len()];
+             let keep = &mut kept_now;
+             keep.iter_mut().for_each(|k| *k = [false; SLOTS]);
+             let worst = self.svc.cap.bottlenecks(self.net.line_count());
++            ph::lap("sc.bottlenecks", &mut tk);
+             let scope = self.settle_scope.as_deref();
+             // per line and level: its shortfall, its sign, and whether full track holds it
+             let mut at = vec![[(0.0f64, 0i8, false); SLOTS]; ids.len()];
+@@ -1439,6 +1462,7 @@ impl TrackWorld {
+                     at[j][lev] = (short, sign, held);
+                 }
+             }
++            ph::lap("sc.classify", &mut tk);
+             if !back.is_empty() {
+                 let mut who: Vec<usize> = back.iter().map(|b| b.0).collect();
+                 who.sort_unstable();
+@@ -1460,6 +1484,7 @@ impl TrackWorld {
+                     if sign != 0 && !held && !keep[j][lev] && scope.map_or(true, |s| s[id as usize]) { active[lev] = true; }
+                 }
+             }
++            ph::lap("sc.keep", &mut tk);
+             if !active.contains(&true) { break; }
+             // A common 1% upward probe measures the sum of positive congestion derivatives.
+             // Dividing by this bound damps shared-track feedback even close to saturation.
+@@ -1475,6 +1500,7 @@ impl TrackWorld {
+             } else {
+                 Some(self.svc.probe_trips(&self.net, &ids))
+             };
++            ph::lap("sc.probe", &mut tk);
+             for (j, &id) in ids.iter().enumerate() {
+                 let i = id as usize;
+                 for lev in (0..SLOTS).filter(|&lev| active[lev]) {
+@@ -1497,6 +1523,7 @@ impl TrackWorld {
+                     }) as f32;
+                 }
+             }
++            ph::lap("sc.step", &mut tk);
+             // T-517: no track carries more trains than its capacity; a fleet's surplus waits at the ends
+             for lev in (0..SLOTS).filter(|&lev| active[lev]) {
+                 let want: Vec<(u32, f64)> = ids.iter().map(|&id| (id, self.net.line_tph[id as usize][lev] as f64)).collect();
+@@ -1504,9 +1531,11 @@ impl TrackWorld {
+                     self.net.line_tph[id as usize][lev] = got as f32;
+                 }
+             }
++            ph::lap("sc.fill", &mut tk);
+             let d = self.svc.update_scoped(&self.net, &[], &ids, true, Some((&[], &[])));
+             SETTLE_UPDATES.with(|c| c.set(c.get() + 1));
+             affected.extend(d.recomputed);
++            ph::lap("sc.update", &mut tk);
+             // T-747: a round that ends where it began repeats itself to the cap, ~12 ms a round on
+             // 143 lines
+             let still = ids.iter().enumerate().all(|(j, &id)| self.net.line_tph[id as usize] == rates[j] && self.svc.lines[id as usize].round_trip == trips[j]);
+@@ -1520,8 +1549,11 @@ impl TrackWorld {
+                 self.net.settle_kept.push((id, lev, self.net.line_tph[id as usize][lev].to_bits(), self.svc.lines[id as usize].round_trip[lev].to_bits(), self.net.kept_key(id as usize, lev)));
+             }
+         }
++        ph::lap("sc.tail", &mut tk);
+         affected.extend(ids.into_iter().filter(|&id| before[id as usize] != self.net.line_tph[id as usize]));
+-        affected.sort_unstable(); affected.dedup(); affected
++        affected.sort_unstable(); affected.dedup();
++        ph::add("sc.total", t_sc);
++        affected
+     }
+ 
+     /// T-517: whether line `id` runs over full track at level `lev` (`worst`: `bottlenecks`), so
+@@ -2111,11 +2143,16 @@ impl TrackWorld {
+     /// (`TrackApi::pay_owed`). Whether any were owed.
+     pub fn settle_owed(&mut self) -> bool {
+         let Some(o) = self.owed.take() else { return false };
++        let mut tk = ph::now();
+         let before = self.line_rates_all();
++        ph::lap("so.rates_before", &mut tk);
+         let solved = self.net.rest_solved;
+         let ahead = self.ahead(None);
++        ph::lap("so.ahead", &mut tk);
+         let dirty = self.services_after(&o.t, o.der, &ahead);
++        ph::lap("so.services_after", &mut tk);
+         let lines = rates_moved(&before, &self.line_rates_all());
++        ph::lap("so.rates_after", &mut tk);
+         if let Some(b) = self.undo.get_mut(o.first) {
+             b.step.1 = Rates { lines, rest_solved: (self.net.rest_solved, solved), unknown: false };
+         }
+@@ -2291,6 +2328,7 @@ impl TrackWorld {
+ 
+     /// The services an applied edit touched (`t`, `der`) worked out again: rebuilt, settled, placed and timed.
+     fn services_after(&mut self, t: &super::net::Touch, der: super::net::Derived, a: &Ahead) -> Dirty {
++        let mut tk = ph::now();
+         // T-3542: rows that split or join the slots work every line out again, as a load does
+         let old_slots = self.net.period_slot();
+         let reslotted = self.net.refresh_slots();
+@@ -2330,7 +2368,10 @@ impl TrackWorld {
+             let service = super::service::ServiceDirty { rebuilt: all.clone(), recomputed: all.clone(), shared: vec![], demand: all.clone() };
+             return Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources: (0..self.svc.cap.res.len() as u32).collect(), lines: all, service };
+         }
++        ph::lap("sa.pre", &mut tk);
+         let lines = self.lines_touched(t, &der, true);
++        ph::count("sa.lines_in_edit", lines.len());
++        ph::lap("sa.lines_touched", &mut tk);
+         let junction_touched = der.nodes.iter().any(|&n| self.net.node_ok(n) && self.net.node_ports[n as usize].n >= 3);
+         // A station touched with no line stopping there still changes passing lines' platforms.
+         let cap_dirty = !der.crossings.is_empty() || junction_touched || !t.stations.is_empty();
+@@ -2358,8 +2399,10 @@ impl TrackWorld {
+                 was_sharing.extend(us.iter().map(|u| u.line));
+             }
+         }
++        ph::lap("sa.was_sharing", &mut tk);
+         let settles = cap_dirty || !lines.is_empty() || !schedules.is_empty();
+         let before = settles.then(|| self.demand_view());
++        ph::lap("sa.demand_view", &mut tk);
+         // after the demand view, so what is put back counts for demand where it moved
+         let restored = set.map(|(set, solved)| {
+             let l = self.put_rates(&set);
+@@ -2371,8 +2414,11 @@ impl TrackWorld {
+             }
+             (set, l)
+         });
++        ph::lap("sa.restore", &mut tk);
+         let mut svc = self.svc.update_scoped(&self.net, &lines, &schedules, cap_dirty, Some((&der.edges, &cap_nodes)));
++        ph::lap("sa.update_scoped", &mut tk);
+         if settles { self.mirror_weekend(&lines, &schedules, cap_dirty, &der.edges, &cap_nodes); }
++        ph::lap("sa.mirror_weekend", &mut tk);
+         if let Some(before) = before {
+             // T-752: a switch between counts and headways never buys or sells a train
+             self.switching = a.switch;
+@@ -2380,7 +2426,11 @@ impl TrackWorld {
+             // `svc.shared` never names it, and its new count would never be settled into a rate (T-3704)
+             let mut seeds = lines.clone();
+             seeds.extend(svc.rebuilt.iter().chain(&svc.recomputed).chain(&svc.shared).chain(&t.weekend).chain(&schedules).chain(&was_sharing).copied());
++            ph::lap("sa.seeds", &mut tk);
+             self.settle_scope = Some(self.sharing_closure(&seeds));
++            ph::count("sa.scope_lines", self.settle_scope.as_ref().map_or(0, |s| s.iter().filter(|&&b| b).count()));
++            ph::count("sa.seeds_n", seeds.len());
++            ph::lap("sa.closure", &mut tk);
+             // the levels a line ran no trains at, or every level of a line the edit made (or brought back)
+             self.settle_edited = a.none_at(&changed, 0);
+             self.settle_edited_rest = a.none_at(&changed, 1);
+@@ -2402,6 +2452,7 @@ impl TrackWorld {
+                 });
+             }
+             self.settle_reshare_rest = self.settle_reshare.clone();
++            ph::lap("sa.edited_reshare", &mut tk);
+             let counts = match &restored {
+                 // T-3646: put back as settled, so not settled again: a settle from there is no
+                 // no-op where a line is kept off its fleet by having been left out of a scope (a
+@@ -2417,6 +2468,7 @@ impl TrackWorld {
+                 }
+                 None => self.settle_train_counts(false),
+             };
++            ph::lap("sa.settle_train_counts", &mut tk);
+             self.settle_scope = None;
+             self.settle_edited.clear();
+             self.settle_edited_rest.clear();
+@@ -2433,6 +2485,7 @@ impl TrackWorld {
+             }
+             svc.demand.sort_unstable(); svc.demand.dedup();
+             svc.recomputed.sort_unstable(); svc.recomputed.dedup();
++            ph::lap("sa.demand_moved", &mut tk);
+         } else if !t.weekend.is_empty() {
+             // T-3521: an edit of weekends alone settles only them, the weekdays left to the bit
+             self.settle_scope = Some(self.sharing_closure(&t.weekend));
+@@ -2447,18 +2500,23 @@ impl TrackWorld {
+         direct.sort_unstable();
+         direct.dedup();
+         // T-1925: the lines the edit changed take departure slots among the others
++        ph::lap("sa.direct", &mut tk);
+         self.place_departures(&direct);
++        ph::lap("sa.place_departures", &mut tk);
+         self.pin_twin_phases();
++        ph::lap("sa.pin_twin_phases", &mut tk);
+         // T-3735: and on weekends, with the lines whose weekends alone the edit changed
+         let mut weekend = direct.clone();
+         weekend.extend_from_slice(&t.weekend);
+         weekend.sort_unstable();
+         weekend.dedup();
+         self.place_weekend(&weekend);
++        ph::lap("sa.place_weekend", &mut tk);
+         if let Some((set, _)) = &restored {
+             self.put_phases(set);
+         }
+         self.retime();
++        ph::lap("sa.retime", &mut tk);
+         let mut resources = vec![];
+         for (r, res) in self.svc.cap.res.iter().enumerate() {
+             let on_track = (res.edge != u32::MAX && der.edges.binary_search(&res.edge).is_ok())
+@@ -2467,6 +2525,7 @@ impl TrackWorld {
+                 resources.push(r as u32);
+             }
+         }
++        ph::lap("sa.resources", &mut tk);
+         Dirty { edges: der.edges, nodes: der.nodes, crossings: der.crossings, resources, lines: direct, service: svc }
+     }
+ 
