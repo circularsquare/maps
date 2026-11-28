@@ -174,8 +174,8 @@ checks (smoke, perf_bench, strings) current meanwhile; after a big batch of land
 - Daily: `tools/ops/check_resources.py` (read-only, about 2 minutes); every flagged line (OVER, HIGH, SOON, MISSING)
   goes in that day's report to her with what docs/ops-checks.md says to do. Last run: 2026-11-28 03:57 UTC; update it
   when you run it.
-- **Non-default settings check** (T-4426): after cpu, memory, loading or worker changes, about weekly, at most daily. Last run: never;
-  update it when you run it.
+- **Non-default settings check** (T-4426): after cpu, memory, loading or worker changes, about weekly, at most daily. Run `node trainworld/checks/settings-matrix.mjs`
+  (about 5 minutes, 3 cores, its own Vite); it logs each full run to `notes/settings-check-ledger.jsonl`, refuses within a day of the last and warns within 7. `--last` says when it ran.
 - **Gemini for adversarial review only** (her 11-27), at release prep and on every big design before it's built
   (11-24): `tools/gemini_audit.py --brief <file> --out <file>` (Gemini 4 Neon medium, her pick). The brief names a
   diff file under artifacts/trainworld/gemini/ and the task's Goal: "try to break it". The agent acting on a finding
