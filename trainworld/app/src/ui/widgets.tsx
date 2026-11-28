@@ -479,13 +479,13 @@ const SHOW_MODES: [TransitMode, () => JSX.Element, string][] = [
   ["ferry", Icon.ferry, MODE_ICON_COLOURS.ferry],
 ];
 
-/** T-4400, T-4406, T-4423: a button per kind of line, white with its icon in the mode's colour while drawn; a click hides or shows it. */
+/** T-4400, T-4406, T-4423: a button per kind of line, lit in the mode's colour like the level buttons while drawn, pale while hidden; a click hides or shows it. */
 export function ModeToggles({ hidden, onToggle }: { hidden: ReadonlySet<TransitMode>; onToggle: (m: TransitMode) => void }) {
   return (
     <div class="group mode-toggles">
       {SHOW_MODES.map(([m, I, c]) => (
         <button key={m} class={"btn icon" + (hidden.has(m) ? "" : " on")}
-          style={{ "--lc": c }}
+          style={{ "--lc": c, "--lk": inkOn(c) }}
           data-tip={transitName(m)} aria-label={transitName(m)}
           aria-pressed={!hidden.has(m)} onClick={() => onToggle(m)}><I /></button>
       ))}
