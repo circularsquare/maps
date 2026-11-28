@@ -354,6 +354,7 @@ impl IntercityApi {
         let mut walks: Vec<(usize, f32)> = Vec::with_capacity(K);
         let comp = station_components(&build_graph(&net0, &self.base));
         let on_train = on_train(&net0);
+        let reach = train_reach(&net0);
         // T-2216 stage 2: a zone's sites walk and ride only to stations on its land (`zone_land`; a
         // station's is its nearest site's), as the local layer between land parts
         let st_land = zone_lands_on().then(|| m.station_lands(&net0));
@@ -430,7 +431,7 @@ impl IntercityApi {
         for mm in cw_home.iter_mut().chain(cw_walk.iter_mut()).chain(cw_work.iter_mut()).chain(ew.iter_mut()) {
             at_beta(mm, beta_c, theta);
         }
-        let lists = |maps: Vec<BTreeMap<usize, f32>>, positive: bool| -> Vec<Vec<(usize, f32)>> { maps.into_iter().map(|mm| access_list(mm, positive, &comp, &on_train)).collect() };
+        let lists = |maps: Vec<BTreeMap<usize, f32>>, positive: bool| -> Vec<Vec<(usize, f32)>> { maps.into_iter().map(|mm| access_list(mm, positive, &comp, &on_train, &reach)).collect() };
         self.access = lists(weights, false);
         self.access_work = lists(work, false);
         self.access_c = if commuting { lists(cw_home, true) } else { vec![] };

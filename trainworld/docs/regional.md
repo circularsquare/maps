@@ -258,9 +258,11 @@ on routed drives.
 
 Origin access is population-weighted; destination access uses population and jobs. Each site offers
 nearby stations through the local layer's walk and, where it applies, rides (5.3). Each zone end
-keeps its 8 best-weighted stations, then up to 10 in all, the best station of each track component
-none of those is on (an inter-city line not linked to a city's metro), best first; a station only
-bus routes or lines with no trains stop at takes no such slot [T-1506]. The longer trips, commutes and outings between zones and the trip explorer use the same
+keeps its 8 best-weighted stations, then up to 10 in all, best first: the best station of each track
+component none of those is on (an inter-city line not linked to a city's metro) [T-1506], then the
+best station of a line longer along its stops than any line the list has (an inter-city line the metro
+does reach, whose own station a zone of many metro stops would otherwise drop, sending every long trip
+by metro to it) [T-4567]; a station only bus routes or lines with no trains stop at takes neither slot. The longer trips, commutes and outings between zones and the trip explorer use the same
 lists. They feed the common strategy graph. Local feeder lines, transfers and the
 intercity service receive actual loads and boardings. No express-only route or station-city
 affiliation bypasses the player's local network.

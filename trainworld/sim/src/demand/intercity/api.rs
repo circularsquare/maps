@@ -125,13 +125,15 @@ pub(super) fn at_beta(m: &mut BTreeMap<usize, f32>, beta: f32, theta: f32) {
         *v = (*v as f64).powf(p) as f32;
     }
 }
-/// An access list's stations: its `ACCESS_TOP` best, then (T-1506) up to `ACCESS_MAX` in all, the
-/// best station of each track component none of those is on (`on_train`: a station some train line
-/// stops at). Without it a city of many metro lines filled the list with metro stations and an
-/// inter-city station not linked to the metro was in no zone's list.
+/// An access list's stations: its `ACCESS_TOP` best, then up to `ACCESS_MAX` in all, best first:
+/// (T-1506) the best station of each track component none of those is on (`on_train`: a station some
+/// train line stops at), then (T-4567) the best station of a line reaching farther than any of
+/// theirs (`reach`, `train_reach`). Without the first a city of many metro lines filled the list with
+/// metro stations and an inter-city station not linked to the metro was in no zone's list; without the
+/// second, linking it to the metro dropped it again, and every long trip rode the metro to it.
 pub(crate) const ACCESS_TOP: usize = 8;
 pub(crate) const ACCESS_MAX: usize = 10;
-pub(super) fn access_list(weights: BTreeMap<usize, f32>, positive: bool, comp: &[u32], on_train: &[bool]) -> Vec<(usize, f32)> {
+pub(super) fn access_list(weights: BTreeMap<usize, f32>, positive: bool, comp: &[u32], on_train: &[bool], reach: &[f32]) -> Vec<(usize, f32)> {
     let mut v: Vec<_> = weights.into_iter().filter(|e| !positive || e.1 > 0.).collect();
     v.sort_by(|a, b| b.1.total_cmp(&a.1));
     if v.len() <= ACCESS_TOP {
@@ -139,16 +141,45 @@ pub(super) fn access_list(weights: BTreeMap<usize, f32>, positive: bool, comp: &
     }
     let rest = v.split_off(ACCESS_TOP);
     let mut comps: Vec<u32> = v.iter().map(|e| comp[e.0]).collect();
+    let mut left = vec![];
     for e in rest {
         if v.len() >= ACCESS_MAX {
-            break;
+            return v;
         }
         if on_train[e.0] && !comps.contains(&comp[e.0]) {
             comps.push(comp[e.0]);
             v.push(e);
+        } else {
+            left.push(e);
+        }
+    }
+    let mut far = v.iter().map(|e| reach[e.0]).fold(0f32, f32::max);
+    for e in left {
+        if v.len() >= ACCESS_MAX {
+            break;
+        }
+        if on_train[e.0] && reach[e.0] > far {
+            far = reach[e.0];
+            v.push(e);
         }
     }
     v
+}
+/// T-4567: per station, the length of the longest line with trains stopping there (`on_train`'s
+/// lines), along its stops in the network's units; 0 where none does.
+pub(super) fn train_reach(net: &crate::demand::network::Network) -> Vec<f32> {
+    let mut out = vec![0f32; net.n_stations()];
+    for l in 0..net.n_lines() {
+        if net.bus_line(l) || net.line_headway_min[l].iter().all(|h| !h.is_finite()) {
+            continue;
+        }
+        let stops = net.stops(l);
+        let len: f32 = stops.windows(2).map(|w| (net.st_x[w[1] as usize] - net.st_x[w[0] as usize]).hypot(net.st_y[w[1] as usize] - net.st_y[w[0] as usize])).sum();
+        for s in stops.iter().copied().chain(net.back_only(l)) {
+            out[s as usize] = out[s as usize].max(len);
+        }
+    }
+    out
 }
 
 /// T-409: the pack's own data is shared (`Rc`) by every market `beside` it; the rest is one

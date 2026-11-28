@@ -118,8 +118,8 @@ composition, so opening one parses its packs and visits no pair.
 `set_network_ll` takes stations as longitude and latitude; each place's sites see them in the
 place's own frame for access and rides (each place on its own, so its figures never depend on which
 other packs are open), the graph in the first place's. Each zone end's access list holds up to 10
-stations, its 8 best and then a slot each for track none of those is on (`access_list`,
-T-1506, [regional.md](regional.md) 5.2), so the market's station-pair loop is at most 10 x 10 a
+stations, its 8 best and then a slot each for track none of those is on and for a line longer than
+any of theirs (`access_list`, T-1506, T-4567, [regional.md](regional.md) 5.2), so the market's station-pair loop is at most 10 x 10 a
 zone pair. Each pass goes through the destination zones a window at a time, holding route costs,
 fare km and trips only for the stations the window's zones reach, never a station x station table
 (T-1545, [demand-runtime.md](demand-runtime.md) "The market's pass by a window of zones"). Its rides reserve the same way one level down: past the 6 cheapest lines, up to 2 more
