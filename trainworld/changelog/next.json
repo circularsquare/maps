@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c024",
+      "text": "fixed new lines disappearing when zoomed in, and deleted lines or blueprints still showing zoomed out",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4508",
+      "by": "linezoom",
+      "at": "2026-11-28T01:43:29Z",
+      "rev": 1,
+      "area": "schematic",
+      "fix": true
+    },
+    {
       "id": "c023",
       "text": "trips for a city selected while a game loads are calculated 2x faster on one core",
       "edited": null,

@@ -328,17 +328,36 @@ def _is_protected(path):
     return bool(PROTECTED.search(p)) and not p.lower().endswith(OPEN_SUFFIXES)
 
 
+LANDING = re.compile(r"^\s*(?:\S*(?:node|python(?:\.exe)?)(?:\s+-\S+)*\s+)?(?:\S*[/\\])?(?:agent-tree\.mjs|snap8800\.py)\b|^\s*git\b", re.I)
+
+
+def _mask_quotes(cmd):
+    """The command with the inside of every quoted string blanked (same length), so a commit message that
+    says 'patch' or names a path is not read as a command."""
+    return re.sub(r"'[^']*'|\"[^\"]*\"", lambda m: m.group(0)[0] + "_" * (len(m.group(0)) - 2) + m.group(0)[-1], cmd)
+
+
 def _shell_edits_code(cmd):
     """A shell command that writes into protected code: a redirect to it, or an editing/copying/removing
-    command naming it (the file's .md/.txt names don't count)."""
-    for m in re.finditer(r">>?\s*['\"]?([^\s'\"|;&]+)", cmd):
-        if PROTECTED_TOKEN.search(m.group(1)) and _is_protected("/" + m.group(1).replace("\\", "/")):
-            return True
-    if not SHELL_WRITES.search(cmd):
-        return False
-    for tok in re.findall(r"[^\s'\"|;&<>]*(?:trainworld|isochrone)[/\\](?:app|sim|pipeline|checks)[/\\][^\s'\"|;&<>]*", cmd, re.I):
-        if _is_protected("/" + tok.replace("\\", "/")):
-            return True
+    command naming it (the file's .md/.txt names don't count). Judged per command of a ; && | chain, on the
+    program and its verbs outside quotes; landing commands (agent-tree.mjs, snap8800.py, git) are never refused."""
+    masked = _mask_quotes(cmd)
+    start = 0
+    for m in list(re.finditer(r"&&|\|\||;|\||\n", masked)) + [None]:
+        end = m.start() if m else len(masked)
+        seg_m, seg = masked[start:end], cmd[start:end]
+        start = m.end() if m else end
+        if LANDING.search(seg_m):
+            continue
+        for r in re.finditer(r">>?\s*['\"]?([^\s'\"|;&]+)", seg_m):
+            tgt = seg[r.start(1):r.end(1)]
+            if PROTECTED_TOKEN.search(tgt) and _is_protected("/" + tgt.replace("\\", "/")):
+                return True
+        if not SHELL_WRITES.search(seg_m):
+            continue
+        for tok in re.findall(r"[^\s'\"|;&<>]*(?:trainworld|isochrone)[/\\](?:app|sim|pipeline|checks)[/\\][^\s'\"|;&<>]*", seg, re.I):
+            if _is_protected("/" + tok.replace("\\", "/")):
+                return True
     return False
 
 

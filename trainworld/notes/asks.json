@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-27-23",
+    "title": "Single-train nudge: three calls",
+    "text": "T-4511 (notes/T-4511.md): 1 range: until the train can't make its next departure from the far end or nears its neighbours (about 2 min each way), or half a headway with the map borrowing an unpaid train? (the limit) 2 separate weekend moves with a Weekdays/Weekends switch? (yes) 3 build now rather than wait for Exact mode? (now)",
+    "since": "2026-11-27",
+    "by": "maps-dd"
+  }
+]

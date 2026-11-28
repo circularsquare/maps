@@ -266,6 +266,7 @@ artifacts/trainworld/T-4120/.
 - 2026-10-10 (Anita, T-087): A train's fill is a gauge: half full when seats are taken, full at crush, red rim over, showing the busiest hour by default. Fill in proportion to crush and colouring trains by load were rejected.
 
 ## Saves and performance
+- 2026-11-27 (T-4449): Retime plans a run's holds once and lays held hops from their start, offset by when the train takes them. Lie: last-bit differences in timetables (Asia: 908 of 931 changed rows under 1e-9 s, 12 slot rows up to 0.024 s, one line's variants reordered); NYC to the bit. notes/T-4449.md
 - 2026-11-27 (Anita, T-4267): Edit-speed work stops at 50 ms an action ("pause any edit speed work for actions that already take under 50ms"): a stage whose only target is an action already under 50 ms on her Asia save, as felt in the page, waits at P4. notes/T-4267.md
 - 2026-11-27 (T-4501): During a game load the focus pool moves from the zone in view, once it has shown it a round, to a city selected in the city view that has no figures yet. Lie: the zone in view's later rounds come from the main pool, later. notes/T-4501.md
 - 2026-11-27 (T-4396): A load on one worker that runs out of memory retries once on its own, with intercity trips off, else in less detail, by changing the real Settings toggles so the player can turn them back. notes/T-4396.md

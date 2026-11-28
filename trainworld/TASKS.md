@@ -178,7 +178,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4097 [P1] {L:edit-speed} Edits feel instant on big worlds
   - Context: You, 11-25: "the game reworking the whole network after each edit is really the target here and everything else is kinda just flavor". 11-25 landed: Asia later clicks 144-360 ms (were 618-2,156), page and clickable map by change (T-4150, T-4214 done). Parts left: T-4153 (drawn network), T-4291, T-4299, T-4300 (worker), T-4272 (your answer).
   - Goal: Edit speed measured step by step on a big world (when it last felt instant, what slowed it); edits shown within about 100 ms, none of the sim's work dropped.
-- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line (taking, 2026-11-27, agent stage11)
+- T-4153 [P1] {L:edit-speed} Redraw only the cut stretch of a line
   - Context: You, 11-23: "this is the entire issue". Stage 10 landed 11-27: per-line passes redone only for the lines an edit changed (their parts 41 to 31 ms on your Asia save). By its parts a trunk station now builds in about 92-96 ms, not yet timed on a quiet machine. Left: train speeds (14-53 ms), the bands' last whole-line copies.
   - Goal: A station on a line's track on Asia under 100 ms of network build, timed on a quiet machine; train speeds redone only for lines that changed.
   - Other: notes/T-4153.md "Stage 10"
@@ -198,7 +198,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
   - Goal: The board marks only your edits; agents' rewords keep their own record.
   - Other: notes/T-4196.md
-- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work (taking, 2026-11-27, agent clickwait)
+- T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
   - Context: Stage 3 landed 11-25: the panels' `today` with the clock running costs 3-6 ms on your Asia save (was about 107). Click run on Asia: first 46 ms, later 37, 170, 272. Left: which follow-up piece later clicks wait behind (no per-click laps yet); the page's click hold stays (unsafe to drop).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
@@ -250,10 +250,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage A1, your 11-27 yes. A later click on running track first works out the click before's train work, most of its wait on your Asia save (about 150 ms in Node, T-4441). Overlaps T-4281 (clickwait): read its notes first.
   - Goal: A quick run settles its trains once, after the answers; later clicks under 100 ms once T-4444 to T-4446 and T-4449 land.
   - Other: notes/T-4267.md
-- T-4444 [P1] {L:edit-speed} {after:T-4309} Track capacity updated by what an edit touched (taking, 2026-11-27, agent capupdate)
-  - Context: T-4267 stage C2. After a click the track capacity is worked out again twice, for weekdays and for the weekend service: 62 of the 152 ms train work on your Asia trunk (T-4441), 40 of it going over every edge, node and track resource.
-  - Goal: Both updates find what the edit changed by index; together under 25 ms in T-4441's run (62 there).
-  - Other: notes/T-4267.md; notes/T-4441.md
+- T-4504 [P1] {L:edit-speed} {after:T-4444} Overtake plans worked out faster after an edit (taking, 2026-11-27, agent planbest)
+  - Context: T-4444 took the loops over every edge, node and resource out of the capacity update (6 of its 40 ms on your Asia trunk). The rest is the overtake plans of the lines the edit moved, 30-36 ms, 44 `Plan::best` calls of 0.8 ms.
+  - Goal: Both capacity updates under 25 ms in T-4441's run (about 55 now), the same outcomes to the bit.
+  - Other: notes/T-4444.md
 - T-4445 [P2] {L:edit-speed} {after:T-4444} The weekend work costs only the edited lines
   - Context: T-4267 stage C3. After a click the weekend service copy and its departures take 49 of the 152 ms train work on your Asia trunk (T-4441), for 3 lines; most of it goes over every line, some of it three times.
   - Goal: Under 10 ms in T-4441's run (49 there), the same weekend timetables to the bit.
@@ -270,10 +270,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Paused: already under 50 ms (her 11-27). Part of a click's confirm, about 45 ms. T-4267 stage A8, from Gemini's review. Every edit searches the track again for each line with a way back of its own, and on saves with quad-track twins plans every twin again.
   - Goal: Only the lines whose searched track or twin route the edit touched; both under 1 ms in Node on Asia.
   - Other: notes/T-4267.md
-- T-4449 [P1] {L:edit-speed} Retime costs less for each line it redoes (taking, 2026-11-27, agent retime)
-  - Context: T-4267 stage C5. After a click the timetables of the lines sharing waits with it are worked out again: 48 of the 152 ms train work on your Asia trunk (T-4441), 35 of it the waits at passing stations, about 12 ms a line.
-  - Goal: Retime under 15 ms in T-4441's run (48 there), with the same timetables or the shift said.
-  - Other: notes/T-4267.md section 4 Part C; notes/T-4441.md
 - T-4451 [P2] {L:edit-speed} {after:T-4444 to T-4446 and T-4449} Delete line and breaking deletes answered at once
   - Context: T-4267 stage A2. On your Asia save Delete line is answered in 526-703 ms and a delete that breaks a line in 2.2-2.6 s: neither gets a map patch, so both wait for the whole state.
   - Goal: Both answered under 100 ms on Asia.
@@ -330,7 +326,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage C7, your 11-27 yes (it can leave a far line a train up or down until an edit reaches it). Built only if T-4444 to T-4446 and T-4449 leave a click on edge 1818 (150 lines in reach; T-4441 measured 1482, 3 lines) over about 30 ms of train work in the page.
   - Goal: Later clicks on the trunk under 100 ms with the far lines settled in the next piece.
   - Other: notes/T-4267.md
-- T-4501 [P1] {L:loading} A selected city waits for the load on one core (taking, 2026-11-27, agent cityload)
+- T-4501 [P1] {L:loading} A selected city waits for the load on one core
   - Context: You, 11-27: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core." Changed (tree cityload): during a game load the second worker takes the selected city after the city in view. New York save, one worker: New Haven 23 s after the click, was 53 s.
   - Goal: You say on 8800 that a selected city loads fast enough; else stage 2 in the notes.
   - Other: notes/T-4501.md
@@ -438,18 +434,14 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4433 [P2] {L:memory} Phone solving worker keeps 100 MB after a load (taking, 2026-11-27, agent phoneworker)
-  - Context: On an emulated iPad (NYC save, one solving worker that is the aux worker too, T-4103) a job just after the load's final takes its heap in use from 66 to 166 MB; the solve itself peaks at 66. A WASM memory keeps its highest size, so that stays all game. Which job was not traced.
-  - Goal: That job named and its peak brought near the solve's, rail trips unchanged.
-  - Other: notes/T-4370.md
-- T-4434 [P3] {L:memory} Page garbage while trains run (taking, 2026-11-27, agent framegarbage)
-  - Context: Safari collects late, so garbage piles up: with the clock running the web process swings about 240 MB on an emulated iPad after T-4370. Biggest allocators left: boarding queues and station crowds, speed colours made as text per bus point, text formatting each frame, the clock worker's money every 250 ms.
-  - Goal: The running swing halved on the NYC save in WebKit, the map unchanged.
-  - Other: notes/T-4370.md
 - T-3708 [P3] {L:memory} Place rows lost in a worker restart wait
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
   - Other: notes/T-2136.md
+- T-4505 [P3] {L:memory} Old game's zones held through the next load
+  - Context: By reading the code (T-4433): no zone closes in a load's hold (`sweep`), so a save loaded in a running game is solved with the old game's unreached zones and their periods still open in every solving worker, to its final. On a phone that adds to the one worker's peak. Not measured.
+  - Goal: Measured on an emulated phone (a Tokyo game, then the NYC save); if it shows, those zones closed once the save's reach is known, rail trips unchanged.
+  - Other: notes/T-4433.md
 - T-3550 [P3] {L:edit-speed} Shared-track edits still over 0.5 s on the windrush save
   - Context: Stage 1 landed 11-20: crawl speeds solved by a secant, London's typical train-count edit 0.95 to 0.23 s natively. Still 22 of 143 lines pass 0.5 s at every level, windrush edits take 1.2-2.3 s in the browser, and a gap of 0.4-1.9 s outside the timed parts is in both builds, cause not measured. Folds in T-1794 and T-1936.
   - Goal: London and windrush train-count and headway edits under 0.5 s in the browser, the gap explained or gone; figures within the pacing's own noise (T-3388's tolerance).
@@ -596,10 +588,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4440 [P1] {L:loading} The first load's card shrank and can't be moved or closed (taking, 2026-11-27, agent loadcard)
-  - Context: You, 11-27: "we seem to have made it a lot smaller horizontally / less margin, which i dont want. also it doesnt actually seem to be movable or dismissable. theres no x in the corner. and i cant drag it to the side." From T-4346's x and header drag.
-  - Goal: The card has its width and margins from before T-4346, and its x and drag work when the load reaches them.
-  - Other: notes/T-4440.md
+- T-4509 [P3] {L:map-look} Check zooming in and out between edits
+  - Context: T-4508's two bugs (new lines vanishing zoomed in, deleted ones staying zoomed out) went unseen for two days: the `?patch=check` comparisons exist, but no browser check edits while zoomed out and then zooms in, or deletes the last line in the draw order.
+  - Goal: A standing check runs both sequences with `?patch=check` and fails on any check error.
+  - Other: notes/T-4508.md "Game run"
 - T-4401 [P3] {L:map-look} Stray stroke joins two lines zoomed out
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
@@ -1110,7 +1102,13 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
   - Other: research/late-game-spending.md C.
-- T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows (taking, 2026-11-27, agent modesdesign)
+- T-4510 [P2] {L:timetables} Offset column behind a toggle, with weekend offsets (taking, 2026-11-27, agent offsettoggle)
+  - Context: You, 11-27, on T-3742's nudges: "for all trains lets have the offset column be toggleable with an icon button that represents like shifting. default off / not shown. also why dont we have separate offsets for weekends?"
+  - Goal: The Offset column hidden by default behind a shift icon button; weekend rows take their own offsets.
+- T-4511 [P2] {L:timetables} Nudge single trains (taking, 2026-11-27, agent nudgesingle)
+  - Context: You, 11-27: "i was thinking we nudge individual trains"; T-3742 built offsets for a whole schedule row.
+  - Goal: A design to you first: how a player picks a train or departure, how far it moves, how it holds through edits.
+- T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows
   - Context: Your pad, 11-25: most players won't care about every mode as niche ones come (cable cars, monorail, maglev, maybe planes). Your design: a gear on the construct panel to hide or show modes; by default it shows today's (bus and ferry), with checkboxes for cable cars and monorail.
   - Goal: That gear and its setting, kept per player; a mode switched off and never built shows up nowhere, build menus included (you, 11-27). Needed before the next mode ships.
   - Other: stages T-4479 to T-4482; design notes/T-4334.md
@@ -1409,10 +1407,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 ## Held features
 
 ## Code health
-- T-4506 [P1] {L:small-fixes} Smoke's patched rows check fails on an edge's cost (taking, 2026-11-27, agent edgecost)
-  - Context: Smoke on master 888dc9c73 logged "T-4214 check: the patched rows differ from the state's: edges 2: cost" on the real NYC save; the last passing smoke was b5697efed.
-  - Goal: The patch and the next state give every edge the same cost, and the check passes.
-  - Other: notes/T-4506.md
 - T-3699 [P3] {L:solve-speed} Goals wait for good if the intercity result never comes
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
