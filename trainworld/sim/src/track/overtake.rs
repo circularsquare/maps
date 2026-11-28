@@ -217,6 +217,11 @@ impl Plan {
         key.extend(self.next.iter().map(|&x| x as u64));
     }
 
+    /// T-4444: the same two runs over the same stretch, at the same times, so every outcome is the other plan's.
+    pub fn same_as(&self, o: &Plan) -> bool {
+        self.fast == o.fast && self.slow == o.slow && self.start == o.start && self.at == o.at && self.spacing == o.spacing && self.points == o.points && self.next == o.next
+    }
+
     /// The next passing point after point `p`, or the stretch's end.
     pub fn next_passing(&self, p: usize) -> usize {
         self.next[p]

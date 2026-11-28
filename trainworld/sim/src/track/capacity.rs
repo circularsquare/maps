@@ -107,6 +107,8 @@ pub struct Capacity {
     keys: Vec<u32>,
     /// T-4309: each line's limits and the resources it uses (`limits.rs`).
     lim: limits::Index,
+    /// T-4444: each resource by the edges, nodes and lines it belongs to (`places.rs`).
+    places: places::Places,
     /// T-2231: per resource, the overtake plans it reads: a following loss's, one per slower user
     /// marked `FOLLOW_PASSING` in order; a wait's, its one plan. Empty for every other resource.
     plans: Vec<Vec<Arc<Plan>>>,
@@ -1326,50 +1328,62 @@ impl Capacity {
     /// to a different delay, i.e. whether its holds may have changed.
     pub fn update(&mut self, net: &Network, lines: &[LineSvc], edges: &[u32], nodes: &[u32], rescheduled: &[u32]) -> Vec<bool> {
         self.worked = std::array::from_fn(|s| net.slot_worked(s));
+        self.ensure_places();
         let (ne, nn) = (net.edge_count(), net.node_count());
+        // what the edit touched, as flags and as lists: nothing below goes over every edge or node
         let mut de = vec![false; ne];
+        let mut de_list: Vec<u32> = vec![];
         for &e in edges {
             if let Some(x) = de.get_mut(e as usize) {
-                *x = true;
+                if !*x {
+                    *x = true;
+                    de_list.push(e);
+                }
             }
         }
         let mut dn = vec![false; nn];
+        let mut dn_list: Vec<u32> = vec![];
         for &n in nodes {
             if let Some(x) = dn.get_mut(n as usize) {
-                *x = true;
+                if !*x {
+                    *x = true;
+                    dn_list.push(n);
+                }
             }
         }
-        for e in 0..ne {
-            if de[e] {
-                for n in [net.edge_a[e], net.edge_b[e]] {
-                    if let Some(x) = dn.get_mut(n as usize) {
+        for &e in &de_list {
+            for n in [net.edge_a[e as usize], net.edge_b[e as usize]] {
+                if let Some(x) = dn.get_mut(n as usize) {
+                    if !*x {
                         *x = true;
+                        dn_list.push(n);
                     }
                 }
             }
         }
         // Hot edges: touched, or ending at a touched node (a section through it may change).
         let mut he = de.clone();
-        for n in 0..nn {
-            if dn[n] {
-                for &c in net.node_ports[n].ends() {
+        let mut he_list = de_list.clone();
+        for &n in &dn_list {
+            for &c in net.node_ports[n as usize].ends() {
+                if !he[(c >> 1) as usize] {
                     he[(c >> 1) as usize] = true;
+                    he_list.push(c >> 1);
                 }
             }
         }
         let mut kk = vec![false; ne * 2];
-        for e in 0..ne {
-            if he[e] {
-                kk[e * 2] = true;
-                kk[e * 2 + 1] = true;
-            }
+        let mut kk_list = he_list.clone();
+        for &e in &he_list {
+            kk[e as usize * 2] = true;
+            kk[e as usize * 2 + 1] = true;
         }
         let flag = |v: &[bool], i: u32| v.get(i as usize).copied().unwrap_or(true);
         // T-1924: a line's following losses come from every line on its track, so all of them go
         // and are built again when any edge it runs over is hot
         let mut follow = vec![false; lines.len()];
-        for e in (0..ne).filter(|&e| he[e]) {
-            for &l in net.lines_on_edge(e as u32) {
+        for &e in &he_list {
+            for &l in net.lines_on_edge(e) {
                 if let Some(x) = follow.get_mut(l as usize) {
                     *x = true;
                 }
@@ -1378,15 +1392,24 @@ impl Capacity {
 
         // ---- drop what the edit invalidates
         let mut affected = vec![false; lines.len()];
+        let mut near = self.resources_at(&he_list, &dn_list);
+        near.extend(self.tagged_where(|l| flag(&follow, l) || !lines.get(l as usize).is_some_and(|l| l.running)));
+        near.sort_unstable();
+        near.dedup();
         let mut kill = vec![];
-        for r in 0..self.res.len() {
+        let mut old_plans: Vec<Arc<Plan>> = vec![];
+        for r in near.into_iter().map(|r| r as usize) {
             let dead = match self.tag[r] {
                 Tag::Section { first, count } => {
                     let ks = &self.keys[first as usize..(first + count) as usize];
                     if ks.iter().any(|&k| flag(&he, k / 2)) {
                         for &k in ks {
-                            if let Some(x) = kk.get_mut(k as usize) {
-                                *x = true;
+                            let ki = k as usize;
+                            if ki < kk.len() {
+                                if !kk[ki] && !kk[ki ^ 1] {
+                                    kk_list.push(k / 2);
+                                }
+                                kk[ki] = true;
                             }
                         }
                         true
@@ -1409,6 +1432,10 @@ impl Capacity {
         }
         for &r in kill.iter().rev() {
             self.index_drop(r);
+            self.places_drop(r);
+            if matches!(self.tag[r], Tag::Follow { .. }) {
+                old_plans.extend(self.plans[r].iter().cloned());
+            }
             self.dead_users += self.res[r].count as usize;
             if let Tag::Section { count, .. } = self.tag[r] {
                 self.dead_keys += count as usize;
@@ -1437,16 +1464,33 @@ impl Capacity {
             v.sort_unstable();
             v
         };
-        let c = cand(&mut (0..ne as u32).filter(|&e| kk[e as usize * 2] || kk[e as usize * 2 + 1]));
+        let c = cand(&mut kk_list.iter().copied());
         build_sections(net, lines, &c, &|k| kk.get(k as usize).copied().unwrap_or(false), self);
-        let c = cand(&mut (0..nn as u32).filter(|&n| dn[n as usize]).flat_map(|n| net.node_ports[n as usize].ends().iter().map(|&c| c >> 1)));
+        let c = cand(&mut dn_list.iter().flat_map(|&n| net.node_ports[n as usize].ends().iter().map(|&c| c >> 1)));
         build_nodes(net, lines, &c, &|n| flag(&dn, n), self);
         let sel = |x: &Crossing| flag(&de, x.e1) || flag(&de, x.e2);
         let c = cand(&mut net.crossings.iter().filter(|x| matches!(x.kind, CrossKind::Flat(_)) && sel(x)).flat_map(|x| [x.e1, x.e2]));
         build_crossings(net, lines, &c, &sel, self);
         let owners: Vec<u32> = (0..lines.len() as u32).filter(|&l| follow[l as usize]).collect();
         build_follow(net, lines, &owners, self);
+        // a plan the edit left as it was keeps what it worked out (a rebuilt following loss of a line far from the edit)
+        let mut kept: Vec<(*const Plan, Arc<Plan>)> = vec![];
+        for r in first_new..self.res.len() {
+            for p in &mut self.plans[r] {
+                let at = Arc::as_ptr(p);
+                match kept.iter().find(|k| k.0 == at) {
+                    Some(k) => *p = k.1.clone(),
+                    None => {
+                        if let Some(o) = old_plans.iter().find(|o| o.same_as(p)) {
+                            kept.push((at, o.clone()));
+                            *p = o.clone();
+                        }
+                    }
+                }
+            }
+        }
         self.index_attach(first_new);
+        self.places_attach(first_new);
 
         // ---- solve the new ones, and the old ones a rescheduled line uses
         let mut streams = vec![];
@@ -1461,16 +1505,8 @@ impl Capacity {
             }
         }
         if !rescheduled.is_empty() {
-            let mut rs = vec![false; lines.len()];
-            for &l in rescheduled {
-                if let Some(x) = rs.get_mut(l as usize) {
-                    *x = true;
-                }
-            }
-            for r in 0..first_new {
-                if !self.users_of(r).iter().any(|u| rs[u.line as usize]) {
-                    continue;
-                }
+            let old: Vec<u32> = self.resources_of_lines(rescheduled.iter().copied(), false).into_iter().filter(|&r| (r as usize) < first_new).collect();
+            for r in old.into_iter().map(|r| r as usize) {
                 let (rho, delay) = solve_one(self.users_of(r), net, &mut streams, self.tag[r], self.res[r].kind, &self.plans[r]);
                 self.rho[r] = rho;
                 if delay != self.delay[r] {
@@ -1484,6 +1520,8 @@ impl Capacity {
             }
         }
         self.compact();
+        #[cfg(test)]
+        assert!(self.places_match_fresh(), "the resources by edge, node and line differ from a fresh pass");
         affected
     }
 
@@ -1590,7 +1628,10 @@ pub fn holds_with(cap: &Capacity, delay: &[[f64; SLOTS]], lines: &[LineSvc], wan
             std::array::from_fn(|r| std::array::from_fn(|s| (vec![], if wanted(l) && cap.worked[s] { vec![0.0; ls.runs[r].stop_s.len()] } else { vec![] })))
         })
         .collect();
-    for r in 0..cap.res.len() {
+    // T-4444: only the resources of the lines wanted, in resource order, so the holds come out in the same order
+    let some: Option<Vec<u32>> = want.map(|w| cap.resources_of_lines((0..w.len() as u32).filter(|&l| w[l as usize]), true));
+    let all = 0..cap.res.len() as u32;
+    for r in some.map_or_else(|| all.collect::<Vec<u32>>(), |v| v).into_iter().map(|r| r as usize) {
         if let Tag::Follow { line } = cap.tag[r] {
             // T-2018: the loss as slower running over the whole stretch, never a stand between
             // stops (the app's trainGuard keeps it behind the train it follows)
@@ -1636,6 +1677,7 @@ pub fn holds_with(cap: &Capacity, delay: &[[f64; SLOTS]], lines: &[LineSvc], wan
 }
 
 mod limits;
+mod places;
 
 #[cfg(test)]
 mod tests;

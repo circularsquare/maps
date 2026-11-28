@@ -1376,17 +1376,8 @@ impl Service {
             }
         }
         // One step: lines sharing a resource with a line that changed.
-        let mut seed = vec![false; self.lines.len()];
-        for &l in rebuilt.iter().chain(rescheduled) {
-            if let Some(x) = seed.get_mut(l as usize) {
-                *x = true;
-            }
-        }
-        for r in 0..self.cap.res.len() {
-            let us = self.cap.users_of(r);
-            if us.iter().any(|u| seed[u.line as usize]) {
-                d.shared.extend(us.iter().map(|u| u.line));
-            }
+        for r in self.cap.resources_of_lines(rebuilt.iter().chain(rescheduled).copied(), false) {
+            d.shared.extend(self.cap.users_of(r as usize).iter().map(|u| u.line));
         }
         for v in [&mut d.shared, &mut demand] {
             v.sort_unstable();
