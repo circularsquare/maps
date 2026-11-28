@@ -78,6 +78,7 @@ import {
   editsSettling,
   lineLoadsFor,
   demandHeld,
+  marketComing,
 } from "../game/demand";
 import { FOCUS_WORKERS, FocusPool } from "./demandFocus";
 import { ASIDE_MAX_ZONES, SNAP_MAX_BYTES, ShownStore, type AsideAnswer, type AsideShown, type Snapshot } from "./demandShown";
@@ -1624,6 +1625,13 @@ class DemandClient {
     this.flush();
     this.progress();
     this.sweep();
+    this.noteMarkets();
+  }
+
+  /** T-4502: a wanted market pack is on its way into a solve (`marketComing`); none is solved while idle */
+  private noteMarkets() {
+    const on = !this.idle() && this.marketWanted.some((id) => this.fetching.has(marketItem(id)));
+    if (on !== marketComing.peek()) marketComing.value = on;
   }
 
   // --- Level of detail (T-1223, notes/T-1206.md) -------------------------------------------------
@@ -1943,6 +1951,7 @@ class DemandClient {
     }
     const alsoBare = ids.filter((id) => this.bareOpen.has(id));
     if (alsoBare.length) this.closeBare(alsoBare);
+    this.noteMarkets();
   }
 
   /** T-351: the reach as far as opening a pack goes. A new game's (`?new=1`) is known to be empty

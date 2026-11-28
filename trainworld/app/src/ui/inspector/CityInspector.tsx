@@ -5,7 +5,7 @@
 // Cities tab opens it too, the city view (T-1438), with CityDetails.tsx's rows around these.
 
 import { cityById, type CityId } from "../../game/cities";
-import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES } from "../../game/demand";
+import { cityDemandViews, demandView, intercityDemand, INTERCITY_PLACES, marketDue } from "../../game/demand";
 import { transitParts, zoneTransit, type TransitShares } from "../../game/transitModes";
 import { placeFigures } from "../../game/corridorFigures";
 import { count, exact } from "../../game/format";
@@ -59,8 +59,9 @@ function everydayOf(e: number[] | undefined, place: number): [number, number, nu
 
 export function CityInspector({ id }: { id: string }) {
   const city = cityById(id);
-  // T-421: a zone still loading (its bar on the map) has no figures to state yet
-  const shown = zoneLoads.value.has(id as CityId) ? null : intercityDemand.value;
+  // T-421: a zone still loading (its bar on the map) has no figures to state yet; T-4502: nor any zone its trips to
+  // other places while the market is on its way
+  const shown = zoneLoads.value.has(id as CityId) || marketDue.value ? null : intercityDemand.value;
   if (!city) return null;
   // T-2136: the zone's rows come from a worker; until they do, its trips to other places wait as a loading zone's do
   const byPlace = shown ? placeFigures(shown.corridors, city.place) : null;

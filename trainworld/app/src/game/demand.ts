@@ -362,6 +362,12 @@ export function zoneViews(d: DayDemand | undefined): Map<CityId, DemandView> {
 }
 /** Distinct, synthetic intercity trips: never included in local commute denominators. */
 export const intercityDemand = computed<IntercityDemand | null>(() => demandByDay.value[shownDay.value]?.intercity ?? null);
+/** T-4502: a wanted market pack is downloading, opening or open, and a solve will take it (workers/demandClient.ts) */
+export const marketComing = signal(false);
+/** T-4502: the figures shown have no market (solved before any market pack was open, or the book not in yet) and one
+ * is coming: every place's trips to other places are unknown until it lands, not none. Any market's rows hold every
+ * place's longer trips, so a zone whose own pack is still opening is not waited for (docs/demand-market.md). */
+export const marketDue = computed(() => marketComing.value && !marketIn(demandByDay.value[shownDay.value]));
 /** A solve is running for a newer network than the one `demandView` shows (or, T-328, the shown
  * figures are the cache's and the same network is being solved again). */
 export const demandUpdating = signal(false);

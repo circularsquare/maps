@@ -51,9 +51,11 @@ where some are), the bands breaking at 0.5, 1, 2, 3, 5, 7, 10, 15, 20, 30, 50, 7
 the bottom, Inter-city trips, being the trips to other places, on top; University with School); its hover lists each
 purpose that shows as 0.1% or more, then "All". The choice stays from one zone to the next until the game closes.
 Then the top three destinations. While the
-zone still loads (its bar on the map, T-421), To other places and the destinations wait, "Calculating demand" in
-their place; its Trips within and its graph show as soon as it has figures of its own (a round of its cluster
-during a load, T-2453), "Calculating demand" alone before that [T-2500]. Then, for
+zone still loads (its bar on the map, T-421), or the figures shown have no market yet while a market pack is on its
+way (a city selection opens its zone's; any market's rows hold every place's trips, so its own pack is not waited
+for, T-4502), To other places and the destinations wait, "Calculating trips" in their place; its Trips within and
+its graph show as soon as it has figures of its own (a round of its cluster during a load, T-2453), "Calculating
+trips" alone before that [T-2500]. Then, for
 a zone with a built station: **By purpose**, the purpose bar of the
 inspectors (`PurposeSplit`, no key) over the boardings at the zone's stations on every line;
 **Top lines**, the five lines with most boardings at the zone's stations today

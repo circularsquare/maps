@@ -3,7 +3,7 @@
 // Its hover says more. T-2693: a thin bar in every case (see `share` below); no ring since T-2728.
 
 import { computed, effect, signal } from "@preact/signals";
-import { demandBehindFrom, demandHeld, demandScope, demandStep, demandSolving, demandWork, editHeld, solveRestarted, workShare, demandUpdating, demandView, focusZones, intercityDemand, refiningZone, viewRecomputing } from "../game/demand";
+import { demandBehindFrom, demandHeld, demandScope, demandStep, demandSolving, demandWork, editHeld, solveRestarted, workShare, demandUpdating, demandView, focusZones, intercityDemand, marketDue, refiningZone, viewRecomputing } from "../game/demand";
 import { linesPending } from "../game/lineFigures";
 import { count } from "../game/format";
 import { clock, DEMAND_CAP } from "../game/clock";
@@ -50,7 +50,7 @@ const clickWait = computed<CityId | null>(() => {
     const v = tripView.value;
     return v?.trip || v?.market || v?.failed ? null : activeCity.value;
   }
-  if (sel?.kind === "city" && !demandIdle.value && !tripsOff.value && (zoneLoads.value.has(sel.city) || !intercityDemand.value)) return sel.city;
+  if (sel?.kind === "city" && !demandIdle.value && !tripsOff.value && (zoneLoads.value.has(sel.city) || !intercityDemand.value || marketDue.value)) return sel.city;
   return null;
 });
 
