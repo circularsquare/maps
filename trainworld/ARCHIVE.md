@@ -1,6 +1,8 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4536 [P2] {L:small-fixes} Blueprints tip out; cities served counts every transit trip (2026-11-27): tip removed in 12 languages; cities served already counted every mode, wording fixed. notes/T-4536.md.
+- T-4502 [P2] {L:loading} A selected city shows no trips to other places while its market opens (2026-11-27): A selected city says Calculating trips while the figures shown have no market yet and one is coming, not To other places 0; T-4533 filed for the zoomed-out case with no station.
 - T-4096 [P3] {L:checks} A daily sweep of old session scratch (2026-11-27): tools/scratch_sweep.py: dry run by default, --yes deletes units over 2 days old, skips folders a session holds; not scheduled.
 - T-4198 [P3] {L:checks} Changelog edited mark only for your edits (2026-11-27): changelog.py reword sets a separate reworded field; the edited mark and board label follow only her edits.
 - T-4509 [P3] {L:map-look} Check zooming in and out between edits (2026-11-27): standing check checks/t4509-zoom-edits.mjs: both T-4508 sequences with ?patch=check; passes with the fix, fails with it reverted.

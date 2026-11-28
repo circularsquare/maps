@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c029",
+      "text": "fixed a selected city showing no trips to other places before they were calculated",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4502",
+      "by": "marketcalc",
+      "at": "2026-11-28T02:52:48Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": true
+    },
+    {
       "id": "c028",
       "text": "cities served counts only cities with 1,000 train trips a day",
       "edited": null,
@@ -10,9 +22,11 @@
       "task": "T-4049",
       "by": "blueprinttip",
       "at": "2026-11-28T02:35:12Z",
-      "rev": 1,
+      "rev": 2,
       "area": "demand",
-      "fix": false
+      "fix": false,
+      "reworded": "cities served counts cities with 1,000 transit trips a day, buses included",
+      "changed": "2026-11-28T02:51:03Z"
     },
     {
       "id": "c027",

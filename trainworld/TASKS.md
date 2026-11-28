@@ -319,10 +319,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-27: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core." Changed (tree cityload): during a game load the second worker takes the selected city after the city in view. New York save, one worker: New Haven 23 s after the click, was 53 s.
   - Goal: You say on 8800 that a selected city loads fast enough; else stage 2 in the notes.
   - Other: notes/T-4501.md
-- T-4502 [P2] {L:loading} A selected city shows no trips to other places while its market opens (taking, 2026-11-27, agent marketcalc)
-  - Context: Seen in T-4501 (new game, one worker): Philadelphia, the first city selected, showed "To other places 0" and "No intercity trips are modeled here yet." until its market pack opened and the next calculation landed. On one worker that calculation can wait behind a whole one.
-  - Goal: The panel says it is calculating until the selected city's market is in the figures shown.
-  - Other: notes/T-4501.md
+- T-4533 [P3] {L:loading} A city picked zoomed out before any station gets no trips to other places
+  - Context: Found in T-4502 (from the code): with no station and the map zoomed out too far for zones to load, nothing is needed, so no market pack opens and no calculation runs. The city view shows "To other places 0" and "No intercity trips are modeled here yet."
+  - Goal: A city selected there opens its market pack and shows its trips to other places.
+  - Other: notes/T-4502.md
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
@@ -669,10 +669,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4035: a station holds at most two platforms, each on one track (ids 2s and 2s+1 from its node), so an island serving two tracks or a station on 4 tracks can't be placed. T-4043 keeps platform ids tied to the node, so it doesn't cover this.
   - Goal: A station of two islands on 4 tracks saved, loaded and undone with every platform kept.
   - Other: About 1.5-3 h, before T-3963. notes/T-3444-design/10-build-plan.md
-- T-4518 [P2] {L:track-rework} {waits:Anita} Picking track between stations
-  - Need from Anita: Once stations stop cutting the track, should a click still pick just the stretch between two stations, the game cutting the track there when you change it? I'd say yes.
-  - Context: From T-4037 g3b: with stations off the track, a click picks the whole stretch from junction to junction, so making the part between two stations single, raised or one way would need a joint first. Today players pick between stations.
-  - Goal: If yes: the stretch between two stations made single in one edit and one undo.
+- T-4518 [P2] {L:track-rework} Picking track between stations
+  - Context: You, 11-27: yes, a click still picks between two stations. From T-4037 g3b: with stations off the track, a click picks the whole stretch from junction to junction, so making the part between two stations single, raised or one way would need a joint first. Today players pick between stations.
+  - Goal: The stretch between two stations made single, raised or one way in one edit and one undo.
   - Other: About 1.5-2.5 h, before the station tool switches (T-4037). notes/T-4037.md "For Anita" (on tw/track)
 - T-4520 [P2] {L:track-rework} {after:the tw/track sync} Branch fixes from Gemini's read
   - Context: Gemini's read of tw/track, checked: Add a track on built two-way single puts its lines' way back on blueprint track, so they stop; a line left on a removed track saves bytes the game then refuses as newer; a flip's charge and undo against the per-track price; stations off the track in a frame conversion and on a removed piece.
@@ -1101,6 +1100,10 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
 - T-4511 [P3] {L:timetables} Nudge single trains
   - Context: Design done 11-27 (16-21 h). You, 11-27: "put single-train moves to p3 and do it later ... see if players request single train after" the real-gaps waits (T-4514) and line-wide nudges.
   - Goal: Build when players still ask for it after T-4514.
+  - Other: notes/T-4511.md
+- T-4515 [P3] {L:timetables} Show a shared stretch's wait on the departures board
+  - Context: Since T-4514 a stretch lines share waits by the real gaps between their trains, but nothing shows a player that wait or what evening them would save. Drafted in notes/T-4511.md "Readout", about 1-1.5 h.
+  - Goal: A line under the board's station picker with the average wait there, its hover the evenly spaced wait.
   - Other: notes/T-4511.md
 - T-4514 [P2] {L:demand-ideas} Waits on shared stretches from the real gaps (taking, 2026-11-27, agent realgaps)
   - Context: You, 11-27: yes. Lines sharing a stretch are counted as perfectly even today, so evening interlined trains earns nothing; from the real gaps (sum of squared gaps over twice their sum), bunched lines lose riders until evened. Design in notes/T-4511.md "Interlining".

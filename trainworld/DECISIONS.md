@@ -59,7 +59,7 @@ artifacts/trainworld/T-4120/.
 
 ## Lines and scheduling
 - 2026-11-27 (Anita, T-4336): Cable car cabins hold 10 riders, as Mi Teleferico's, every 12 s at the most: 3,000 an hour each way. Counted at crush, so the rated load is 6.7 (every vehicle's crush is 1.5 times its rated load). notes/T-4334.md
-- 2026-11-27 (T-3742): A nudge asks for no trip calculation. Waits are by headway; a stop's first and last trains move by up to the offset (half a headway at most) and reach demand at the line's next edit (the lie). notes/T-3742.md
+- 2026-11-27 (Anita, T-4514): A nudge calculates trips only where it moves a shared stretch's wait past 5 s since demand's network. Other waits are by headway; a stop's first and last trains move by up to the offset, reaching demand at the line's next edit (the lie). notes/T-4514.md
 - 2026-11-27 (T-4374): Deleting a station a line stops at takes the stop out as a stop edit does (a loop closes again on its new first stop). Where the line cannot run without it, the delete is refused as the station in use. notes/T-4374.md
 - 2026-11-27 (Anita, T-4220): An edit made during a whole re-solve shows its touched cities' quick result from a second worker, solved against the figures on screen, until the whole result replaces it. Asia's lines within 0.1% (worst -0.06%); off on phones and short memory. notes/T-4220.md
 - 2026-11-24 (Anita, T-4239): The train-count settle need not be exact. A line circling across a jump in its round trip (passing-track waits, following loss) is held: counts where its fleet falls short (lie: up to 3% more trains an hour than it runs), headways under one train spare. notes/T-4239.md
@@ -92,11 +92,12 @@ artifacts/trainworld/T-4120/.
 ## Demand
 
 - 2026-11-27 (Anita, T-4514): A trip served by several lines on a shared stretch waits by the real gaps in their combined departures, not as if perfectly even, so evening interlined lines earns riders. Single-train moves wait at P3 until players ask again. notes/T-4511.md
+- 2026-11-27 (T-4514): Real-gap waits come per period from each line's weekday departure nearest mid-period and its headway; a service takes its lines' largest factor. Lie: riders arrive at random (long headways are timed), and a bunched half hour inside an even rest counts as its period's share. notes/T-4514.md
 - 2026-11-24 (Anita, T-921): Commute zone pairs under 1 person a day are dealt in chunks of about 1 (`COMMUTE_CHUNK_DAY`, the one number to tune), was 0.1 trips a period. The lie: a station under 1,000 a day can move up to about 3.5%, as much as redrawing. notes/T-921.md
 - 2026-11-24 (Anita, T-4158): A bus line's consecutive stops within 500 m on the same lines are one demand station ("ok, lets do 500m"), was 300 m. About 18-29% faster solves on bus-heavy saves; rides inside a group are lost, about 1% of Auto lines' riders. notes/T-4158.md
 - 2026-11-23 (Anita, T-4093): Crowding stays at 3 rounds; 2 rounds (24% faster) is refused for its line swings (NJT NEC +19%), "final unless the swing numbers get a lot lower". Don't ask again. Rounds stop early once loads move under 3%, was 1%. notes/T-4057.md
 - 2026-11-23 (Anita, T-4054): Riders turn up at random: 75% take the line that gets them there first, a quarter the first train still arriving by the best line's latest, replacing the split by trains an hour. Change nodes take no late lines. notes/T-4041.md
-- 2026-11-23 (Anita, T-4064): Lines leaving one platform for one platform at the next stop are one evenly spaced service for riders to that stop (her 4 and 5 trains). At a change riders take no line heading back or right behind theirs. notes/T-4050.md
+- 2026-11-23 (Anita, T-4064): Lines leaving one platform for one platform at the next stop are one service for riders to that stop (her 4 and 5 trains). At a change riders take no line heading back or right behind theirs. notes/T-4050.md
 - 2026-11-21 (Anita, T-4008): Express against local gets no soft rule of its own, and income groups were dropped for it (T-4008). Industrial land jobs count a quarter (T-3376).
 - 2026-11-21 (Anita, T-2624): A recalculating line reads "calculating..." until the edit's whole final ("dont wanna hide if theres stuff we could show"). Its local result shows period by period as solved; the lie, for up to half a minute: unsolved periods take a solved period's change. notes/T-2624.md
 - 2026-11-24 (Anita, T-2188, T-4204): A city edit ends at its local re-solve; intercity edits (fares, a switched line, a stop on a 20+ minute run, a run moved 3+ minutes) re-solve whole, as does a quiet refresh 2 minutes after the last edit. Lie: drift meanwhile, 0.003% of trips. notes/T-2188.md
@@ -193,7 +194,8 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
-- 2026-11-28 (orchestrator, T-4049): Her "about 1,000 rides" for a served city is read per day, like the other thresholds: a city counts once its zone has 1,000 train trips a day, so Cities served is known only once demand is final. notes/T-4049.md
+- 2026-11-27 (T-4502): The city view's trips to other places wait ("Calculating trips") only while the figures shown have no market at all. A zone whose own market pack is still opening shows them at once: any composed market holds every place's trips. notes/T-4502.md
+- 2026-11-28 (orchestrator, T-4049): Her "about 1,000 rides" for a served city is read per day, like the other thresholds: a city counts once its zone has 1,000 transit trips a day on any kind of line (a bus-only city counts, T-4536), so Cities served is known only once demand is final. notes/T-4049.md
 - 2026-11-27 (Anita, T-4334): The Build tab's mode gear lists Tram beside Bus, Ferry, Monorail and Cable car; trains and high speed always show. An unticked mode leaves the build menus unless the game has some of it, blueprints included. notes/T-4334.md
 - 2026-11-27 (Anita, T-4440): The first load's card gets its x and drag only once only trips are left to calculate; before that the map isn't usable. notes/T-4346.md
 - 2026-11-27 (Anita, T-4400): Hidden modes and hidden levels are removed from the map entirely. An even fade was ruled out: an opaque colour mixed toward the land paints over shown track crossing it and reads as a causeway over water. A ramp still fades out toward a hidden level.
