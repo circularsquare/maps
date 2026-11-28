@@ -193,6 +193,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-28 (orchestrator, T-4049): Her "about 1,000 rides" for a served city is read per day, like the other thresholds: a city counts once its zone has 1,000 train trips a day, so Cities served is known only once demand is final. notes/T-4049.md
 - 2026-11-27 (Anita, T-4334): The Build tab's mode gear lists Tram beside Bus, Ferry, Monorail and Cable car; trains and high speed always show. An unticked mode leaves the build menus unless the game has some of it, blueprints included. notes/T-4334.md
 - 2026-11-27 (Anita, T-4440): The first load's card gets its x and drag only once only trips are left to calculate; before that the map isn't usable. notes/T-4346.md
 - 2026-11-27 (Anita, T-4400): Hidden modes and hidden levels are removed from the map entirely. An even fade was ruled out: an opaque colour mixed toward the land paints over shown track crossing it and reads as a causeway over water. A ramp still fades out toward a hidden level.

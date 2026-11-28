@@ -6,6 +6,12 @@ research/code.md section 7 and the notes it cites. Each is tagged **measured** (
 machine, so every budget has two parts: an absolute number, and a same-run ratio, the `tw/track` branch against
 master alternating in one loaded game (T-3803's method, 20 arms a side).
 
+**Since (11-28).** Master's edit-speed work (T-4153's drawn network by cut stretch, the rows, post, complexes and
+renderer by record, T-4267's stages) now does most of what stage 5a was for, so 5a is re-scoped to keeping it true
+with anchors and parts, and the release 1 gate is an `edit_bench` run on her Asia save against master
+(10-build-plan "Release 1: what is left" and "Gates"). `corridors.ts` goes only once 5b gives both its readers, the
+ribbons and the network diagram, their per-track layout. The figures below are 11-21's.
+
 **Saves used.** Timing: real NYC and the 2,647-station save (`artifacts/trainworld/t3600-asianita-1852.save`), kept as
 the big-save timing case because T-3803's "before" figures were measured on it; North America day 383 for the
 widest network. Conversion and look: her Amsterdam test save first (lightest), the Vienna community save (share

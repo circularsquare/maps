@@ -10,12 +10,11 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 3. Edit speed: T-4267 stages re-aimed on C0 (T-4441); running retime (T-4449) and capupdate (T-4444); T-4442 (A1) next, but clickwait's tree (T-4281) was stopped from outside: asked her whether on purpose; the tree is kept.
 4. Asks to her: nudge strings (listed in chat 00:18 UTC), clickwait, diagnostics download for the slow city load (T-4501 stage 1 landed; stage 2 plan in notes; a repeat: don't call it fixed). T-4435 (server save check level 43) needs an agent, then her deploy yes before the next publish.
 5. _track sits at save level 42 (LBN1): renumber at sync; master is now 43. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
-6. brief.py requires --tree and --port; fix in a tooling round.
 
 ## Her words
-- 11-27 21:16 her time: "lets do track rework before adding other modes, since track rework is kinda more promised" (DECISIONS). Asked for easy tasks to cut the count (sweep running, notes/task-sweep-2026-11-28.md). Offsets button: right end of the Set by row; text acknowledged.
+- 11-27 21:16-21:33 her time: track rework before new modes (DECISIONS); catch up tw/track, Gemini on it and the plan; crash testing all at once near release, not before; easy tasks to cut the count (notes/task-sweep-2026-11-28.md).
 - 11-27 20:55 her time, nudges: players shift trains to space interlined lines evenly ("not one train A then a train B 2 minutes later, then like 20 minutes until the next train A"); "it would be cool if [ridership responded] ... but if it introduces lots of cost we dont have to do it in full weight way". T-4511: weekday/weekend switch yes, build now yes.
-- 11-27 20:14 her time: "pause any edit speed work for actions that already take under 50ms" (DECISIONS); shonei-server 07f5a75 (save level 43) not deployed yet: "we can deploy once more things are in"; ask again when the next publish nears.
+- 11-27 20:14: pause edit-speed work under 50 ms an action (DECISIONS); server deploy (07f5a75, 3a8e65c) once more is in.
 - 11-27 18:30 her time: a hidden mode that was never built "dont show up anywhere, like in build menus" (T-4334 Goal); nothing to do for Resend or R2; track rework not started while there is enough other work ("shouldnt spread ourselves too thin").
 - 11-27 18:25 her time, priorities: demand solve speed (if improvements are possible), memory (if actually possible), schedule nudging, monorail and cable cars, track rework. Real bug fixes and regular chores come before these.
 - 11-27 18:10 her time: Windows 11 done, "can resume work as normal"; 3-10 agents at once; "stay lean as an orchestrator... try to not do that [work yourself]"; a code guard for it, yes (T-4428).

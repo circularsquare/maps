@@ -1,6 +1,16 @@
 # Archive
 
 Entries before 2026-10-20 are in [ARCHIVE-to-2026-10-19.md](ARCHIVE-to-2026-10-19.md), searched the same way. New entries go at the top, under this line.
+- T-4096 [P3] {L:checks} A daily sweep of old session scratch (2026-11-27): tools/scratch_sweep.py: dry run by default, --yes deletes units over 2 days old, skips folders a session holds; not scheduled.
+- T-4198 [P3] {L:checks} Changelog edited mark only for your edits (2026-11-27): changelog.py reword sets a separate reworded field; the edited mark and board label follow only her edits.
+- T-4509 [P3] {L:map-look} Check zooming in and out between edits (2026-11-27): standing check checks/t4509-zoom-edits.mjs: both T-4508 sequences with ?patch=check; passes with the fix, fails with it reverted.
+- T-4049 [P3] {L:achievements} Cities served counts only busy cities (2026-11-27): Cities served counts cities with 1,000 train trips a day; notes/T-4371.md.
+- T-4371 [P3] {L:help-tutorial} Say what blueprints are (2026-11-27): Settings Blueprints checkbox has a tip, translated into 12 languages; notes/T-4371.md.
+- T-4356 [P3] {L:track-speed} Ramp speed labels while dragging and in the blueprint box (2026-11-27): Ramp speed labels while dragging nodes and in the blueprint box (typecheck only)
+- T-4327 [P3] {L:translations} Key hints in Japanese and Chinese hovers (2026-11-27): Full-width key hints lettered and hidden on phones.
+- T-3675 [P3] {L:feedback} Feedback button on the graphics error screens (2026-11-27): Feedback button on the graphics error screens.
+- T-3395 [P1] {L:accounts-server} Close once the save scan runs clean (2026-11-27): Scan reports 11-25 to 11-27 read: the two rev-1 games are old damage (only copies, nothing to pin); no new damage, 0 quarantined since the upload check. Adding the damage reason to the scan note needs a deploy, her word.
+- T-4504 [P1] {L:edit-speed} Overtake plans worked out faster after an edit (2026-11-27): Plan::best's sweep keeps its trains in flat lists, re-sorts each point by insertion and starts each wait at the first faster train that matters: about 0.8 to 0.4 ms a call, both capacity updates 34-36 to 21-26 ms on Asia's trunk edit (under 25 at 2 of 3 readings); outcomes the same to the bit (2000 random stretches, all 860 on Asia; NYC has no plans); notes/T-4504.md.
 - T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south (2026-11-27): closed without code: not reproduced since 2026-11-16 (a station node's heading stays put on a drag) and no report since; the station tool rework (T-3963) replaces this placement code. Reopen with the exact drag if it shows again. notes/T-3332.md.
 - T-3345 [P2] {L:schematic} Better schematic (2026-11-27): closed without code: umbrella overtaken (sweep 11-28): its three named parts are done or closed (T-3360 buses and ferries, T-2724 continent scale closed on her word, T-3358 rivers option E built); the schematic work left stands as T-3453, T-3872 and T-3947.
 - T-3943 [P3] {L:map-look} Hide lines by mode (2026-11-27): closed without code: done by T-4400 and T-4406: Settings has one Show block with a toggle per mode and one Show all; a hidden mode's lines, vehicles, track and unshared stations leave the map and schematic, and hidden levels do too. notes/T-4406.md.

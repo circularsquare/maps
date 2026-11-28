@@ -162,15 +162,12 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4045 [P2] {L:small-fixes} {after:next week's usage} Adding stops to a line with many one-way stations is very slow
   - Context: A player, 11-22: a line with 21 one-way platforms is "extremely laggy", once 40 minutes for the stops to register. You: "dont have to spend a lot of time looking into this since we're doing a track rework but if we see an easy fix, would be interested". Tree onewaylag has a memo making stop_tiers 2.3x faster (uncommitted). Notes/T-4045.md.
   - Goal: The cause of the slow stop adding named; fixed if the fix is small, else a note of what it would take.
-- T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them
+- T-4091 [P3] {L:buses} Undoing a bus reroute leaves its stops where the reroute put them (taking, 2026-11-27, agent busundo)
   - Context: Seen by the T-4069 checker (notes/checkbns.md, case 3), not compared with master: undoing a busRoute reroute put the route back to 2 points but left stop 105 moved (-73.99374 to -73.99385). Reach: players who reroute a manual bus line and undo, a few metres off.
   - Goal: Undo puts the stops back where they were, or the cause named if it's older than T-4069.
 - T-4095 [P3] {L:checks} Agent worktrees with only trainworld checked out
   - Context: From T-4088: each tree is a full 1.4 GB copy of maps/, of which about 0.2 GB is trainworld; a sparse checkout in agent-tree.mjs would save 10-15 GB with 10 trees.
   - Goal: New trees hold only trainworld (and what its builds need); land and remove still work.
-- T-4096 [P3] {L:checks} A daily sweep of old session scratch
-  - Context: From T-4088: session scratch in Temp\claude was 78 GB, the biggest single user of the disk, and nothing clears it. The standing rule already lets agents delete finished sessions' scratch 2+ days old.
-  - Goal: Scratch folders untouched for 2+ days deleted daily, sessions still running skipped.
 - T-4134 [P3] {L:edit-speed} A line's time zone and fleet kind looked up once
   - Context: From T-4131: `utc_offset_at` per line costs 75-120 ms an edit and `cars_needed` 95 ms once on the Asia save.
   - Goal: Both kept per line and refreshed only when the line moves; about 2-3.5 h.
@@ -194,10 +191,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Paused: already under 50 ms (her 11-27). From T-4284: after each edit, in idle time, the page's upkeep shares go over every edge, station and bus route point (3.5-6.3 ms on your Asia save), and the region shares post their whole table.
   - Goal: Under 0.5 ms an edit on Asia.
   - Other: notes/T-4150.md "Left"
-- T-4198 [P3] {L:checks} Changelog edited mark only for your edits
-  - Context: From T-4196: changelog.py reword sets the same "edited" mark as your board edits, so agents' rewords (26 today, and c014 earlier) show as yours and get left alone as your wording.
-  - Goal: The board marks only your edits; agents' rewords keep their own record.
-  - Other: notes/T-4196.md
 - T-4281 [P1] {L:edit-speed} Later clicks wait on the previous click's whole-save work
   - Context: Stage 3 landed 11-25: the panels' `today` with the clock running costs 3-6 ms on your Asia save (was about 107). Click run on Asia: first 46 ms, later 37, 170, 272. Left: which follow-up piece later clicks wait behind (no per-click laps yet); the page's click hold stays (unsafe to drop).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
@@ -250,10 +243,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage A1, your 11-27 yes. A later click on running track first works out the click before's train work, most of its wait on your Asia save (about 150 ms in Node, T-4441). Overlaps T-4281 (clickwait): read its notes first.
   - Goal: A quick run settles its trains once, after the answers; later clicks under 100 ms once T-4444 to T-4446 and T-4449 land.
   - Other: notes/T-4267.md
-- T-4504 [P1] {L:edit-speed} {after:T-4444} Overtake plans worked out faster after an edit (taking, 2026-11-27, agent planbest)
-  - Context: T-4444 took the loops over every edge, node and resource out of the capacity update (6 of its 40 ms on your Asia trunk). The rest is the overtake plans of the lines the edit moved, 30-36 ms, 44 `Plan::best` calls of 0.8 ms.
-  - Goal: Both capacity updates under 25 ms in T-4441's run (about 55 now), the same outcomes to the bit.
-  - Other: notes/T-4444.md
 - T-4445 [P2] {L:edit-speed} {after:T-4444} The weekend work costs only the edited lines
   - Context: T-4267 stage C3. After a click the weekend service copy and its departures take 49 of the 152 ms train work on your Asia trunk (T-4441), for 3 lines; most of it goes over every line, some of it three times.
   - Goal: Under 10 ms in T-4441's run (49 there), the same weekend timetables to the bit.
@@ -330,7 +319,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: You, 11-27: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core." Changed (tree cityload): during a game load the second worker takes the selected city after the city in view. New York save, one worker: New Haven 23 s after the click, was 53 s.
   - Goal: You say on 8800 that a selected city loads fast enough; else stage 2 in the notes.
   - Other: notes/T-4501.md
-- T-4502 [P2] {L:loading} A selected city shows no trips to other places while its market opens
+- T-4502 [P2] {L:loading} A selected city shows no trips to other places while its market opens (taking, 2026-11-27, agent marketcalc)
   - Context: Seen in T-4501 (new game, one worker): Philadelphia, the first city selected, showed "To other places 0" and "No intercity trips are modeled here yet." until its market pack opened and the next calculation landed. On one worker that calculation can wait behind a whole one.
   - Goal: The panel says it is calculating until the selected city's market is in the figures shown.
   - Other: notes/T-4501.md
@@ -388,9 +377,10 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 - T-4141 [P3] {L:station-placement} Track placed by an edit call crossed the Hudson at ground level
   - Context: Seen by T-4112: a route entered through the game's edit call crossed the Hudson at ground level without a refusal, while pointer-drawn track nearby was bridged. Water may not have been loaded under part of it.
   - Other: notes/T-4112.md
-- T-4116 [P2] {L:track-rework} {after:the 0.4.6 publish} Track model panic after a route edit on the track branch
-  - Context: Your panic on 8800 (track branch build f382ee54): store.rs:851 under nodes_info, after a route edit and line colour changes. Not reproduced by 1,800 random edits each on NYC and your North America save; likely a line's service still naming track an edit removed. A second panic (run_polyline on a one-way return run) is fixed on tw/track. Notes/T-4116.md.
-  - Goal: Reproduced with the fuzzer or your save under ?track, and fixed with a test, when the track rework resumes.
+- T-4116 [P2] {L:track-rework} {after:T-3967} Track model panic after a route edit on the track branch
+  - Context: Your panic on 8800 (track branch build): store.rs:851 under nodes_info, after a route edit and colour changes. Not reproduced in 1,800 random edits each on NYC and your North America save; likely a run still naming removed track. A second panic is fixed. Your 11-27 call: crash testing all at once near the release, so this leads that round (T-4519).
+  - Goal: Reproduced with the fuzzer or your save in the crash round, and fixed with a test.
+  - Other: notes/T-4116.md
 - T-4156 [P3] {L:memory} Demand workers keep WASM memory after zones close
   - Context: Tree memwasm (11-24): restart at a 192 MB gap gives back 290-340 MB per worker on all-China; then edits wait 3-8 min while workers reopen, final trips drift 0.11%. NYC never restarts.
   - Goal: Memory given back with no edit waiting on the restart: restart only when the tab is hidden or memory is tight (Gemini, 11-24). You, 11-24: not high priority, later.
@@ -411,9 +401,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4052 (11-24): the line hover's "riders who wanted a bus" is carried plus left behind, so a rider who boards a later bus counts twice (rail too). Fix: count everyone who came to the stops; shifts the issues row's 3% threshold a little.
   - Goal: The hover's share left behind counts each rider once.
   - Other: notes/T-4052.md
-- T-4049 [P3] {L:achievements} Cities served counts only busy cities
-  - Context: Your scratch pad, 11-22: "for "cities served" count for like achievements, lets only coutn cities with like >1000 rides or something".
-  - Goal: A city counts as served once it has about 1,000 rides.
 - T-3936 [P3] {L:route-choice} Intercity effective time for the route shown
   - Context: From T-3632, 11-21: the intercity panel's "Effective time" is the average over the whole place, not the route shown (Nagoya - Osaka: the route's own 136 min, the panel 237, the car 174), so a click beside a station reads as the train losing.
   - Goal: The panel shows the shown route's own effective time beside the car's.
@@ -588,10 +575,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Other: notes/T-1200.md and notes/T-1211.md.
 
 ## Interface
-- T-4509 [P3] {L:map-look} Check zooming in and out between edits
-  - Context: T-4508's two bugs (new lines vanishing zoomed in, deleted ones staying zoomed out) went unseen for two days: the `?patch=check` comparisons exist, but no browser check edits while zoomed out and then zooms in, or deletes the last line in the draw order.
-  - Goal: A standing check runs both sequences with `?patch=check` and fails on any check error.
-  - Other: notes/T-4508.md "Game run"
 - T-4401 [P3] {L:map-look} Stray stroke joins two lines zoomed out
   - Context: Seen in a new NYC game built by quick edits (T-4400): at zoom 12 a thick stroke in the subway's colour ran from its last point to the high-speed line's first. Not pickable; gone with the stroke LOD off, not with gather or culling off. The same build done minutes earlier didn't show it.
   - Goal: Cause found in the LOD strokes and fixed, so no drawn stroke joins two lines' ends.
@@ -606,7 +589,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4376 [P3] {L:map-look} No sound for days for one player
   - Context: A Japanese player on 0.4.7.1 (tw-feedback 1795779886-f61e0c7e, 11-27), Chrome 158 on Windows, 109 lines, hears nothing for days. Could be the Sound switch, volume 0, a browser muted site or audio never starting after a reload. Reach: few.
   - Goal: Sound starts after the first click in a fresh game on Chrome, or the cause is found.
-- T-4368 [P3] {L:map-look} A high-speed line made normal still shows as high-speed
+- T-4368 [P3] {L:map-look} A high-speed line made normal still shows as high-speed (taking, 2026-11-27, agent hsrstroke)
   - Context: A player on 0.4.7 (tw-feedback 1795690226, 11-26): after changing a high-speed line to a normal one, the line is still drawn as high-speed. One report.
   - Goal: Changing a line's kind redraws it in the new kind's style at once.
 - T-4328 [P3] {L:map-look} {after:players still blocked after 0.4.6.1} OpenFreeMap through our own address as a last route
@@ -617,10 +600,6 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-4351: 174 English strings sit in app/src outside `t()` (game 98, map 31, workers 29, interface 13); some are only for diagnostics.
   - Goal: Every one a player can see goes through `t()` and is translated.
   - Other: notes/T-4351.md
-- T-4327 [P3] {L:translations} Key hints in Japanese and Chinese hovers
-  - Context: Found while adding R to the station rename hover (11-25): ja, zh-Hans and zh-TW write a hover's key in full-width brackets ("バス路線を描く（U）"). The hover styles only ASCII brackets, so those keys are not lettered in the accent, and on phones they stay although there is no keyboard.
-  - Goal: Full-width bracketed keys get the same hint styling, and go on phones, as ASCII ones.
-  - Other: notes/renameui.md
 - T-4246 [P3] {L:map-look} Tram wires look rough at corners in thickness mode
   - Context: You, 11-24: "trams and their two white wires look a little ugly in demand thickness mode, when they turn around corners. not sure if we could improve this easily."
   - Goal: Tram wires follow corners cleanly at every width.
@@ -658,63 +637,83 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
   - Context: From T-3630: a report sent from the menu after a crash doesn't say how far the last load got.
   - Goal: The game keeps a last-load record across a reload (game, stage, percent, finished or not, failure text) and a report includes it.
   - Other: notes/T-3630.md "Follow-ups"
-- T-3675 [P3] {L:feedback} Feedback button on the graphics error screens
-  - Context: From T-3630: the no-WebGL2 and graphics-lost screens have no button at all (T-3307's call), so a player stuck there can't report it.
-  - Other: notes/T-3630.md "Follow-ups"
-- T-3444 [P2] {L:track-rework} Track, platform and station model rework
-  - Context: Design agreed 11-21 (notes/T-3444-design/; three small calls still open in review/track-rework-design.md). Built in 39 stages, T-3948 to T-3985 and T-4024, in four releases, on a long-lived branch tw/track merged into master at each release. Stage 1 (T-3948) is done on master; next is stage 2a (T-3949). Your weekend notes (2026-11-16) are the heart of it.
-  - Goal: Closes with the last of its stages.
-  - Other: Your notes verbatim: notes/T-3444.md; sizes in notes/code-tour.md. Requirements folded in 11-20: a station placed on track that leaves its shape alone redraws no neighbours (T-2767, 0.2-0.9 s today); the drawn network rebuilds only near a change (T-2701); the Penn Station to Emeryville snapped preview (3 s, T-763) as a check case. notes/review-edit-speed-2026-11-20.md
-- T-4026 [P2] {L:track-rework} {after:the first tw/track release} TWT7 outside the game before the merge
-  - Context: From T-3953: before tw/track merges into master, shonei-server's save check must walk TWT7 (body levels 1-4) and levels 39-41 (deploy on your yes), `pipeline/readsave.py` must read TWT7, and 07-saves still says "body level 36". Master's next save level is renumbered past tw/track's 40 at that merge.
-  - Goal: A TWT7 save passes the server check and readsave.py on a real save; the docs say level 40.
-- T-3958 [P2] {L:track-rework} {after:the first tw/track release} Ship the re-saved sandbox starts at the merge
-  - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7.
+- T-3444 [P2] {L:track-rework} Track, platform and station model rework (taking, 2026-11-27, agent tracksync)
+  - Context: Design agreed 11-21, revised 11-28 after Gemini's two reviews (notes/T-3444-design/README.md). About half of release 1 is built on tw/track: stages 1 to 4c, Add a track, stations off the track in the simulation. Master's 575 commits since 11-23 are being merged in. Release 1 from here about 40-70 h, plus 10-20 h of fixes.
+  - Goal: Closes with the last of its stages; release 1 merges into master after the crash round and the Asia edit speed run (T-4519, T-4521).
+  - Other: Your notes verbatim: notes/T-3444.md; the plan: notes/T-3444-design/10-build-plan.md. Requirements folded in 11-20 (T-2767, T-2701, T-763): notes/review-edit-speed-2026-11-20.md
+- T-4026 [P2] {L:track-rework} {after:T-3963} TWT7 outside the game before the merge
+  - Context: Before tw/track merges into master: shonei-server's save check must walk TWT7 (every body level) at the final save level, building on T-4435's level 43 (not deployed), and `pipeline/readsave.py` must read TWT7 with its path parts. One server deploy on your yes, before release 1 ships.
+  - Goal: A TWT7 save at the final level passes the server check and readsave.py on a real save.
+  - Other: notes/T-3444-design/07-saves.md "Save level"
+- T-3958 [P2] {L:track-rework} {after:T-3965} Ship the re-saved sandbox starts at the merge
+  - Context: Stage 3g landed on tw/track 11-22: `realnet.py resave` re-saves all 41 starts as TWT7 with bundles (same fingerprints, London 256 ms), but data/packs/real keeps today's TWT6 files since master can't read TWT7. T-3965 rebuilds them with station records first.
   - Goal: At the merge, in an empty `REALNET_OUT`, `realnet.py resave` exits 0 with 41 lines, then `realnet.py ship` (never ship without it: stale October files). Steps in notes/T-3958.md.
   - Other: notes/T-3958.md (on tw/track).
-- T-4067 [P2] {L:track-rework} Connect an added track manually
-  - Context: Add a track leaves the new track loose at both ends (your 11-21 call), and no tool yet joins one track of a 3+ track piece, so a line can't use an added track. Your 11-21 picture: draw a single track between two single tracks. Proposed by agent addtrack: a join naming the one track across a node.
+- T-4067 [P2] {L:track-rework} {after:the tw/track sync} Connect an added track manually
+  - Context: Add a track leaves the new track loose (your 11-21 call), and no tool yet joins one track of a 3+ track piece, so a line can't use an added track. Your picture: a single track drawn between two tracks. Plan: a join naming one track across a node. In release 1, so Add a track ships usable.
   - Goal: A double made 4 tracks, a single drawn from each new track's end to the track beyond, then a line set on the new tracks runs.
-  - Other: About 3-5 h. Sim tracks.rs (the join), wasm/draw.rs (the track tool's joins), the app's track snapping. notes/T-4024.md
-- T-4030 [P2] {L:track-rework} {after:T-3959} Tracks held as their own records in memory
-  - Context: Stages 3a1-4a1 kept today's in-memory model, where a piece is the derived edge with at most one track each way; 3b saves each track alone but loads back into it. So stations still split pieces, one track of a double can't be flipped, and a third track can't pass a station. No stage built 01-model.md's bundles (notes/T-3957.md).
-  - Goal: Bundles and tracks stored in memory, compiled to the derived edges, stations no longer cutting pieces; parity gates A and B byte identical. Stages T-4031 to T-4037 (about 30-37 h).
-  - Other: 4b (T-3961), Add a track (T-4024), 4d (T-3963) and 5a (T-3966) wait on its stages. Found by maps-5a with the advisor, 11-22. notes/T-4030.md
+  - Other: About 2-3 h. Sim tracks.rs (the join), wasm/draw.rs (the track tool's joins), the app's track snapping. notes/T-4024.md
+- T-4030 [P2] {L:track-rework} {after:T-4037} Tracks held as their own records in memory
+  - Context: Stages a to f landed on tw/track 11-22 (T-4031 to T-4036): track records on pieces, runs on derived edges, paths naming tracks, trains and ribbons per track, platforms on tracks, routing to stop points. Stage g, stations placed without cutting track, is T-4037.
+  - Goal: Closes with T-4037.
+  - Other: notes/T-4030.md
 - T-4039 [P3] {L:track-rework} Singles joined to a double with its own ways
   - Context: From T-4038: a single joined to a double whose tracks run ways of their own still takes its way from the running side (`join_away`, `join_for`), not from the joined track. Only meets a flip whose segment ends at a junction with a joined single. Reach: few players until they flip tracks.
   - Goal: The single reads the joined track's real way, with `way_lines` checking lines in the same edit.
   - Other: notes/T-4038.md
-- T-4037 [P2] {L:track-rework} {after:the 0.4.6 publish} Stations placed without splitting track
-  - Context: You, 11-23: "yes, can keep going with track plan." Design: notes/T-4037-design.md, about 5.5-6.5 h. Before building, bring you the pick for lines that turn back at a middle stop: (a) paths keep naming whole pieces and get a turn marker; (b) paths are written on the compiled track, cut at every station. Say what each means for flips.
-  - Other: 4-5 h. notes/T-4030.md
+- T-4037 [P2] {L:track-rework} {after:the tw/track sync} Stations placed without splitting track
+  - Context: Your (b), 11-23: routes written on the track as stations cut it. Built on tw/track: g1, g2, and g3's edits that keep stations off the track right. Left: g3b's six groups of failing tests with that switched on, the branch review's station bugs, then the station tool switched (after T-4518's answer), and g4, the drawing.
+  - Goal: The station tool places stations without cutting track on single, double and 4 tracks; figures equal to a split on the reference saves; undo exact.
+  - Other: About 5-7.5 h. Design notes/T-4037-design.md; progress notes/T-4037.md (on tw/track); notes/T-3444-design/10-build-plan.md
+- T-4517 [P2] {L:track-rework} {after:T-4043} Platform ids apart from node ids
+  - Context: From T-4035: a station holds at most two platforms, each on one track (ids 2s and 2s+1 from its node), so an island serving two tracks or a station on 4 tracks can't be placed. T-4043 keeps platform ids tied to the node, so it doesn't cover this.
+  - Goal: A station of two islands on 4 tracks saved, loaded and undone with every platform kept.
+  - Other: About 1.5-3 h, before T-3963. notes/T-3444-design/10-build-plan.md
+- T-4518 [P2] {L:track-rework} {waits:Anita} Picking track between stations
+  - Need from Anita: Once stations stop cutting the track, should a click still pick just the stretch between two stations, the game cutting the track there when you change it? I'd say yes.
+  - Context: From T-4037 g3b: with stations off the track, a click picks the whole stretch from junction to junction, so making the part between two stations single, raised or one way would need a joint first. Today players pick between stations.
+  - Goal: If yes: the stretch between two stations made single in one edit and one undo.
+  - Other: About 1.5-2.5 h, before the station tool switches (T-4037). notes/T-4037.md "For Anita" (on tw/track)
+- T-4520 [P2] {L:track-rework} {after:the tw/track sync} Branch fixes from Gemini's read
+  - Context: Gemini's read of tw/track, checked: Add a track on built two-way single puts its lines' way back on blueprint track, so they stop; a line left on a removed track saves bytes the game then refuses as newer; a flip's charge and undo against the per-track price; stations off the track in a frame conversion and on a removed piece.
+  - Goal: Each with a cargo test; lines keep running until Construct; every save the branch writes opens.
+  - Other: About 2-4 h. artifacts/trainworld/gemini/T-3444-branch-review.md findings 1-3, 11, 12; notes/T-3444-design/10-build-plan.md "Review 11-28"
 - T-3961 [P2] {L:track-rework} {after:T-4037} Old station nodes merged into anchors
-  - Context: Stage 4b's two named fixes landed on tw/track 11-22. The merge waits: the design's rule (joined piece's length equal to its two pieces' to the bit) merges only 22 of 4,581 reference stations, 2,790 within 1 mm, and an anchor's piece can't take a station until stage g. Up to 1 mm is invisible, so that tolerance is the plan.
+  - Context: Stage 4b. Under your (b) the converter renumbers line paths into parts, exactly; lengths merge within 1 mm (to the bit merged 22 of 4,581 reference stations, within 1 mm 2,790). Every field keyed by an old station node moves with it: fare zones, BRT, links, separated pairs, kept bus stops' connections, lines' stops and picks.
   - Goal: Old saves' station nodes become stations on anchors, figures equal to before within the tolerance.
-  - Other: Prototype and counts in notes/T-3961-merge.patch (applies to b19961f2). notes/T-3961.md
-- T-3963 [P2] {L:track-rework} {after:T-4037} Station tool templates and preview
-  - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
+  - Other: About 2-3 h. notes/T-3961.md (on tw/track); notes/T-3444-design/07-saves.md step 6
+- T-3963 [P2] {L:track-rework} {after:T-4517} Station tool templates and preview
+  - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform, placed as anchors; the pointer picks the tracks (on more tracks, side platforms take the track under it and its neighbour nearer the pointer); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways. 4 tracks needs T-4517.
   - Goal: All three templates on single, double and 4 tracks; strings listed.
-  - Other: Side by side with 4b, 4c, 4e. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
-- T-4043 [P2] {L:track-rework} {after:next week's usage} Station ids apart from node ids
-  - Context: Paused 11-22 for the week's usage before any code; the plan (own dense station ids with a stop-node map, about 700 call sites unchanged) is in tree stationids's notes/T-4043.md. Stations are known by their node's id, so one can't take in platforms on another node. Join to station and Make a separate station (T-3964) wait on this. About 5-8 h.
+  - Other: Side by side with T-3967. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 3-4 h. stage 4d
+- T-4043 [P2] {L:track-rework} {after:T-3961} Station ids apart from node ids
+  - Context: Paused 11-22 before any code; the plan (own dense station ids with a stop-node map, about 700 call sites unchanged) is in notes/archive/trees/stationids-untracked/T-4043.md. Its audit adds what master added since: kept bus stops' connections (LBK1) and separated pairs (LAP1). Join to station and Make a separate station (T-3964) wait on this.
   - Goal: Stations carry their own ids, saved and loaded, with old saves mapping each node station to one id and figures unchanged.
-  - Other: notes/T-3961.md
+  - Other: About 3-5 h. notes/T-3961.md
 - T-3964 [P2] {L:track-rework} {after:T-4043} Join to station and Make a separate station
-  - Context: Stage 4e's platform picture landed on tw/track 11-22 (platforms added and removed from the station panel). Join to station and Make a separate station need a station's membership stored apart from its node, which 4b (T-3961) brings; stand-ins on passages were dropped. Also found: the sim accepted an eastbound-only station beside a westbound-only twin, which the docs forbid.
+  - Context: Stage 4e's platform picture landed on tw/track 11-22. Both buttons need a station's membership apart from its node (T-4043). Joining a pair you separated (T-4048) clears the separation. Also found: the sim accepted an eastbound-only station beside a westbound-only twin, which the docs forbid.
   - Goal: Both buttons on the platform picture, joining by the name within 300 m as the design says.
-  - Other: StationInspector.tsx, PlatformPicture.tsx. notes/T-3964.md
+  - Other: About 1.5-2 h. StationInspector.tsx, PlatformPicture.tsx. notes/T-3964.md
 - T-3965 [P2] {L:track-rework} {after:T-3961} Sandbox starts with station records
   - Context: The starts rebuilt with stations as records, keeping today's stations.
   - Goal: Every start loads settled; rides within 2% of today's.
-  - Other: Files: realsave.rs, realshared.py. 2-3 h. stage 4f
+  - Other: Then T-3958 ships them. Files: realsave.rs, realshared.py. 1-2 h. stage 4f
 - T-3966 [P2] {L:track-rework} {after:T-4037} Drawn network rebuilt per bundle
-  - Context: Drawn records keyed by bundle chunk and chainage, so an edit redraws only what it touched (T-2767, T-2701).
-  - Goal: A station on built track redraws no other bundle: worker 30 ms or less, shows up in 400 ms median or less on the 2,647-station save (1,925 ms today).
-  - Other: Closes T-2767 and T-2701. Files: network.ts, strokeCache.ts, clockPost.ts. 4-6 h. stage 5a
+  - Context: Master's T-4153 now redraws only what an edit touched (your 11-23 call), so this stage keeps that true on tw/track with stations off the track: ribbons keyed by a line's tracks with parts merged, so a station placed redraws no other bundle or line.
+  - Goal: A station on built track no slower than master's for the same click, on real NYC and the 2,647-station save; ?patch=check clean.
+  - Other: Closes T-2767 and T-2701. Files: network.ts, lineBands.ts, strokePost.ts, strokeSlots.ts. 1.5-3 h. stage 5a
 - T-3967 [P2] {L:track-rework} {after:T-3966} Line ribbons per track
-  - Context: Lines side by side on one track laid out from their paths; `besideSamples` goes. Left by T-4034 (notes/T-4034.md): in the Traffic view, trains on a 3+ track piece sit off their band; ribbons from a double cross into track order where 4 tracks begin; a line with its own way back over a 3+ track piece never ran.
-  - Goal: Midtown's ribbons look as today; the Penn Station to Emeryville preview timed (3 s on 10-19).
-  - Other: Closes T-763. Files: lineBands.ts, corridors.ts. 3-4 h. stage 5b
+  - Context: Lines side by side on one track laid out from their paths; `besideSamples` goes for the ribbons and the network diagram, which reads it too (clockPost.ts, diagram/graph.ts). Left by T-4034: Traffic view trains off their band on 3+ tracks; ribbons crossing into track order where 4 tracks begin; a line's own way back over 3+ tracks never ran.
+  - Goal: Midtown's ribbons and the diagram look as today; the Penn Station to Emeryville preview timed (3 s on 10-19).
+  - Other: Closes T-763. Files: lineBands.ts, corridors.ts, clockPost.ts, diagram/graph.ts. 2-4 h. stage 5b
+- T-4519 [P2] {L:track-rework} {after:T-3967} Crash round before release 1
+  - Context: You, 11-27: "we'll have to be careful with edit speed and crashes ... we can do that all at once closer to release". The edit fuzzer (T-4116's edit_fuzz) on Amsterdam test, Vienna, real NYC, North America 383 and your Asia save; your own saves played; a Gemini adversarial read of the branch. T-4116's panic first.
+  - Goal: Every panic, refused reload or broken invariant found has a test and a fix; the fuzzer runs clean on all five saves.
+  - Other: About 3-5 h plus fixes. notes/T-3444-design/10-build-plan.md "Gates"
+- T-4521 [P2] {L:track-rework} {after:T-4519} Release 1 merged into master
+  - Context: The last gate: edit_bench on your Asia save (click run, station built, Delete line, stop click) against master's numbers that week, perf_bench on real NYC; the reference saves and real NYC with figures equal to master's where nothing new is used; smoke; T-4026 deployed on your yes; T-3958's starts shipped; your play on 8800.
+  - Goal: tw/track merged into master; no number more than 10% worse than master's, or the trade-off brought to you.
+  - Other: About 3-5 h. notes/T-3444-design/10-build-plan.md "Gates"
 - T-3968 [P3] {L:track-rework} {after:T-3967} Draw up to sixteen tracks in one stroke
   - Context: The More button's count stepper (3 to 16) and its two layouts, Side by side and By direction, which only preset the tracks' ways. Adding one track, its price and removing one moved to T-4024 and 3e.
   - Goal: 6 tracks drawn by direction in one stroke, priced by the per-track rule.
@@ -726,7 +725,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3970 [P3] {L:quad-track} {after:T-3967} One line over several tracks
   - Context: The hidden twin line goes; a line runs equal shares of its trains on each track it uses; panels read one line.
   - Goal: The t3333 save gives the same trains and rides.
-  - Other: Side by side with 6a and 6b. Closes T-3335. Files: twin.rs, service.rs, world.rs twin_ops, the line panel. 3-5 h. stage 6c
+  - Other: Side by side with 6a and 6b. Closes T-3335. Files: twin.rs, service.rs, world.rs twin_ops, the line panel. 3-5 h. stage 6c. Nudges and retime's plan memo by pattern: notes/T-3444-design/10-build-plan.md "What later master changes mean"
 - T-3971 [P3] {L:passing-tracks} {after:T-3970} Real passing loops on single track
   - Context: The loop drawn at a single-track station becomes real track; a little less waiting where lines share one, and a terminal there turns 30 an hour (decision 20).
   - Goal: Parity B except the reviewed differences part 5 lists.
@@ -734,10 +733,10 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3972 [P3] {L:passing-tracks} {after:T-3971} Passing tracks as real track
   - Context: The passing tracks button builds real tracks; overtakes read the tracks (a train that doesn't stop takes the free track past a stopped one when it can); each line stops on one platform track (decision 19); the terminal stays an upgrade.
   - Goal: T-2231's line keeps its express and local times.
-  - Other: Files: upgrades.rs, overtake.rs, network.ts passing drawing, the station panel. 4-6 h. stage 7b
+  - Other: Files: upgrades.rs, overtake.rs, network.ts passing drawing, the station panel. 4-6 h. stage 7b. Real passing tracks keep marking FOLLOW_PASSING, so lines timed together still nudge together (10-build-plan.md)
 - T-3973 [P3] {L:track-rework} {after:T-3972} Track purpose
   - Context: Each track or long selection can be Any line or Only for chosen lines; routing and capacity read it. No "Passing track" purpose (you, 11-21: "passing track doesnt really need to be specified ... non-stoppign trains can just avoid stopped trains if they have the option").
-  - Goal: An express pair kept to expresses; a passing track used only for overtakes.
+  - Goal: An express pair kept to expresses by Only for chosen lines.
   - Other: Files: net/paths.rs, overtake.rs, TrackInspector.tsx. 4-6 h. stage 7c
 - T-3974 [P3] {L:track-rework} {after:T-3973} Crossovers drawn as single track
   - Context: Your note: a crossover is a single track drawn between two tracks (the tool lays the S); a scissors is two; old crossovers load as singles; turnback crossovers are laid with the stop edit, priced, deletable; figures at termini unchanged.
@@ -981,9 +980,6 @@ Anita's notes 2026-11-04 evening (verbatim in notes/todo-2026-11-04f.md; briefs 
   - Other: notes/T-2424.md
 Anita's notes 2026-11-04 midday (verbatim in notes/todo-2026-11-04c.md; briefs quote it word for word):
 Anita's playtest with a friend, filed 2026-11-03 evening (verbatim, grouped, in notes/todo-2026-11-03h.md; briefs quote it word for word):
-- T-4371 [P3] {L:help-tutorial} Say what blueprints are
-  - Context: A Japanese player on 0.4.7 (tw-feedback 1795696901, 11-26) doesn't know what "blueprints" in Settings refers to and asked for an explanation in Japanese; the tab reads 計画 there.
-  - Goal: A player meeting the word in Settings or the toolbar can find out what a blueprint is in one line, in every language.
 - T-2280 [P3] {L:help-tutorial} {after:tutorial playtest} More tutorial hovers
   - Context: Only if your tutorial playtest asks for more: the demand bubble hover, Train length, and the top bar's split.
   - Goal: Longer tutorial-only hovers for those three, if the playtest wants them.
@@ -1278,10 +1274,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-4369 [P3] {L:passing-tracks} Up trains skip a passing loop down trains use
   - Context: A player on 0.4.7 (tw-feedback 1795654684, 11-25): on a line with passing loops, down trains wait in the loop as they should, but up trains don't and get stuck behind. One report.
   - Goal: Both directions wait in a loop the timetable plans for, shown on a small case built like the player's.
-- T-4356 [P3] {L:track-speed} Ramp speed labels while dragging and in the blueprint box
-  - Context: From T-4349: node drags, the blueprint box and an idle selected stretch show curve labels but no ramp labels. Missing, not wrong; the drawing tool shows both.
-  - Goal: Every place that labels a curve's limit also labels a ramp that is the lowest limit.
-  - Other: notes/T-4349.md
 - T-4345 [P3] {L:fares} A fee to use a station's park and ride
   - Context: You, 11-25: "i think there probably also are some people having issues with parking lots with non tram lines. but yeah we can just do this for now. can maybe file like charging a fee to use parking lot as a task, could be fun". A rail station's lot costs US$40k a day and earns nothing.
   - Goal: A design for a parking fee that earns money and puts some drivers off, shown to you before it is built.
@@ -1406,10 +1398,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You, 11-20: pack rather than drop, "we dont really have to do anything there til we get cloesr to the limit". Measured 11-20: 5.05 GB is 55% backups, 35% current saves, 9.5% pictures; the 16 GB cap fills Dec 5-10 at today's growth. A backup stored as a difference is 6-16% of its size; packing frees about 1.26 GB now.
   - Goal: Packing deployed, with the games cap raised to about 24 GB (safe on the disk), before the store reaches 12 GB.
   - Other: notes/T-3821.md, notes/T-3243.md "Games"
-- T-3395 [P1] {L:accounts-server} {after:the 11-20 and 11-21 scan reports} Close once the save scan runs clean
-  - Context: You, 11-15: damaged saves caught on upload and in a daily scan, their bytes kept, the last intact version pinned with a way to restore it. All three stages are live (server 11-18, game v0.4.0). The 11-19 pass found two damaged games on one account, each a first save never saved again. Still damaged on 11-20 means old damage: close.
-  - Goal: The scan has run a day clean.
-  - Other: Requested by you 2026-11-15. notes/T-3395.md
 - T-2573 [P3] {L:checks} Worker check misses the walker rule
   - Context: Three Boston lines tried and reverted: rail takes no walkers in the fixture whichever pair is served. Needs a Rust-side look at the pair share (e_frac) before choosing stops.
   - Goal: The check covers a line serving two stations at both ends of a walkable cross-pack pair.

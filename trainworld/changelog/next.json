@@ -3,6 +3,42 @@
   "line": "",
   "items": [
     {
+      "id": "c028",
+      "text": "cities served counts only cities with 1,000 train trips a day",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4049",
+      "by": "blueprinttip",
+      "at": "2026-11-28T02:35:12Z",
+      "rev": 1,
+      "area": "demand",
+      "fix": false
+    },
+    {
+      "id": "c027",
+      "text": "track speed labels show while dragging a node and moving blueprints",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4356",
+      "by": "smallui",
+      "at": "2026-11-28T02:31:57Z",
+      "rev": 1,
+      "area": "track",
+      "fix": false
+    },
+    {
+      "id": "c026",
+      "text": "added a Submit feedback button to the browser error screens",
+      "edited": null,
+      "hidden": false,
+      "task": "T-3675",
+      "by": "smallui",
+      "at": "2026-11-28T02:31:55Z",
+      "rev": 1,
+      "area": "other",
+      "fix": false
+    },
+    {
       "id": "c025",
       "text": "added a button to show the schedule window's offset column, and offsets for weekends",
       "edited": null,

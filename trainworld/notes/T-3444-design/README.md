@@ -1,10 +1,44 @@
 # Track, platform and station rework: design (T-3444)
 
-The design you agreed on 2026-11-21, revised to your answers (`answers-2026-11-21.md`). Nothing is built, and none of
-the strings in it are final. Written by agent trackdesign with seven helpers: four research (other games, player
-requests, today's code, real stations) and three drafting.
+The design you agreed on 2026-11-21, revised to your answers (`answers-2026-11-21.md`), and on 11-28 to Gemini's two
+reviews and your 11-27 notes. Written by agent trackdesign with seven helpers; revised 11-28 by agent trackplan.
 
-## The summary
+## Where it stands (11-28)
+
+1. About half of release 1 is built, on its own branch (tw/track), 11-21 to 11-23: every track is its own single
+   track, 1 to 16 side by side; one track can be picked, flipped and deleted; Add a track; long selections; stations
+   and platforms as records; one-click two-way stops; the stop list's track chip. Stations that sit on the track
+   without cutting it work in the simulation, but the station tool still cuts the track.
+2. Paused 11-23 to 11-27. Master moved 575 commits meanwhile, and they are being merged into the branch now. From
+   here the branch takes master after every batch that touches track, stations, lines or saves.
+3. Left for release 1: stations placed without cutting the track (T-4037), old saves' stations converted (T-3961),
+   station and platform ids of their own (T-4043, T-4517), the station tool's three templates (T-3963), Join to
+   station (T-3964), a way to connect an added track (T-4067), lines drawn per track (T-3966, T-3967), and fixes from
+   Gemini's read of the branch (T-4520).
+4. Then, as you said on 11-27, one crash round near the release instead of crash hunting while building: the edit
+   fuzzer on your saves and a Gemini adversarial read of the branch, your T-4116 panic first (T-4519). Plus an edit
+   speed run on your Asia save against master; anything more than 10% slower comes to you (T-4521).
+5. About 40-70 h of agent time for release 1 from here, plus 10-20 h of fixes after. Releases 2 to 4 are unchanged.
+6. Gemini's reviews: of the plan's 15 points, 7 stand, 7 partly, 1 wrong; of the branch's 12 bugs, 6 are confirmed in
+   the code, 2 partly, 4 likely. Each is in the plan or a task now ("Review 11-28" in 10-build-plan.md).
+
+## Your call
+
+- Once a station no longer cuts the track, a click picks the whole stretch from junction to junction, so "make just
+  the bit between these two stations single" would need a joint first. Should a click still pick the stretch between
+  the stations either side, with the game cutting the track there when you change it (T-4518)? I'd say yes: it is
+  what players do today.
+
+Settled already: the route question for lines that turn back at a middle stop was yours on 11-23 ((b): routes are
+written on the track as stations cut it), and its first two steps are built on it. The three small calls this page
+used to list were answered on 11-21 (no passing track purpose; turnback crossovers come with the stop edit; where none
+fits, the line turns back as today).
+
+Decided by us, for you to know: dragging a station slides it along its track (bending is done with the track's own
+points); deleting track keeps the stations on it (your 11-23 call); on 3 or more tracks a station's platforms sit on
+the outer two until the templates come.
+
+## The design in short (11-21)
 
 **What goes wrong today.** The game knows two kinds of track piece, single and double. Quad is two doubles that the
 game finds again by measuring how far apart they are, in at least six places, each with its own distance. Passing
@@ -42,19 +76,10 @@ is a new feature's bug tail more than the usual rate.
   platform at that click and remembers it, so your split one-way legs work in one click. Exact stops are an option
   on each line: a numbered circle for every track a train could stop on, as in your notes.
 
-**How it lands.** On its own branch, so the game keeps shipping and hotfixes go out while it is half done. It merges
-in four releases (hours of real agent time; past track work built in about half its first guess, then drew a week of
-fixes):
-1. The foundation, 73-102 h: the three cases, one track pickable, Add a track, long selections, the station tool's
-   templates, stations on built track showing up in under half a second instead of about 2 s on the big save.
-2. More tracks, 30-44 h: any count in one stroke, the crossover offer, drawing by direction, real passing loops and
-   passing tracks, track purpose, crossovers as single track.
-3. Stations, 27-37 h: islands that spread the tracks, the Spanish solution, the 1-minute island change, tapering and
-   drawn platforms, exact stops, quick-placed and copied station layouts.
-4. Real stations from OSM, 10-15 h, low priority.
-
-About 140-200 h in all, plus 10-20 h of fixes after the foundation. Old saves are converted when they load, with the
-old bytes kept; your Amsterdam "test" save is tried first, then the Vienna community save, then North America day 383.
+**How it lands.** On its own branch, merged into master in four releases: the foundation (single, double and
+more tracks, stations off the track, the station tool's templates), more tracks (any count in one stroke, crossovers,
+passing tracks, purpose), stations (islands, the Spanish solution, exact stops), and real stations from OSM. Old saves
+are converted when they load, with the old bytes kept. Hours and order: 10-build-plan.md.
 
 ## What you decided
 
@@ -68,19 +93,6 @@ islands 6 m wide (7), direction per track with long selections (10), real crosso
 stops: a junction, a station's throat, or where that track meets other track. The idea was to connect the new track
 to its neighbour there, so trains could get on it. You have since said to leave added tracks unconnected and offer
 crossovers when a line needs them, so that is what the design does now.
-
-## Still open for you (my pick in brackets)
-
-1. Track purpose: a passing track is where a stopping train waits for a faster train of another line, and trains
-   that don't stop there keep off it; "only for these lines" just keeps other lines' routes off the track? (yes)
-2. A line that turns back on double track gets its crossover laid with the stop edit, its cost in the edit, without
-   the "Build crossovers?" question? (yes)
-3. Where no turnback crossover fits, the line still turns back as it does now, rather than the stop being refused?
-   (yes)
-
-Decided by us, for you to know: crossovers are laid for the flyover target speed (80 km/h by default, about 80 m
-long); old double-track crossovers load as double track; a stop whose two directions use different platforms shows
-as one row in the stop list, with the track chip.
 
 ## The parts
 
@@ -96,6 +108,8 @@ as one row in the stop list, with the track chip.
 - [07-saves.md](07-saves.md): the save format and old saves
 - [08-performance.md](08-performance.md): eleven speed requirements with numbers, and the measurements to take first
 - [09-real-networks.md](09-real-networks.md): sandbox starts, OSM and GTFS
-- [10-build-plan.md](10-build-plan.md): the branch, 39 stages of 2-6 h, the releases, where each paused task goes
-- [tasks-to-file.md](tasks-to-file.md): one task per stage, ready to file
+- [10-build-plan.md](10-build-plan.md): where it stands, the branch rules and the sync checklist, release 1's stages
+  left, the gates before its merge, what master's changes mean for each stage, the 11-21 stages and releases, and
+  "Review 11-28" (both Gemini reviews, finding by finding)
+- [tasks-to-file.md](tasks-to-file.md): the 11-21 stage tasks as filed (TASKS.md has them as they are now)
 - research/: the four research reports; saves/: the reference saves
