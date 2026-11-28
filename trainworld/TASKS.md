@@ -694,7 +694,7 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-3963 [P2] {L:track-rework} {after:T-4037} Station tool templates and preview
   - Context: Your decision 2: Side platforms, Island (zero width for now) and Single platform; the pointer picks the tracks (on more tracks, side platforms take the track under the pointer and its neighbour nearer the pointer, never by pairing); a platform placed overlapping a station joins it; the ghost shows the covered tracks and their ways.
   - Goal: All three templates on single, double and 4 tracks; strings listed.
-  - Other: Side by side with 4b, 4c, 4e. Closes T-3354. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
+  - Other: Side by side with 4b, 4c, 4e. Files: stationTool.ts, stationSnap.ts, ToolBar.tsx. 5-6 h. stage 4d
 - T-4043 [P2] {L:track-rework} {after:next week's usage} Station ids apart from node ids
   - Context: Paused 11-22 for the week's usage before any code; the plan (own dense station ids with a stop-node map, about 700 call sites unchanged) is in tree stationids's notes/T-4043.md. Stations are known by their node's id, so one can't take in platforms on another node. Join to station and Make a separate station (T-3964) wait on this. About 5-8 h.
   - Goal: Stations carry their own ids, saved and loaded, with old saves mapping each node station to one id and figures unchanged.
@@ -1252,9 +1252,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Goal: A design for you first; then a save traces back to its original.
 - T-3850 [P3] {L:community} Friend requests and messages
   - Context: Your TODO.md, 11-20: "community: friend request and message people?" Design for you first.
-- T-3943 [P3] {L:map-look} Hide lines by mode
-  - Context: Player request via your scratch pad, 11-21: "hide lines of a certain type from map (i thin kwe can just expand the settings 'ferries and buses' to include icons for each mode type... show all should show all of those too. for trains and trams, if mode is disabled *or* level is disabled we can hide the line."
-  - Goal: The map settings' "ferries and buses" row becomes one toggle per mode, Show all covers them, and a train or tram line hides when its mode or level is off.
 - T-3942 [P3] {L:region-redraws} {after:Norway's next rebuild} Norway zone borders
   - Context: Your scratch pad, 11-21: "someone keeps complaining about norway zone borders, not super high prio can do with other zone redraws". The player (artifacts/trainworld/board/20261120-233223-7f4b.png): split the Bergen zone so Stavanger has its own, and the islands now in Oslo's zone belong with Ostfold.
   - Goal: Stavanger its own zone and those islands in Ostfold's, with Norway's next zone rebuild.
@@ -1352,9 +1349,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: You, 11-20: "rivers big improvement. still not perfect (there are some islands that are not islands irl) but i think its good to ship this." On your North America save: a line through Panama to Colombia, "panama appearing as a tiny archipelago of many disconnected islands... not super high prio but should file" (artifacts/trainworld/board/20261120-112548-a8e1.png).
   - Goal: Thin land (Panama's isthmus first) stays joined land on a country map, and a line over land never runs mostly through water.
   - Other: notes/T-3839.md
-- T-3354 [P3] {L:single-track} One-track platform jumps sides when dragged north-south
-  - Context: Not reproduced 2026-11-16 (bug-a): a station node's heading stays put when dragged, so the fixed axis never flips in the sim. Needs the exact drag that shows it.
-  - Other: About 1 h. notes/T-3332.md.
 - T-3353 [P3] {L:single-track} {after:the track rework design} Second single from a double's end refused
   - Context: When the first single came in at an angle, a second single to a close target gets RadiusTooSmall. Stage 3e (T-3956) did not fix it: the node's heading, set by the first single, is the cause, not the joins; a double's two tracks extended from a straight end work.
   - Goal: A route leaves a node anywhere in the cone between the ends' headings.
@@ -1362,10 +1356,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
 - T-3453 [P3] {L:schematic} Finer schematic grid near dense cities
   - Context: Option B of T-3448, queued by you 2026-11-16 for later: make the sheet's grid finer wherever stations are dense, whatever the map's size; would also help cities squished too much. A redesign of the sheet's land and water grid, a day or more.
   - Other: notes/T-3448.md
-- T-3345 [P2] {L:schematic} Better schematic
-  - Context: Your umbrella for schematic work (2026-11-16). Both fixes you picked from mocks landed 2026-11-12: cities keep their turn on big maps, and bigger city centres.
-  - Goal: Open while its parts are: buses and ferries (T-3360), the continent-scale view (T-2724), rivers (T-3358, paused). Nothing lands before you review it.
-  - Other: notes/T-3345.md
 - T-3346 [P2] {L:timetables} {after:next week's usage} Timetables, stage 3 onward
   - Context: Stage 3 paused 11-22 for the week's usage, half built in tree timetables (not landed; notes/T-3346.md). Design: Simple, Detailed and Exact modes, six stages; 1 and 2 landed. Left of 3-4: up to 6 freely split rows, weekend-only lines, weekend rows with their own hours, the board's weekday/weekend tabs. Old tree tt2's work: artifacts/trainworld/tt2-unported-2026-11-19.patch.
   - Goal: The rest built in stages (about 40-60 h before Exact).
@@ -1412,10 +1402,6 @@ Anita's TODO.md "short term", filed 2026-10-26 (afternoon).
   - Context: From T-3509's checker: with intercity trips on, goals and achievements now wait for a market table with at least one row; after a worker failure that never delivers one, they would wait for good. Not tested.
   - Goal: After a worker failure or a long wait, goals fall back to local figures or wait for the restarted worker's result; probed once.
   - Other: notes/T-3509.md
-- T-3697 [P3] {L:checks} Old-layout diagram checks fail
-  - Context: From T-3446: once diagram-game.mjs's syntax error was fixed, checks that test the old unsheeted diagram layout ran again for the first time since T-2590, and fail: t2289 on jpn (at HEAD too), t2407's movement and distance lines, t2162's time limits on nyc and tyo (tyo misses one interchange name).
-  - Goal: Each retired to checks/old/ if it only tests the old layout, or rewritten to the sheet layout and passing.
-  - Other: notes/T-3446.md
 - T-3821 [P3] {L:accounts-server} {after:the games store passes about 10 GB} Pack idle games' backups as differences
   - Context: You, 11-20: pack rather than drop, "we dont really have to do anything there til we get cloesr to the limit". Measured 11-20: 5.05 GB is 55% backups, 35% current saves, 9.5% pictures; the 16 GB cap fills Dec 5-10 at today's growth. A backup stored as a difference is 6-16% of its size; packing frees about 1.26 GB now.
   - Goal: Packing deployed, with the games cap raised to about 24 GB (safe on the disk), before the store reaches 12 GB.

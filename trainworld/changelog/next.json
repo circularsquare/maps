@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c025",
+      "text": "added a button to show the schedule window's offset column, and offsets for weekends",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4510",
+      "by": "offsettoggle",
+      "at": "2026-11-28T02:10:29Z",
+      "rev": 1,
+      "area": "scheduling",
+      "fix": false
+    },
+    {
       "id": "c024",
       "text": "fixed new lines disappearing when zoomed in, and deleted lines or blueprints still showing zoomed out",
       "edited": null,

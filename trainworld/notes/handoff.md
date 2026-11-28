@@ -13,6 +13,7 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
 6. brief.py requires --tree and --port; fix in a tooling round.
 
 ## Her words
+- 11-27 21:16 her time: "lets do track rework before adding other modes, since track rework is kinda more promised" (DECISIONS). Asked for easy tasks to cut the count (sweep running, notes/task-sweep-2026-11-28.md). Offsets button: right end of the Set by row; text acknowledged.
 - 11-27 20:55 her time, nudges: players shift trains to space interlined lines evenly ("not one train A then a train B 2 minutes later, then like 20 minutes until the next train A"); "it would be cool if [ridership responded] ... but if it introduces lots of cost we dont have to do it in full weight way". T-4511: weekday/weekend switch yes, build now yes.
 - 11-27 20:14 her time: "pause any edit speed work for actions that already take under 50ms" (DECISIONS); shonei-server 07f5a75 (save level 43) not deployed yet: "we can deploy once more things are in"; ask again when the next publish nears.
 - 11-27 18:30 her time: a hidden mode that was never built "dont show up anywhere, like in build menus" (T-4334 Goal); nothing to do for Resend or R2; track rework not started while there is enough other work ("shouldnt spread ourselves too thin").

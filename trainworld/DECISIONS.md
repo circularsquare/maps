@@ -10,6 +10,8 @@ artifacts/trainworld/T-4120/.
 
 ## Track
 
+- 2026-11-27 (Anita, T-3444): The track rework comes before new modes (monorail, cable cars), "since track rework is kinda more promised".
+
 - 2026-11-27 (Anita, T-4335): Monorail track bends to 30 m ("monorails can get like 30m"); train track bends to 25 m. Lie: real monorails need 40-100 m on main lines, 35-40 m on small ones. notes/T-4334.md
 - 2026-11-27 (Anita, T-4335): Monorail track never crosses other track on its own level (a beam can't cross rails). Drawn across it with the ramp switch on, it ramps over where that fits; otherwise the crossing is refused. notes/T-4334.md
 - 2026-11-25 (Anita, T-4248): Track should cross the 180th meridian if players build there ("this is not a game to replicate real world rails"), replacing the refusal in docs/world.md "The plane's edges" once built; scoped first.
