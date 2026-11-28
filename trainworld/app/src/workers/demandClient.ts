@@ -122,7 +122,7 @@ import { fetchMarketDrives } from "../game/marketRule";
 import { lineFareMul, ownLineFare, type FareArea, type Fares } from "../game/fareCurve";
 import { takesMarketless } from "../game/fareInEffect";
 import { localStep } from "./demandSteps";
-import { saveSlotsState } from "./clockClient";
+import { awaitFirstState, onFirstState, saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
 import { DEMAND_KEY, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, standsIn, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 import { patientFetch } from "./patientFetch";
@@ -703,6 +703,8 @@ const RETRY_MS = [500, 1500, 4000];
 const BROKEN_RETRY_MS = [10000, 30000, 60000];
 /** T-1174: workers replaced after a panic in one page, before a further panic stops the pool */
 const MAX_RESPAWNS = 4;
+/** T-4583: the longest the packs wait for the clock worker's first state (a game that never posts one) */
+const STATE_HOLD_MS = 20_000;
 /** T-2704: the waits before each new try of a worker whose code did not download (as wasmInit.ts's) */
 const SCRIPT_WAITS_MS = [1_000, 4_000];
 /** T-1205 (measured, notes/T-1205.md): a fresh worker's WASM after a solve, as its heap at rest or that
@@ -1237,6 +1239,20 @@ class DemandClient {
     this.auxShared = n === 1 && phoneLoad() && !this.holding;
     for (let i = 0; i < n + (this.auxShared ? 0 : 1); i++) this.workers.push(this.spawn(i, i === 0 && n > 1));
     if (this.viewHeld) setTimeout(() => this.releaseView(), 10_000);
+    const openRest = () => { if (!this.stateHold) return; this.stateHold = false; this.releaseHeld(); this.postMarkets(); };
+    onFirstState(openRest);
+    setTimeout(openRest, STATE_HOLD_MS);
+    let loadSeen = gameLoadSeq.peek();
+    effect(() => {
+      if (gameLoadSeq.value === loadSeen) return;
+      loadSeen = gameLoadSeq.peek();
+      if (this.stateHold) return;
+      this.stateHold = true;
+      this.held ??= [];
+      awaitFirstState();
+      onFirstState(openRest);
+      setTimeout(openRest, STATE_HOLD_MS);
+    });
     // the viewed city loads when it changes (a pan, the city buttons)
     effect(() => { activeCity.value; viewedZone.value; zonesLoadForView.value; this.ensure(); });
     // and the zones beside it with bubbles on screen (T-276), once nothing waits on them
@@ -2184,6 +2200,17 @@ class DemandClient {
    * late (7-8 s in every worker instead of 1.5-2 s); compiled code is shared by a page's workers,
    * so after one worker's warm-up they all open on optimised code. Null once released. */
   private held: (() => void)[] | null = [];
+  private worker0Ready = false;
+  /** T-4583: the other solving workers' packs (and the markets) also wait for the clock worker's first whole state, so
+   * the map shows up sooner: they opened beside it took about twice as long (NYC, notes/T-4230.md). A timer ends the wait. */
+  private stateHold = true;
+  private releaseHeld() {
+    if (!this.held || !this.worker0Ready || this.stateHold) return;
+    const held = this.held;
+    this.held = null;
+    held.forEach((send) => send());
+    this.postMarkets();
+  }
 
   /** `full`: to every worker; `bare` (T-325): to the aux worker alone; `undecided` (T-351): either,
    * by the reach known once it has downloaded. A pack opened bare and reached later is fetched
@@ -2279,7 +2306,7 @@ class DemandClient {
     if (this.marketsDownloading.size || !this.marketsHeld.length) return;
     // T-1533: and after the city packs still downloading or held: a worker composing a big game's
     // market (a minute for China's 370) would hold up the zone in view's pack and its rough solve
-    if (this.held?.length || [...this.fetching].some((id) => !isMarket(id) && !this.bytes.has(id))) return;
+    if (this.held?.length || this.stateHold || [...this.fetching].some((id) => !isMarket(id) && !this.bytes.has(id))) return;
     // (one closed or given up on meanwhile is not sent)
     const held = this.marketsHeld.filter((m) => this.fetching.has(marketItem(m.id)));
     this.marketsHeld = [];
@@ -5021,7 +5048,7 @@ class DemandClient {
       this.start.workers[i] = { wasmMs: msg.wasmMs, openMs: msg.openMs, warmMs: msg.warmMs, memBytes: msg.memBytes };
       this.noteMem(i, msg.memBytes, msg.heap);
       // T-173: worker 0 has warmed the everyday code up; the held city packs may go
-      if (i === 0 && this.held) { const held = this.held; this.held = null; held.forEach((send) => send()); this.postMarkets(); }
+      if (i === 0) { this.worker0Ready = true; this.releaseHeld(); }
       if (!periodsMatch(msg.periods, PERIOD_STRIDE))
         console.error("demand: game/periods.ts disagrees with sim/src/track/params.rs PERIOD_HOURS / PERIOD_ROW", msg.periods);
       if (!this.periodTable.length && i < this.computeN) this.periodTable = msg.periods;

@@ -169,6 +169,14 @@ let stationsAheadSink: StationsAheadSink | null = null;
 export function onStationsAhead(f: StationsAheadSink) {
   stationsAheadSink = f;
 }
+let stateOut = false;
+const stateOutListeners: (() => void)[] = [];
+/** T-4583: call `f` once the clock worker has posted its first whole state (the map is on its way), at once if it has */
+export function onFirstState(f: () => void) {
+  if (stateOut) f(); else stateOutListeners.push(f);
+}
+/** T-4583: a game loaded into a page already running (a new game came first) has its own first state to wait for */
+export function awaitFirstState() { stateOut = false; }
 const roadsListeners: (() => void)[] = [];
 /** T-1929: call `f` whenever road tiles land in the track model (a ghost priced before them is out of date). */
 export function onRoadsLanded(f: () => void) {
@@ -1758,6 +1766,10 @@ export class ClockClient {
     const order = ++this.arrived;
     this.orders.set(msg, order);
     if (msg.kind === "state") this.orders.set(msg.state, order);
+    if (msg.kind === "state" && !msg.state.rows && !stateOut) {
+      stateOut = true;
+      for (const f of stateOutListeners.splice(0)) f();
+    }
     if (msg.kind === "edited") trace("clock-answer", { seq: msg.seq, ok: msg.ok, ms: msg.ms });
     if (msg.kind === "error") trace("clock-error", msg.message);
     if (this.deferred) { this.deferred.push(msg); return; }
