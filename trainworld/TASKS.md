@@ -250,7 +250,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage A1, your 11-27 yes. A later click on running track first works out the click before's train work, most of its wait on your Asia save (about 150 ms in Node, T-4441). Overlaps T-4281 (clickwait): read its notes first.
   - Goal: A quick run settles its trains once, after the answers; later clicks under 100 ms once T-4444 to T-4446 and T-4449 land.
   - Other: notes/T-4267.md
-- T-4444 [P1] {L:edit-speed} {after:T-4309} Track capacity updated by what an edit touched
+- T-4444 [P1] {L:edit-speed} {after:T-4309} Track capacity updated by what an edit touched (taking, 2026-11-27, agent capupdate)
   - Context: T-4267 stage C2. After a click the track capacity is worked out again twice, for weekdays and for the weekend service: 62 of the 152 ms train work on your Asia trunk (T-4441), 40 of it going over every edge, node and track resource.
   - Goal: Both updates find what the edit changed by index; together under 25 ms in T-4441's run (62 there).
   - Other: notes/T-4267.md; notes/T-4441.md
@@ -270,7 +270,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage A8, from Gemini's review. Every edit searches the track again for each line with a way back of its own, and on saves with quad-track twins plans every twin again.
   - Goal: Only the lines whose searched track or twin route the edit touched; both under 1 ms in Node on Asia.
   - Other: notes/T-4267.md
-- T-4449 [P1] {L:edit-speed} Retime costs less for each line it redoes
+- T-4449 [P1] {L:edit-speed} Retime costs less for each line it redoes (taking, 2026-11-27, agent retime)
   - Context: T-4267 stage C5. After a click the timetables of the lines sharing waits with it are worked out again: 48 of the 152 ms train work on your Asia trunk (T-4441), 35 of it the waits at passing stations, about 12 ms a line.
   - Goal: Retime under 15 ms in T-4441's run (48 there), with the same timetables or the shift said.
   - Other: notes/T-4267.md section 4 Part C; notes/T-4441.md
@@ -434,7 +434,7 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
 
 ## Performance
 Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and notes/T-1200.md (slow CPUs).
-- T-4433 [P2] {L:memory} Phone solving worker keeps 100 MB after a load
+- T-4433 [P2] {L:memory} Phone solving worker keeps 100 MB after a load (taking, 2026-11-27, agent phoneworker)
   - Context: On an emulated iPad (NYC save, one solving worker that is the aux worker too, T-4103) a job just after the load's final takes its heap in use from 66 to 166 MB; the solve itself peaks at 66. A WASM memory keeps its highest size, so that stays all game. Which job was not traced.
   - Goal: That job named and its peak brought near the solve's, rail trips unchanged.
   - Other: notes/T-4370.md
@@ -1181,7 +1181,7 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Stage C4 of T-4336: the line's panel, headways in seconds down to 12 s, new-line headways. It measures whether so many departures slow the count of who boards, and groups cabins by the minute if so.
   - Other: notes/T-4334.md
 - T-4495 [P3] {L:other-modes} {after:T-4494} Cable cars on the map
-  - Context: Stage C5 of T-4336: the rope, stations, cabins as little squircles from zoom 14 in (your 11-27 note: so many vehicles), and the Traffic, Speed and Profit views.
+  - Context: Stage C5 of T-4336: the rope, stations, cabins as little squircles from zoom 12 in (your 11-27 note: so many vehicles; trains show from 10), and the Traffic, Speed and Profit views.
   - Goal: 1 screenshot.
   - Other: notes/T-4334.md
 - T-4496 [P3] {L:other-modes} {after:T-4495} Cable cars in the mode lists and strings
