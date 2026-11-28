@@ -34,7 +34,6 @@ diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Cor
   to perform worse cuz u feel limited"; after the release, mostly quiet-machine work. T-4346 is P3.
 - 11-25 ~12:10: at her parents' 1.5 days on her laptop, connecting by remote control; mostly urgent bug fixes, other
   work if there's room; keep the up-next items.
-- 11-25 ~12:00: waiting rooms back to US$10k, tram stop parking smaller (T-4344); parking fee filed (T-4345); time left
   from a load's start (T-4347): "10 minutes left" then instant is "kinda funny but not a problem".
 - 11-25 10:0x her time: buy trains after the confirm, cash may go negative; proxy "only in cases we actually need to";
   weekend solve after loads are faster; plays with Use more cores off; account cap 128 MB; PRs 21, 24 closed.

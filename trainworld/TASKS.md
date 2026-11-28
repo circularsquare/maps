@@ -1089,10 +1089,83 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
   - Context: Your note 2026-11-03: "we could do maglev lol. can make it super expensive". A third track kind at 500 km/h, to compete with planes.
   - Goal: A maglev track kind, design first.
   - Other: research/late-game-spending.md C.
-- T-4511 [P2] {L:timetables} Nudge single trains (taking, 2026-11-27, agent shiftplan)
-  - Context: You, 11-27: build it together with the real-gap waits (T-4514, held off master until then), a 90 s minimum gap between trains on a shared stretch, and an auto-space option per line, since 11/14 minute lines can't be evened without moving single trains. Design done 11-27, 16-21 h.
-  - Goal: Single moves, auto-space and T-4514 land together; design updated with auto-space and the minimum gap first.
+- T-4511 [P2] {L:timetables} Single trains, minimum gap and auto-space (taking, 2026-11-27, agent shiftplan)
+  - Context: Your 11-27: single-train moves, a 90 s minimum gap between lines at shared stops and an auto-space option per line land in one release with the real-gap waits (T-4514). Design updated 11-28: about 29 h in 18 stages, T-4543 to T-4560, each landing switched off until T-4559.
+  - Goal: All 18 stages landed and switched on; closes with T-4560.
   - Other: notes/T-4511.md
+- T-4543 [P2] {L:timetables} {waits:Anita} Real-gap waits onto master switched off
+  - Need from Anita: OK to put T-4514 on master switched off, so players see nothing of it until T-4559 switches everything on? I'd say yes.
+  - Context: Stage 1 of 18 (T-4511). T-4514 is built in the realgaps tree and held off master (your 11-27). Behind a switch, figures stay as they are until T-4559; the alternative, a branch until the end, costs about 2-4 h of merges.
+  - Goal: Master's figures to the bit with the switch off, T-4514's tests passing with it on. About 1 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4544 [P2] {L:timetables} {after:T-4543} Single-train moves through the timetable
+  - Context: Stage 2 of 18 (T-4511). Each line gets a list of moved departures beside its pattern, which everything that reads the timetable applies; the 90 s gap and auto-space write to the same list.
+  - Goal: One departure moves and nothing else does; a game with no moves runs bit for bit as before. 2-2.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4545 [P2] {L:timetables} {after:T-4544} Move one train with its range and reasons
+  - Context: Stage 3 of 18 (T-4511). The edit that moves one train, with undo: as far as its train still makes its next departure and stays 1 min from its own line's trains, each limit with its reason.
+  - Goal: Both range ends refuse with their reason; no train enters or leaves service for a move in range; undo to the bit. 2-2.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4546 [P2] {L:timetables} {after:T-4545} Retime room and floor for moved trains
+  - Context: Stage 4 of 18 (T-4511). Trains timed train by train (passing stations) lose the room a move used, and a moved train short of its 60 s stand runs its slot's timetable.
+  - Goal: On the 180 km passing-track line a local moved later keeps its run's other timings and makes its next departure. 1-1.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4547 [P2] {L:timetables} {after:T-4546} Moved trains kept through later edits
+  - Context: Stage 5 of 18 (T-4511). A move follows the departure nearest its time through rate changes, stops added, reroutes and row Offsets; one with no train waits and comes back.
+  - Goal: A count step, a stop at the first end and an Offset step all keep the 7:32's move; undo restores each. 1.5-2 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4548 [P2] {L:timetables} {after:T-4547} Timed partners move with a moved train
+  - Context: Stage 6 of 18 (T-4511). A train timed with another (an express behind a local) moves with it, one step only, so a move never spreads through the day.
+  - Goal: A local's move moves its express by the same seconds; an express passing two locals moves only with the one moved. 1.5-2.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4549 [P2] {L:timetables} {after:T-4548} Weekend moves in the sim
+  - Context: Stage 7 of 18 (T-4511). Your 11-27 yes: weekdays and weekends moved apart. A move applies on its kind of day only, without the weekend switch that would untime a line's pairs.
+  - Goal: A weekday move is absent on a weekend day and a weekend one present; a timed pair keeps its timing after a weekday move. 1.5-2 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4550 [P2] {L:timetables} {after:T-4549} Save block for moved trains
+  - Context: Stage 8 of 18 (T-4511). Moves and the auto-space flags go in a new save block at level 44; the server's save check learns it. Best after tracksync lands, since tw/track rewrote saves.
+  - Goal: A save round trip keeps a waiting move and a flag; a damaged block is refused; old saves load; the server test passes. 1-1.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4551 [P2] {L:timetables} {after:T-4550} Real-gap waits read moved trains
+  - Context: Stage 9 of 18 (T-4511). The waits at shared stops lay out each line's real departures, moves included, instead of one even pattern per period.
+  - Goal: A moved train changes the wait as its gaps say; with no moves, T-4514's figures to the bit. About 1 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4552 [P2] {L:timetables} {after:T-4551} Minimum 90 s gap between lines at shared stops
+  - Context: Stage 10 of 18 (T-4511). Your 11-27 ask: after each edit the game moves single trains so lines leaving one platform onto the same track are 90 s apart, the less frequent line's train moving, within its range.
+  - Goal: Lines every 11 and 14 min on one stretch keep 90 s all day with no extra trains; NYC's real save unchanged. 2 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4553 [P2] {L:timetables} {after:T-4552} Minimum gap with player moves and partners
+  - Context: Stage 11 of 18 (T-4511). A player's step that would leave its train under 90 s from another line's is refused with the reason; partners move together; what can't be cleared is counted.
+  - Goal: The refusal names the other train; a whole Asia pass under 20 ms natively. 1-1.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4554 [P2] {L:timetables} {after:T-4553} Auto-space a line's trains in the sim
+  - Context: Stage 12 of 18 (T-4511). Your 11-27 idea: an option per line, off by default, moving its trains to even out gaps at stops it shares, counting its own stops too, so a short shared stretch barely moves it.
+  - Goal: Lines every 11 and 14 min, one spaced, get within 15% of even waits there; every Belgrade line on under 25 ms an edit natively. 2-3 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4555 [P2] {L:timetables} {after:T-4554} Select a train in the timetable and chart
+  - Context: Stage 13 of 18 (T-4511). A click on a train's timetable column or chart line selects it; Esc or a click elsewhere clears it; the selection survives zooming and moves.
+  - Goal: One selection survives a move and a zoom. 1.5-2 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4556 [P2] {L:timetables} {after:T-4555} Arrows to move a selected train
+  - Context: Stage 14 of 18 (T-4511). Arrows above the selected column move it 1 min a click (Shift 15 s, Ctrl 10 min), knocking at a limit with the reason; moved trains get a dot; Reset N moved trains.
+  - Goal: A game run: a Boston train moved 2 min later shows on the board, table, chart and map; Ctrl+Z puts it back. 2-2.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4557 [P2] {L:timetables} {after:T-4556} Weekdays and weekends switch for the timetable
+  - Context: Stage 15 of 18 (T-4511). A Weekdays / Weekends switch over the schedule window's table, chart and board, so weekend moves can be seen and made.
+  - Goal: A game run: a weekday move shows on the weekday table only. 1.5-2 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4558 [P2] {L:timetables} {after:T-4557} Auto-space toggle in the schedule window
+  - Context: Stage 16 of 18 (T-4511). The per-line option "Space trains evenly with other lines" in the table's tools, shown only for lines on a shared stop.
+  - Goal: Screenshots light and dark; turning it on moves trains and undo puts them back. About 1 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4559 [P2] {L:timetables} {after:T-4558} Switch on waits, gap and controls
+  - Context: Stage 17 of 18 (T-4511). Everything goes on together. Estimates: Belgrade -3.9% rail trips with the gap, -2.2% with auto-space on every line, against -4.7% for the waits alone; NYC unchanged.
+  - Goal: You see Belgrade's figure diff before it lands; NYC to the bit; edits within 10% of master's. 1-1.5 h.
+  - Other: notes/T-4511.md "Stages"
+- T-4560 [P2] {L:timetables} {after:T-4559} Docs, wiki and strings for single trains
+  - Context: Stage 18 of 18 (T-4511). Spec, wiki, decisions (who moves at a conflict, the lies), the strings for your review, changelog items and screenshots.
+  - Goal: The docs match the game and T-4511 closes. 1-1.5 h.
+  - Other: notes/T-4511.md "Stages"
 - T-4515 [P3] {L:timetables} Show a shared stretch's wait on the departures board
   - Context: Since T-4514 a stretch lines share waits by the real gaps between their trains, but nothing shows a player that wait or what evening them would save. Drafted in notes/T-4511.md "Readout", about 1-1.5 h.
   - Goal: A line under the board's station picker with the average wait there, its hover the evenly spaced wait.

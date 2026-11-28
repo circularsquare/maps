@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "id": "a-2026-11-27-25",
+    "title": "Shifting: land switched off",
+    "text": "T-4543-T-4560 (train shifting, 90 s gap, auto-space, real-gap waits; about 29 h): land each stage on master switched off, and switch everything on at T-4559 after you see the Belgrade diff? Recommended yes (a branch until the end costs 2-4 h more in merges).",
+    "since": "2026-11-27",
+    "by": "maps-dd"
+  }
+]
