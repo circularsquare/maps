@@ -6,7 +6,7 @@ use super::capacity::{self, Capacity};
 use super::geom;
 use super::net::{path_dir, path_edge, DayFleet, LoopKind, Network};
 use super::params::*;
-use super::moves::{self, Move, Moves};
+use super::moves::{self, Move, MoveKind, Moves};
 use super::profile::{self, Hold, Profile};
 
 pub mod bends;
@@ -272,6 +272,11 @@ pub struct Trip {
     /// T-3346 stage 2: the timetable variant it runs (`LineSvc::prof_of`), 0 for the slot's.
     /// Every reader takes it from here.
     pub var: u8,
+    /// T-4545: the seconds its departure is moved off its pattern (`moves`), already in `draw` and `end`; 0 for most.
+    pub moved: f32,
+    /// T-4545: when its train is ready at the far end with that move undone (`end` before any move). `hand_over` pairs
+    /// trains by it and by the unmoved departures, so a move never brings a train into service or sends one away.
+    pub ready: f64,
 }
 
 /// A train running when an edit is applied: where it is on its profile (T-206).
@@ -1902,13 +1907,16 @@ impl Service {
             let was = before.lat.get(l).copied().flatten().unwrap_or(Lattice::NONE);
             let lens = self.trip_lens(net, l);
             let reshaped = before.lens.get(l).is_some_and(|b| b.iter().zip(&lens).any(|(x, y)| (x - y).abs() > 1e-6));
-            moved[l] |= was != after || reshaped;
+            // T-4545: a move edit is a service edit with the edit lead as a new pattern is: the trains running carry on, so
+            // the line's moves from before the edit stay with an era
+            let removed = before.moves.get(l).is_some_and(|b| *b != self.moves_of(l));
+            moved[l] |= was != after || reshaped || removed;
             let v = &mut self.eras[l];
             match v.last() {
                 // a change at the same instant: the pattern before the instant stands for
                 // everything before it
                 Some(e) if e.until >= now => {}
-                _ if was != after || reshaped => {
+                _ if was != after || reshaped || removed => {
                     let drawn = before.flight.iter().filter(|f| f.line as usize == l).map(|f| (f.run, f.dep)).collect();
                     let vars = before.flight.iter().filter(|f| f.line as usize == l && f.var > 0).map(|f| (f.run, f.dep, f.var)).collect();
                     v.push(Era { until: now, lat: was, moves: before.moves.get(l).cloned().unwrap_or_default(), drawn, vars })
@@ -2174,6 +2182,28 @@ impl Service {
         self.note_changed(&[l as u32]);
     }
 
+    /// T-4545: the slots of line `l` whose weekday departures carry a move the player made (own or with another train): the
+    /// spacing holds those rows as an offset holds them (`spacing::place`). A move no departure matches holds nothing.
+    pub fn move_holds(&self, net: &Network, l: usize) -> [bool; SLOTS] {
+        let mut held = [false; SLOTS];
+        let mv = self.moves_of(l);
+        if mv.iter().all(|m| !matches!(m.kind, MoveKind::Own | MoveKind::With)) {
+            return held;
+        }
+        let Some(lat) = self.lattice(net, l) else { return held };
+        let mut buf: Vec<Dep> = vec![];
+        for m in mv.iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With)) {
+            buf.clear();
+            lattice_deps(&lat, m.run as usize, m.at - 1.0, m.at + 1.0, &mut buf);
+            if let Some(&(_, lev, _, _)) = buf.iter().find(|x| (x.0 - m.at).abs() < 1.0) {
+                if (lev as usize) < SLOTS {
+                    held[lev as usize] = true;
+                }
+            }
+        }
+        held
+    }
+
     /// A line's eras (empty for most).
     pub fn eras_of(&self, l: usize) -> &[Era] {
         self.eras.get(l).map_or(&[], |v| &v[..])
@@ -2199,7 +2229,7 @@ impl Service {
 
     /// The longest trip a line draws (run and turnaround) and the longest it may stand at a
     /// terminal for its next departure.
-    fn reach(&self, net: &Network, l: usize) -> (f64, f64) {
+    pub(crate) fn reach(&self, net: &Network, l: usize) -> (f64, f64) {
         let ls = &self.lines[l];
         if !ls.ok {
             return (0.0, 0.0);
@@ -2273,7 +2303,8 @@ impl Service {
                 }
                 last = Some(d);
                 if d >= a && d < b {
-                    let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2) + moves::secs(mv, r, d, hw);
+                    let moved = moves::secs(mv, r, d, hw);
+                    let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2) + moved;
                     let var = if i < eras.len() {
                         era_var(&eras[i], &ls.runs[r], r, d, lev)
                     } else if timed {
@@ -2281,8 +2312,18 @@ impl Service {
                     } else {
                         0
                     };
-                    let end = draw + ls.trip_len_var(net, l as u32, r, lev as usize, var);
-                    out.push(Trip { line: l as u32, run: r as u8, level: lev, dep: d, draw, end, hw, next: None, var });
+                    let len = ls.trip_len_var(net, l as u32, r, lev as usize, var);
+                    let (end, ready) = if moved == 0.0 {
+                        let end = draw + len;
+                        (end, end)
+                    } else {
+                        // a train moved later stands less at the far end, down to `TURN_MIN_S`; moved earlier it stands longer and is
+                        // ready when it was
+                        let ready = draw - moved + len;
+                        let stand = ls.close_stand(net, l as u32).min(super::timing::TURN_MIN_S);
+                        (ready.max(draw + ls.prof_of(r, lev as usize, var).duration + stand), ready)
+                    };
+                    out.push(Trip { line: l as u32, run: r as u8, level: lev, dep: d, draw, end, hw, next: None, var, moved: moved as f32, ready });
                 }
             }
             seg_start = seg_end;
@@ -2299,7 +2340,11 @@ impl Service {
     /// On a loop (T-798) a train finishing a run takes that run's next departure, which is where
     /// it stands; its stand there is the timing hold.
     fn hand_over(trips: &mut [Trip], eras: &[Era], is_loop: bool) {
-        let ready: Vec<f64> = trips.iter().map(|t| t.end).collect();
+        // T-4545: trains are paired by the departures' unmoved times and the trains' unmoved readiness, so moving a departure
+        // brings no train into service and sends none away; the move shows in each trip's own `end` and `next`
+        let ready: Vec<f64> = trips.iter().map(|t| t.ready).collect();
+        let at = |t: &Trip| if t.moved == 0.0 { t.draw } else { t.draw - t.moved as f64 };
+        let own_end: Vec<f64> = trips.iter().map(|t| t.end).collect();
         // T-2429: a train standing at the terminal across a change, which its new, quicker run would
         // have had ready before it, waits from the change, and up to the half headway the new
         // pattern's first departure may be put back (MIN_GAP_SHARE)
@@ -2317,7 +2362,7 @@ impl Service {
                 && eras.iter().all(|e| !(ready[w] < e.until && d > e.until) || e.drawn.contains(&(trips[w].run, trips[w].dep)))
         };
         for (t, &f) in trips.iter_mut().zip(&from) {
-            t.end = f;
+            t.end = f.max(t.end);
         }
         for r in 0..2u8 {
             // trains finishing run r stand at the first stop of the other run, or of run r on a loop
@@ -2329,10 +2374,11 @@ impl Service {
                 }
                 // a train running at a change and drawn on from where it was (`shifts`) is that
                 // train still, even drawn from its first stop: no train standing there takes it
-                let moved_on = t.draw != t.dep && eras.iter().any(|e| t.dep < e.until && e.drawn.contains(&(t.run, t.dep)));
+                let shifted = if t.moved == 0.0 { t.draw != t.dep } else { (at(t) - t.dep).abs() > 1e-6 };
+                let moved_on = shifted && eras.iter().any(|e| t.dep < e.until && e.drawn.contains(&(t.run, t.dep)));
                 if (t.run == r) == is_loop && !moved_on {
-                    ev.push((t.draw, 1, i));
-                    deps.push((t.draw, t.hw));
+                    ev.push((at(t), 1, i));
+                    deps.push((at(t), t.hw));
                 }
             }
             ev.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
@@ -2351,10 +2397,11 @@ impl Service {
                         wait = Some(i);
                     }
                 } else if let Some(w) = wait.take() {
-                    let (d, hw) = (trips[i].draw, trips[i].hw);
+                    let (d, hw) = (at(&trips[i]), trips[i].hw);
                     if can(trips, w, d, hw) {
-                        trips[w].end = d.max(ready[w]);
-                        trips[w].next = Some(d);
+                        let draw = trips[i].draw;
+                        trips[w].end = draw.max(own_end[w]);
+                        trips[w].next = Some(draw);
                     }
                 }
             }

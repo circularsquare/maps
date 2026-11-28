@@ -186,6 +186,7 @@ pub(super) fn release(n: &mut Network, l: u32) -> Vec<NudgeSet> {
 pub(super) fn lines_of(op: &Op, out: &mut Vec<u32>) {
     match op {
         Op::Nudge(v) => out.extend(v.iter().map(|x| x.line)),
+        Op::MoveTrain { line, .. } => out.push(*line),
         Op::Batch(v) => v.iter().for_each(|o| lines_of(o, out)),
         _ => {}
     }

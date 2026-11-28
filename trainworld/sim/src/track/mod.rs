@@ -49,6 +49,7 @@ pub mod frame;
 pub mod geom;
 pub mod lanes;
 pub mod localtime;
+pub mod move_train;
 pub mod moves;
 pub mod names;
 pub mod net;

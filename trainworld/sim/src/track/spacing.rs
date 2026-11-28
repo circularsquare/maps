@@ -171,6 +171,12 @@ pub fn place(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32; 
     moved
 }
 
+/// T-4545: the slots of line `l` held by a train the player moved, as an offset holds a slot; not while the weekends are placed
+/// (a move holds weekdays; the weekends' are stage 7).
+fn move_holds(net: &Network, svc: &Service, l: u32) -> [bool; SLOTS] {
+    if net.placing_rest { [false; SLOTS] } else { svc.move_holds(net, l as usize) }
+}
+
 /// T-2972: a line with spare time whose track is shared at one end only stands it at the other (a
 /// branch into a shared terminus waits out at its own far end, so the order its trains leave the
 /// terminus in is the order they come back in). True when its split moved.
@@ -188,9 +194,11 @@ fn seed_split(net: &Network, svc: &Service, l: u32, split: &mut [[f32; SLOTS]]) 
         _ => return false,
     };
     let mut moved = false;
+    // T-4545: and a slot with a train the player moved
+    let held = move_holds(net, svc, l);
     for lev in net.slots() {
         // T-3742: a slot the player nudged keeps where it stands
-        if svc.spare(net, l as usize, lev) >= 1.0 && split[l as usize][lev] != want && net.offset_at(l, lev).is_none() {
+        if svc.spare(net, l as usize, lev) >= 1.0 && split[l as usize][lev] != want && net.offset_at(l, lev).is_none() && !held[lev] {
             split[l as usize][lev] = want;
             moved = true;
         }
@@ -265,10 +273,11 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
         let Some(Some(lat)) = lats[l as usize] else { continue };
         let mut p = phase[l as usize];
         let mut x = split[l as usize];
+        let held = move_holds(net, svc, l);
         for lev in net.slots() {
             let tph = lat.tph[lev] as f64;
-            // T-3742: a slot the player nudged is held: the others are placed around its times
-            if tph <= 0.0 || net.offset_at(l, lev).is_some() {
+            // T-3742: a slot the player nudged is held: the others are placed around its times (T-4545: a moved train's too)
+            if tph <= 0.0 || net.offset_at(l, lev).is_some() || held[lev] {
                 continue;
             }
             let h = 3600.0 / tph;

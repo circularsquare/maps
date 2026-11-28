@@ -50,6 +50,9 @@ pub enum Op {
     /// T-3742: hold slots of lines at an offset from where the spacing placed them, their departure phases set with it
     /// (`nudge`): a service edit with nothing to settle or place.
     Nudge(Vec<super::nudge::NudgeSet>),
+    /// T-4545: set line `line`'s moved departures (`Service::moves`) to `moves`, the whole list; its inverse sets back the
+    /// list it found. A service edit with nothing to settle or place (`move_train`).
+    MoveTrain { line: u32, moves: Vec<super::moves::Move> },
     Batch(Vec<Op>),
 }
 
@@ -353,6 +356,7 @@ fn op_lines(op: &Op) -> Option<Vec<u32>> {
     match op {
         Op::TrainCounts { id, .. } | Op::AutoTrains { id, .. } | Op::Weekend { id, .. } | Op::Extra { id, .. } => Some(vec![*id]),
         Op::Nudge(v) => Some(v.iter().map(|x| x.line).collect()),
+        Op::MoveTrain { line, .. } => Some(vec![*line]),
         Op::Batch(v) => v.iter().map(op_lines).collect::<Option<Vec<_>>>().map(|v| v.concat()),
         _ => None,
     }
@@ -1747,7 +1751,7 @@ impl TrackWorld {
     pub fn step_is_service(&self, redo: bool) -> bool {
         fn only_counts(op: &Op) -> bool {
             match op {
-                Op::TrainCounts { .. } | Op::AutoTrains { .. } | Op::Weekend { .. } | Op::Rows { .. } | Op::Extra { .. } | Op::Hours { .. } | Op::Nudge(_) => true,
+                Op::TrainCounts { .. } | Op::AutoTrains { .. } | Op::Weekend { .. } | Op::Rows { .. } | Op::Extra { .. } | Op::Hours { .. } | Op::Nudge(_) | Op::MoveTrain { .. } => true,
                 Op::Batch(ops) => !ops.is_empty() && ops.iter().all(only_counts),
                 _ => false,
             }
@@ -2899,6 +2903,14 @@ impl TrackWorld {
                 if held.is_empty() { inv } else { Op::Batch(vec![inv, Op::Nudge(held)]) }
             }
             Op::Nudge(set) => super::nudge::apply(n, set)?,
+            Op::MoveTrain { line, moves } => {
+                if !self.net.line_ok(line) {
+                    return Err(Issue::NoSuchLine { line });
+                }
+                let was = self.svc.moves_of(line as usize).to_vec();
+                self.svc.set_moves(line as usize, moves);
+                Op::MoveTrain { line, moves: was }
+            }
             Op::Keep { id, data } => Op::Keep { id, data: n.set_keep(id, data)? },
             Op::TrainCounts { id, trains, tph } => {
                 let old = n.line_data(id).ok_or(Issue::NoSuchLine { line: id })?;

@@ -44,7 +44,9 @@ fn t4544_one_departure_moves_and_nothing_else() {
         if i == k {
             assert_eq!((g.dep, g.level, g.var), (o.dep, o.level, o.var), "the pattern's departure and its timetable stay");
             assert_eq!(g.draw, o.draw + 120.0);
-            assert_eq!(g.end, o.end + 120.0);
+            // (T-4545: moved later it stands less at the far end, down to a minute: its turnaround here is 3 min, so it is ready when it was)
+            assert_eq!((g.moved, g.ready), (120.0, o.end));
+            assert!((g.end - o.end).abs() < 1e-6, "{} {}", g.end, o.end);
         } else {
             assert_eq!(format!("{g:?}"), format!("{o:?}"), "departure {i}");
         }
