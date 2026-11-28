@@ -1,15 +1,15 @@
 # Orchestrator handoff, trainworld
 
 Orchestrator: session bae761ca-c85c-416e-b4e2-0a931ae6b8a6, name maps-dd, since 2026-11-27 23:10 UTC (Windows 11 now; maps-6c gone, nothing in flight)
-Updated: 2026-11-27 23:10 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
+Updated: 2026-11-28 01:03 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word 11-27 18:33 her time: "we can rise core cap to 14").
 
 ## Next
-1. Work order (her 11-27): real bug fixes and regular chores first, then solve speed, memory, schedule nudging (T-3742, nudge running), monorail and cable cars (T-4334-6 design running), track rework (not started while there is enough work).
-2. Owed: batch 1127e Gemini review (hidepick, reachfill, crashcount, busfix, then pagestage5, loadsave), 1 edit_bench NYC and 1 perf_bench NYC on master; smoke after this round; 8800 rebuild after the landings in flight. Daily: check_resources (11-27 done; Resend and R2 she said leave), requests.py fetch and sort.
-3. Landing: nudge raises the save level and needs a saves review first; tramcap and loadcard carry strings for her. editdesign2 files T-4267's stages (T-4441-T-4475) after checking Gemini's review; if A1's or C7's lie changes, ask her again.
-4. T-4249's settle still moves Asia lines 0, 4, 64 on an unused-track station: left to T-4239 (my call). Parked: pagestage5 (Gemini, T-4284). T-4424: her claude2 login and the test (notes/T-4424.md).
-5. _track sits at save level 42 (LBN1): renumber at sync. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
+1. Work order (her 11-27): real bug fixes and regular chores first, then solve speed, memory, schedule nudging (landed), monorail and cable cars (designed, T-4479-T-4498, P3, after the first three), track rework (not started while there is enough work).
+2. Smoke on master 888dc9c73 FAILED one check (T-4214 patched edge rows' cost differ): edgecost (T-4506) on it; rebuild 8800 and re-smoke after its fix. Owed after: 1 edit_bench NYC and 1 perf_bench NYC on master (stage11 couldn't run edit_bench in its tree), batch 1127e Gemini review. Daily: requests.py fetch and sort.
+3. Edit speed: T-4267 stages re-aimed on C0 (T-4441); running retime (T-4449) and capupdate (T-4444); T-4442 (A1) next, but clickwait's tree (T-4281) was stopped from outside: asked her whether on purpose; the tree is kept.
+4. Asks to her: nudge strings (listed in chat 00:18 UTC), clickwait, diagnostics download for the slow city load (T-4501 stage 1 landed; stage 2 plan in notes; a repeat: don't call it fixed). T-4435 (server save check level 43) needs an agent, then her deploy yes before the next publish.
+5. _track sits at save level 42 (LBN1): renumber at sync; master is now 43. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 6. brief.py requires --tree and --port; fix in a tooling round.
 
 ## Her words

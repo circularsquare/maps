@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c023",
+      "text": "trips for a city selected while a game loads are calculated 2x faster on one core",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4501",
+      "by": "cityload",
+      "at": "2026-11-28T01:02:30Z",
+      "rev": 1,
+      "area": "performance",
+      "fix": false
+    },
+    {
       "id": "c022",
       "text": "added nudging a rail line's departures earlier or later in the schedule window",
       "edited": null,

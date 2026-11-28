@@ -330,9 +330,13 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: T-4267 stage C7, your 11-27 yes (it can leave a far line a train up or down until an edit reaches it). Built only if T-4444 to T-4446 and T-4449 leave a click on edge 1818 (150 lines in reach; T-4441 measured 1482, 3 lines) over about 30 ms of train work in the page.
   - Goal: Later clicks on the trunk under 100 ms with the far lines settled in the next piece.
   - Other: notes/T-4267.md
-- T-4501 [P1] {L:loading} A clicked city takes over a minute on one core (taking, 2026-11-27, agent cityload)
-  - Context: You, 11-27: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core." A repeat of the 90% bar (notes/repeats.md).
-  - Goal: The cause named from the code, and the biggest part fixed or staged.
+- T-4501 [P1] {L:loading} A selected city waits for the load on one core (taking, 2026-11-27, agent cityload)
+  - Context: You, 11-27: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core." Changed (tree cityload): during a game load the second worker takes the selected city after the city in view. New York save, one worker: New Haven 23 s after the click, was 53 s.
+  - Goal: You say on 8800 that a selected city loads fast enough; else stage 2 in the notes.
+  - Other: notes/T-4501.md
+- T-4502 [P2] {L:loading} A selected city shows no trips to other places while its market opens
+  - Context: Seen in T-4501 (new game, one worker): Philadelphia, the first city selected, showed "To other places 0" and "No intercity trips are modeled here yet." until its market pack opened and the next calculation landed. On one worker that calculation can wait behind a whole one.
+  - Goal: The panel says it is calculating until the selected city's market is in the figures shown.
   - Other: notes/T-4501.md
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
