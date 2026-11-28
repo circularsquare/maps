@@ -443,7 +443,9 @@ export async function riderTrip(from: [number, number], to: [number, number], ke
 async function exploreMarket(end: "home" | "work", cells: Uint32Array, fars: MarketEnd[], near?: MarketEnd): Promise<Omit<TripShown, "key" | "asking"> | null> {
   // T-1148: whole places where no train is in play (no station near one end of every pair): the
   // market rows answer at once, with no worker
-  const stations = world.peek()?.save.stations ?? [];
+  const w = world.peek();
+  // every stop the player can build counts, bus stops too (they are not in the save's stations)
+  const stations = w ? [...stopsById(w).values()] : [];
   const bare = near && near.gid < 0 && fars.every((f) => f.gid < 0) ? [near, ...fars].map((e) => e.place).filter((p) => !stationNear(p, stations)) : [];
   const noRail = near && (bare.includes(near.place) || fars.every((f) => bare.includes(f.place)));
   const rows = noRail && (await loadMarketRows()) ? fars.map((f) => rowsAnswer(near, f, shownDay.peek())) : null;

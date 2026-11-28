@@ -1201,8 +1201,8 @@ title is "Trip" with no line under it naming the ends: the map marks them [T-125
   then shows only the straight-line distance between the two places' centres and By car from it
   (the model's car rules for that pair, or "No road joins the two ends"), and no trip counts, bar
   or Train by period. With no distance known, neither the distance nor By car is shown.
-- **Between places with no station** [T-1148]: two whole places (the city view's path) where
-  either end, or every far place, has no station within 40 km of its zone's box (`stationNear`;
+- **Between places with no station** [T-1148, T-4604]: two whole places (the city view's path) where
+  either end, or every far place, has no stop (a station or a bus stop) within 40 km of its zone's box (`stationNear`;
   past the market's 15 km drive to a station) have no train in play, so the answer comes from
   the market rows at once with no worker (`rowsAnswer` in `game/marketRule.ts`, a mirror of the
   sim's place-pair rule held to it by `checks/t1148-market-rule.mjs`): the places' trips by the

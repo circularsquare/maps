@@ -422,9 +422,9 @@ export function placeTrips(a: number, b: number): number {
   return 0.5 * (directed(p, q, km) + directed(q, p, km));
 }
 
-/** Whether any of `stations` ([lng, lat] each) is near place `place`: inside its zone's box widened
- * by `ZONE_REACH_M`, well past the market's reach to a station (a drive of 15 km from a 6 km area).
- * With none, no train serves the place. */
+/** Whether any of `stations` (every stop: stations and bus stops, [lng, lat] each) is near place `place`:
+ * inside its zone's box widened by `ZONE_REACH_M`, well past the market's reach to a stop (a drive of
+ * 15 km from a 6 km area). With none, no transit serves the place. */
 export function stationNear(place: number, stations: readonly { lng: number; lat: number }[]): boolean {
   const c = CITIES.find((x) => x.place === place);
   if (!c) return true;
