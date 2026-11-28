@@ -1642,6 +1642,8 @@ class DemandClient {
     if (reached?.size) addOpened(reached);
     for (const id of need) this.want(id, reached === null ? null : reached.has(id));
     if (this.nearbyOpen()) for (const id of nearbyZones.peek()) this.want(id, !!reached?.has(id));
+    // T-4501: a zone sent to every worker before it was drawn (one sent now takes its copy from the download, `bareFirst`)
+    for (const id of this.drawnZones()) if (this.levelPosted.has(id) && this.bubblesBare(id)) this.fetchCity(id, "bare");
     this.openCrossed(reached);
     this.flush();
     this.progress();
@@ -2264,10 +2266,33 @@ class DemandClient {
     }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
   }
 
-  /** A zone about to open in every worker that an edit's solve would find with no figures shown (`dispatch`); never a
-   * loading save's, whose packs open ahead of its network and so of the load's hold (`stationsAhead`, T-4433) */
+  /** A zone about to open in every worker that an edit's solve would find with no figures shown (`dispatch`), or one whose
+   * bubbles want a bare copy again (`bubblesBare`); never a loading save's, whose packs open ahead of its network and so
+   * of the load's hold (`stationsAhead`, T-4433) */
   private bareFirst(id: CityId): boolean {
-    return !this.hold && !gameLoadArmed() && !(this.ahead && !this.ahead.arrived) && !!demandView.peek()?.final && !cityDemandViews.peek().has(id) && !this.bareOpen.has(id) && !this.bareKept.has(id);
+    return (this.bareAfterFinal() && !cityDemandViews.peek().has(id) && !this.bareOpen.has(id) && !this.bareKept.has(id)) || this.bubblesBare(id);
+  }
+  /** outside a load, with a final result shown */
+  private bareAfterFinal(): boolean {
+    return !this.hold && !gameLoadArmed() && !(this.ahead && !this.ahead.arrived) && !!demandView.peek()?.final;
+  }
+
+  /** The zones whose bubbles are drawn: the zone in view and those beside it. */
+  private drawnZones(): CityId[] {
+    return [...this.viewedSet(), ...(this.nearbyOpen() ? nearbyZones.peek() : [])];
+  }
+
+  /**
+   * T-4501: zone `id`'s bubbles are drawn and a station reaches it that the solve shown does not cover, with no bare copy
+   * open: one opens again in the aux worker (`isBare`), as for a zone no station reaches, until a shown solve covers it.
+   * Its figures kept from a closed bare copy (`bareKept`) show meanwhile; its bubbles otherwise wait for that solve (after
+   * a restarted edit its final: minutes on a big save on one solving worker). `?perfOff=bubblesBare` off.
+   */
+  private bubblesBare(id: CityId): boolean {
+    if (perfOff("bubblesBare") || !this.bareAfterFinal() || this.bareOpen.has(id) || this.fetchingBare.has(id) || this.broken.has(id)) return false;
+    if (this.cityVersion.has(id) || (this.fpool?.alive && this.fshown.has(id)) || !this.drawnZones().includes(id)) return false;
+    const v = demandView.peek()?.version;
+    return !this.log.find((s) => s.version === v)?.cities.includes(id);
   }
 
   /** T-377: a zone's market pack, to every solving worker. */
@@ -2467,6 +2492,8 @@ class DemandClient {
       this.logLoad(id, true, "openedAt");
     }
     this.addBareViews();
+    // (T-4501: a zone reached since the solve shown, whose bubbles asked and found nothing, asks again)
+    if (this.drawnZones().some((id) => id in figures && this.fetching.has(id))) demandAskTurn.value++;
     this.settleWaiters();
     if (trackZones.peek().built.size) this.ensure(); // T-1047: the next zone track crosses
   }

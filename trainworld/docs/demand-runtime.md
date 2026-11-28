@@ -110,7 +110,12 @@ solved with no station in it.
   worker there (T-4051, `bareFirst`), so the solve covering it finds its figures and runs as any
   edit's solve, not round by round with a barrier (`newZones`: 3.5x the wait on a big game); never a
   loading save's zones, which open ahead of its network and are solved with the barrier anyway (T-4433). The
-  auxiliary worker keeps its bare copy (WASM memory never shrinks).
+  auxiliary worker keeps its bare copy (WASM memory never shrinks). A zone whose bubbles are drawn (in view, or
+  beside it) that a station reaches and the shown solve does not cover keeps a bare copy there for them until a
+  shown solve covers it: one closed since (`bareKept`, its figures still shown) opens bare again, from that same
+  download, or from a download of its own when it comes into view later (T-4501, `bubblesBare`,
+  `?perfOff=bubblesBare` off). Without it those bubbles waited for that solve, which after an edit cut short by the
+  next (T-3925) is its final.
   Memory and timings of a pan with bare zones: notes/demand-measurements.md.
 - **Zones track crosses** (T-1047, `openCrossed`): a zone built track crosses (game/trackZones.ts)
   that no station reaches opens bare too, outside a load's card and only while no other bare

@@ -17,7 +17,7 @@ import type { Map as MlMap } from "maplibre-gl";
 import { activeCity, cityById, getWorldFrame, viewedZone, worldFrameEpoch, type CityId } from "../game/cities";
 import { lngLatToPack } from "../game/coords";
 import { nearbyZones } from "../game/zones";
-import { cellModes, cityCells, demandUpdating, demandView, flows, legsKey, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
+import { cellModes, cityCells, demandAskTurn, demandUpdating, demandView, flows, legsKey, type CellModes, type CityCells, type DemandView, type FarEnd, type Flows, type PurposeTrips } from "../game/demand";
 import { count, wholeDistance } from "../game/format";
 import { BUBBLE_ALPHA, bubbleSchemeKey, purposeColour3, purposeSchemeOn, setBubbleColours, setBubbleShade } from "../game/palette";
 import { dealFlows } from "../game/farChunks";
@@ -472,6 +472,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const stand = shown && shown.end !== end && built?.purpose === purpose && built.dv === shown.dv ? built.done.get(end) : undefined;
     if (stand && stand.anchor.version === anchor().version) showBubbles({ dv: built!.dv, end, purpose, bubbles: stand, modes: built!.modes, src: shown!.src });
     retry.value; // T-1493: asked again after an answer that did not come
+    demandAskTurn.value; // (T-4501: a bare copy opened for a zone reached since the solve shown)
     const ask = ++wanted, epoch = focusEpoch;
     // T-1533: an answer overtaken by a newer ask still shows while the zone has no bubbles at all, so
     // estimates landing faster than bubbles are built do not keep the zone bare until the last one
@@ -527,6 +528,7 @@ export function startCommuterView(map: MlMap, view: DemandOverlay) {
     const settled = !!dv?.final;
     const purpose = purposeFilter.value;
     anchorVersion.value; // again at a new draw anchor (T-317)
+    demandAskTurn.value; // (T-4501: as the zone in view's)
     // the focused zone's own entry is left for the focus change to take over (above)
     for (const id of [...zones.keys()]) if (!ids.includes(id) && id !== focus) dropZone(id);
     if (!d.commuters || !dv) return;

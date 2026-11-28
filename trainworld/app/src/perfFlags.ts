@@ -56,6 +56,8 @@
 //   focusAhead  the zone in view's cluster goes first even when the focus pool solves it, so the city view's zone waits
 //   focusEnd the focus pool's workers stay until the load's final
 //   focusAux the focus pool has an aux worker of its own
+//   bubblesBare  a drawn zone reached since the solve shown, its bare copy closed, opens none again: its bubbles wait for
+//            the solve that covers it (T-4501)
 //   `?focusWorkers=n` sets the focus pool's solving workers (default FOCUS_WORKERS).
 //
 // Drawing (each also a field on the renderer, to switch live):
@@ -90,6 +92,6 @@ const q = new URLSearchParams(location.search);
 const off = new Set((q.get("perfOff") ?? "").split(",").filter(Boolean));
 if (import.meta.env.DEV) (globalThis as { twPerfOff?: Set<string> }).twPerfOff = off;
 
-export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "keepSlack" | "rough" | "cacheAhead" | "cacheCard" | "standIn" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "firm" | "restart" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "focusAux" | "focusSelected" | "carryWasm" | "overviewCache" | "fareHold" | "msaa" | "steps" | "wholeSteps" | "preview" | "localEnd" | "refresh" | "editAside" | "keepGl") => off.has(part);
+export const perfOff = (part: "labels" | "shadow" | "hover" | "clock" | "overlay" | "markers" | "clusters" | "periods" | "split" | "reach" | "chunks" | "farChunks" | "close" | "marks" | "fans" | "zoneZoom" | "moving" | "cap" | "grow" | "keepSlack" | "rough" | "cacheAhead" | "cacheCard" | "standIn" | "estimate" | "splitAhead" | "strokeCache" | "strokeCull" | "strokeLod" | "strokeGather" | "bands" | "follow" | "crossWait" | "singleWait" | "bays" | "stillThrottle" | "share" | "noise" | "firm" | "restart" | "alone" | "focus" | "muteThin" | "bandsSmooth" | "bandsOrder" | "bandsPlace" | "bandsHold" | "bandsAlign" | "bandGap" | "roads" | "selected" | "viewRound" | "lengths0" | "focusAhead" | "focusEnd" | "focusAux" | "focusSelected" | "carryWasm" | "overviewCache" | "fareHold" | "msaa" | "steps" | "wholeSteps" | "preview" | "localEnd" | "refresh" | "editAside" | "keepGl" | "bubblesBare") => off.has(part);
 /** how lines side by side are worked out (map/lineBands.ts `setBandMode`) */
 export const bandTry = (): string => (perfOff("bandsSmooth") ? "" : (perfOff("bandsOrder") ? "smooth" : "smooth,order") + (perfOff("bandsPlace") ? "" : ",fit,snap") + (perfOff("bandsHold") ? "" : ",hold") + (perfOff("bandsAlign") ? "" : ",align"));
