@@ -105,6 +105,8 @@ pub struct Capacity {
     pub delay: Vec<[f64; SLOTS]>,
     tag: Vec<Tag>,
     keys: Vec<u32>,
+    /// T-4309: each line's limits and the resources it uses (`limits.rs`).
+    lim: limits::Index,
     /// T-2231: per resource, the overtake plans it reads: a following loss's, one per slower user
     /// marked `FOLLOW_PASSING` in order; a wait's, its one plan. Empty for every other resource.
     plans: Vec<Vec<Arc<Plan>>>,
@@ -199,10 +201,6 @@ impl Capacity {
     /// T-679: per line and level, the most trains an hour it can run with every other line's rate
     /// as it stands, and the limiting resource that sets it: (trains an hour, resource), or
     /// (infinity, MAX) where nothing limits it. `fill` cuts a line at the same rate.
-    pub fn line_limits(&self, net: &Network) -> Vec<[(f64, u32); SLOTS]> {
-        self.line_limits_lone(net, true)
-    }
-
     /// `line_limits`, with `lone` false counting single track's margin for a lone train too
     /// (T-3526): the limit a second train would meet, which a line's train count is capped by.
     pub fn line_limits_lone(&self, net: &Network, lone: bool) -> Vec<[(f64, u32); SLOTS]> {
@@ -221,20 +219,25 @@ impl Capacity {
     fn each_limit(&self, net: &Network, lone: bool, mut at: impl FnMut(u32, usize, f64, usize)) {
         let mut own: Vec<(u32, f64, bool)> = vec![];
         for r in (0..self.res.len()).filter(|&r| self.limits(r)) {
-            let single = self.res[r].kind == ResKind::SingleTrack;
-            for lev in net.slots() {
-                own.clear();
-                for u in self.users_of(r) {
-                    let occ = if lone { occ_at(net, self.users_of(r), single, u, lev) } else { u.occ } / 3600.0;
-                    match own.iter_mut().find(|o| o.0 == u.line) {
-                        Some(o) => o.1 += occ,
-                        None => own.push((u.line, occ, self.caps(r, u))),
-                    }
+            self.each_limit_at(net, lone, r, &mut own, &mut at);
+        }
+    }
+
+    /// `each_limit` for the limiting resource `r`; `own` is scratch.
+    fn each_limit_at(&self, net: &Network, lone: bool, r: usize, own: &mut Vec<(u32, f64, bool)>, mut at: impl FnMut(u32, usize, f64, usize)) {
+        let single = self.res[r].kind == ResKind::SingleTrack;
+        for lev in net.slots() {
+            own.clear();
+            for u in self.users_of(r) {
+                let occ = if lone { occ_at(net, self.users_of(r), single, u, lev) } else { u.occ } / 3600.0;
+                match own.iter_mut().find(|o| o.0 == u.line) {
+                    Some(o) => o.1 += occ,
+                    None => own.push((u.line, occ, self.caps(r, u))),
                 }
-                let load: f64 = own.iter().map(|&(l, a, _)| net.line_tph[l as usize][lev] as f64 * a).sum();
-                for &(l, a, _) in own.iter().filter(|o| o.1 > 0.0 && o.2) {
-                    at(l, lev, (net.line_tph[l as usize][lev] as f64 + (1.0 - load) / a).max(0.0), r);
-                }
+            }
+            let load: f64 = own.iter().map(|&(l, a, _)| net.line_tph[l as usize][lev] as f64 * a).sum();
+            for &(l, a, _) in own.iter().filter(|o| o.1 > 0.0 && o.2) {
+                at(l, lev, (net.line_tph[l as usize][lev] as f64 + (1.0 - load) / a).max(0.0), r);
             }
         }
     }
@@ -263,7 +266,9 @@ impl Capacity {
         let mut two: Vec<((u32, usize), [(f64, usize); 2])> = cand.iter().map(|c| ((c.0, c.1), [(f64::INFINITY, usize::MAX); 2])).collect();
         two.sort_by_key(|x| x.0);
         two.dedup_by_key(|x| x.0);
-        self.each_limit(net, true, |l, lev, most, r| {
+        let mut want: Vec<u32> = two.iter().map(|x| x.0 .0).collect();
+        want.dedup();
+        self.each_limit_of(net, true, &want, |l, lev, most, r| {
             if let Ok(k) = two.binary_search_by_key(&(l, lev), |x| x.0) {
                 let t = &mut two[k].1;
                 if most < t[0].0 {
@@ -1403,6 +1408,7 @@ impl Capacity {
             }
         }
         for &r in kill.iter().rev() {
+            self.index_drop(r);
             self.dead_users += self.res[r].count as usize;
             if let Tag::Section { count, .. } = self.tag[r] {
                 self.dead_keys += count as usize;
@@ -1440,6 +1446,7 @@ impl Capacity {
         build_crossings(net, lines, &c, &sel, self);
         let owners: Vec<u32> = (0..lines.len() as u32).filter(|&l| follow[l as usize]).collect();
         build_follow(net, lines, &owners, self);
+        self.index_attach(first_new);
 
         // ---- solve the new ones, and the old ones a rescheduled line uses
         let mut streams = vec![];
@@ -1627,6 +1634,8 @@ pub fn holds_with(cap: &Capacity, delay: &[[f64; SLOTS]], lines: &[LineSvc], wan
     }
     out
 }
+
+mod limits;
 
 #[cfg(test)]
 mod tests;

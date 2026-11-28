@@ -2579,6 +2579,8 @@ mod realwater_tests;
 mod bus_tests;
 #[cfg(test)]
 mod keeps_tests;
+#[cfg(test)]
+mod station_limits_probe_tests;
 /// T-4249: an edit rebuilds the bus lines and ways back it reaches.
 #[cfg(test)]
 mod scope_tests;
