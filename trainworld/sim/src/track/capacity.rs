@@ -1193,15 +1193,22 @@ impl Capacity {
     /// slower one's trains the faster one's reach their shared track (s): just ahead of a slower
     /// one (`follow_best`), or with passing stations their overtake plan's offset, with the plan's
     /// outcome (what every offset costs, T-3929) and where its stretch starts in each run (m:
-    /// slower, faster), where the offset is had.
+    /// slower, faster), where the offset is had. Only pairs with a line `want` takes (T-4281: a
+    /// plan's outcome is worked out at the rates now, and an edit's weekend placement swaps the
+    /// weekends' in, so every plan in the game was worked out again for the few it kept).
     #[allow(clippy::type_complexity)]
-    pub fn follow_targets(&self, net: &Network, lev: usize) -> Vec<((u32, u8), (u32, u8), f64, Option<(Arc<overtake::Outcome>, [f64; 2])>)> {
+    pub fn follow_targets(&self, net: &Network, lev: usize, want: impl Fn(u32) -> bool) -> Vec<((u32, u8), (u32, u8), f64, Option<(Arc<overtake::Outcome>, [f64; 2])>)> {
         let mut out = vec![];
         for r in (0..self.res.len()).filter(|&r| matches!(self.tag[r], Tag::Follow { .. })) {
             let us = self.users_of(r);
             let Some(f) = us.iter().find(|u| u.owner) else { continue };
             let mut plan = self.plans[r].iter();
             for u in us.iter().filter(|u| !u.owner) {
+                if !want(f.line) && !want(u.line) {
+                    // (its plan passed over, as each passing user takes the next)
+                    if u.stop == FOLLOW_PASSING { plan.next(); }
+                    continue;
+                }
                 let (at, o) = match u.stop {
                     FOLLOW_TIMED => (timed(net, f.line, u, lev).1, None),
                     FOLLOW_PASSING => plan.next().map_or((0.0, None), |p| {

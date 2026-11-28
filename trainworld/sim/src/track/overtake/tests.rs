@@ -121,7 +121,15 @@ fn passing_tracks_let_the_express_by() {
         assert!(n[1..6].contains(&cap.res[r].node));
     }
     // the express's phase is placed at the plan's offset behind the local
-    assert!(cap.follow_targets(&w.net, 0).iter().any(|x| (x.0 .0, x.1 .0) == (express, local)));
+    assert!(cap.follow_targets(&w.net, 0, |_| true).iter().any(|x| (x.0 .0, x.1 .0) == (express, local)));
+    // T-4281: the pairs of the lines asked for, as all of them sorted out after (offsets and plans to the bit)
+    let bits = |v: Vec<((u32, u8), (u32, u8), f64, Option<(std::sync::Arc<super::Outcome>, [f64; 2])>)>| -> Vec<_> {
+        v.iter().map(|x| (x.0, x.1, x.2.to_bits(), x.3.as_ref().map(|(o, at)| (o.offset.to_bits(), o.loss.to_bits(), at.map(f64::to_bits))))).collect()
+    };
+    for keep in [express, local, u32::MAX] {
+        let all = cap.follow_targets(&w.net, 0, |_| true).into_iter().filter(|x| x.0 .0 == keep || x.1 .0 == keep).collect();
+        assert_eq!(bits(cap.follow_targets(&w.net, 0, |l| l == keep)), bits(all));
+    }
     // removing them puts it back as it was
     let with = over(&w, express, 0);
     set_passing(&mut w, &n[1..6], false);

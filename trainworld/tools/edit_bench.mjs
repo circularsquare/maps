@@ -22,7 +22,8 @@
 //   --steps          each edit's steps, ms from the input: posted, word, drawn ahead, rows, network in, taken, drawn (T-4097);
 //                    T-4240: also the worker's laps for the state and its trips (a DEV build's `timing`; `fromApply` counts from
 //                    the follow-up's first edit), trips in, the page's take and setNetwork, its long tasks, and a second
-//                    station's steps (logged, not counted)
+//                    station's steps (logged, not counted); T-4281: per click of the click run, how long it waited in the
+//                    worker before its apply (`queued`) and the worker's tasks in that wait (`behind`, ms each)
 //
 // Actions (times in ms, median of --runs repeats; shows = the first frame that changes, built = the frame that
 // draws the edit as built): ghost trail (px the drawn ghost trails the pointer at a steady speed, and the answer
@@ -347,8 +348,10 @@ function clickRunOf(ev, presses) {
     // T-4281: the follow-ups the worker ran whole in one block since the edit before (what ran each, ms), and the questions
     // the page asked since the press before
     const forced = Object.fromEntries(Object.entries(ans?.ms ?? {}).filter(([k]) => k.startsWith('forced:')).map(([k, v]) => [k.slice(7), Math.round(v)]));
+    // T-4281: from its post to its apply in the worker (`queued`), and what the worker ran meanwhile (each task's ms of it)
+    const behind = Object.fromEntries(Object.entries(ans?.ms ?? {}).filter(([k, v]) => k.startsWith('behind:') && v >= 1).map(([k, v]) => [k.slice(7), Math.round(v)]));
     const asked = ev.filter((e) => e.k === 'post' && e.kind === 'query' && e.t >= (i ? presses[i - 1] : t0 - 1000) && e.t <= p.t).map((e) => e.q);
-    return { post: p.t - t0, confirm: confirm ? confirm.t - t0 : null, answer: ans ? ans.t - t0 : null, ok: ans?.ok ?? null, forced, asked };
+    return { post: p.t - t0, confirm: confirm ? confirm.t - t0 : null, answer: ans ? ans.t - t0 : null, ok: ans?.ok ?? null, queued: ans?.ms?.queued ?? null, behind, apply: ans?.ms?.apply ?? null, forced, asked };
   });
 }
 

@@ -2295,7 +2295,7 @@ export class ClockClient {
    * the map, answered once the tools' map holds it (its patch), before `world` does. `game`: the `gameStamp` it was made under,
    * for an edit sent later than made (T-3734); else the one now (T-4214: every edit is refused in a game it was not made in). */
   edit(op: EditOp, early: boolean | "rows" | "click" = false, game?: number): Promise<EditAnswer> {
-    const seq = ++this.seq, stamp = { game: game ?? gameStamp.peek() };
+    const seq = ++this.seq, stamp = { game: game ?? gameStamp.peek(), sent: performance.timeOrigin + performance.now() };
     // T-4145: an undo names the newest edit still out, so it takes back nothing when that one is refused
     if ((op.op === "undo" || op.op === "redo") && op.after === undefined && this.pending.size) op = { ...op, after: Math.max(...this.pending.keys()) };
     pendingSent(seq, op, this.pending.size === 0, early === "rows");

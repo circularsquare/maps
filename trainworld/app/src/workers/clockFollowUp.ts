@@ -5,7 +5,7 @@ import type { ClockState, EditOp, ToClock } from "./protocol";
 import { forget, game, localOf, sendRows, sendState, shiftFrom, stateSteps } from "./clockMain";
 import { isPanic, MODEL_RESTORED, modelDown, recover } from "./clockPanic";
 import { diagramOn, postDiagram, posted } from "./clockPost";
-import { api, messages, packLngLat, putMessages, putTiming, send, timing } from "./clockState";
+import { api, lapped, messages, packLngLat, piece, putMessages, putPiece, putTiming, send, timing } from "./clockState";
 import { editSteps, loadsOwed, scheduleSnapshot } from "./clockDemand";
 import { bookTrains, gameNow } from "./clockMoney";
 
@@ -108,7 +108,9 @@ function* followSteps(f: FollowUp): Generator<void, void, void> {
   // reads them (an edit coming after it goes ahead of the rest), then the boarding account's lines they moved, a few a
   // piece, as an edit's are before its state (`editSteps`), whichever path worked them out (`board`; kept until the
   // steps end, as an edit between them begins this again)
+  putPiece("settle");
   if (settleOwed(f)) yield;
+  putPiece("board");
   if (f.ask.board) {
     if (api!.has_riders()) for (const step = editSteps(false); step();) yield;
     f.ask.board = false;
@@ -150,7 +152,7 @@ export function settleOwedNow() {
 export function stepThenRun(f: FollowUp) {
   if (followUp !== f) return;
   try {
-    if (f.step?.()) { followTimer = setTimeout(() => stepThenRun(f), 0) as unknown as number; return; }
+    if (lapped("board", () => f.step?.())) { followTimer = setTimeout(() => stepThenRun(f), 0) as unknown as number; return; }
   } catch (err) {
     // a step that throws ends the stepping, never the follow-up: its run (which meets a panic
     // again) still answers the edit
@@ -166,7 +168,8 @@ function pump(f: FollowUp) {
   // (so nothing in the piece runs it again: the trips at its end run a waiting follow-up first)
   followUp = null;
   let done: boolean | undefined;
-  try { done = f.job.next().done; } catch (err) {
+  const job = f.job;
+  try { done = lapped(() => piece, () => job.next().done); } catch (err) {
     // the whole follow-up again in the message queue, which meets a panic again and recovers there
     f.job = undefined;
     if (!followUp) followUp = f;
@@ -252,7 +255,7 @@ let afterState: (() => void)[] = [];
 export function whenNoneWaits(fn: () => void) { afterState.push(fn); }
 async function guardedAfter(fn: () => void, g: number) {
   if (g !== game || modelDown) return;
-  try { fn(); } catch (err) {
+  try { lapped("after state", fn); } catch (err) {
     if (isPanic(err)) await recover(err, "trips after an edit's state", MODEL_RESTORED, performance.now()); // i18n-ignore
     else send({ kind: "error", message: String(err) });
   }

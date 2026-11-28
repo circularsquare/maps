@@ -20,7 +20,7 @@ import { followUp, putServiceEditMs, REST_MS, whenNoneWaits } from "./clockFollo
 import { platformLineOf, stateRows, termEnds, version } from "./clockMain";
 import { dayEntry, gameNow, hourEntry, moneyNow, putTodayGen, regionEntries, shapeHour, todayGen } from "./clockMoney";
 import { patchMode } from "./clockPost";
-import { api, city, epoch, fares, frame, frameSpec, heldCharges, ledgerDay, midLoad, newLineHeadway, newLineWeekendShare, packLngLat, send, SNAPSHOT_DEBOUNCE_MS, syncHolidays, timing, trackVersion } from "./clockState";
+import { api, city, epoch, fares, frame, frameSpec, heldCharges, lapped, ledgerDay, midLoad, newLineHeadway, newLineWeekendShare, packLngLat, send, SNAPSHOT_DEBOUNCE_MS, syncHolidays, timing, trackVersion } from "./clockState";
 
 let snapVersion = 0;
 
@@ -46,6 +46,9 @@ const BOARD_HOLD_MS = 3000;
 /** since when the steps have waited, 0 while they do not, -1 once they have waited their most */
 let boardHeldAt = 0;
 export function stepBoarding() {
+  lapped("boarding steps", stepBoardingNow);
+}
+function stepBoardingNow() {
   clearTimeout(boardingTimer);
   if (!api) return;
   const now = performance.now();
@@ -121,15 +124,15 @@ function nextHourLater() {
   if (waits()) return whenNoneWaits(nextHourLater);
   const e = epoch, h = e + 3600;
   const due = () => !!api && e === epoch && !sentHours.has(h) && !accountStale();
-  nextHourTimer = setTimeout(() => {
+  nextHourTimer = setTimeout(() => lapped("next hour's trips", () => {
     if (waits()) return whenNoneWaits(nextHourLater);
     if (!due() || !tripsPrelude()) return;
     const at = [version, trackVersion], s = sliceTrips(h, rawTrips(), bayTimes());
-    nextHourTimer = setTimeout(() => {
+    nextHourTimer = setTimeout(() => lapped("next hour's trips", () => {
       if (version !== at[0] || trackVersion !== at[1]) return nextHourLater();
       if (due()) sendSlice(s);
-    }, 0) as unknown as number;
-  }, 0) as unknown as number;
+    }), 0) as unknown as number;
+  }), 0) as unknown as number;
 }
 /** T-3804: a new hour. Its slice went out at the last turn (as the next hour) or since, and is sent again only if it
  * did not; the next hour's goes a task later. A boarding account that is not up to date (new riders still being worked
@@ -800,7 +803,7 @@ function nodeArray(cx: Complexes): Uint32Array {
 export function scheduleSnapshot() {
   clearTimeout(snapTimer);
   if (midLoad) return;
-  snapTimer = setTimeout(() => { if (!midLoad) send({ kind: "snapshot", snapshot: buildSnapshot() }); }, SNAPSHOT_DEBOUNCE_MS) as unknown as number;
+  snapTimer = setTimeout(() => { if (!midLoad) lapped("demand's snapshot", () => send({ kind: "snapshot", snapshot: buildSnapshot() })); }, SNAPSHOT_DEBOUNCE_MS) as unknown as number;
 }
 export function putPreviewAt(v: typeof previewAt) { previewAt = v; }
 export function putXferSet(v: typeof xferSet) { xferSet = v; }

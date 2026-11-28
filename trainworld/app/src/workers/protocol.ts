@@ -342,8 +342,9 @@ export type ToClock =
   /** `rows` (T-2766, the line tool's stop clicks): the world's rows are posted and the edit answered at once, its
    * network, trips and boarding once no stop click has come for a moment; a stop click before then joins them */
   /** `game` (T-3734): the game the edit was made in, `loaded`'s `game` when it was made; one of another game is refused
-   * unapplied. Only edits queued behind others carry it (stop edits); an edit without one is the game in hand's. */
-  | { kind: "edit"; seq: number; op: EditOp; early?: boolean; rows?: boolean; click?: boolean; game?: number }
+   * unapplied. Only edits queued behind others carry it (stop edits); an edit without one is the game in hand's. `sent`
+   * (T-4281): when the page posted it (wall ms, `performance.timeOrigin` + now), so its answer says what it waited behind. */
+  | { kind: "edit"; seq: number; op: EditOp; early?: boolean; rows?: boolean; click?: boolean; game?: number; sent?: number }
   /** what a route would cost and whether it can be built; answered with "preview" */
   | ({ kind: "preview"; seq: number } & RouteAsk)
   /** what giving blueprint track new PIs would do (T-064); answered with "preview" */

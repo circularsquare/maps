@@ -235,9 +235,7 @@ fn place_pass(net: &Network, svc: &Service, lines: &[u32], phase: &mut Vec<[f32;
         if !net.slot_worked(lev) {
             return vec![];
         }
-        let mut v = cap.follow_targets(net, lev);
-        v.retain(|x| want[x.0 .0 as usize] || want[x.1 .0 as usize]);
-        v
+        cap.follow_targets(net, lev, |l| want[l as usize])
     });
     // this line's run `ur` against line `v`'s run `vr`: how far behind (+) or ahead (-) it belongs,
     // and with passing stations their plan

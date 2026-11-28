@@ -242,6 +242,45 @@ export const heldCharges = new Map<number, { day: number; hour: number; build: n
 export const wallNow = () => performance.timeOrigin + performance.now();
 export let clk = { t: START_CLOCK, rate: 0, at: wallNow() };
 
+/** T-4281: this worker's tasks of the last few seconds, each [name, wall start, wall end], so an edit's answer can say what
+ * it waited behind between the page sending it and its apply (`waitedFor`): a message takes its turn only between tasks */
+const laps: [string, number, number][] = [];
+const LAPS_KEEP_MS = 10000;
+function pushLap(name: string | (() => string), t0: number) {
+  const t1 = wallNow();
+  laps.push([typeof name === "string" ? name : name(), t0, t1]);
+  let drop = 0;
+  while (drop < laps.length && (laps[drop][2] < t1 - LAPS_KEEP_MS || laps.length - drop > 512)) drop++;
+  if (drop) laps.splice(0, drop);
+}
+/** `fn` run as a task named `name` (a function: read once it ran) */
+export function lapped<T>(name: string | (() => string), fn: () => T): T {
+  const t0 = wallNow();
+  try { return fn(); } finally { pushLap(name, t0); }
+}
+export async function lappedAsync<T>(name: string, fn: () => Promise<T>): Promise<T> {
+  const t0 = wallNow();
+  try { return await fn(); } finally { pushLap(name, t0); }
+}
+/** the name the follow-up's piece running now goes by (`putPiece` as it moves on; the last one set names the piece) */
+export let piece = "";
+export function putPiece(v: typeof piece) { piece = v; }
+/** what an edit the page sent at `sent` (wall ms) waited behind before its apply: `queued`, the whole wait, and per task the ms
+ * of it that task took ("behind:" and its name; a message's own wait for a download counts as its) */
+export function waitedFor(sent: number | undefined, began: number): Record<string, number> {
+  if (sent === undefined) return {};
+  const now = wallNow(), out: Record<string, number> = { queued: Math.max(0, now - sent) };
+  // (from `began`, when its own message began: what it awaited there that no task covers, its ground or masks)
+  let own = began > sent ? now - began : 0;
+  for (const [k, a, b] of laps) {
+    const ms = Math.min(b, now) - Math.max(a, sent);
+    if (ms > 0.05) out["behind:" + k] = (out["behind:" + k] ?? 0) + ms;
+    own -= Math.max(0, Math.min(b, now) - Math.max(a, began));
+  }
+  if (own > 0.05) out["behind:its own ground and masks"] = own;
+  return out;
+}
+
 /** T-284: money is settled up to this game second, not by whole hours, so the cash moves as fares
  * land. `partHour` is the hour being settled and `partFare`, `partCost` the shares of its fares and
  * running cost already in the cash (each reaches 1 as the hour ends, so an hour still pays its whole

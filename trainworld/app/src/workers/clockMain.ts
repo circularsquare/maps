@@ -19,7 +19,7 @@ import { moneyState } from "./clockMoney";
 import { keep } from "./clockPanic";
 import { patchOutside } from "./clockPatch";
 import { checkRows, checkShift, DiagramIn, diagramOn, keepPosted, netForPost, NO_PHASES, patchMode, postDiagram, posted, postState, postWhole, SAME_FIELDS, sameBytes } from "./clockPost";
-import { anchorSpec, api, applyRunFactors, clk, diagramCities, frame, frameSpec, freezeCheckpoint, hiddenLines, home, hourShape, lineShapes, midLoad, newLineHeadway, opened, packLngLat, packLocal, partCost, partHour, pinDayShift, placeLineCountries, putClk, putIncomePerHour, putLineIncome, putLinePoints, putLineRides, putMidLoad, putPartCost, putPartFare, putPartHour, putRidesPerHour, putSettledT, SAMPLE_STEP, send, startZone, syncFrame, syncHolidays, timing, wallNow } from "./clockState";
+import { anchorSpec, api, applyRunFactors, clk, diagramCities, frame, frameSpec, freezeCheckpoint, hiddenLines, home, hourShape, lineShapes, midLoad, newLineHeadway, opened, packLngLat, packLocal, partCost, partHour, pinDayShift, placeLineCountries, putClk, putIncomePerHour, putLineIncome, putLinePoints, putLineRides, putMidLoad, putPartCost, putPartFare, putPartHour, putPiece, putRidesPerHour, putSettledT, SAMPLE_STEP, send, startZone, syncFrame, syncHolidays, timing, wallNow } from "./clockState";
 
 /** T-2679: the first built station's lng and lat (lowest node id), as the last state was built. */
 export let firstBuiltAt: [number, number] | null = null;
@@ -728,6 +728,9 @@ export function sendState(service = false, effectiveAt?: number, trips = true, g
   while (!g.next().done);
 }
 
+/** T-4281: what each of the drawn network's pieces works out (map/network.ts `networkSteps`, a yield after each), the last
+ * with the post and the trips, as an edit's answer names what it waited behind */
+const NET_PIECES = ["network: counts and splits", "network: track", "network: lines", "network: speeds", "network: stations", "network: rest and post"];
 /** `sendState` in pieces of about 0.1 s on the biggest saves (T-3803): the rows, then the network's pieces
  * (`networkSteps`), then its post with the trips, the last never split (T-648: a state's trips follow it before
  * anything else). It yields only where an edit may come between (a first network posted, no anchor move pending);
@@ -736,6 +739,7 @@ export function sendState(service = false, effectiveAt?: number, trips = true, g
 export function* stateSteps(service = false, effectiveAt?: number, trips = true, ghostFirst = false, split = false, rowsBuilt?: (s: ClockState) => void, boardAt?: number): Generator<void, void, void> {
   if (midLoad) return; // (`restart` sends the loaded game's)
   freezeCheckpoint("build-state-start");
+  putPiece("rows");
   const t0 = performance.now();
   const s = buildState();
   freezeCheckpoint("build-state-end", { ms: performance.now() - t0 });
@@ -784,10 +788,11 @@ export function* stateSteps(service = false, effectiveAt?: number, trips = true,
   let between = 0;
   if (pieces) {
     rowsBuilt?.(s);
-    for (;;) {
+    for (let k = 0; ; k++) {
       const ty = performance.now();
       yield;
       between += performance.now() - ty;
+      putPiece(NET_PIECES[k] ?? "network " + k);
       const x = steps.next();
       if (x.done) { n = x.value; break; }
     }

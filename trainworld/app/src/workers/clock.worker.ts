@@ -46,7 +46,7 @@ import { mapPatch, patchMiss } from "./clockPatch";
 import { routeEnded, runEnds } from "./clockRunEnds";
 import { nameArrived, nameOwed, nameOwedStations, placedNameless, withName } from "./clockNames";
 import { diagramOn, patchMode, postDiagram, posted, postWhole, putDiagramOn, putDiagramWhole, putPatchMode, sender } from "./clockPost";
-import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineIncome, lineNotes, linePoints, lineRides, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
+import { achievements, api, applyRunFactors, AUTOSAVE_MS, city, clk, copyOf, lapped, lappedAsync, waitedFor, wallNow, dayPinned, dayShift, demandBuilt, demandFine, diagramCities, emptyTrack, epoch, failInPlace, fares, frameSpec, freezeCheckpoint, freezePort, freezeTimer, goals, guide, guideWanted, heldCharges, home, hourLedger, initIncoming, ledger, ledgerDay, lineIncome, lineNotes, linePoints, lineRides, lineShapes, loadHolidays, loan, loanOp, messages, modded, mode, newLineCars, newLineHeadway, newLineWeekendShare, opened, outlinesGot, outlinesIn, outlinesRead, packLngLat, packLocal, pageModded, peakC, placeLineCountries, pricesOf, putAchievements, putClk, putCopyOf, putDemandBuilt, putDemandFine, putDiagramCities, putDiagramInside, putEmptyTrack, putEpoch, putFares, putFreezeMemory, putFreezePort, putFreezeTimer, putGoals, putGuide, putGuideWanted, putHiddenLines, putHome, putHourLedger, putIncomePerHour, putInitIncoming, putLedger, putLineIncome, putLineNotes, putLinePoints, putLineRides, putLineShapes, putLineShares, putLoan, putMessages, putMidLoad, putModded, putMoneyFrozen, putNewLineCars, putNewLineHeadway, putNewLineWeekendShare, putOpened, putOutlinesRead, putPageModded, putPrices, putRidesPerHour, putRowsSent, putStars, putTiming, putTrackVersion, putUpkeepRegions, send, setMode, setStartZone, stars, startZone, syncHolidays, timing, trackVersion, withModded } from "./clockState";
 
 // T-3734: the save slot (slots.ts) and what it needs of the game in hand
 bindSlots({ api: () => api, game: () => game, send, gameNow, saveBytes, slotSummary, roomFor, outOfRoom, loadGame, inQueue: (f) => (putMessages(messages.then(f).catch((err) => send({ kind: "error", message: String(err) }))), messages), isPanic, panicLater, openFailed: failInPlace });
@@ -500,7 +500,7 @@ function rowsOwed() {
 // T-4272: demand's results kept while a follow-up waited go into the queue, in order, once none waits; one from a game no
 // longer in hand is dropped (the message that ran the follow-up may open another, whose restart clears riders)
 // (T-4281: a question kept so is answered empty, as one the model cannot answer is)
-whenStateWent((msgs) => { for (const k of msgs) putMessages(messages.then(() => k.game === game ? processMessage(k.m) : failAnswer(k.m, [])).then(pumpBlocks).catch((err) => send({ kind: "error", message: String(err) }))); });
+whenStateWent((msgs) => { for (const k of msgs) putMessages(messages.then(() => k.game === game ? lappedAsync(msgLap(k.m), () => processMessage(k.m)) : failAnswer(k.m, [])).then(pumpBlocks).catch((err) => send({ kind: "error", message: String(err) }))); });
 onmessage = (e: MessageEvent<ToClock>) => {
   const msg = e.data;
   if (msg.kind === "freezeTrace") {
@@ -560,9 +560,14 @@ onmessage = (e: MessageEvent<ToClock>) => {
   if (isPreview(msg)) putPreviewAt(performance.now());
   // T-4214: a station's name, taken by its edit if that still waits in the queue
   if (msg.kind === "stationName") nameArrived(msg.ticket, msg.name, msg.game);
-  putMessages(messages.then(() => processMessage(msg)).then(pumpBlocks).catch(err => send({ kind: "error", message: String(err) })));
+  putMessages(messages.then(() => lappedAsync(msgLap(msg), () => processMessage(msg))).then(pumpBlocks).catch(err => send({ kind: "error", message: String(err) })));
 };
+/** T-4281: a message's name as a task an edit waited behind */
+const msgLap = (m: ToClock) => m.kind === "query" ? "question " + m.q.what : m.kind === "edit" ? "edit " + m.op.op : m.kind;
+/** T-4281: when the message being processed began (wall ms) */
+let msgBegan = 0;
 async function processMessage(msg: ToClock) {
+  msgBegan = wallNow();
   if (msg.kind === "init") {
     if (msg.patch) putPatchMode(msg.patch);
     setBandCheck(patchMode === "check");
@@ -723,8 +728,8 @@ async function processMessage(msg: ToClock) {
     // T-988: the game in hand claimed on the account, the other slots settled
     void ready.then(() => { saves.initDone = true; if (import.meta.env.DEV && msg.loadPanic === "late") putPanicOnLoad(true); void cloudKick(); });
     addEventListener("online", () => { void cloudKick(); if (saves.cloudRetryAt) void cloudUp(saves.activeSlot); });
-    setInterval(tick, 1000);
-    setInterval(liveMoney, LIVE_MONEY_MS);
+    setInterval(() => lapped("tick", tick), 1000);
+    setInterval(() => lapped("money", liveMoney), LIVE_MONEY_MS);
     return;
   }
   await ready;
@@ -1018,7 +1023,7 @@ async function handleMessage(msg: ToClock) {
       const missing = await parkedOn(groundForBlueprint());
       if (missing) return void send({ kind: "edited", seq: msg.seq, ok: false, issues: [missing], charge: 0 });
     }
-    const tA = performance.now(), forced = takeForced();
+    const waited = waitedFor(msg.sent, msgBegan), tA = performance.now(), forced = takeForced();
     // T-2763: blueprint track taken out carries no train, as a segment put in (T-1780)
     const bpRemove = msg.op.op === "removeEdge" && posted.edges.get(msg.op.edge)?.built === false;
     // T-1071: a train count takes effect a moment ahead, once its trips are on screen
@@ -1058,7 +1063,7 @@ async function handleMessage(msg: ToClock) {
     // an op of two edits (T-1899) says what both charged
     const charge = r === 0 ? charged ?? api.last_charge() : 0;
     const op = msg.op, seq = msg.seq;
-    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : r === CLIP_NEWER ? ["ClipNewer"] : r === CLIP_UNREADABLE ? ["ClipUnreadable"] : r === CLIP_GONE ? ["ClipGone"] : issues(), charge, line, node, paid: paidFor(op), skipped, pasted, ms: { apply: tB - tA, ...timing, ...forced, total: performance.now() - tA }, early, held }); // i18n-ignore
+    const answer = (early?: boolean, held?: Float32Array[]) => send({ kind: "edited", seq, ok: r === 0, issues: r === 0 ? why ?? [] : r === INSERT_REFUSED ? ["InsertStop"] : r === DROP_REFUSED ? ["DropStop"] : r === ORDER_REFUSED && fault ? [`StopOrder:${fault.join(":")}`] : r === CLIP_NEWER ? ["ClipNewer"] : r === CLIP_UNREADABLE ? ["ClipUnreadable"] : r === CLIP_GONE ? ["ClipGone"] : issues(), charge, line, node, paid: paidFor(op), skipped, pasted, ms: { apply: tB - tA, ...timing, ...forced, ...waited, total: performance.now() - tA }, early, held }); // i18n-ignore
     if (r !== 0) return answer();
     placedNameless(api, msg.op, game);
     // T-4145: what the page can show of the edit, before its rows and network (a stop click's line path, T-4114)
