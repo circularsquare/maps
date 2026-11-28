@@ -5,7 +5,7 @@
 
 import { t, tDate, type MessageKey } from "../i18n";
 import { attachClockTrace, editTrace, trace, tracing } from "../game/freezeTrace";
-import { effect, signal } from "@preact/signals";
+import { batch, effect, signal } from "@preact/signals";
 import type { DiagramGraph } from "../diagram/graph";
 import { clock } from "../game/clock";
 import { activeCity, HOME_CITY, setWorldFrame, viewedZone } from "../game/cities";
@@ -1830,26 +1830,30 @@ export class ClockClient {
     const moved = a !== anchor();
     if (moved) setAnchor(a);
     if (msg.state.net) msg.state.net.anchor = a;
-    setMoneyState(msg.state.money!);
-    this.worldBefore = world.value;
-    worldIsRows.value = !!msg.state.rows;
-    if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
-    const order = this.orderOf(msg);
-    if (import.meta.env.DEV) timed("dev.checkPatched", () => this.checkPatched(msg.state, order));
-    // T-4150 stage 2: the world says which of its records may differ from the last, for the readers' diffs
-    const ids = this.since, next = timed("take.toWorld", () => toWorld(msg.state, true, ids));
-    this.since = { edges: new Set(), nodes: new Set() };
-    if (ids && edgeLinesMoved) for (const p of edgeLinesMoved) ids.edges.add(p);
-    noteStep(this.worldBefore, next, ids && { edges: edgeLinesMoved ? ids.edges : null, nodes: ids.nodes });
-    world.value = next;
-    this.taken = msg.state;
-    this.patched = null;
-    setClickWorld(null);
-    // (a patch that arrived after this state, when it is taken late: laid on it again)
-    this.patchLog = this.patchLog.filter((x) => x.order > order);
-    for (const x of this.patchLog) if (x.p) this.layPatch(x.p);
-    // T-4145: the panels and money of every edit whose word came before this state are in it
-    pendingTaken(this.orderOf(msg), { rows: true, money: true });
+    // T-4284 stage 5: the state's money, world and pending panels set together, so an effect reading more than one of them
+    // runs once, on the state as a whole, never on the new money with the last world
+    batch(() => {
+      setMoneyState(msg.state.money!);
+      this.worldBefore = world.value;
+      worldIsRows.value = !!msg.state.rows;
+      if (msg.state.rightHand !== undefined) rightHand.value = msg.state.rightHand;
+      const order = this.orderOf(msg);
+      if (import.meta.env.DEV) timed("dev.checkPatched", () => this.checkPatched(msg.state, order));
+      // T-4150 stage 2: the world says which of its records may differ from the last, for the readers' diffs
+      const ids = this.since, next = timed("take.toWorld", () => toWorld(msg.state, true, ids));
+      this.since = { edges: new Set(), nodes: new Set() };
+      if (ids && edgeLinesMoved) for (const p of edgeLinesMoved) ids.edges.add(p);
+      noteStep(this.worldBefore, next, ids && { edges: edgeLinesMoved ? ids.edges : null, nodes: ids.nodes });
+      world.value = next;
+      this.taken = msg.state;
+      this.patched = null;
+      setClickWorld(null);
+      // (a patch that arrived after this state, when it is taken late: laid on it again)
+      this.patchLog = this.patchLog.filter((x) => x.order > order);
+      for (const x of this.patchLog) if (x.p) this.layPatch(x.p);
+      // T-4145: the panels and money of every edit whose word came before this state are in it
+      pendingTaken(order, { rows: true, money: true });
+    });
     if (world.value && !msg.state.rows) noteLoad("network in the page", { stations: world.value.save.stations.length, lines: world.value.save.lines.length });
     const es = this.earlyShares;
     this.earlyShares = null;

@@ -26,7 +26,8 @@ import { RIDES_PER_PERSON, sumModes } from "./worldTotals";
 import { zonesLoaded } from "./zones";
 import type { LineInput, LineStats, StationInput, WorldView } from "./types";
 import type { Complexes } from "./complexes";
-import { checkPatches, freshly, freshNow, PerLine, sameBuilt } from "./worldDiff";
+import { complexChanges } from "./complexBuilder";
+import { checkPatches, freshly, freshNow, PerLine, sameBuilt, worldDiff } from "./worldDiff";
 import { gameStamp, postAchievements, queryClock } from "../workers/clockClient";
 import type { Achieved } from "../workers/saveFile";
 
@@ -393,8 +394,53 @@ export const demandFigures = computed(() => {
   if (checkPatches() && !sameBuilt(out, freshly(() => demandFiguresOf(w, d, v, cx, net.zones)))) console.error("T-4150 check: the demand achievement figures kept per line differ from a whole build");
   return out;
 });
+/** T-4284 stage 5: what the busiest station reads of each station of a view, one row each in the view's `stations` order (the
+ * order its sums add in): boardings, changes, whether the world has the station, its name, and its complex as a group of
+ * the rows' own (-1: none). Kept from the world and complexes last read while the view is the same: the stations the
+ * world's diff and `complexChanges` name are read again, never every station. */
+interface StationRows { v: DemandView; w: WorldView; cx: Complexes; at: Map<string, number>; boards: Float64Array; changes: Float64Array; on: Uint8Array; group: Int32Array; name: string[]; groups: Map<number, number> }
+let stationRowsLast: StationRows | null = null;
+function stationRowsOf(w: AchWorld, v: DemandView, cx: Complexes): StationRows {
+  const was = freshNow() ? null : stationRowsLast;
+  const moved = was && was.v === v ? complexChanges(was.cx, cx) : null;
+  const rows = was && moved ? was : null;
+  const groupOf = (r: StationRows, id: string) => {
+    const num = cx.of.get(id);
+    if (num === undefined) return -1;
+    let g = r.groups.get(num);
+    if (g === undefined) r.groups.set(num, (g = r.groups.size));
+    return g;
+  };
+  if (rows) {
+    for (const id of moved!) { const i = rows.at.get(id); if (i !== undefined) rows.group[i] = groupOf(rows, id); }
+    for (const [id, [, s]] of worldDiff(rows.w, w.w)!.stations) {
+      const i = rows.at.get(id);
+      if (i === undefined) continue;
+      rows.on[i] = s ? 1 : 0;
+      rows.name[i] = s?.name ?? "";
+      rows.group[i] = groupOf(rows, id);
+    }
+    rows.w = w.w;
+    rows.cx = cx;
+    return rows;
+  }
+  const n = v.stations.size, byId = w.byId;
+  const out: StationRows = { v, w: w.w, cx, at: new Map(), boards: new Float64Array(n), changes: new Float64Array(n), on: new Uint8Array(n), group: new Int32Array(n), name: new Array(n), groups: new Map() };
+  let i = 0;
+  for (const [id, sd] of v.stations) {
+    const s = byId.get(id);
+    out.at.set(id, i);
+    out.boards[i] = sd.boardings;
+    out.changes[i] = sd.transfers ?? 0;
+    out.on[i] = s ? 1 : 0;
+    out.name[i] = s?.name ?? "";
+    out.group[i] = groupOf(out, id);
+    i++;
+  }
+  if (!freshNow()) stationRowsLast = out;
+  return out;
+}
 function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes, served: CityId[]) {
-  const byId = w.byId;
   const run = w.running;
   const firsts = new Map<FirstId, Detail>();
   // Trips a day: the Cities tab's World row, coarse zones included
@@ -407,32 +453,22 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
   // T-4049: a city counts as served once its zone has CITY_MIN_RIDES transit trips a day, whatever the kind of line (railTripsPerDay counts them all)
   const cities = served.filter((id) => { const z = zones.get(id); return z?.final && z.railTripsPerDay >= CITY_MIN_RIDES; }).length;
   // busiest station, by complex (each complex by a place of its own, one of none after them, in the order first met)
-  const n = cx.members.size, own = new Map<string, number>(), slot = new Map<number, number>();
-  const sum = new Float64Array(n), top = new Float64Array(n).fill(-1), names: string[] = new Array(n), seen = new Uint8Array(n), met: number[] = [];
-  const more: { n: number; top: number; name: string }[] = [];
+  const rows = stationRowsOf(w, v, cx), nG = rows.groups.size;
+  const sum = new Float64Array(nG), top = new Float64Array(nG), names: string[] = new Array(nG), seen = new Uint8Array(nG), met: number[] = [];
   let transfers = 0;
-  for (const [sid, sd] of v.stations) {
-    const s = byId.get(sid);
-    if (!s) continue;
-    transfers += sd.transfers ?? 0;
-    const num = cx.of.get(sid);
-    if (num === undefined) {
-      let k = own.get(sid);
-      if (k === undefined) { own.set(sid, (k = more.length)); more.push({ n: 0, top: -1, name: s.name }); met.push(n + k); }
-      const e = more[k];
-      e.n += sd.boardings;
-      if (sd.boardings > e.top) { e.top = sd.boardings; e.name = s.name; }
-      continue;
-    }
-    let c = slot.get(num);
-    if (c === undefined) slot.set(num, (c = slot.size));
-    if (!seen[c]) { seen[c] = 1; names[c] = s.name; met.push(c); }
-    sum[c] += sd.boardings;
-    if (sd.boardings > top[c]) { top[c] = sd.boardings; names[c] = s.name; }
+  for (let i = 0; i < rows.on.length; i++) {
+    if (!rows.on[i]) continue;
+    transfers += rows.changes[i];
+    const c = rows.group[i], b = rows.boards[i];
+    // (a station in no complex: its own, ~i)
+    if (c < 0) { met.push(~i); continue; }
+    if (!seen[c]) { seen[c] = 1; top[c] = -1; names[c] = rows.name[i]; met.push(c); }
+    sum[c] += b;
+    if (b > top[c]) { top[c] = b; names[c] = rows.name[i]; }
   }
   let station: Detail | null = null;
   for (const k of met) {
-    const e = k < n ? { n: sum[k], name: names[k] } : more[k - n];
+    const e = k >= 0 ? { n: sum[k], name: names[k] } : { n: rows.boards[~k], name: rows.name[~k] };
     if (!station || e.n > station.v!) station = { of: e.name || undefined, v: e.n };
   }
   let line: Detail | null = null, sleeper: Detail | null = null;

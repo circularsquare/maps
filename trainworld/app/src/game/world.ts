@@ -972,16 +972,17 @@ export function renameLine(id: LineId, name: string) {
 export const undo = () => edit({ op: "undo" }, true);
 export const redo = () => edit({ op: "redo" }, true);
 
-// The lookups below are built once per save: a new snapshot makes a new `save` object and nothing
-// edits one in place, so a WeakMap keyed on it never goes stale.
-const looked = new WeakMap<Save, Map<string, unknown>>();
-function lookup<T>(w: WorldView, key: string, build: (s: Save) => T): T {
-  let m = looked.get(w.save);
-  if (!m) looked.set(w.save, (m = new Map()));
-  if (!m.has(key)) m.set(key, build(w.save));
+// The lookups below are built once per list they read (T-4284: not per save, which every state makes anew): a state keeps
+// a list's object while none of its records changed (workers/clockClient.ts `toWorld`) and nothing edits one in place, so a
+// WeakMap keyed on it never goes stale.
+const looked = new WeakMap<readonly unknown[], Map<string, unknown>>();
+function lookup<L extends readonly unknown[], T>(list: L, key: string, build: (list: L) => T): T {
+  let m = looked.get(list);
+  if (!m) looked.set(list, (m = new Map()));
+  if (!m.has(key)) m.set(key, build(list));
   return m.get(key) as T;
 }
-export const stationsById = (w: WorldView) => lookup(w, "stations", (s) => { const m = new Map<string, StationInput>(); for (const x of s.stations) m.set(x.id, x); return m; });
+export const stationsById = (w: WorldView) => lookup(w.save.stations, "stations", (s) => { const m = new Map<string, StationInput>(); for (const x of s) m.set(x.id, x); return m; });
 const stopMemo = new WeakMap<WorldView, { byId: Map<string, StationInput>; names: Map<string, string>; bus: Map<string, StationInput>; custom: Map<string, string> }>();
 /** T-1464: the stations and a bus line's other stops (no station, no name of their own) by id: a stop's
  * place for the figures, its words for the panels. A bus stop is named for the station within 1 km
@@ -1104,17 +1105,17 @@ export const busStopsById = (w: WorldView) => stopsOf(w).bus;
 export const namedBusStops = (w: WorldView) => stopsOf(w).custom;
 /** Every stop's name by id, a bus stop's included. */
 export const stationNames = (w: WorldView) => stopsOf(w).names;
-export const stationsByNum = (w: WorldView) => lookup(w, "stationNums", (s) => { const m = new Map<number, StationInput>(); for (const x of s.stations) m.set(x.num, x); return m; });
-export const linesById = (w: WorldView) => lookup(w, "lines", (s) => new Map(s.lines.map((l) => [l.id, l])));
-export const linesByNum = (w: WorldView) => lookup(w, "lineNums", (s) => new Map(s.lines.map((l) => [l.num, l])));
+export const stationsByNum = (w: WorldView) => lookup(w.save.stations, "stationNums", (s) => { const m = new Map<number, StationInput>(); for (const x of s) m.set(x.num, x); return m; });
+export const linesById = (w: WorldView) => lookup(w.save.lines, "lines", (s) => new Map(s.map((l) => [l.id, l])));
+export const linesByNum = (w: WorldView) => lookup(w.save.lines, "lineNums", (s) => new Map(s.map((l) => [l.num, l])));
 /** T-3333: the lines a player sees listed: every line but the hidden twins of lines run on both pairs of
  * quad track (which every sum still counts). */
-export const listedLines = (w: WorldView) => lookup(w, "listed", (s) => (s.lines.some((l) => l.twinOf) ? s.lines.filter((l) => !l.twinOf) : s.lines));
+export const listedLines = (w: WorldView) => lookup(w.save.lines, "listed", (s) => (s.some((l) => l.twinOf) ? s.filter((l) => !l.twinOf) : s));
 /** The lines that stop at each station, in line order; at a twin's stations, the line it runs for (T-3333). */
-export const linesAtMap = (w: WorldView) => lookup(w, "linesAt", (s) => {
+export const linesAtMap = (w: WorldView) => lookup(w.save.lines, "linesAt", (s) => {
   const at = new Map<string, LineInput[]>();
-  const byId = new Map(s.lines.map((l) => [l.id, l]));
-  for (const t of s.lines) {
+  const byId = new Map(s.map((l) => [l.id, l]));
+  for (const t of s) {
     const l = t.twinOf ? byId.get(t.twinOf) : t;
     if (!l) continue;
     for (const st of new Set(t.stops)) {
@@ -1127,9 +1128,9 @@ export const linesAtMap = (w: WorldView) => lookup(w, "linesAt", (s) => {
 
 /** T-4125: the lines stopping at each station, as indices into the save's lines, ascending and once each (twins as
  * themselves) */
-export const lineIndicesAt = (w: WorldView) => lookup(w, "lineIndicesAt", (s) => {
+export const lineIndicesAt = (w: WorldView) => lookup(w.save.lines, "lineIndicesAt", (s) => {
   const at = new Map<string, number[]>();
-  s.lines.forEach((l, i) => {
+  s.forEach((l, i) => {
     for (const st of l.stops) {
       const v = at.get(st) ?? at.set(st, []).get(st)!;
       if (v[v.length - 1] !== i) v.push(i);

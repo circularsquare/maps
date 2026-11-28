@@ -135,21 +135,33 @@ function composeRuns(a: RunMap, b: RunMap): RunMap {
   return Int32Array.from(out);
 }
 
-/** A grid carried over edits (T-1030): an older grid with its items renumbered (`map`, T-4284 as runs), and a small
- * grid of the items added since (`extra`, their numbers in `ids`). */
+/** Items added over edits, in a small grid of their own: `ids` their numbers in the set it was made for, `map` (null: that
+ * set is the newest) those numbers' in the newest. */
+interface Extra { grid: CellIndex; ids: Int32Array; map: RunMap | null }
+/** A grid carried over edits (T-1030): an older grid with its items renumbered (`map`, T-4284 as runs), and small grids of
+ * the items added since: T-4284 stage 5, one an edit (its own new items), merged into one past `EXTRAS_MAX`, so an edit's
+ * carry costs its own items rather than every item added since the older grid was built. */
 class PatchedIndex {
-  constructor(readonly base: CellIndex, readonly map: RunMap, readonly extra: CellIndex | null, readonly ids: Int32Array) {}
+  constructor(readonly base: CellIndex, readonly map: RunMap, readonly extras: readonly Extra[]) {}
   near(x: number, y: number, reach: number, take: (i: number) => void) {
-    const m = this.map, ids = this.ids;
+    const m = this.map;
     this.base.near(x, y, reach, (i) => {
       const j = mapItem(m, i);
       if (j >= 0) take(j);
     });
-    this.extra?.near(x, y, reach, (k) => take(ids[k]));
+    for (const e of this.extras) {
+      const ids = e.ids, em = e.map;
+      e.grid.near(x, y, reach, (k) => {
+        const j = em ? mapItem(em, ids[k]) : ids[k];
+        if (j >= 0) take(j);
+      });
+    }
   }
 }
 /** a grid carried past this many runs is built anew instead */
 const RUNS_MAX = 4096;
+/** past this many grids of added items, they are merged into one (each item is laid again about once in this many edits) */
+const EXTRAS_MAX = 8;
 type Grid = CellIndex | PatchedIndex;
 
 /** Runs `job` when the main thread is idle: a build takes 5-20 ms, which a pointer move never waits for. */
@@ -241,19 +253,29 @@ export class CellLevels {
     const step = f.step, fresh = f.fresh;
     if (!fresh) return null;
     const base = g instanceof PatchedIndex ? g.base : g;
-    const ids: number[] = [];
-    if (g instanceof PatchedIndex) for (const i of g.ids) { const j = mapItem(step, i); if (j >= 0) ids.push(j); }
-    for (const i of fresh) ids.push(i);
-    if (ids.length > Math.max(4096, this.count / 8)) return null;
     const map = g instanceof PatchedIndex ? composeRuns(g.map, step) : step;
     if (map.length / 3 > RUNS_MAX) return null;
     const all = f.itemBox ? null : (this.boxes ??= this.box());
-    const b = new Float64Array(ids.length * 4);
-    ids.forEach((i, k) => {
-      if (all) for (let c = 0; c < 4; c++) b[k * 4 + c] = all[i * 4 + c];
-      else f.itemBox!(i, b, k * 4);
-    });
-    return new PatchedIndex(base, map, ids.length ? new CellIndex(b, ids.length, CELL_SIDES[L]) : null, Int32Array.from(ids));
+    // a grid of items by their numbers in this set
+    const gridOf = (ids: ArrayLike<number>): Extra => {
+      const b = new Float64Array(ids.length * 4);
+      for (let k = 0; k < ids.length; k++) {
+        if (all) for (let c = 0; c < 4; c++) b[k * 4 + c] = all[ids[k] * 4 + c];
+        else f.itemBox!(ids[k], b, k * 4);
+      }
+      return { grid: new CellIndex(b, ids.length, CELL_SIDES[L]), ids: Int32Array.from(ids), map: null };
+    };
+    let extras: Extra[] = g instanceof PatchedIndex ? g.extras.map((e) => ({ grid: e.grid, ids: e.ids, map: e.map ? composeRuns(e.map, step) : step })) : [];
+    if (fresh.length) extras.push(gridOf(fresh));
+    if (extras.length > EXTRAS_MAX) {
+      const ids: number[] = [];
+      for (const e of extras) for (const i of e.ids) { const j = e.map ? mapItem(e.map, i) : i; if (j >= 0) ids.push(j); }
+      extras = ids.length ? [gridOf(ids)] : [];
+    }
+    let added = 0;
+    for (const e of extras) added += e.ids.length;
+    if (added > Math.max(4096, this.count / 8)) return null;
+    return new PatchedIndex(base, map, extras);
   }
 
   /** `?patch=check`: every level that can be carried over, carried, answering as grids built from

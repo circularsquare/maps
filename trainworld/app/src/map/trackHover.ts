@@ -437,7 +437,17 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
   box.addEventListener("wheel", () => hide(), { passive: true });
   map.on("movestart", hide);
   // What is drawn changed under a resting pointer: say what is there now. After the current task,
-  // as the clock client sets the world before handing the renderer its network.
+  // as the clock client sets the world before handing the renderer its network; once however many of these changed in it
+  // (T-4284: a state sets several)
+  let queued = false;
+  const soon = () => {
+    if (queued) return;
+    queued = true;
+    queueMicrotask(() => {
+      queued = false;
+      if (shown) update();
+    });
+  };
   effect(() => {
     world.value;
     demandView.value;
@@ -448,6 +458,6 @@ export function startTrackHover(map: MlMap, ov: Overlay) {
     ask.value;
     clock.minute.value; // trains move and crowds change under a resting pointer (T-194)
     tripsLanded.value;
-    if (shown) queueMicrotask(() => shown && update());
+    if (shown) soon();
   });
 }

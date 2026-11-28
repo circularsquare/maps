@@ -103,7 +103,8 @@ Web first, so it can be shared as a link.
   arrays stay packed for every reader on the CPU.
   Other network textures are kept, written only in the rows whose data changed (T-4262); the pick grids are
   carried over through the same runs instead of built again (T-1030), their old items renumbered by the runs
-  themselves, so a carry costs the runs, never a pass over every segment. The snap grids (`map/snapIndex.ts`) are the
+  themselves and each edit's new segments put in a small grid of their own (the small grids merged into one past
+  eight, T-4284), so a carry costs the runs and that edit's segments, never a pass over every segment. The snap grids (`map/snapIndex.ts`) are the
   last ones with the edges and nodes an edit changed laid over them, found from the network's changed edges
   (`mergeNet`'s `edgeStep`, a patch's edges) and the worlds' diffs; past 4096 laid over, built whole [T-4284].
   Anything that cannot be taken as changes (a load, a new draw anchor, a mismatch) goes whole;

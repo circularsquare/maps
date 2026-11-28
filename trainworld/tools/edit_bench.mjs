@@ -802,7 +802,8 @@ async function main() {
         const boosting = boost(g.chrome.profile ?? g.chrome.dir ?? 'tw-editbench-');
         try {
           if (pass === 'quiet') {
-            await g.waitDemand({ timeout: Number(opt('final-wait', 900)) * 1000 }).then(() => { final = true; }, () => { final = false; });
+            // (held: the load's card stays up while its clock is held, which can outlast the main view's final, T-4284)
+            await g.waitDemand({ timeout: Number(opt('final-wait', 900)) * 1000, held: true }).then(() => { final = true; }, () => { final = false; });
             if (!final) log('  trips were still calculating after ' + opt('final-wait', 900) + ' s: the quiet pass ran with them calculating');
           } else {
             await sleep(3000);

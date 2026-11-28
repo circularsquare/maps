@@ -258,12 +258,17 @@ function incomeLine(w: WorldView, l: LineInput, dv: DemandView | null, m: MoneyT
 /** A running line's income terms from its own figures, its part of the network's base fares (`baseTrips`, which any line's
  * edit moves), the network's rail trips a boarding and the economy; NaN for any: not made yet. */
 function ownMoney(own: IncomeOwn, based: number, tpb: number, x: number): IncomeLine {
-  const per = PERIODS.map(() => 0), rode = PERIODS.map(() => 0), rides = own.riders * tpb;
-  own.share.forEach((share, p) => {
-    per[p] = (faresFor(own.fares, based * share, own.pkmPaid[p], own.mul) + (own.fareX?.[p] ?? 0)) * x;
-    rode[p] = rides * share;
-  });
-  return { own, old: false, based, tpb, x, per, rode, money: { perHour: per.map((v, p) => v / PERIOD_HOURS[p] / 1e6), rides: rode.map((v, p) => v / PERIOD_HOURS[p]) } };
+  // T-4284 stage 5: every line's money is made again whenever any line's part of the base moves, so no closures here
+  const n = PERIODS.length, share = own.share, fareX = own.fareX, rides = own.riders * tpb;
+  const per = new Array<number>(n).fill(0), rode = new Array<number>(n).fill(0);
+  for (let p = 0; p < share.length; p++) {
+    per[p] = (faresFor(own.fares, based * share[p], own.pkmPaid[p], own.mul) + (fareX?.[p] ?? 0)) * x;
+    rode[p] = rides * share[p];
+  }
+  const perHour = new Array<number>(per.length), ridesHour = new Array<number>(rode.length);
+  for (let p = 0; p < per.length; p++) perHour[p] = per[p] / PERIOD_HOURS[p] / 1e6;
+  for (let p = 0; p < rode.length; p++) ridesHour[p] = rode[p] / PERIOD_HOURS[p];
+  return { own, old: false, based, tpb, x, per, rode, money: { perHour, rides: ridesHour } };
 }
 
 /** A line's boardings' mean base fare multiplier, by the stop each boards at (T-1277). */
@@ -292,12 +297,12 @@ type BasePart = { extra: number[]; pk: number; sc: number; b: number; own: numbe
 const baseLinesBy = new Map<unknown, PerLine<BasePart | null>>();
 
 /** `kind`: which of the caller's demand views `dv` is (each line's parts are kept per kind, T-4284) */
-export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms["fares"], kind: unknown, byBoardings = BASE_BY_BOARDINGS): Map<string, number> {
+export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms["fares"], kind: unknown, byBoardings = BASE_BY_BOARDINGS): ReadonlyMap<string, number> {
   const out = new Map<string, number>();
   if (!dv) return out;
   // (zone boundaries arriving re-place the stops, and with them their fare scales: `lineGeo`)
   const was = baseLast.get(dv), zl = zonesLoaded.peek();
-  if (was && !freshNow() && was.w === w && was.fares === fares && was.by === byBoardings && was.zl === zl) return new Map(was.out);
+  if (was && !freshNow() && was.w === w && was.fares === fares && was.by === byBoardings && was.zl === zl) return was.out;
   let boardingsAll = 0;
   for (const l of w.save.lines) boardingsAll += dv.lines.get(l.id)?.ridersPerDay ?? 0;
   const perBoarding = boardingsAll > 0 ? Math.min(1, dv.railTripsPerDay / boardingsAll) : 1;
@@ -344,7 +349,7 @@ export function baseTrips(w: WorldView, dv: DemandView | null, fares: MoneyTerms
   }
   ids.forEach((id, i) => out.set(id, got[i]));
   if (!freshNow()) baseLast.set(dv, { w, fares, by: byBoardings, zl, out });
-  return new Map(out);
+  return out;
 }
 /** A running line's own part of the base share, null when it takes none (not running, no figures for its stops). */
 function basePart(w: WorldView, l: LineInput, dv: DemandView, fares: MoneyTerms["fares"]): BasePart | null {
