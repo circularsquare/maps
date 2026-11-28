@@ -35,6 +35,7 @@ impl IntercityApi {
             passages_in: vec![],
             apart_in: vec![],
             span_in: vec![],
+            gaps_in: vec![],
             bus_in: (vec![], vec![]),
             back_in: vec![],
             pier_in: (vec![], vec![]),

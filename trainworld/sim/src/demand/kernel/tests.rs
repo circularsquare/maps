@@ -19,7 +19,7 @@ fn common_test_net(lines: &[&[u32]], tph: &[f32], ride: &[f32]) -> Network {
         hop_min: vec![], hop_back: vec![], line_speed_kmh: vec![0.0; lines.len()],
         line_headway_min: tph.iter().map(|t| [if *t > 0.0 { 60.0 / t } else { f32::INFINITY }; network::PERIODS]).collect(),
         line_seats: vec![100.0; lines.len()], line_rated: vec![], line_crush: vec![200.0; lines.len()],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![], span: vec![], gap_f: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
     };
     for (l, stops) in lines.iter().enumerate() {
         net.line_stops.extend_from_slice(stops);
@@ -691,7 +691,7 @@ fn a_circle_rides_the_short_way_through_its_first_stop() {
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: stops.to_vec(),
             hop_min: ride, hop_back: back, line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], gap_f: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
         }
     };
     let g = build_graph(&ring(true), &p);
@@ -749,7 +749,7 @@ fn a_passed_stop_boards_and_alights_nobody() {
         line_name: vec![String::new()], line_off: vec![0, 3], line_stops: vec![0, 1, 2],
         hop_min: vec![2.0, 2.0, 0.0], hop_back: vec![0.0, 1.5, 1.5], line_speed_kmh: vec![0.0],
         line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], gap_f: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
     };
     // route nodes: run 0 = 0..3 (stations 0, 1, 2), run 1 = 3..6 (2, 1, 0)
     net.span = (0..network::PERIODS).flat_map(|_| (0..6).map(|r| if r == 4 { -1.0 } else { 1.0 })).collect();
@@ -777,7 +777,7 @@ fn only_net(at_1: f32) -> Network {
         line_name: vec![String::new()], line_off: vec![0, 3], line_stops: vec![0, 1, 2],
         hop_min: vec![2.0, 2.0, 0.0], hop_back: vec![0.0, 2.0, 2.0], line_speed_kmh: vec![0.0],
         line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], gap_f: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
     };
     // route nodes: run 0 = 0..3 (stations 0, 1, 2), run 1 = 3..6 (2, 1, 0); stop 1 is 1 and 4
     net.span = (0..network::PERIODS).flat_map(|_| (0..6).map(move |r| if r == 1 || r == 4 { at_1 } else { 1.0 })).collect();
@@ -1109,6 +1109,33 @@ fn lines_on_one_track_and_stops_are_evenly_spaced() {
     assert!(build_graph(&bus, &p).rn_even.is_empty());
 }
 
+/// T-4514 (Anita 11-27): a shared stretch waits by its real gaps. Two lines every 10 minutes 2 and 8 minutes apart
+/// (factor 1.36: (4 + 64) / 20 = 3.4 minutes, not 2.5) wait that on the trunk, their riders still split by trains an
+/// hour; riders for one line's branch wait its own half headway; a factor of 1 is evenly spaced to the bit.
+#[test]
+fn a_shared_stretch_waits_by_its_real_gaps() {
+    let p = common_test_params();
+    let even = common_test_net(&[&[0, 1, 2], &[0, 1, 3]], &[6.0, 6.0], &[2.0, 2.0]);
+    let base = skims(&build_graph(&even, &p), &p);
+    let with = |f: f32| {
+        let mut n = even.clone();
+        n.gap_f = vec![f; network::PERIODS * 12];
+        n
+    };
+    let g1 = build_graph(&with(1.0), &p);
+    assert!(g1.rn_gap.is_empty());
+    let r1 = skims(&g1, &p);
+    assert!(r1.r.iter().zip(base.r.iter()).all(|(a, b)| a.to_bits() == b.to_bits()));
+    let g = build_graph(&with(1.36), &p);
+    let sk = skims(&g, &p);
+    assert!((sk.r[1] - (2.0 + 3.4)).abs() < 1e-4, "trunk: {}", sk.r[1]);
+    assert!((sk.r[2] - (4.0 + 5.0)).abs() < 1e-4, "branch: {}", sk.r[2]);
+    let mut od = vec![0.0; 16];
+    od[1] = 90.0;
+    let loads = assign(&g, &sk, &od);
+    assert!((loads.rn_board[0] - 45.0).abs() < 1e-3 && (loads.rn_board[6] - 45.0).abs() < 1e-3, "{:?}", loads.rn_board);
+}
+
 /// T-1281: a wait in a waiting room counts at 0.8 of its minutes, and changing there too; a park
 /// and ride takes 10 minutes off a ride's fixed cost.
 #[test]
@@ -1362,7 +1389,7 @@ fn a_lollipop_line_changes_onto_itself_at_its_junction() {
             line_name: vec![String::new()], line_off: vec![0, n as u32], line_stops: stops,
             hop_min: (0..n).map(|k| if k + 1 < n { 2.0 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], gap_f: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
         }
     };
     let g = build_graph(&lolly(true), &p);
@@ -1424,7 +1451,7 @@ fn bent_line(gap: f32) -> Network {
         line_name: vec![String::new()], line_off: vec![0, 7], line_stops: (0..7).collect(),
         hop_min: vec![3.0, 6.0, 6.0, 6.0, 6.0, 3.0, 0.0], hop_back: vec![], line_speed_kmh: vec![0.0],
         line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
+        st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![false], span: vec![], gap_f: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
     }
 }
 
@@ -2426,7 +2453,7 @@ fn leaf_stations_leave_every_strategy_as_it_was() {
             line_name: vec![String::new()], line_off: vec![0, 7], line_stops: vec![0, 1, 2, 3, 4, 5, 0],
             hop_min: (0..7).map(|k| if k < 6 { 2.0 } else if wrap { 0.5 } else { 0.0 }).collect(), hop_back: vec![], line_speed_kmh: vec![0.0],
             line_headway_min: vec![[5.0; network::PERIODS]], line_seats: vec![100.0], line_rated: vec![], line_crush: vec![200.0],
-            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
+            st_group: vec![], stop_x: vec![], stop_y: vec![], line_wrap: vec![wrap], span: vec![], gap_f: vec![], st_ups: vec![], st_passage: vec![], st_apart: vec![], catches: vec![], st_bus: vec![], st_tram: vec![], back_stops: vec![], line_pier: vec![], stop_street: vec![], bus_walks: None,
         }
     };
     let nets = [network::synth_network(), ring(true), ring(false), common_test_net(&[&[0, 1, 2, 3], &[0, 1, 2]], &[6.0, 12.0], &[2.0, 3.0])];

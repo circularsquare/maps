@@ -1,0 +1,181 @@
+diff --git a/trainworld/SPEC.md b/trainworld/SPEC.md
+index 13647322b..8fc37734e 100644
+--- a/trainworld/SPEC.md
++++ b/trainworld/SPEC.md
+@@ -132,7 +132,8 @@ institutions** (prisons, nursing homes and the like, T-234).
+   share of them (`everyday_kept_<purpose>`, its budget times it) and the rest travel in the regional
+   layer (section 5.1). Packs built before carry none and keep everything.
+ - **Mode choice** recomputes after service or fare changes: station access, destination-specific
+-  common-line strategies (a wait is half the combined headway, in plain minutes [T-585]; a change
++  common-line strategies (a wait is half the combined headway, in plain minutes [T-585], and where lines share track
++  and stops from the real gaps between their departures [T-4514]; a change
+   of trains costs a fixed 2 perceived minutes, its wait and the walk between the two platforms'
+   centres [T-717]; a train's or tram's first boarding and last alighting, 2
+   each, at any level [T-3888, T-3910]), fare-sensitive choice between rail and driving, and up to three crowding
+diff --git a/trainworld/docs/demand-kernel.md b/trainworld/docs/demand-kernel.md
+index cd5d297c9..67e0c046d 100644
+--- a/trainworld/docs/demand-kernel.md
++++ b/trainworld/docs/demand-kernel.md
+@@ -144,17 +144,31 @@ levels:
+    (`Graph::rn_even`), share that track with no stop between to pass at, and the timetable spaces
+    such lines evenly ([track-and-service.md](track-and-service.md) "Spaced from other lines"). Where
+    their riders get off at the same stop after the same number of stops (`Search::alight`), they
+-   are one line in the pool (`Search::merge_even`, as riders take evenly spaced trains): from the
+-   cheapest, each joins while its cost from boarding is below the service's so far (the lines'
+-   mean by trains an hour plus half their combined headway times the wait weight); trains an hour
+-   are summed and riders split by them; a line that does not join is never taken there. So two
+-   lines every 10 minutes on one track and stops wait 2.5 minutes, every 10 and every 5 split a
+-   third and two thirds. A line skipping a stop has another next stop and stays independent (the 4
++   are one line in the pool (`Search::merge_even`): from the cheapest, each joins while its cost
++   from boarding is below the service's so far (the lines' mean by trains an hour plus half their
++   combined headway times the wait weight); trains an hour are summed and riders split by them; a
++   line that does not join is never taken there. **Its wait is from the real gaps** (Anita
++   2026-11-27, T-4514): two or more lines that join wait as riders turning up at random against
++   their combined departures there do, the sum of the squared gaps over twice their sum. In the pool
++   the service runs as if its trains an hour were divided by the factor n x (sum of squared gaps) /
++   (sum of gaps)², 1 where evenly spaced (`Graph::rn_gap` from `Network::gap_f`, the largest of
++   its joined lines'). The clock worker works the factor out per period (`track::span::gaps`):
++   runs leaving one station node for one at the next stop, rides within 30 s of the shortest
++   (`SAME_RIDE_S`, which `EVEN_RIDE_MIN` is), of two or more lines, each laid out from its weekday
++   departure nearest the period's middle and that departure's headway; over one headway, round,
++   where they all run at one, else over the period; sent to hundredths. So two lines every 10
++   minutes evenly spaced wait 2.5 minutes, 2 and 8 minutes apart 3.4; every 20, 2 and 18 apart,
++   8.2 (not 5); every 10 and every 5 at their best 1.9 (not 1.67), split a third and two thirds. A
++   shared stretch's wait that moved by more than 5 s (`MOVE_S`) since the network demand last got
++   calculates trips (`TrackApi::dirty_demand_lines`: a row's Offset, a re-spacing, which move no
++   run time or rate); less does not. A line skipping a stop has another next stop and stays independent (the 4
+    beside the 6), as do lines at platforms of their own, and coupled lines whose riders get off
+-   elsewhere (bound past the split, each branch's riders board their own as above). **The lie**
+-   (DECISIONS 2026-11-22): lines at different rates cannot be spread exactly evenly (every 10 and
+-   every 5 really wait about 1.9 minutes, not 1.67); the cost is continuous but a line's share is
+-   not: one dearer (a fare, crowding) by less than half the other's headway keeps its trains-an-hour
++   elsewhere (bound past the split, each branch's riders board their own as above). **The lies**
++   (DECISIONS 2026-11-27): riders turn up at random through the period (on long headways real riders
++   time their arrival; the planned first wait keeps its cap), on a weekday, against each line's
++   pattern at the period's middle (a bunched half hour in an even rest counts as its period's
++   share), the timetable's gaps (not trains held on the map), and the service's largest factor
++   whichever of its lines join; the cost is continuous but a line's share is not: one dearer (a fare, crowding) by less than half the other's headway keeps its trains-an-hour
+    share, by more it gets none, so crowding can move a line of a pair in and out between rounds;
+    riders past the split wait for their own line at their own station (no change onto the line
+    right behind their train, below).
+diff --git a/trainworld/docs/demand-plain.md b/trainworld/docs/demand-plain.md
+index 2fc0dd002..181e35d24 100644
+--- a/trainworld/docs/demand-plain.md
++++ b/trainworld/docs/demand-plain.md
+@@ -137,9 +137,13 @@ only reach stations on it. The city panel counts these trips as "No route" until
+   the local's share fades to nothing as it nears 40 minutes slower. Two lines every 10 minutes with the same ride but different stops or
+   platforms mean waiting a third of 10 minutes, not a quarter, since their trains aren't spread out
+   evenly.
+-- Lines on the same track and the same stops (Anita, 2026-11-22, the 4 and 5 trains): the
+-  timetable spaces them evenly, so for people disembarking at the same stop they are one line,
+-  and two lines every 10 minutes mean waiting 2.5 minutes, people splitting by trains an hour. Where
++- Lines on the same track and the same stops (Anita, 2026-11-22, the 4 and 5 trains): for people
++  disembarking at the same stop they are one line, people splitting by trains an hour, and the wait
++  comes from the real gaps between their trains (Anita, 2026-11-27): the gaps squared and added up,
++  over twice the gaps added up. Two lines every 10 minutes evenly spaced mean waiting 2.5 minutes;
++  2 and 8 minutes apart, 3.4. Every 20 minutes with the second line 2 minutes behind the first, then
++  18 minutes to the next: 8.2 minutes, not 5. So evening out lines that share track wins riders,
++  and moving a row's Offset calculates trips when it changes such a wait by more than 5 seconds. Where
+   one line skips a stop (the 4 beside the 6), stops at its own platform, or is a bus, they stay
+   separate as above. On a shared trunk that splits into branches, people going past the split
+   wait for their own branch's train at their own station (Anita, 2026-11-23): nobody rides the
+diff --git a/trainworld/docs/demand-worldwide.md b/trainworld/docs/demand-worldwide.md
+index 905eba83c..68f2f45ef 100644
+--- a/trainworld/docs/demand-worldwide.md
++++ b/trainworld/docs/demand-worldwide.md
+@@ -750,9 +750,10 @@ notes/T-420.md has the tables.
+   rider's stop, riders turn up at random; three quarters take whichever gets them there first
+   and a quarter the first train that comes (unless it is sure to arrive after the others would),
+   each line's wait uniform over its headway and independent of the others'; lines on one track and
+-  stops with nowhere to pass are one evenly spaced service where their riders get off alike (T-4050:
+-  two lines every 10 minutes wait 2.5 minutes, not 3.3; docs/demand-kernel.md 4). One rule for every
+-  place. Why it may not carry over: elsewhere real timetables also space lines that share only a
++  stops with nowhere to pass are one service where their riders get off alike, waiting by the real
++  gaps between their departures (T-4050, Anita 2026-11-27, T-4514: two lines every 10 minutes wait
++  2.5 minutes evenly spaced, not 3.3, and 3.4 two and eight minutes apart; docs/demand-kernel.md 4).
++  One rule for every place. Why it may not carry over: elsewhere real timetables also space lines that share only a
+   platform or meet at a junction, and where riders check a live departure board or an app they
+   know the next train, which this rule assumes they act on. Check: the split between an express and a local on
+   a corridor with published line counts.
+diff --git a/trainworld/docs/track-and-service.md b/trainworld/docs/track-and-service.md
+index ab2afc179..3ce1d0734 100644
+--- a/trainworld/docs/track-and-service.md
++++ b/trainworld/docs/track-and-service.md
+@@ -1607,9 +1607,10 @@ Greedy on
+   `timing::retime` keeps timing it. Back at 0 the row is released and placed again at its line's next edit;
+   a line removed holds none, its undo holding them again. A line timed behind a slower one (`Capacity::follow_pairs`)
+   holds no offset: a nudge of either moves the slower line's (up the chain), and every line timed with it by the
+-  same seconds, so passes and waits stay as sized. A nudge settles nothing and asks for no demand solve: waits are by
+-  headway, and a stop's first and last trains, which move by up to the offset, reach demand at the line's next edit. Riders' waits
+-  are by headway, so demand does not move; it cannot keep an express from catching a local far down a
++  same seconds, so passes and waits stay as sized. A nudge settles nothing. It calculates trips only where it moves the
++  wait on a shared stretch (lines leaving one platform for one at the next stop, `span::gaps`, T-4514) by more than
++  5 s since the network demand last got; other waits are by headway, and a stop's first and last trains, which move by
++  up to the offset, reach demand at the line's next edit. A nudge cannot keep an express from catching a local far down a
+   long stretch (its slower running above and the display guard keep it trailing). When the pattern changes (a new period, or an edit) a new
+   departure closer than half a headway after the old pattern's last one is left out, so trains
+   never leave a terminal in pairs.
+diff --git a/trainworld/wiki/read/scheduling.md b/trainworld/wiki/read/scheduling.md
+index 8eef203a1..a798ffb2b 100644
+--- a/trainworld/wiki/read/scheduling.md
++++ b/trainworld/wiki/read/scheduling.md
+@@ -16,7 +16,7 @@ If the round trip leaves time over, the extra trains wait at the ends, half at e
+ 
+ **Spacing between lines.** Lines that share track or a platform are set a little apart, so their trains don't arrive together. Two lines at one gap on one track leave half a gap apart.
+ 
+-**Nudging.** In a rail line's schedule window you can move a weekday row's departures earlier or later, up to half a gap either way. The game then keeps that row where you put it, and other lines are set around it. A line timed just behind it moves with it. Weekends follow the weekdays. Back at zero, the game sets the row again at the line's next change.
++**Nudging.** In a rail line's schedule window you can move a weekday row's departures earlier or later, up to half a gap either way. The game then keeps that row where you put it, and other lines are set around it. A line timed just behind it moves with it. Weekends follow the weekdays. Back at zero, the game sets the row again at the line's next change. Where lines share track and stops, their trains' spacing sets the wait there ([waiting and changing](waiting-and-changing.md)), so a nudge that changes that wait by more than 5 seconds calculates trips.
+ 
+ **Changing the count.** Trains join and leave at the ends. A new train enters at a terminal, and a removed one finishes its trip first. Trains already running carry on where they were. The edit takes effect a moment after you click, so old and new service swap on one frame.
+ 
+diff --git a/trainworld/wiki/read/waiting-and-changing.md b/trainworld/wiki/read/waiting-and-changing.md
+index ed79868f3..077eae382 100644
+--- a/trainworld/wiki/read/waiting-and-changing.md
++++ b/trainworld/wiki/read/waiting-and-changing.md
+@@ -4,7 +4,7 @@
+ 
+ **Several lines.** Where more than one line goes your way, people turn up at any time. Three in four take whichever gets them there first, and the rest take the first train that comes. A faster express that comes less often still gets its riders: the ones who turn up just before it, or who can wait a bit for it and still get there sooner. A slower local keeps the people it gets there first, and some who just take it because it came. A line so slow it gets there after the other line's worst case gets nobody. Two lines with the same gap going the same way, but with different stops or platforms, mean waiting a third of that gap, not a quarter, since their trains aren't spread out evenly.
+ 
+-**Lines on the same track and stops.** The timetable spaces lines that share track, so two lines that run on the same track and stop at the same stations count as one line for people disembarking at the same stop. Two lines every ten minutes mean waiting two and a half minutes, and people split between them by trains an hour. A line that skips a stop, or stops at a platform of its own, stays separate. Where the lines split into branches, people going past the split wait for their own branch at their own station. They don't ride the other branch's train to the split and change there, since their own train is right behind it.
++**Lines on the same track and stops.** Two lines that run on the same track and stop at the same stations count as one line for people disembarking at the same stop, and people split between them by trains an hour. The wait comes from the real gaps between their trains. Two lines every ten minutes, evenly spaced, mean waiting two and a half minutes. Two and eight minutes apart, it is nearly three and a half, so bunched lines lose riders until they are evened out. A line that skips a stop, or stops at a platform of its own, stays separate. Where the lines split into branches, people going past the split wait for their own branch at their own station. They don't ride the other branch's train to the split and change there, since their own train is right behind it.
+ 
+ **No train for hours.** People differ in how long they'd wait. On a line with long gaps, or at the end of the day when the last train has gone, only some people have a train coming soon enough. Boarding there counts extra, the fewer the people with a train coming, the more it counts. If nobody has one, nobody boards.
+ 
+@@ -25,4 +25,4 @@ A line that bends back close to itself can be changed onto across the bend. Peop
+ If the train that arrives is full, the wait gets longer: see [full trains](full-trains.md).
+ 
+ Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most 30 minutes, and it has no extra for long gaps; with several lines it takes whichever gets there first in the same way. Commutes and outings between cities wait as local trips do.
+-In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `pool_cost`, `build_graph`, also `planned_board_cost`, `wait_spread`, `even_classes`, `merge_even`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span` `sim/src/demand/network.rs` `walk_reach_m`, `connection_min`, `BUS_WALK_M`, `CONNECTION_MIN`
++In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `pool_cost`, `build_graph`, also `planned_board_cost`, `wait_spread`, `even_classes`, `merge_even`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span` `sim/src/track/span/gaps.rs` `groups`, `real_wait` `sim/src/demand/network.rs` `walk_reach_m`, `connection_min`, `BUS_WALK_M`, `CONNECTION_MIN`
+diff --git a/trainworld/wiki/scheduling.md b/trainworld/wiki/scheduling.md
+index 70fe2cdaf..1202ce40c 100644
+--- a/trainworld/wiki/scheduling.md
++++ b/trainworld/wiki/scheduling.md
+@@ -16,7 +16,7 @@ If the round trip leaves time over, the extra trains wait at the ends, half at e
+ 
+ **Spacing between lines.** Lines that share track or a platform are set a little apart, so their trains don't arrive together. Two lines at one gap on one track leave half a gap apart.
+ 
+-**Nudging.** In a rail line's schedule window you can move a weekday row's departures earlier or later, up to half a gap either way. The game then keeps that row where you put it, and other lines are set around it. A line timed just behind it moves with it. Weekends follow the weekdays. Back at zero, the game sets the row again at the line's next change.
++**Nudging.** In a rail line's schedule window you can move a weekday row's departures earlier or later, up to half a gap either way. The game then keeps that row where you put it, and other lines are set around it. A line timed just behind it moves with it. Weekends follow the weekdays. Back at zero, the game sets the row again at the line's next change. Where lines share track and stops, their trains' spacing sets the wait there ([[waiting-and-changing]]), so a nudge that changes that wait by more than {{sim/src/track/span/gaps.rs:MOVE_S|0}} seconds calculates trips.
+ 
+ **Changing the count.** Trains join and leave at the ends. A new train enters at a terminal, and a removed one finishes its trip first. Trains already running carry on where they were. The edit takes effect a moment after you click, so old and new service swap on one frame.
+ 
+diff --git a/trainworld/wiki/waiting-and-changing.md b/trainworld/wiki/waiting-and-changing.md
+index 106139a40..c450b9e7b 100644
+--- a/trainworld/wiki/waiting-and-changing.md
++++ b/trainworld/wiki/waiting-and-changing.md
+@@ -4,7 +4,7 @@
+ 
+ **Several lines.** Where more than one line goes your way, people turn up at any time. Three in four take whichever gets them there first, and the rest take the first train that comes. A faster express that comes less often still gets its riders: the ones who turn up just before it, or who can wait a bit for it and still get there sooner. A slower local keeps the people it gets there first, and some who just take it because it came. A line so slow it gets there after the other line's worst case gets nobody. Two lines with the same gap going the same way, but with different stops or platforms, mean waiting a third of that gap, not a quarter, since their trains aren't spread out evenly.
+ 
+-**Lines on the same track and stops.** The timetable spaces lines that share track, so two lines that run on the same track and stop at the same stations count as one line for people disembarking at the same stop. Two lines every ten minutes mean waiting two and a half minutes, and people split between them by trains an hour. A line that skips a stop, or stops at a platform of its own, stays separate. Where the lines split into branches, people going past the split wait for their own branch at their own station. They don't ride the other branch's train to the split and change there, since their own train is right behind it.
++**Lines on the same track and stops.** Two lines that run on the same track and stop at the same stations count as one line for people disembarking at the same stop, and people split between them by trains an hour. The wait comes from the real gaps between their trains. Two lines every ten minutes, evenly spaced, mean waiting two and a half minutes. Two and eight minutes apart, it is nearly three and a half, so bunched lines lose riders until they are evened out. A line that skips a stop, or stops at a platform of its own, stays separate. Where the lines split into branches, people going past the split wait for their own branch at their own station. They don't ride the other branch's train to the split and change there, since their own train is right behind it.
+ 
+ **No train for hours.** People differ in how long they'd wait. On a line with long gaps, or at the end of the day when the last train has gone, only some people have a train coming soon enough. Boarding there counts extra, the fewer the people with a train coming, the more it counts. If nobody has one, nobody boards.
+ 
+@@ -25,4 +25,4 @@ A line that bends back close to itself can be changed onto across the bend. Peop
+ If the train that arrives is full, the wait gets longer: see [[full-trains]].
+ 
+ Exact rule: `docs/demand-kernel.md` "Access and station-to-station times". A longer trip between cities is planned, so its first wait is shorter, at most {{sim/src/demand/kernel/search.rs:PLANNED_WAIT_CAP_MIN|0}} minutes, and it has no extra for long gaps; with several lines it takes whichever gets there first in the same way. Commutes and outings between cities wait as local trips do.
+-In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `pool_cost`, `build_graph`, also `planned_board_cost`, `wait_spread`, `even_classes`, `merge_even`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span` `sim/src/demand/network.rs` `walk_reach_m`, `connection_min`, `BUS_WALK_M`, `CONNECTION_MIN`
++In the code: **main** `sim/src/demand/kernel/search.rs` `board_cost`, `pool_cost`, `build_graph`, also `planned_board_cost`, `wait_spread`, `even_classes`, `merge_even`, `change_f`, `trip_ends`, `walk_ban` `sim/src/demand/kernel/subzones.rs` `wait_factor` `sim/src/track/upgrades.rs` `WAITING_ROOM_WAIT`, `PASSAGE_MPS` `sim/src/track/span.rs` `line_span`, `stop_span` `sim/src/track/span/gaps.rs` `groups`, `real_wait` `sim/src/demand/network.rs` `walk_reach_m`, `connection_min`, `BUS_WALK_M`, `CONNECTION_MIN`

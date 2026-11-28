@@ -83,6 +83,9 @@ export interface DemandNetwork {
    * as `hopKm`), the share of riders with a train due within their tolerance; empty or absent:
    * 1 everywhere */
   span?: Float32Array;
+  /** T-4514 (`DemandApi.set_gaps`): per period and route node as `span`, the factor on the evenly spaced wait of the
+   * shared stretch the route node leaves on; absent: 1 everywhere */
+  gaps?: Float32Array;
   /** T-1464 (`DemandApi.set_bus`): per stop (parallel to `stops`) the points of its stretch of
    * bus route, 0 for none, and their x, y after one another in `frame`; absent with no buses */
   catchN?: Uint32Array;

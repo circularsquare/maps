@@ -80,6 +80,9 @@ pub struct Graph {
     /// T-4050: per route node, its class of departures run as one evenly spaced service
     /// (`even_classes`): the least route node of the class, `NONE` in none. Empty when none is.
     pub rn_even: Vec<u32>,
+    /// T-4514: per route node, its class's factor on the evenly spaced wait this period (`Network::gap_f`, the real
+    /// gaps between its lines' departures), 1 or more; empty where every class's is 1.
+    pub rn_gap: Vec<f32>,
 }
 
 impl Graph {
@@ -225,8 +228,8 @@ pub fn planned_board_cost(headway_min: f32, wait_f: f32, change_f: f32, p: &Para
 }
 
 /// T-4050: how much two lines' rides to the next stop may differ and still be one service there:
-/// the track side's "one pattern" (`capacity::FOLLOW_TIMED_MIN_S`, 30 s).
-pub const EVEN_RIDE_MIN: f32 = 0.5;
+/// the track side's "one pattern" (`track::span::gaps::SAME_RIDE_S`, 30 s, its shared stretches' too).
+pub const EVEN_RIDE_MIN: f32 = (crate::track::span::gaps::SAME_RIDE_S / 60.0) as f32;
 
 /// T-4050 (Anita 11-22: "lines like the 4 and 5 trains that are on the same track and same stops,
 /// no passing rails ... assumed as evenly spaced. but the 4 and 6 should be independent"): departures
@@ -448,6 +451,16 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
         if h > 0.0 && h.is_finite() && phi(r) > 0.0 && boards(r) { 60.0 / h } else { 0.0 }
     }).collect();
     let rn_even = even_classes(net, s, &rn_station, &rn_line, &rn_next, &rn_ride, &rn_dx, &rn_dy, &rn_wrap, &rn_tph);
+    // T-4514: each class's factor on its evenly spaced wait this period, where any is past 1
+    let rn_gap: Vec<f32> = if rn_even.is_empty() || net.gap_f.len() != super::super::network::PERIODS * nr {
+        vec![]
+    } else {
+        let at = |r: usize| {
+            let f = net.gap_f[p.period * nr + r];
+            if f.is_finite() && f > 1.0 { f } else { 1.0 }
+        };
+        if (0..nr).any(|r| rn_even[r] != NONE && at(r) > 1.0) { (0..nr).map(at).collect() } else { vec![] }
+    };
     let rn_span: Vec<f32> = (0..nr).map(|r| { let f = phi(r); if f > 0.0 && f < 1.0 { -f.ln() / p.beta } else { 0.0 } }).collect();
     // T-3888, T-3910: the boarding cost at a train's or tram's stop (`pays_ends`); only where any stop pays
     let stairs: Vec<bool> = (0..net.n_lines()).map(|l| net.stairs_line(l)).collect();
@@ -460,6 +473,7 @@ pub fn build_graph(net: &Network, p: &Params) -> Graph {
     };
     Graph {
         rn_even,
+        rn_gap,
         rn_in,
         rn_out,
         rn_left: rn_span.clone(),
@@ -1643,6 +1657,9 @@ pub(super) struct Search<'a> {
     /// (`merge_even`), each line's place there, and their shares
     pub(super) pk: Vec<u32>,
     pub(super) pm: Vec<(f32, f32)>,
+    /// T-4514: each `pm` entry's trains an hour as they run, which its lines' riders split by; `pm`'s own are fewer
+    /// where the service's real gaps make its wait longer than evenly spaced (`Graph::rn_gap`)
+    pub(super) pmf: Vec<f32>,
     pub(super) pmap: Vec<u32>,
     pub(super) shm: Vec<f32>,
     pub(super) pord: Vec<u32>,
@@ -1950,6 +1967,7 @@ impl Search<'_> {
             pl: vec![],
             pk: vec![],
             pm: vec![],
+            pmf: vec![],
             pmap: vec![],
             shm: vec![],
             pord: vec![],
@@ -2281,7 +2299,7 @@ impl Search<'_> {
         if want {
             for i in 0..self.pl.len() {
                 let m = self.pmap[i];
-                self.sh[i] = if m == NONE { 0.0 } else { self.shm[m as usize] * self.pl[i].1 / self.pm[m as usize].1 };
+                self.sh[i] = if m == NONE { 0.0 } else { self.shm[m as usize] * self.pl[i].1 / self.pmf[m as usize] };
             }
         }
         out
@@ -2294,8 +2312,9 @@ impl Search<'_> {
     /// lines' by trains an hour, plus half their combined headway times `wait_f`); trains an hour
     /// summed, so riders split by trains an hour. A line that does not join is never taken there
     /// (`pmap` `NONE`): its trains come between the service's. Coupled lines whose riders get off
-    /// elsewhere (a stop on one branch) stay apart, as any. False, `pm` untouched, when no two lines
-    /// are one service.
+    /// elsewhere (a stop on one branch) stay apart, as any. T-4514: two or more joined wait by their real
+    /// gaps (`Graph::rn_gap`, the largest of theirs): the service's trains an hour in `pm` over that factor, the
+    /// ones they run in `pmf`. False, `pm` untouched, when no two lines are one service.
     fn merge_even(&mut self, wait_f: f32, planned: bool) -> bool {
         let (g, s) = (self.g, self.s);
         let k = self.pl.len();
@@ -2322,6 +2341,7 @@ impl Search<'_> {
             return false;
         }
         self.pm.clear();
+        self.pmf.clear();
         // each line's first line with its key, then its entry in `pm`
         self.pmap.clear();
         for i in 0..k {
@@ -2339,21 +2359,27 @@ impl Search<'_> {
             ord.extend((i..k).filter(|&j| self.pmap[j] as usize == i).map(|j| j as u32));
             if ord.len() == 1 {
                 self.pm.push(self.pl[i]);
+                self.pmf.push(self.pl[i].1);
                 self.pmap[i] = at;
                 continue;
             }
             ord.sort_unstable_by(|&a, &b| self.pl[a as usize].0.total_cmp(&self.pl[b as usize].0).then(a.cmp(&b)));
-            // (sums of cost x trains an hour, then the mean)
-            let (mut df, mut sf) = (0f64, 0f64);
+            // (sums of cost x trains an hour, then the mean; the joined lines' largest factor on their wait)
+            let (mut df, mut sf, mut joined, mut gf) = (0f64, 0f64, 0u32, 1f32);
             for &j in ord.iter() {
                 let (d, f) = (self.pl[j as usize].0 as f64, self.pl[j as usize].1 as f64);
                 let joins = sf == 0.0 || d < df / sf + wait_spread(sf as f32, wait_f, planned) as f64 / 2.0;
                 if joins {
-                    (df, sf) = (df + d * f, sf + f);
+                    (df, sf, joined) = (df + d * f, sf + f, joined + 1);
+                    if let Some(&x) = g.rn_gap.get(self.pk[j as usize] as usize) {
+                        gf = gf.max(x);
+                    }
                 }
                 self.pmap[j as usize] = if joins { at } else { NONE };
             }
-            self.pm.push(((df / sf) as f32, sf as f32));
+            let gf = if joined > 1 { gf as f64 } else { 1.0 };
+            self.pm.push(((df / sf) as f32, (sf / gf) as f32));
+            self.pmf.push(sf as f32);
         }
         self.pord = ord;
         self.shm.clear();
@@ -3546,11 +3572,12 @@ pub(super) struct SkimKey {
     pub(super) rn_in: Vec<f32>,
     pub(super) rn_out: Vec<f32>,
     pub(super) rn_even: Vec<u32>,
+    pub(super) rn_gap: Vec<f32>,
 }
 
 impl SkimKey {
     pub(super) fn of(g: &Graph, p: &Params) -> SkimKey {
-        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), xfer_fare: g.xfer_fare, st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone(), rn_in: g.rn_in.clone(), rn_out: g.rn_out.clone(), rn_even: g.rn_even.clone() }
+        SkimKey { n_st: g.n_st, n: g.n, adj_off: g.adj_off.clone(), adj_to: g.adj_to.clone(), adj_cost: g.adj_cost.clone(), rn_tph: g.rn_tph.clone(), rn_left: g.rn_left.clone(), rn_dx: g.rn_dx.clone(), rn_dy: g.rn_dy.clone(), transfer_min: p.change_min(), xfer_fare: g.xfer_fare, st_wait: g.st_wait.clone(), st_bld: g.st_bld.clone(), fare_curve: g.fare_curve.clone(), rn_km: g.rn_km.clone(), rn_kmw: g.rn_kmw.clone(), rn_base_mul: g.rn_base_mul.clone(), base_min: g.base_min, st_walk_to: g.st_walk_to.clone(), st_walk_min: g.st_walk_min.clone(), rn_in: g.rn_in.clone(), rn_out: g.rn_out.clone(), rn_even: g.rn_even.clone(), rn_gap: g.rn_gap.clone() }
     }
     pub(super) fn same(&self, g: &Graph, p: &Params) -> bool {
         self.n_st == g.n_st
@@ -3576,6 +3603,7 @@ impl SkimKey {
             && self.rn_in == g.rn_in
             && self.rn_out == g.rn_out
             && self.rn_even == g.rn_even
+            && self.rn_gap == g.rn_gap
     }
 }
 

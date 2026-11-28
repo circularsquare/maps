@@ -384,6 +384,8 @@ pub(crate) struct Service {
     pub(crate) group: Vec<u32>,
     /// `Network::span` (T-842), empty for 1 everywhere.
     pub(crate) span: Vec<f32>,
+    /// `Network::gap_f` (T-4514), empty for 1 everywhere.
+    pub(crate) gaps: Vec<f32>,
     /// `Network::st_ups` (`demand_ups`, T-1281).
     pub(crate) ups: Vec<u8>,
     /// `Network::st_passage` (`demand_passages`, T-1281).
@@ -421,6 +423,7 @@ pub(crate) struct NetInputs<'a> {
     pub pier: &'a (Vec<u8>, Vec<u8>),
     pub back: &'a [u32],
     pub span: &'a [f32],
+    pub gaps: &'a [f32],
 }
 
 impl NetInputs<'_> {
@@ -434,6 +437,7 @@ impl NetInputs<'_> {
             ("stops at grade", self.pier.1.len(), self.stops, "stop"),
             ("back stops", self.back.len(), self.stops, "stop"),
             ("span", self.span.len(), PERIODS * 2 * self.stops, "period and route node"),
+            ("gaps", self.gaps.len(), PERIODS * 2 * self.stops, "period and route node"),
         ]
         .iter()
         .filter(|&&(_, got, want, _)| got != 0 && got != want)
@@ -458,6 +462,7 @@ pub(crate) struct SvcInputs<'a> {
     pub pier: &'a (Vec<u8>, Vec<u8>),
     pub back: &'a [u32],
     pub span: &'a [f32],
+    pub gaps: &'a [f32],
 }
 
 impl Service {
@@ -482,9 +487,10 @@ impl Service {
         let back = demand_back(&st_map, stops, i.back);
         let street = pier_lines(&i.pier.1, nstops);
         let span = span_for(i.span, nstops);
-        let (back, street, span) = match &fold {
-            Some(f) => (f.in_stops(&back), f.in_stops(&street), f.in_max(&span)),
-            None => (back, street, span),
+        let gaps = gaps_for(i.gaps, nstops);
+        let (back, street, span, gaps) = match &fold {
+            Some(f) => (f.in_stops(&back), f.in_stops(&street), f.in_max(&span), f.in_max(&gaps)),
+            None => (back, street, span, gaps),
         };
         let (catches, st_bus) = demand_catches(&st_map, n, stops, i.bus.0, i.bus.1);
         Service {
@@ -508,6 +514,7 @@ impl Service {
             tph,
             cars: cars.iter().enumerate().map(|(l, &c)| if i.tram.get(l).copied().unwrap_or(false) { c * TRAM_CARS } else { c }).collect(),
             span,
+            gaps,
             fold,
         }
     }
@@ -521,6 +528,12 @@ pub(crate) fn pier_lines(flags: &[u8], n: usize) -> Vec<bool> {
 /// held to 0..1, its marks kept (`network::span_clamped`).
 pub(crate) fn span_for(span: &[f32], stops: usize) -> Vec<f32> {
     if span.len() == PERIODS * 2 * stops && span.iter().any(|&v| v != 1.0) { span.iter().map(|&v| super::network::span_clamped(v)).collect() } else { vec![] }
+}
+
+/// T-4514: `gaps` if it is one per period and route node of `stops` stops with one past 1, else empty; each held to
+/// 1 or more.
+pub(crate) fn gaps_for(gaps: &[f32], stops: usize) -> Vec<f32> {
+    if gaps.len() == PERIODS * 2 * stops && gaps.iter().any(|&v| v > 1.0) { gaps.iter().map(|&v| if v > 1.0 && v.is_finite() { v } else { 1.0 }).collect() } else { vec![] }
 }
 
 /// Equal to the bit (T-124: a kept period must be exactly what a fresh solve would give).
@@ -605,17 +618,16 @@ impl Service {
         };
         let same: [bool; PERIODS] = std::array::from_fn(period_same);
         let nr = 2 * self.stops.len();
-        let span_same = |q: usize| {
-            fn at(s: &Service, q: usize, nr: usize) -> Option<&[f32]> {
-                if s.span.is_empty() { None } else { Some(&s.span[q * nr..(q + 1) * nr]) }
-            }
-            match (at(self, q, nr), at(o, q, nr)) {
+        // a period's span (T-842) and gaps (T-4514), each empty for 1 everywhere
+        fn rows_same(a: &[f32], b: &[f32], q: usize, nr: usize) -> bool {
+            let at = |s: &[f32]| if s.is_empty() { None } else { Some(s[q * nr..(q + 1) * nr].to_vec()) };
+            match (at(a), at(b)) {
                 (None, None) => true,
-                (Some(a), Some(b)) => same_bits(a, b),
+                (Some(a), Some(b)) => same_bits(&a, &b),
                 (Some(a), None) | (None, Some(a)) => a.iter().all(|&v| v == 1.0),
             }
-        };
-        (0..PERIODS).filter(|&q| same[q] && span_same(q)).fold(0, |m, q| m | 1 << q)
+        }
+        (0..PERIODS).filter(|&q| same[q] && rows_same(&self.span, &o.span, q, nr) && rows_same(&self.gaps, &o.gaps, q, nr)).fold(0, |m, q| m | 1 << q)
     }
 }
 
@@ -818,6 +830,8 @@ pub struct DemandApi {
     apart_in: Vec<u32>,
     /// The service span of the next `set_network` (`set_span`, T-842).
     span_in: Vec<f32>,
+    /// The shared stretches' gaps of the next `set_network` (`set_gaps`, T-4514).
+    gaps_in: Vec<f32>,
     /// set_bus (T-1464)
     bus_in: (Vec<u32>, Vec<f32>),
     /// Per line of the network `set_network` is given, 1 if it runs on tram track (`set_tram_lines`).
@@ -866,7 +880,7 @@ impl DemandApi {
         if let Some(s) = &self.sz {
             mem::subzones(s, r, at);
         }
-        r.add(format!("{at}stations (want, od_st, od_at), fares, inputs"), vb(&self.want) + vb(&self.od_st) + vb(&self.od_at) + vb(&self.fare_km) + vb(&self.fare_mul) + vb(&self.base_mul) + vb(&self.fare_curve) + vb(&self.complex_in) + vb(&self.ups_in) + vb(&self.passages_in) + vb(&self.apart_in) + vb(&self.span_in) + vb(&self.bus_in.0) + vb(&self.bus_in.1) + vb(&self.tram_in) + vb(&self.back_in) + vb(&self.pier_in.0) + vb(&self.pier_in.1));
+        r.add(format!("{at}stations (want, od_st, od_at), fares, inputs"), vb(&self.want) + vb(&self.od_st) + vb(&self.od_at) + vb(&self.fare_km) + vb(&self.fare_mul) + vb(&self.base_mul) + vb(&self.fare_curve) + vb(&self.complex_in) + vb(&self.ups_in) + vb(&self.passages_in) + vb(&self.apart_in) + vb(&self.span_in) + vb(&self.gaps_in) + vb(&self.bus_in.0) + vb(&self.bus_in.1) + vb(&self.tram_in) + vb(&self.back_in) + vb(&self.pier_in.0) + vb(&self.pier_in.1));
         let (mut net, mut g, mut avg, mut od, mut sub, mut rest) = (0, 0, 0, 0, 0, 0);
         for p in self.per.iter().flatten() {
             net += mem::network(&p.net);
@@ -965,6 +979,7 @@ impl DemandApi {
             stop_y: svc.stop_xy.iter().skip(1).step_by(2).copied().collect(),
             line_wrap: vec![false; nl],
             span: svc.span.clone(),
+            gap_f: svc.gaps.clone(),
             st_ups: svc.ups.clone(),
             st_passage: svc.passages.clone(),
             st_apart: svc.apart.clone(),
@@ -1352,6 +1367,7 @@ impl DemandApi {
             passages_in: vec![],
             apart_in: vec![],
             span_in: vec![],
+            gaps_in: vec![],
             bus_in: (vec![], vec![]),
             tram_in: vec![],
             back_in: vec![],
@@ -1470,7 +1486,7 @@ impl DemandApi {
         let (home_k, work_k) = zone_trip_factors(&city, &z, &gr, gravity_from_pack);
         // read only above; z and gr hold what the solves need of it (T-1611)
         city.gravity = None;
-        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_zones: FareZones::default(), fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], apart_in: vec![], span_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], pier_in: (vec![], vec![]), ferry: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
+        Ok(DemandApi { city: Arc::new(city), z: Arc::new(z), gr: Arc::new(gr), weights: None, base, nr, walk_all, walk_home_zone: ns.walk_home, walk_work_zone: ns.walk_work, unr_all, unr_home: ns.unr_home, unr_work: ns.unr_work, home_k, work_k, svc: None, sz: None, want: vec![], od_st: vec![], od_at: vec![], per: (0..PERIODS).map(|_| None).collect(), fare_per_km: 0.0, fare_km: vec![], fare_mul: vec![], base_mul: vec![], fare_zones: FareZones::default(), fare_curve: vec![], open_ms: now_ms() - t0, complex_in: vec![], ups_in: vec![], passages_in: vec![], apart_in: vec![], span_in: vec![], gaps_in: vec![], bus_in: (vec![], vec![]), tram_in: vec![], back_in: vec![], pier_in: (vec![], vec![]), ferry: vec![], same: 0, layout_same: false, reusable: false, lod: Lod::of(lod::FINE)?, part: (0, 1), len_base: std::cell::OnceCell::new() })
     }
 
     /// `new` at a level of detail (T-1222, `lod::FINE` or `lod::COARSE`): the commute chunks
@@ -1522,6 +1538,12 @@ impl DemandApi {
     /// (`track::span`). Empty or another length: 1 everywhere.
     pub fn set_span(&mut self, span: &[f32]) {
         self.span_in = span.to_vec();
+    }
+
+    /// T-4514: the shared stretches' factors on their evenly spaced waits of the networks `set_network` is given from
+    /// now on (`Network::gap_f`), per period and route node as `set_span`; empty for 1 everywhere.
+    pub fn set_gaps(&mut self, gaps: &[f32]) {
+        self.gaps_in = gaps.to_vec();
     }
 
     /// The bus corridors of the networks `set_network` is given from now on (T-1464): per stop
@@ -1610,9 +1632,9 @@ impl DemandApi {
         if stops.iter().any(|&s| s as usize >= ns) {
             return Err("a stop names a station that is not in the list".into());
         }
-        NetInputs { stations: ns, lines: nl, stops: nstops, complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
+        NetInputs { stations: ns, lines: nl, stops: nstops, complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in, gaps: &self.gaps_in }.check()?;
         let tram_line: Vec<bool> = if self.tram_in.len() == nl { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
-        let inp = SvcInputs { complex: &self.complex_in, ups: &self.ups_in, passages: &self.passages_in, apart: &self.apart_in, bus: (&self.bus_in.0, &self.bus_in.1), tram: &tram_line, pier: &self.pier_in, back: &self.back_in, span: &self.span_in };
+        let inp = SvcInputs { complex: &self.complex_in, ups: &self.ups_in, passages: &self.passages_in, apart: &self.apart_in, bus: (&self.bus_in.0, &self.bus_in.1), tram: &tram_line, pier: &self.pier_in, back: &self.back_in, span: &self.span_in, gaps: &self.gaps_in };
         let mut svc = Service::build(st_xy, line_off, stops, times, tph, cars, &inp, (self.base.station_merge_m, self.base.bus_merge_m));
         if let Some(f) = svc.fold.as_mut() {
             let mass: Vec<f32> = self.city.pop.iter().zip(&self.city.jobs).map(|(a, b)| a + b).collect();

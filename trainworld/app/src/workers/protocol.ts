@@ -1331,6 +1331,9 @@ export interface SnapshotLine {
    * travel order), the share of the period's riders there with a train due within their tolerance
    * (`TrackApi.line_span`); absent when it is 1 everywhere */
   span?: number[];
+  /** T-4514: per period, run and stop as `span`, the factor on the evenly spaced wait of the shared stretch the stop
+   * leaves on (`TrackApi.shared_gaps`: the real gaps between its lines' departures); absent when it is 1 everywhere */
+  gaps?: number[];
 }
 
 // ---------- demand workers: a small pool per city (T-026), later one long-distance ----------

@@ -18,6 +18,8 @@ pub const TOL_MAX_S: f64 = 6.0 * 3600.0;
 const STEP_S: f64 = 60.0;
 const DAY: f64 = 86400.0;
 
+pub mod gaps;
+
 /// The share of riders who would wait `wait` seconds.
 pub fn within(wait: f64) -> f64 {
     if wait <= TOL_MIN_S {

@@ -84,6 +84,23 @@ fn the_service_span_prices_stops_with_no_train_due() {
     assert_eq!(api.same, (1 << PERIODS) - 1 - 2);
 }
 
+/// T-4514: the shared stretches' gaps reach each period's network as set, one per period and route node or none; a
+/// new one forgets only the periods it moved, and one of another length is refused.
+#[test]
+fn gaps_reach_the_period_networks() {
+    let nr = 68;
+    let (mut api, xy, n, stops, times, tph, cars) = small();
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    assert!(DemandApi::period_net(api.svc.as_ref().unwrap(), 1).gap_f.is_empty());
+    let g: Vec<f32> = (0..PERIODS * nr).map(|i| if i / nr == 1 && i % nr == 3 { 1.4 } else { 1.0 }).collect();
+    api.set_gaps(&g);
+    api.set_network(&xy, &n, &stops, &times, &tph, &cars).unwrap();
+    assert_eq!(api.same, (1 << PERIODS) - 1 - 2);
+    assert_eq!(DemandApi::period_net(api.svc.as_ref().unwrap(), 1).gap_f, g);
+    api.set_gaps(&[1.2; 5]);
+    assert!(api.set_network(&xy, &n, &stops, &times, &tph, &cars).is_err());
+}
+
 /// T-4048: stations within the merge distance are one demand station, unless the player separated them.
 #[test]
 fn separated_stations_are_never_merged() {

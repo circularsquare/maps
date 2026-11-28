@@ -49,6 +49,23 @@ impl TrackApi {
             }
         }
     }
+    /// T-4514: the running train and tram lines' shared stretches as demand takes them (`span::gaps`): per stop whose
+    /// factor on the evenly spaced wait is past 1, the line, `[(period * 2 + run) * n + stop]` (`line_span`'s layout)
+    /// and the factor. Kept as what demand was sent, which `dirty_demand_lines` measures a moved wait from.
+    pub fn shared_gaps(&mut self) -> Vec<f32> {
+        if !self.real_gaps {
+            self.gaps = Default::default();
+            return vec![];
+        }
+        let sent = crate::track::span::gaps::Sent::of(crate::track::span::gaps::groups(&self.w.net, &self.w.svc));
+        let out = sent.triples(&self.w.svc);
+        self.gaps = sent;
+        out
+    }
+    /// T-4543: switch the waits from real gaps (`shared_gaps`) on or off; off at first.
+    pub fn set_real_gaps(&mut self, on: bool) {
+        self.real_gaps = on;
+    }
     /// All phase tables: 4 floats per phase (t, s, v, a). notes/T-040.md "Keyframes".
     pub fn phases(&self) -> Vec<f32> {
         let mut out = vec![];

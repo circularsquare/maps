@@ -63,9 +63,26 @@ impl TrackApi {
     pub fn take_name_changes(&mut self) -> Vec<u32> {
         self.w.net.take_name_changes()
     }
-    /// Lines whose service changed for demand (stops, frequency, running, a time moving 5 s).
+    /// Lines whose service changed for demand (stops, frequency, running, a time moving 5 s); with none, T-4514: the
+    /// edit's lines on a shared stretch whose wait moved past `span::gaps::MOVE_S` since `shared_gaps` (a row's Offset,
+    /// a re-spacing).
     pub fn dirty_demand_lines(&self) -> Vec<u32> {
-        self.last.as_ref().map_or(vec![], |r| r.dirty.service.demand.clone())
+        let Some(r) = self.last.as_ref() else { return vec![] };
+        if !r.dirty.service.demand.is_empty() {
+            return r.dirty.service.demand.clone();
+        }
+        if !self.real_gaps {
+            return vec![];
+        }
+        self.gaps.moved(&self.w.net, &self.w.svc, &r.dirty.lines)
+    }
+    /// T-4514: of `lines`, those on a shared stretch whose wait moved past `span::gaps::MOVE_S` since `shared_gaps`:
+    /// for services worked out after their edit's answer (`take_settled_demand`'s).
+    pub fn gaps_moved(&self, lines: &[u32]) -> Vec<u32> {
+        if !self.real_gaps {
+            return vec![];
+        }
+        self.gaps.moved(&self.w.net, &self.w.svc, lines)
     }
 
     // ---- the network, for the main thread's snapshot

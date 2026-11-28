@@ -318,11 +318,14 @@ const popScales = new WeakMap<Reader, { base: number; rate: number }>();
  * one train on a line of under 500 an hour is past 0.2%. Span is compared exactly */
 const NOISE_RUN_S = 0.5;
 const NOISE_TRAINS = 0.002;
-/** T-1862: run times and trains an hour of `now` within noise of `was` (same shape), span the same */
+/** T-1862: run times and trains an hour of `now` within noise of `was` (same shape), span and gaps (T-4514) the same */
 function withinNoise(was: DemandNetwork, now: DemandNetwork): boolean {
   const s0 = was.span ?? new Float32Array(0), s1 = now.span ?? new Float32Array(0);
   if (was.times.length !== now.times.length || was.tph.length !== now.tph.length || s0.length !== s1.length) return false;
   for (let k = 0; k < s0.length; k++) if (s0[k] !== s1[k]) return false;
+  const g0 = was.gaps ?? new Float32Array(0), g1 = now.gaps ?? new Float32Array(0);
+  if (g0.length !== g1.length) return false;
+  for (let k = 0; k < g0.length; k++) if (g0[k] !== g1[k]) return false;
   for (let k = 0; k < was.times.length; k++) if (!(Math.abs(was.times[k] - now.times[k]) <= NOISE_RUN_S)) return false;
   for (let k = 0; k < was.tph.length; k++) if (!(Math.abs(was.tph[k] - now.tph[k]) <= NOISE_TRAINS * Math.abs(was.tph[k]))) return false;
   return true;
@@ -2294,6 +2297,7 @@ function jobTools(ctx: JobCtx) {
       p.set_passages(m.passages ?? new Uint32Array(0));
       p.set_apart(m.apart ?? new Uint32Array(0)); // T-4048
       p.set_span(m.span ?? new Float32Array(0));
+      p.set_gaps(m.gaps ?? new Float32Array(0)); // T-4514, before set_network
       p.set_back_stops(m.back ?? new Uint32Array(0)); // T-3348, before set_network          // T-1277: riders weigh fares by their country's income and pay the curve times its scale;
       // the market takes the curve as set, at `marketFareWeight` (T-2670, T-3239: its route
       // search charges that), and (T-1286) each trip's at its origin's scale over its default's

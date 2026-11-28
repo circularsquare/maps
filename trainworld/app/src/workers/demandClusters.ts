@@ -54,7 +54,7 @@ export interface Cluster {
   nodeGlobal: Uint32Array;
   /** everything its result depends on, so an unchanged cluster can keep its result */
   sig: string;
-  /** T-1862: `sig` less the service values (run times, trains an hour, span) */
+  /** T-1862: `sig` less the service values (run times, trains an hour, span, gaps) */
   shape: string;
   /** T-124: per period, everything that period's result depends on: `sig` less the other demand
    * levels' run times and trains an hour */
@@ -323,7 +323,7 @@ export function reachView(n: DemandNetwork, c: Cluster, reach: Uint8Array): PopV
     o += p;
   });
   const at = spans.flatMap(([l, a, b]) => Array.from({ length: b - a + 1 }, (_, k) => lineOff[l] + a + k)), ls = spans.map(([l]) => l);
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...passagesOf(n, stLocal), ...slicedOf(n, ls, at, stations), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span: spanOf(n, nodeGlobal), ...catchesOf(n, at) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...passagesOf(n, stLocal), ...slicedOf(n, ls, at, stations), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span: spanOf(n, nodeGlobal), ...gapsOf(n, nodeGlobal), ...catchesOf(n, at) };
   return { net, stLocal, nodeGlobal, pads: Uint32Array.from(pads) };
 }
 
@@ -421,11 +421,20 @@ function fzLinesOf(n: DemandNetwork, nodeGlobal: Uint32Array, hopKm: Float32Arra
 
 /** T-842: the whole network's span for the route nodes `nodeGlobal` names, period by period. */
 function spanOf(n: DemandNetwork, nodeGlobal: Uint32Array): Float32Array {
+  return perPeriodNode(n.span, n, nodeGlobal);
+}
+/** T-4514: the whole network's shared stretches' gaps for the route nodes `nodeGlobal` names, as `spanOf` */
+function gapsOf(n: DemandNetwork, nodeGlobal: Uint32Array): { gaps?: Float32Array } {
+  const g = perPeriodNode(n.gaps, n, nodeGlobal);
+  return g.length ? { gaps: g } : {};
+}
+/** a value per period and route node of the whole network, for the route nodes `nodeGlobal` names; empty where all are 1 */
+function perPeriodNode(v: Float32Array | undefined, n: DemandNetwork, nodeGlobal: Uint32Array): Float32Array {
   const all = 2 * n.stops.length, here = nodeGlobal.length;
-  if (!n.span || n.span.length !== PERIODS.length * all) return new Float32Array(0);
+  if (!v || v.length !== PERIODS.length * all) return new Float32Array(0);
   const out = new Float32Array(PERIODS.length * here);
-  for (let q = 0; q < PERIODS.length; q++) for (let r = 0; r < here; r++) out[q * here + r] = n.span[q * all + nodeGlobal[r]];
-  return out.some((v) => v !== 1) ? out : new Float32Array(0);
+  for (let q = 0; q < PERIODS.length; q++) for (let r = 0; r < here; r++) out[q * here + r] = v[q * all + nodeGlobal[r]];
+  return out.some((x) => x !== 1) ? out : new Float32Array(0);
 }
 
 function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], market: boolean, marketKey: string, stations: number[], lines: number[], rounds: number, frameKey: string): Cluster {
@@ -451,13 +460,14 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
   });
   const span = spanOf(n, nodeGlobal);
   const at = lines.flatMap((l) => Array.from({ length: n.lineN[l] }, (_, k) => lineOff[l] + k));
-  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...passagesOf(n, stLocal), ...slicedOf(n, lines, at, stations), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span, ...catchesOf(n, at) };
+  const net: DemandNetwork = { frame: n.frame, stXY, complex, ...passagesOf(n, stLocal), ...slicedOf(n, lines, at, stations), lineN, stops, ...backOf(back, stops), times, tph, cars, fare: n.fare, hopKm, ...fareWOf(n, nodeGlobal), ...fzLinesOf(n, nodeGlobal, hopKm), span, ...gapsOf(n, nodeGlobal), ...catchesOf(n, at) };
   const head = `${cities.join(",")}|${market}|${marketKey}|${rounds}|${n.fare.base}|${n.fare.perKm}|${frameKey}${curveKnots(n.fare).join(",")}|${JSON.stringify(n.fare.scales ?? {})}${n.fare.byCity ? `|c${JSON.stringify(n.fare.cityScales ?? {})}` : ""}${transferFare(n.fare) ? `|x${transferFare(n.fare)}` : ""}${net.fz && n.fare.zones?.length ? `|z${JSON.stringify(n.fare.zones.map((a) => [a.id, chargedPrices(n.fare, a)]))}` : ""}`;
   // the optional parts only where there are any, each after its name: two of one shape (passages and separated
   // pairs, T-4048) never read as each other
   const opt = { ups: net.ups, passages: net.passages, apart: net.apart, catchN: net.catchN, catchXY: net.catchXY, fareW: net.fareW, baseW: net.baseW, ferry: net.ferry, tram: net.tram, pierLines: net.pierLines, streetStops: net.streetStops, back: net.back, fz: net.fz, fzDist: net.fzDist, fzPassOff: net.fzPassOff, fzPass: net.fzPass };
   const ups = Object.entries(opt).flatMap(([k, v]) => (v ? [k, v] : []));
-  const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span]);
+  // (T-4514: the gaps only where there are any, so other networks keep their keys)
+  const sig = hashOf([head, stXY, complex, ...ups, lineN, stops, times, tph, cars, hopKm, span, ...(net.gaps ? ["gaps", net.gaps] : [])]);
   const shape = hashOf([head, stXY, complex, ...ups, lineN, stops, cars, hopKm]);
   // T-3542: each period's own run times and trains an hour
   const P = PERIODS.length;
@@ -472,8 +482,11 @@ function subNetwork(n: DemandNetwork, lineOff: Uint32Array, cities: CityId[], ma
     });
     return hashOf([`${head}|period ${q}`, stXY, complex, ...ups, lineN, stops, lt, lp, cars, hopKm]); // i18n-ignore
   });
-  // T-842: a period's own span, where there is one
-  const nr = 2 * nStops;
-  const psig = PERIODS.map((_, q) => span.length ? hashOf([periodSig[q], span.subarray(q * nr, (q + 1) * nr)]) : periodSig[q]);
+  // T-842: a period's own span, where there is one; T-4514: its own gaps alike
+  const nr = 2 * nStops, gaps = net.gaps;
+  const psig = PERIODS.map((_, q) => {
+    const own = span.length ? hashOf([periodSig[q], span.subarray(q * nr, (q + 1) * nr)]) : periodSig[q];
+    return gaps ? hashOf([own, "gaps", gaps.subarray(q * nr, (q + 1) * nr)]) : own;
+  });
   return { cities, market, marketKey, net, lines: Uint32Array.from(lines), stLocal, nodeGlobal, sig, shape, psig };
 }

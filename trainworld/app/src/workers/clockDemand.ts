@@ -440,6 +440,9 @@ export function buildSnapshot(): NetworkSnapshot {
   for (let k = 0; k + 1 < fa.length; k += 2) if (built.has(String(fa[k])) && built.has(String(fa[k + 1]))) apart.push([fa[k], fa[k + 1]]);
   const li = a.lines_info();
   const lines: NetworkSnapshot["lines"] = [];
+  // T-4514: per line, each stop past 1 on its shared stretch's factor (`TrackApi.shared_gaps`: line, place, factor)
+  const gapAt = new Map<number, number[]>(), sg = a.shared_gaps();
+  for (let k = 0; k + 2 < sg.length; k += 3) { const v = gapAt.get(sg[k]); if (v) v.push(sg[k + 1], sg[k + 2]); else gapAt.set(sg[k], [sg[k + 1], sg[k + 2]]); }
   for (let i = 0; i < li.length; i += 22) {
     if (li[i + 3] !== 1) continue; // running lines only
     const id = li[i];
@@ -448,7 +451,9 @@ export function buildSnapshot(): NetworkSnapshot {
     const boat = (ferry ? a.ferry_boat(id) : MEDIUM) as Boat;
     const bus = a.is_bus(id) ? busSnapshot(a, id, stations) : null;
     const hopS: number[][][] = [], dwellS: number[][][] = [];
-    const span = a.line_span(id), back = a.line_back_stops(id);
+    const span = a.line_span(id), back = a.line_back_stops(id), runStops = [...a.line_run_stops(id)], gapList = gapAt.get(id);
+    const gaps = gapList ? new Array<number>(PERIODS.length * 2 * runStops.length).fill(1) : null;
+    if (gaps) for (let k = 0; k + 1 < gapList!.length; k += 2) gaps[gapList![k]] = gapList![k + 1];
     for (let run = 0; run < 2; run++) {
       hopS.push([]);
       dwellS.push([]);
@@ -460,7 +465,7 @@ export function buildSnapshot(): NetworkSnapshot {
       }
     }
     lines.push({
-      id, name: a.line_name(id), stops: [...a.line_run_stops(id)], ...(back.length ? { backStops: [...back] } : {}), tph: Array.from(a.line_demand_tph(id)), hopS, dwellS,
+      id, name: a.line_name(id), stops: runStops, ...(back.length ? { backStops: [...back] } : {}), tph: Array.from(a.line_demand_tph(id)), hopS, dwellS,
       hopKm: [0, 1].map((run) => { const s = a.line_stop_s(id, run); return Array.from({ length: s.length - 1 }, (_, k) => (s[k + 1] - s[k]) / 1000); }),
       ...(!bus && !ferry && a.line_fast(id) ? { fast: true } : {}),
       ...(ferry ? { ferry: true } : {}),
@@ -476,6 +481,7 @@ export function buildSnapshot(): NetworkSnapshot {
       // T-798: a circle's riders ride on round through its first stop, standing the dwell there
       ...(a.line_loop(id) === 1 ? { wrapS: Math.max(1, li[i + 19]) } : {}),
       ...(span.some((v) => v !== 1) ? { span: Array.from(span) } : {}),
+      ...(gaps ? { gaps } : {}),
     });
   }
   if (fz.size) busStopFares(stations);

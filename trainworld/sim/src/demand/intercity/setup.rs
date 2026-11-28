@@ -552,9 +552,9 @@ impl IntercityApi {
         let Some((times, tph)) = per.filter(|_| st_xy.len() % 2 == 0 && stops.len() == *off.last().unwrap() as usize && cars.len() == line_n.len() && stops.iter().all(|&s| (s as usize) < st_xy.len() / 2)) else {
             return Err("intercity network arrays disagree".into());
         };
-        crate::demand::api::NetInputs { stations: st_xy.len() / 2, lines: line_n.len(), stops: stops.len(), complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in }.check()?;
+        crate::demand::api::NetInputs { stations: st_xy.len() / 2, lines: line_n.len(), stops: stops.len(), complex: &self.complex_in, ups: &self.ups_in, bus_n: &self.bus_in.0, tram: &self.tram_in, pier: &self.pier_in, back: &self.back_in, span: &self.span_in, gaps: &self.gaps_in }.check()?;
         let tram_line: Vec<bool> = if self.tram_in.len() == line_n.len() { self.tram_in.iter().map(|&f| f != 0).collect() } else { vec![] };
-        let inp = crate::demand::api::SvcInputs { complex: &self.complex_in, ups: &self.ups_in, passages: &self.passages_in, apart: &self.apart_in, bus: (&self.bus_in.0, &self.bus_in.1), tram: &tram_line, pier: &self.pier_in, back: &self.back_in, span: &self.span_in };
+        let inp = crate::demand::api::SvcInputs { complex: &self.complex_in, ups: &self.ups_in, passages: &self.passages_in, apart: &self.apart_in, bus: (&self.bus_in.0, &self.bus_in.1), tram: &tram_line, pier: &self.pier_in, back: &self.back_in, span: &self.span_in, gaps: &self.gaps_in };
         // T-4094: the market has no cells, so a run's stops share its figures equally
         let svc = Service::build(st_xy, off, stops, times, tph, cars, &inp, (self.base.station_merge_m, self.base.bus_merge_m));
         // T-124: as `DemandApi::set_network`, access is kept with the layout and a period with

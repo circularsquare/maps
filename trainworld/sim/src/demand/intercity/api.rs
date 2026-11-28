@@ -199,6 +199,8 @@ pub struct IntercityApi {
     pub(super) apart_in: Vec<u32>,
     /// `DemandApi::set_span` (T-842).
     pub(super) span_in: Vec<f32>,
+    /// `DemandApi::set_gaps` (T-4514).
+    pub(super) gaps_in: Vec<f32>,
     /// set_bus (T-1464)
     pub(super) bus_in: (Vec<u32>, Vec<f32>),
     /// `DemandApi::set_back_stops` (T-3348).

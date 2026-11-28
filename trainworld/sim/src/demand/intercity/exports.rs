@@ -39,6 +39,10 @@ impl IntercityApi {
     pub fn set_span(&mut self, span: &[f32]) {
         self.span_in = span.to_vec();
     }
+    /// `DemandApi::set_gaps` (T-4514).
+    pub fn set_gaps(&mut self, gaps: &[f32]) {
+        self.gaps_in = gaps.to_vec();
+    }
     /// `DemandApi::set_back_stops` (T-3348).
     pub fn set_back_stops(&mut self, back: &[u32]) {
         self.back_in = back.to_vec();

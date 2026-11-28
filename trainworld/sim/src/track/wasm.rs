@@ -184,6 +184,11 @@ pub struct TrackApi {
     boarding: Boarding,
     /// Per line id, its service span for demand and the key it was worked out for (`line_span`).
     spans: Vec<Option<(u64, Vec<f32>)>>,
+    /// T-4514: the shared stretches demand's network was last sent (`shared_gaps`), which a moved wait is measured from.
+    gaps: crate::track::span::gaps::Sent,
+    /// T-4543: waits on shared stretches from the real gaps (T-4514) are off until `set_real_gaps(true)` (T-4559): with it
+    /// off `shared_gaps` sends nothing and no edit calls for a wait that moved, so demand runs as before.
+    real_gaps: bool,
     /// Game seconds now (`set_now`; NaN until the worker sets it: edits then re-space at once).
     now: f64,
     /// Game seconds after `now` the next edit takes effect (`set_edit_lead`, T-1071), and when the
@@ -497,6 +502,8 @@ impl TrackApi {
             preview_ground: [0.0; 7],
             boarding: Boarding::default(),
             spans: vec![],
+            gaps: Default::default(),
+            real_gaps: false,
             now: f64::NAN,
             lead: 0.0,
             edit_at: f64::NAN,

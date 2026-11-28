@@ -9,6 +9,10 @@
 //! `--net tyo` reads `data/work/realnet/tyo_real_track.json` in Tokyo's frame (an empty `--market ""` is a phone's
 //! solve, which has no market).
 //!
+//! T-4514: `--save FILE` (a save's network bytes, `checks/save_net.py`) solves its train and tram lines as the clock worker
+//! packs them (no buses or ferries); `--gaps` adds their shared stretches' factors, `--meta FILE` writes each line's id,
+//! name and largest factor, and `T4514_DEBUG=1` prints each period's factors and the morning's stretches.
+//!
 //! `--parts` prints each population's structures (`mem_parts`) after the solve; `--stages` marks each population's
 //! solve and each crowding round inside a period.
 //!
@@ -119,7 +123,18 @@ fn main() {
     let net = get("--net").unwrap_or("nyc".into());
     // T-3924: `--snapshot FILE`, a game's network as its demand workers got it, bus stops' stretches included
     // (`st_ll`, `line_n`, `stops`, `times`, `tph`, `cars`, `catch_n`, `catch_ll`; longitude and latitude)
-    let (real, ll, catch_n, catch_ll) = match get("--snapshot") {
+    // T-4514: `--save FILE`, a save's network bytes (`checks/save_net.py`), its train and tram lines; with `--gaps` their
+    // shared stretches' factors (`span::gaps`), and `--meta FILE` per line its track id, name and largest factor
+    let from_save = get("--save").map(|p| save_net(&std::fs::read(p).unwrap(), args.iter().any(|a| a == "--gaps")));
+    let gaps: Vec<f32> = from_save.as_ref().map_or(vec![], |s| s.2.clone());
+    if let (Some(s), Some(path)) = (from_save.as_ref(), get("--meta")) {
+        std::fs::write(path, s.3.iter().map(|(id, name, f)| format!("{id}\t{name}\t{f}\n")).collect::<String>()).unwrap();
+    }
+    let (real, ll, catch_n, catch_ll) = if let Some((mut real, ll, _, _)) = from_save {
+        let home = Frame::equirect(origin(&net).0, origin(&net).1);
+        real.st_xy = ll.chunks(2).flat_map(|p| { let (x, y) = home.from_lonlat(p[0], p[1]); [x as f32, y as f32] }).collect();
+        (real, ll, vec![], vec![])
+    } else { match get("--snapshot") {
         Some(path) => {
             let j: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
             let f64s = |k: &str| j[k].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect::<Vec<f64>>();
@@ -136,7 +151,7 @@ fn main() {
             let ll: Vec<f64> = real.st_xy.chunks(2).flat_map(|p| { let (lon, lat) = home.to_lonlat(p[0] as f64, p[1] as f64); [lon, lat] }).collect();
             (real, ll, vec![], vec![])
         }
-    };
+    } };
     let hop_km = real.hop_km();
     println!("network: {} stations, {} lines, {} stops, {} bus stretch points", ll.len() / 2, real.line_n.len(), real.stops.len(), catch_ll.len() / 2);
     st.mark("network read");
@@ -156,10 +171,12 @@ fn main() {
                 a.params_mut().set_extra(k, v.parse().unwrap()).unwrap();
             }
         }
+        a.set_gaps(&gaps);
         a.set_network(&xy, &real.line_n, &real.stops, &real.times, &real.tph, &real.cars).unwrap();
         a.set_fares(1.5, 0.1, &hop_km).unwrap();
         st.mark(&format!("{id}: commutes set_network"));
         if let Some(e) = e {
+            e.set_gaps(&gaps);
             e.set_network(&xy, &real.line_n, &real.stops, &real.times, &real.tph, &real.cars).unwrap();
             e.set_fares(1.5, 0.1, &hop_km).unwrap();
             st.mark(&format!("{id}: everyday set_network"));
@@ -315,4 +332,91 @@ fn main() {
         }
         if let Some(a) = ic.as_ref() { println!("\nmarket:\n{}", a.mem_report()); }
     }
+}
+
+/// T-4514: a save's network (bytes from `checks/save_net.py`) as the clock worker's snapshot gives demand its running
+/// train and tram lines (no buses or ferries): stations at their nodes (longitude and latitude), each line's stops, run
+/// times per run and period (hop plus the dwell before it) and trains an hour per period, its cars; with `with_gaps`,
+/// per period and route node its shared stretch's factor (`span::gaps`, as `TrackApi::shared_gaps` sends), else none;
+/// per line its track id, name and largest factor.
+fn save_net(raw: &[u8], with_gaps: bool) -> (RealNet, Vec<f64>, Vec<f32>, Vec<(u32, String, f32)>) {
+    use trainworld_sim::track::frame::FrameKind;
+    use trainworld_sim::track::{save, span::gaps, world::TrackWorld};
+    let w = TrackWorld::new(save::decode(&save::convert_frame(raw, FrameKind::Merc).unwrap()).unwrap());
+    let frame = w.net.frame();
+    let slot = w.net.period_slot();
+    let (mut ll, mut node_st) = (vec![], std::collections::HashMap::new());
+    let (mut line_n, mut stops, mut times, mut tph, mut cars) = (vec![], vec![], vec![], vec![], vec![]);
+    // per line in the snapshot: track id, its first stop's place, its stops
+    let mut at: Vec<(u32, usize, usize)> = vec![];
+    for l in 0..w.svc.lines.len() {
+        let ls = &w.svc.lines[l];
+        if !ls.running || ls.is_bus() || ls.ferry || !w.net.line_ok(l as u32) || ls.stops.len() < 2 {
+            continue;
+        }
+        let n = ls.stops.len();
+        at.push((l as u32, stops.len(), n));
+        for &s in &ls.stops {
+            let k = *node_st.entry(s).or_insert_with(|| {
+                let (lon, lat) = frame.to_lonlat(w.net.node_x[s as usize], w.net.node_y[s as usize]);
+                ll.extend([lon, lat]);
+                (ll.len() / 2 - 1) as u32
+            });
+            stops.push(k);
+        }
+        let mut t = vec![0f32; 10 * n];
+        for run in 0..2 {
+            for q in 0..PERIODS {
+                let p = &ls.runs[run].prof[slot[q]];
+                for j in 0..n.min(p.arr.len()).saturating_sub(1) {
+                    let dwell = if j == 0 { 0.0 } else { p.dep[j] - p.arr[j] };
+                    let k = if run == 0 { j } else { n - 1 - j };
+                    t[(run * PERIODS + q) * n + k] = (p.arr[j + 1] - p.dep[j] + dwell) as f32;
+                }
+            }
+        }
+        times.extend(t);
+        tph.extend(w.svc.demand_tph(&w.net, l));
+        cars.push(w.net.line_data(l as u32).unwrap().cars as f32);
+        line_n.push(n as u32);
+    }
+    let groups = gaps::groups(&w.net, &w.svc);
+    if std::env::var("T4514_DEBUG").is_ok() {
+        for q in 0..PERIODS {
+            let fs: Vec<f64> = groups.iter().filter(|g| g.q as usize == q).map(|g| g.factor).collect();
+            let bins = [1.0, 1.01, 1.05, 1.1, 1.2, 1.33, 1.5, 1.75, 2.01];
+            let h: Vec<usize> = bins.windows(2).map(|b| fs.iter().filter(|&&f| f >= b[0] && f < b[1]).count()).collect();
+            println!("period {q}: {} stretches, factor bins [1,1.01,1.05,1.1,1.2,1.33,1.5,1.75,2]: {h:?}", fs.len());
+        }
+        let mut pats = std::collections::HashMap::new();
+        for g in groups.iter().filter(|g| g.q == 0).take(60) {
+            let mem: Vec<String> = g.members.iter().map(|m| {
+                let p = pats.entry(m.line).or_insert_with(|| gaps::line_pats(&w.net, &w.svc, m.line));
+                let n = w.svc.lines[m.line as usize].stops.len();
+                match p.get((m.run as usize) * n + m.k as usize).copied().flatten() {
+                    Some(x) => format!("{}r{}k{} hw{:.0} ph{:.0} ride{:.0}", m.line, m.run, m.k, x.hw, x.t.rem_euclid(x.hw), x.ride),
+                    None => format!("{}r{}k{} -", m.line, m.run, m.k),
+                }
+            }).collect();
+            println!("  f{:.2} wait{:.0}: {}", g.factor, g.wait, mem.join(" | "));
+        }
+    }
+    let past = |f: f64| groups.iter().filter(|g| gaps::factor_sent(g.factor) as f64 > f).count();
+    let peak = groups.iter().filter(|g| g.q == 0).count();
+    println!("shared stretches: {} by period ({peak} in the morning peak); factor past 1: {}, past 1.1: {}", groups.len(), past(1.0), past(1.1));
+    let nr = 2 * stops.len();
+    let mut g = vec![1f32; PERIODS * nr];
+    let mut most: std::collections::HashMap<u32, f32> = std::collections::HashMap::new();
+    for x in gaps::Sent::of(groups).triples(&w.svc).chunks(3) {
+        let (l, i, f) = (x[0] as u32, x[1] as usize, x[2]);
+        let Some(&(_, a, n)) = at.iter().find(|y| y.0 == l) else { continue };
+        let (q, run, k) = (i / (2 * n), i % (2 * n) / n, i % n);
+        g[q * nr + 2 * a + run * n + k] = f;
+        let m = most.entry(l).or_insert(1.0);
+        *m = m.max(f);
+    }
+    let gaps = if with_gaps && g.iter().any(|&f| f > 1.0) { g } else { vec![] };
+    let meta = at.iter().map(|&(l, _, _)| (l, w.net.line_data(l).unwrap().name, most.get(&l).copied().unwrap_or(1.0))).collect();
+    // (st_xy is set per population from `ll`)
+    (RealNet { st_xy: vec![], line_n, stops, times, tph, cars }, ll, gaps, meta)
 }

@@ -70,6 +70,10 @@ pub struct Network {
     /// numbers them), the share of the riders arriving there whose wait for the next train is within
     /// their tolerance (`track::span`). Empty: 1 everywhere.
     pub span: Vec<f32>,
+    /// T-4514: per period and route node (as `span`), the factor on the evenly spaced wait of the shared stretch the
+    /// route node leaves on (`track::span::gaps`: the real gaps between its lines' departures), 1 or more. Empty: 1
+    /// everywhere.
+    pub gap_f: Vec<f32>,
     /// Each station's upgrades, `track::upgrades` bits (T-1281): park and ride cuts a ride's fixed
     /// cost (`access_options`), a waiting room the perceived wait (`build_graph`). Empty: none.
     pub st_ups: Vec<u8>,
@@ -283,6 +287,7 @@ pub fn synth_network() -> Network {
         stop_y: vec![],
         line_wrap: vec![],
         span: vec![],
+        gap_f: vec![],
         st_ups: vec![],
         st_passage: vec![],
         st_apart: vec![],

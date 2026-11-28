@@ -102,7 +102,7 @@ interface Svc {
   frame: unknown;
   fare: unknown;
   stations: { id: string; x: number; y: number; level?: number; complex?: number; upgrades?: number; fare?: number; street?: boolean }[];
-  lines: { id: string; stops: string[]; back?: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; ferry?: boolean; boat?: number; brt?: boolean; catches?: unknown; tram?: boolean; fareDist?: boolean; passFares?: unknown; dwellS: unknown; wrapS?: number; cars: number; span?: unknown }[];
+  lines: { id: string; stops: string[]; back?: string[]; tph: unknown; hopS: unknown; hopKm?: unknown; fast?: boolean; ferry?: boolean; boat?: number; brt?: boolean; catches?: unknown; tram?: boolean; fareDist?: boolean; passFares?: unknown; dwellS: unknown; wrapS?: number; cars: number; span?: unknown; gaps?: unknown }[];
   passages?: [string, string][];
   apart?: [string, string][];
 }
@@ -131,10 +131,10 @@ export function canonical(svc: Svc): { text: string; stationIds: string[]; lineI
     if (s.level) return [s.x, s.y, c, s.upgrades ?? 0, s.fare ?? 0, s.level];
     return s.fare ?[s.x, s.y, c, s.upgrades ?? 0, s.fare] : s.upgrades ? [s.x, s.y, c, s.upgrades] : [s.x, s.y, c];
   });
-  // a circle's stand (T-798) and a service span (T-842) only where there is one, so other
+  // a circle's stand (T-798), a service span (T-842) and shared stretches' gaps (T-4514) only where there is one, so other
   // networks keep their keys; T-3926: the way back's stations, the boat size, a busway and a bus's
   // catchment alike (the solve reads them, and the key no longer carries the clock worker's code)
-  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), ...(l.back ? { back: l.back.map((s) => place.get(s) ?? -1) } : {}), tph: asRows(l.tph), hopS: runsAsRows(l.hopS), hopKm: l.hopKm ?? null, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.boat !== undefined ? { boat: l.boat } : {}), ...(l.brt ? { brt: true } : {}), ...(l.catches ? { catches: l.catches } : {}), ...(l.tram ? { tram: true } : {}), ...(l.fareDist ? { fareDist: true } : {}), ...(l.passFares ? { passFares: l.passFares } : {}), dwellS: runsAsRows(l.dwellS), ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}) }));
+  const lines = svc.lines.map((l) => ({ stops: l.stops.map((s) => place.get(s) ?? -1), ...(l.back ? { back: l.back.map((s) => place.get(s) ?? -1) } : {}), tph: asRows(l.tph), hopS: runsAsRows(l.hopS), hopKm: l.hopKm ?? null, ...(l.fast ? { fast: true } : {}), ...(l.ferry ? { ferry: true } : {}), ...(l.boat !== undefined ? { boat: l.boat } : {}), ...(l.brt ? { brt: true } : {}), ...(l.catches ? { catches: l.catches } : {}), ...(l.tram ? { tram: true } : {}), ...(l.fareDist ? { fareDist: true } : {}), ...(l.passFares ? { passFares: l.passFares } : {}), dwellS: runsAsRows(l.dwellS), ...(l.wrapS ? { wrapS: l.wrapS } : {}), cars: l.cars, ...(l.span ? { span: l.span } : {}), ...(l.gaps ? { gaps: l.gaps } : {}) }));
   // passages (T-1281) only where there are any
   const passages = svc.passages?.length ? { passages: svc.passages.map(([a, b]) => [place.get(a) ?? -1, place.get(b) ?? -1]) } : {};
   // T-4048: the separated pairs alike

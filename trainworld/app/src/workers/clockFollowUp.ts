@@ -133,7 +133,8 @@ function settleOwed(f?: FollowUp): boolean {
   if (!any) return false;
   forget();
   a.take_service_moved();
-  const running = a.take_settled_running(), demand = a.take_settled_demand().length > 0;
+  // T-4514: or a shared stretch's wait they moved past 5 s (a re-spacing that moves no run time)
+  const running = a.take_settled_running(), demand = a.take_settled_demand().length > 0 || a.gaps_moved(a.dirty_lines()).length > 0;
   if (demand) scheduleSnapshot();
   if (f && (running || demand)) f.ask.trips = f.ask.board = true;
   return true;
