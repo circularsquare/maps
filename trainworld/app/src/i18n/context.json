@@ -2117,6 +2117,7 @@
   "settingsTab.terrainTip": "Hover on the Terrain checkbox.",
   "settingsTab.showAll": "Settings, Show: button next to the Show label over the level and mode rows that shows every hidden level and kind of transport again; only visible while one is hidden.",
   "settingsTab.blueprints": "Settings, Show: checkbox under the Show mode buttons; unticked, every blueprint (planned track, stations, lines and BRT lanes) is not drawn on the map. Construct and the blueprints themselves are unchanged. A plural noun like the other items.",
+  "settingsTab.blueprintsTip": "Settings, Show: hover of the Blueprints checkbox, saying what a blueprint is. A phrase naming what is drawn but not yet built, no full stop; use the glossary renderings of track, station, line and construct.",
   "settingsTab.theme": "Settings: section heading for light or dark, and the colour theme.",
   "settingsTab.trains": "Settings, Show: checkbox for the trains drawn moving on the map.",
   "settingsTab.tutorial": "Settings, Game: label of the tutorial row (a Start again button beside it).",

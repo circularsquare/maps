@@ -3,7 +3,7 @@
 // under it, and at the right a ring in the achievement's colour filling from zero toward the next tier
 // with the figure in the middle. Then the firsts, a gold medal or an empty place each, the day at the right.
 
-import { demandFigures, FIRSTS, networkFigures, short, TIERED, tierKey, tierText, when, type Tiered } from "../../game/achievements";
+import { demandFigures, FIRSTS, short, TIERED, tierKey, tierText, when, type Tiered } from "../../game/achievements";
 import { dayOf } from "../../game/format";
 import { t as tr } from "../../i18n";
 import { moneyState } from "../../game/money";
@@ -16,9 +16,9 @@ import "../achievements.css";
 
 /** A tiered achievement's figure now and what has it; null while unknown. */
 function figureOf(id: Tiered["id"]): { v: number; of?: string } | null {
-  if (id === "cities") { const n = networkFigures.value; return n ? { v: n.cities } : null; }
   const d = demandFigures.value;
   if (!d) return null;
+  if (id === "cities") return { v: d.cities };
   if (id === "trips") return { v: d.trips };
   const x = id === "station" ? d.station : d.line;
   return x ? { v: x.v ?? 0, of: x.of } : { v: 0 };

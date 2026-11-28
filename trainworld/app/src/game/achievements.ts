@@ -82,6 +82,8 @@ export const CITY_SHARE = 20;
 export const INTERCITY_SHARE = 20;
 /** trips a day to and from other places a city needs before its share counts */
 export const INTERCITY_MIN_TRIPS = 100e3;
+/** T-4049: trips by train a day to, from and within a city for it to count as served (her "about 1,000 rides", read per day like the other thresholds) */
+export const CITY_MIN_RIDES = 1000;
 export const SLEEPER_S = 12 * 3600;
 /** riders a day who must be on one train that long */
 export const SLEEPER_RIDERS = 1;
@@ -228,7 +230,7 @@ function netFigures(w: AchWorld, zl: number) {
   if (long) firsts.set("long", long);
   if (bullet) firsts.set("bullet", bullet);
   if (circle) firsts.set("circle", circle);
-  return { cities: served.size, firsts, running: w.running.length };
+  return { zones: [...served], firsts, running: w.running.length };
 }
 
 /** The figures that come from the network alone. */
@@ -380,18 +382,18 @@ let sleeperView: DemandView | null = null;
 
 /** The figures from demand: the main pool's final results only (T-4307), on the average day, coarse zones' too (T-4117). */
 export const demandFigures = computed(() => {
-  const w = achWorld.value;
+  const w = achWorld.value, net = networkFigures.value;
   void zonesLoaded.value;
   const d = mainDemandByDay.value[AVERAGE_DAY];
   const v = d?.view;
   // (T-3509: the zones' trips within wait for the market's result while the game has one)
-  if (!w || !v?.final || (!marketIn(d) && !marketOff())) return null;
+  if (!w || !net || !v?.final || (!marketIn(d) && !marketOff())) return null;
   const cx = complexes.value;
-  const out = demandFiguresOf(w, d, v, cx);
-  if (checkPatches() && !sameBuilt(out, freshly(() => demandFiguresOf(w, d, v, cx)))) console.error("T-4150 check: the demand achievement figures kept per line differ from a whole build");
+  const out = demandFiguresOf(w, d, v, cx, net.zones);
+  if (checkPatches() && !sameBuilt(out, freshly(() => demandFiguresOf(w, d, v, cx, net.zones)))) console.error("T-4150 check: the demand achievement figures kept per line differ from a whole build");
   return out;
 });
-function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes) {
+function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes, served: CityId[]) {
   const byId = w.byId;
   const run = w.running;
   const firsts = new Map<FirstId, Detail>();
@@ -402,6 +404,8 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
   const zones = zoneViewsOf(d);
   const views = [...built].map((id) => zones.get(id)).filter((x) => x?.final);
   const trips = sumModes(views)?.rides.train ?? 0;
+  // T-4049: a city counts as served once its zone has CITY_MIN_RIDES train trips a day
+  const cities = served.filter((id) => { const z = zones.get(id); return z?.final && z.railTripsPerDay >= CITY_MIN_RIDES; }).length;
   // busiest station, by complex (each complex by a place of its own, one of none after them, in the order first met)
   const n = cx.members.size, own = new Map<string, number>(), slot = new Map<number, number>();
   const sum = new Float64Array(n), top = new Float64Array(n).fill(-1), names: string[] = new Array(n), seen = new Uint8Array(n), met: number[] = [];
@@ -482,7 +486,7 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
   if (shareOf(railEurope, EUROPE_PEOPLE) >= EUROPE_SHARE) firsts.set("europe", { v: shareOf(railEurope, EUROPE_PEOPLE) });
   for (const n of NATIONS) { const v = shareOf(railIn.get(n.cc) ?? 0, n.people); if (v >= n.share) firsts.set(`nation:${n.cc}`, { of: n.cc, v }); }
   const transfersPerTrip = v.railTripsPerDay > 0 ? transfers / v.railTripsPerDay : undefined;
-  return { trips, station, line, firsts, covered, transfersPerTrip };
+  return { trips, cities, station, line, firsts, covered, transfersPerTrip };
 }
 
 /** The best line's profit over the past 24 hours (the Lines tab's Money figure), asked of the clock
@@ -534,10 +538,10 @@ export const metNow = computed(() => {
   const tier = (id: TieredId, v: number | undefined, d: Detail) => {
     for (const t of TIERED.find((x) => x.id === id)!.tiers) if (v !== undefined && v >= t) out[tierKey(id, t)] = d;
   };
-  tier("cities", nf.cities, { v: nf.cities });
   for (const [k, d] of nf.firsts) out[k] = d;
   if (cf) for (const [k, d] of cf.firsts) out[k] = d;
   if (df) {
+    tier("cities", df.cities, { v: df.cities });
     tier("trips", df.trips, { v: df.trips });
     if (df.station) tier("station", df.station.v, df.station);
     if (df.line) tier("line", df.line.v, df.line);
