@@ -1899,6 +1899,12 @@ class DemandClient {
     if (log && (at === "closedAt" || log.openedAt === undefined)) log[at] = performance.now();
   }
 
+  /** T-4433: the bare copies of zones solve `s` covers (a round of it is about to be shown) */
+  private closeCovered(s: Solve) {
+    const ids = [...this.bareOpen.keys()].filter((id) => this.opened.has(id) && s.cities.includes(id));
+    if (ids.length) this.closeBare(ids);
+  }
+
   /** Close zones open bare in the aux worker; their figures stay shown. */
   private closeBare(ids: CityId[]) {
     this.workers[this.auxAt].postMessage({ kind: "close", ids, bare: true } satisfies ToDemand);
@@ -2217,9 +2223,10 @@ class DemandClient {
     }).catch((err) => { this.unreachable(id, id, `city pack ${id}: ${String(err)}`); this.postMarkets(); });
   }
 
-  /** A zone about to open in every worker that an edit's solve would find with no figures shown (`dispatch`). */
+  /** A zone about to open in every worker that an edit's solve would find with no figures shown (`dispatch`); never a
+   * loading save's, whose packs open ahead of its network and so of the load's hold (`stationsAhead`, T-4433) */
   private bareFirst(id: CityId): boolean {
-    return !this.hold && !!demandView.peek()?.final && !cityDemandViews.peek().has(id) && !this.bareOpen.has(id) && !this.bareKept.has(id);
+    return !this.hold && !gameLoadArmed() && !(this.ahead && !this.ahead.arrived) && !!demandView.peek()?.final && !cityDemandViews.peek().has(id) && !this.bareOpen.has(id) && !this.bareKept.has(id);
   }
 
   /** T-377: a zone's market pack, to every solving worker. */
@@ -5193,6 +5200,9 @@ class DemandClient {
       s.results = s.byRound[round];
       s.published = round;
       (s.roundAt ??= [])[round] = performance.now();
+      // T-4433: a round shown (a load's are) covers its zones, so a bare copy of one answers nothing from now on: on a phone,
+      // whose one solving worker holds it too, it goes ahead of the next round, not after the final
+      if (this.auxShared && s.showEstimates && !s.rough && round < ROUNDS) this.closeCovered(s);
       // T-327: every worker has the round, so the next may start
       if (round < ROUNDS) for (const w of this.workers.slice(0, this.computeN)) w.postMessage({ kind: "go", version: s.version, round: round + 1, group: s.ahead ? 1 : 0 } satisfies ToDemand);
       this.publish(s, round);

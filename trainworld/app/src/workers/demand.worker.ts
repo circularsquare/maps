@@ -2575,6 +2575,9 @@ function jobTools(ctx: JobCtx) {
         return t;
       };
       for (let round = 0; round <= ctx.rounds; round++) {
+        // T-4433: each crowding round prices a new graph, so the round before's skims serve nobody now (each about 40 MB
+        // on the real New York save; the other paths free them after every round too)
+        if (round > 0) release_skims();
         const t = round > 0 ? asF32(total(round - 1)) : null;
         if (t) for (const a of fresh) keepTrail(a, q, round - 1);
         for (const a of order) {

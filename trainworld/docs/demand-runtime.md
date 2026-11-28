@@ -42,7 +42,8 @@ of those sets and no station is in its reach. A closed zone carries no rider on 
 figures stand (a bare zone's city figures stay shown); the next solve leaves it out, and a worker
 solving with it closes it when that solve ends. It reopens as it first opened (download, mostly
 from the browser's cache, and opening). The bare copy of a zone that a shown solve covers closes at
-once. WASM memory never shrinks, so closing bounds a worker's peak (the freed space takes the next
+once, after a load's final; on a phone, whose one solving worker holds the bare copies too, as soon as a shown round
+of the load covers it, before the next round (T-4433). WASM memory never shrinks, so closing bounds a worker's peak (the freed space takes the next
 pack) rather than lowering it. `?perfOff=close` keeps everything open. A recomposition (a market
 pack opened or closed) frees the old composition before composing, unless a market part still
 holds it, and a part composed of the same packs serves again without composing (T-1198). A
@@ -107,7 +108,8 @@ solved with no station in it.
   shown solve covers it. A zone with no figures shown yet (reached before any bare opening of it)
   opens bare in the auxiliary worker first, from the same download and ahead of its open in every
   worker there (T-4051, `bareFirst`), so the solve covering it finds its figures and runs as any
-  edit's solve, not round by round with a barrier (`newZones`: 3.5x the wait on a big game). The
+  edit's solve, not round by round with a barrier (`newZones`: 3.5x the wait on a big game); never a
+  loading save's zones, which open ahead of its network and are solved with the barrier anyway (T-4433). The
   auxiliary worker keeps its bare copy (WASM memory never shrinks).
   Memory and timings of a pan with bare zones: notes/demand-measurements.md.
 - **Zones track crosses** (T-1047, `openCrossed`): a zone built track crosses (game/trackZones.ts)

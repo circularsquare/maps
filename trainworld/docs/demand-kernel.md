@@ -303,7 +303,9 @@ levels:
    is searched (T-405). That call-alone table is kept as a spare until the next caller: if it brings
    the same graph (a smaller zone's everyday layer right after its commutes) it carries on from it,
    any other caller drops it before searching, so it never sits beside a new table (T-4123). The
-   worker solves each zone's everyday layer right after its commutes for this (`solveOrder`, T-4057). A table is stations² costs and stations² real minutes (u16, as metres walked at walking's pace, T-1059, T-2265) plus, per searched destination, each node's next
+   worker solves each zone's everyday layer right after its commutes for this (`solveOrder`, T-4057). It drops every
+   table after each period's round, on every solve path: a crowding round prices a new graph, so no table of the round
+   before serves the next (T-4433; New York's is about 40 MB). A table is stations² costs and stations² real minutes (u16, as metres walked at walking's pace, T-1059, T-2265) plus, per searched destination, each node's next
    node and the settle order (u16 ids below 65,535 nodes, change nodes included), one bit per
    boarding route node for the departures accepted there, each change node's station and a bit per
    boarding edge of that station for the departures it accepts: about 4 bytes a node and 10 a
