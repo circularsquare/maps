@@ -1,4 +1,6 @@
 # Country adds, slow plan (2026-11-28)
+
+Anita, 11-27: "we can probably pause it after levant and yemen, if we manage to get that far." Batches 1-4 only; stop after the Levant and Yemen.
 Agent countryrun. Kit: C:\Users\anita\AppData\Local\Temp\claude\dce1fefcc1d43aef\bae761ca-c85c-416e-b4e2-0a931ae6b8a6\scratchpad\countryrun\
 Anita 11-27: cores are low, start a country add plan, keep it slow. Rules: docs/world-run.md "Rules for any data run", docs/adding-a-country.md.
 Task context: T-3764 (fill the gaps; its notes hold the batch list this follows). No task taken by this agent.
