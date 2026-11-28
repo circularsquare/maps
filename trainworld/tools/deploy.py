@@ -20,7 +20,7 @@ about 15 MB) goes to the website repo's `trainsworld/` (T-1707; its old `trainwo
 redirect pages there, written in the same publish), since module workers and WASM must be
 same-origin with the page. The page finds its data with game/dataBase.ts: the `tw-data` meta this
 script writes into the published index.html, else `packs/` beside the page (every local build).
-T-3707: `trainsworld/builds.json` lists the published builds' stamps, this one first and the two before it
+T-3707: `trainsworld/builds.json` lists the published builds' stamps, this one first, then the ones under 14 days old (the newest 3 at least; T-4570)
 (dist/build.json holds the stamp); the account server keeps scores only from a build on it, so it goes live with the
 page in the same website commit and needs no server deploy.
 
@@ -55,6 +55,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.request
 import zlib
@@ -86,7 +87,11 @@ OLD_DIR = "trainworld"
 # T-3707: the build's stamp (app/vite.config.ts), and the site's list of published ones the account server reads
 BUILD_FILE = "build.json"
 BUILDS_FILE = "builds.json"
-BUILDS_KEPT = 3
+# T-4570: a build stays listed 14 days (its stamp is Date.now() in base 36, so the stamp holds its build time), and the
+# newest 3 stay whatever their age; the server accepts at most 100 (shonei-server trainworld_builds.go)
+BUILDS_DAYS = 14
+BUILDS_MIN = 3
+BUILDS_MAX = 100
 SITE = "https://anita.garden/"
 PAGE = SITE + SITE_DIR + "/"
 OLD_PAGE = SITE + OLD_DIR + "/"
@@ -351,15 +356,32 @@ def build_stamp(dist):
     return b if isinstance(b, str) and re.fullmatch(r"[a-z0-9]{1,32}", b) else None
 
 
-def published_builds(dest, stamp):
+def stamp_time(b):
+    """The time a build stamp was made (vite.config.ts: Date.now() in base 36), or None for a stamp that isn't one."""
+    try:
+        t = int(b, 36) / 1000
+    except ValueError:
+        return None
+    return t if 1.5e9 < t < 4e9 else None
+
+
+def published_builds(dest, stamp, now=None):
     """T-3707: the site's list of published builds with `stamp` first: the account server takes a score only from a
-    build on it (shonei-server trainworld_builds.go). The builds before it stay a while, so tabs open across a publish
-    still count."""
+    build on it (shonei-server trainworld_builds.go). T-4570: the builds before it stay while they are under
+    BUILDS_DAYS old, so tabs open across several publishes still count, and the newest BUILDS_MIN stay regardless."""
+    now = time.time() if now is None else now
     try:
         old = json.load(open(os.path.join(dest, BUILDS_FILE), encoding="utf-8")).get("builds") or []
     except (OSError, ValueError, AttributeError):
         old = []
-    return [stamp] + [b for b in old if isinstance(b, str) and b != stamp][:BUILDS_KEPT - 1]
+    out = [stamp]
+    for b in old:
+        if not isinstance(b, str) or b in out:
+            continue
+        t = stamp_time(b)
+        if len(out) < BUILDS_MIN or (t is not None and now - t < BUILDS_DAYS * 86400):
+            out.append(b)
+    return out[:BUILDS_MAX]
 
 
 def record_release(dist, app, dry):
