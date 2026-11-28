@@ -18,13 +18,14 @@
 //! departures are placed (`retime`), for the clusters of lines timed together whose inputs moved.
 
 use std::collections::{BTreeMap, HashMap};
+use std::rc::Rc;
 
 use super::capacity::{FOLLOW_PASSING, FOLLOW_TIMED};
 use super::net::Network;
 use super::overtake::{self, Pass, PASS_CLEAR_S};
 use super::params::*;
 use super::profile::{self, Hold, Profile};
-use super::service::{lattice_deps, lattice_deps_local, profile_with, Cal, Dep, Lattice, Run, Service, Variant, NO_PLACE};
+use super::service::{hold_plan, lattice_deps, lattice_deps_local, profile_with_plan, Cal, Dep, Lattice, Run, Service, Variant, NO_PLACE};
 
 /// Variants per run and slot, besides the slot's own timetable.
 pub const MAX_VARS: usize = 16;
@@ -50,14 +51,32 @@ const DAY_REF: i64 = 10;
 const AROUND_S: f64 = 10.0 * 3600.0;
 
 type Memo = HashMap<(u32, u8, Vec<u64>), Profile>;
+type Plans = HashMap<(u32, u8, Vec<u64>), Rc<profile::HoldPlan>>;
 
 /// Profiles built this time, and those built last time to take again (`Service::timing_memo`).
 struct Built {
     old: Memo,
     new: Memo,
+    /// Each run's departures, worked out once for this retime (T-4449): the lattices are fixed
+    /// through it, and each of the three passes asks for them again.
+    around: HashMap<(u32, u8), Rc<Vec<Dep>>>,
+    days: HashMap<(u32, u8), Rc<Vec<Vec<(f64, f64, u32)>>>>,
+    /// What each run's holds do on its hops, once for all the timetables built with them.
+    plans: Plans,
+    /// Per run, the parts of those plans the holds have in common.
+    plan_memos: HashMap<(u32, u8, Vec<u64>), profile::PlanMemo>,
 }
 
 impl Built {
+    fn around(&mut self, lat: &Lattice, l: u32, r: usize) -> Rc<Vec<Dep>> {
+        self.around.entry((l, r as u8)).or_insert_with(|| Rc::new(around(lat, r))).clone()
+    }
+
+    /// `day_deps` of every slot.
+    fn days(&mut self, lat: &Lattice, l: u32, r: usize) -> Rc<Vec<Vec<(f64, f64, u32)>>> {
+        self.days.entry((l, r as u8)).or_insert_with(|| Rc::new(day_deps(lat, r))).clone()
+    }
+
     /// `profile_with`, or the same profile built before: by line, run, its free run (a rebuilt run
     /// differs there), the line's dwell and turnaround, and the holds.
     fn prof(&mut self, net: &Network, l: u32, r: usize, run: &Run, stop_holds: &[f64], holds: &[Hold]) -> Profile {
@@ -69,7 +88,17 @@ impl Built {
         if let Some(p) = self.new.get(&k) {
             return p.clone();
         }
-        let p = self.old.remove(&k).unwrap_or_else(|| profile_with(net, l, run, stop_holds, holds));
+        let p = match self.old.remove(&k) {
+            Some(p) => p,
+            None => {
+                // the holds' part of a timetable reads the run and the holds only (not the stops' standing)
+                let mut pk: Vec<u64> = vec![run.free.duration.to_bits(), run.len.to_bits(), run.free.phases.len() as u64];
+                pk.extend(holds.iter().flat_map(|h| [h.s.to_bits(), h.delay.to_bits(), h.span.to_bits()]));
+                let memo = self.plan_memos.entry((l, r as u8, pk[..3].to_vec())).or_default();
+                let plan = self.plans.entry((l, r as u8, pk)).or_insert_with(|| Rc::new(hold_plan(run, holds, memo))).clone();
+                profile_with_plan(net, l, run, stop_holds, &plan)
+            }
+        };
         self.new.insert(k, p.clone());
         p
     }
@@ -274,7 +303,7 @@ pub fn retime(net: &Network, svc: &mut Service) {
         }
         false
     });
-    let mut built = Built { old, new: HashMap::new() };
+    let mut built = Built { old, new: HashMap::new(), around: HashMap::new(), days: HashMap::new(), plans: HashMap::new(), plan_memos: HashMap::new() };
     // the waits and following losses of the clusters worked out again, each cluster's in its key's order
     let res: Vec<usize> = cl.iter().zip(&stood).filter(|x| !*x.1).flat_map(|x| x.0.res.iter().copied()).collect();
     if !res.is_empty() {
@@ -405,19 +434,19 @@ fn install(svc: &mut Service, done: Vec<Timed>, lats: &[Option<Lattice>]) {
     }
 }
 
-/// A run's weekday departures in slot `lev` over the reference day (game time), with their
-/// headways and places in the day: each place once, the day being the same every weekday.
-fn day_deps(lat: &Lattice, r: usize, lev: usize) -> Vec<(f64, f64, u32)> {
+/// A run's weekday departures over the reference day (game time), per slot, with their
+/// headways and places in the day: each place once in its slot, the day being the same every weekday.
+fn day_deps(lat: &Lattice, r: usize) -> Vec<Vec<(f64, f64, u32)>> {
     let mut buf: Vec<Dep> = vec![];
     lattice_deps_local(lat, r, DAY_REF as f64 * DAY - 3.0 * 3600.0, (DAY_REF + 1) as f64 * DAY, &mut buf);
-    let mut seen: Vec<u32> = vec![];
-    let mut out = vec![];
+    let mut seen: Vec<std::collections::HashSet<u32>> = vec![Default::default(); SLOTS];
+    let mut out = vec![vec![]; SLOTS];
     for (d, l, hw, place) in buf {
-        if l as usize != lev || place == NO_PLACE || seen.contains(&place) {
+        let lev = l as usize;
+        if lev >= SLOTS || place == NO_PLACE || !seen[lev].insert(place) {
             continue;
         }
-        seen.push(place);
-        out.push((d - lat.shift, hw, place));
+        out[lev].push((d - lat.shift, hw, place));
     }
     out
 }
@@ -456,10 +485,10 @@ fn step(x: f64) -> i64 {
 /// departure which: alike keys merge, the pair that adds the least waiting first, of any two
 /// (T-3931: on lines whose trains drift against each other's, count lines, the keys that sort
 /// together are rarely alike, and merging only those added enough waiting to put whole runs back
-/// on the slot's timetable, `floor`). `ok(key, i)`: whether departure `i` may run that key's
-/// timetable; a merge every departure of may is taken first, and only where none is left one
+/// on the slot's timetable, `floor`). `ok(key, is)`: whether every departure in `is` may run that
+/// key's timetable; a merge every departure of may is taken first, and only where none is left one
 /// that may not.
-fn cluster(each: &[Vec<i64>], ok: impl Fn(&[i64], usize) -> bool) -> (Vec<Vec<i64>>, Vec<usize>) {
+fn cluster(each: &[Vec<i64>], ok: impl Fn(&[i64], &[usize]) -> bool) -> (Vec<Vec<i64>>, Vec<usize>) {
     // (key, its departures)
     let mut keys: Vec<(Vec<i64>, Vec<usize>)> = vec![];
     let mut sorted: Vec<usize> = (0..each.len()).collect();
@@ -477,10 +506,13 @@ fn cluster(each: &[Vec<i64>], ok: impl Fn(&[i64], usize) -> bool) -> (Vec<Vec<i6
     let cost = |a: &(Vec<i64>, Vec<usize>), b: &(Vec<i64>, Vec<usize>)| {
         let m = max(&a.0, &b.0);
         let add = |k: &(Vec<i64>, Vec<usize>)| m.iter().zip(&k.0).map(|(x, y)| (x - y) as f64).sum::<f64>() * k.1.len() as f64;
-        add(a) + add(b) + if a.1.iter().chain(&b.1).all(|&i| ok(&m, i)) { 0.0 } else { UNSAFE }
+        add(a) + add(b) + if ok(&m, &a.1) && ok(&m, &b.1) { 0.0 } else { UNSAFE }
     };
     if keys.len() <= MAX_VARS {
-        let which = (0..each.len()).map(|i| keys.iter().position(|k| k.1.contains(&i)).unwrap()).collect();
+        let mut which = vec![0; each.len()];
+        for (k, key) in keys.iter().enumerate() {
+            key.1.iter().for_each(|&i| which[i] = k);
+        }
         return (keys.into_iter().map(|k| k.0).collect(), which);
     }
     // every pair's cost, and per key the cheapest other (the scan per merge is then one per key)
@@ -527,8 +559,8 @@ fn cluster(each: &[Vec<i64>], ok: impl Fn(&[i64], usize) -> bool) -> (Vec<Vec<i6
     for (i, e) in each.iter().enumerate() {
         // the representative it fits under and may run that adds the least, if not its own
         let add = |k: usize| reps[k].iter().zip(e).map(|(r, x)| r - x).sum::<i64>();
-        if let Some(k) = (0..reps.len()).filter(|&k| reps[k].iter().zip(e).all(|(r, x)| r >= x) && ok(&reps[k], i)).min_by_key(|&k| add(k)) {
-            if add(k) < add(which[i]) || !ok(&reps[which[i]], i) {
+        if let Some(k) = (0..reps.len()).filter(|&k| reps[k].iter().zip(e).all(|(r, x)| r >= x) && ok(&reps[k], &[i])).min_by_key(|&k| add(k)) {
+            if add(k) < add(which[i]) || !ok(&reps[which[i]], &[i]) {
                 which[i] = k;
             }
         }
@@ -554,7 +586,6 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
             }
         }
     }
-    let mut fast_deps: BTreeMap<(u32, u8), Vec<Dep>> = BTreeMap::new();
     let mut out = vec![];
     for (&(l, r), ws) in &by {
         let (ls, Some(lat)) = (&svc.lines[l as usize], lats[l as usize].as_ref()) else { continue };
@@ -564,8 +595,9 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
             continue;
         }
         let run = &ls.runs[r as usize];
+        let days = built.days(lat, l, r as usize);
         for lev in net.slots() {
-            let deps = day_deps(lat, r as usize, lev);
+            let deps = &days[lev];
             if deps.is_empty() {
                 continue;
             }
@@ -589,21 +621,22 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
                 let o = cap.users_of(w).iter().find(|u| u.owner).unwrap();
                 let Some(plan) = cap.plans_of(w).first() else { continue };
                 let (fl, Some(flat)) = (&svc.lines[f as usize], lats[f as usize].as_ref()) else { continue };
-                hcap = hcap.min(plan.headway_cap(net));
+                let cap_h = plan.headway_cap(net);
+                hcap = hcap.min(cap_h);
                 let fr = plan.fast.1 as usize;
                 let k = k as usize;
                 let (pt, q, nb) = (plan.points[k], plan.points[k + 1], plan.points[plan.next_passing(k)]);
                 let s_leave = b.dep[o.stop as usize];
                 let run_s = reach(&b, nb.at) - s_leave;
                 let s_to_q = reach(&b, q.at) - s_leave;
-                let fdeps = fast_deps.entry((f, fr as u8)).or_insert_with(|| around(flat, fr));
+                let fdeps = built.around(flat, f, fr);
                 let passes = stations.entry(o.stop as usize).or_default();
                 for &(d, flev, hf, place) in fdeps.iter().filter(|x| x.0 >= lo - fl.runs[fr].prof[x.1 as usize].duration && x.0 < hi) {
                     // each faster train as it runs (`lead_in`)
                     let fp = fl.prof_of(fr, flev as usize, fl.runs[fr].var_at(flev as usize, place));
                     let x = leave(fp, pt.fat);
                     let lead = PASS_CLEAR_S.max(reach(fp, q.fat) - x + plan.spacing - s_to_q);
-                    passes.push(Pass { at: d + x, lead, run_f: reach(fp, nb.fat) - x, run_s, spacing: plan.spacing, most: hf.min(plan.headway_cap(net)) + lead });
+                    passes.push(Pass { at: d + x, lead, run_f: reach(fp, nb.fat) - x, run_s, spacing: plan.spacing, most: hf.min(cap_h) + lead });
                 }
             }
             let stations: Vec<(usize, f64, Vec<Pass>)> = stations
@@ -620,7 +653,10 @@ fn passing_waits(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: 
             // own does not
             let secs = |k: &[i64]| k.iter().map(|&x| x as f64 * STEP_S).collect::<Vec<f64>>();
             let own: Vec<u64> = each.iter().zip(&times).map(|(k, t)| overtake::conflicts(t.0, &stations, &secs(k))).collect();
-            let (reps, which) = cluster(&each, |k, i| overtake::conflicts(times[i].0, &stations, &secs(k)) & !own[i] == 0);
+            let (reps, which) = cluster(&each, |k, is| {
+                let k = secs(k);
+                is.iter().all(|&i| overtake::conflicts(times[i].0, &stations, &k) & !own[i] == 0)
+            });
             let vars = reps
                 .iter()
                 .map(|rep| {
@@ -675,12 +711,13 @@ fn lead_in(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut B
         let mut xs: Vec<f64> = vec![a];
         xs.extend(frun.node_s.iter().copied().filter(|&x| x > a + 1.0 && x < p1.fat - 1.0));
         xs.push(p1.fat);
-        let slow_deps = around(slat, su.run as usize);
+        let slow_deps = built.around(slat, su.line, su.run as usize);
+        let days = built.days(flat, f, fr as usize);
         for lev in net.slots() {
             if flat.tph[lev] <= 0.0 || slat.tph[lev] <= 0.0 {
                 continue;
             }
-            let deps = day_deps(flat, fr as usize, lev);
+            let deps = &days[lev];
             if deps.is_empty() {
                 continue;
             }
@@ -836,13 +873,14 @@ fn following(net: &Network, svc: &Service, lats: &[Option<Lattice>], built: &mut
         let mut xs: Vec<f64> = vec![a];
         xs.extend(frun.node_s.iter().copied().filter(|&x| x > a + 1.0 && x < b - 1.0));
         xs.push(b);
-        let slow_deps = around(slat, su.run as usize);
+        let slow_deps = built.around(slat, su.line, su.run as usize);
+        let days = built.days(flat, f, fr as usize);
         let slow_timed = sl.timed.is_some() && sl.timed == Some(slat.timing_key());
         for lev in net.slots() {
             if flat.tph[lev] <= 0.0 || slat.tph[lev] <= 0.0 {
                 continue;
             }
-            let deps = day_deps(flat, fr as usize, lev);
+            let deps = &days[lev];
             if deps.is_empty() {
                 continue;
             }

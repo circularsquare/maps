@@ -970,10 +970,23 @@ fn build_run(net: &Network, l: u32, on: &Served, rev: bool, train_len: f64, dwel
 /// each end, leaving out the stops it passes (T-3332); `arr`/`dep` keep every stop, a passed one
 /// timed as the train goes by.
 fn run_profile(run: &Run, dw: &[f64], turn: f64, holds: &[Hold]) -> Profile {
+    run_profile_planned(run, dw, turn, &hold_plan(run, holds, &mut profile::PlanMemo::default()))
+}
+
+/// What `holds` do on a run's hops (`profile::plan_holds`), the same for every timetable of it.
+pub(crate) fn hold_plan(run: &Run, holds: &[Hold], memo: &mut profile::PlanMemo) -> profile::HoldPlan {
+    match with_ends(run, &[], 0.0) {
+        None => profile::plan_holds(&run.limits, &run.stop_s, &run.jump, holds, run.brake(), memo),
+        Some((s, jump, ..)) => profile::plan_holds(&run.limits, &s, &jump, holds, run.brake(), memo),
+    }
+}
+
+/// `run_profile` with the holds planned.
+fn run_profile_planned(run: &Run, dw: &[f64], turn: f64, plan: &profile::HoldPlan) -> Profile {
     let Some((s, jump, stand, keep)) = with_ends(run, dw, turn) else {
-        return profile::run_with(&run.limits, &run.stop_s, &run.jump, dw, holds, &run.hops, run.brake());
+        return profile::run_planned(&run.limits, &run.stop_s, &run.jump, dw, plan, &run.hops, run.brake());
     };
-    let mut p = profile::run_with(&run.limits, &s, &jump, &stand, holds, &run.hops, run.brake());
+    let mut p = profile::run_planned(&run.limits, &s, &jump, &stand, plan, &run.hops, run.brake());
     let n = run.stop_s.len();
     let (mut arr, mut dep) = (vec![0.0; n], vec![0.0; n]);
     for (i, k) in keep.iter().enumerate() {
@@ -1219,12 +1232,17 @@ fn profile_for(net: &Network, l: u32, run: &Run, level: usize) -> Profile {
 /// A rail run's profile with these extra dwells per stop and track holds (T-3346 stage 2: a
 /// variant's, or the slot's).
 pub(crate) fn profile_with(net: &Network, l: u32, run: &Run, stop_holds: &[f64], holds: &[Hold]) -> Profile {
+    profile_with_plan(net, l, run, stop_holds, &hold_plan(run, holds, &mut profile::PlanMemo::default()))
+}
+
+/// `profile_with` for holds already planned (`hold_plan`).
+pub(crate) fn profile_with_plan(net: &Network, l: u32, run: &Run, stop_holds: &[f64], plan: &profile::HoldPlan) -> Profile {
     let turn = net.line_turn[l as usize] as f64;
     let mut dw = stand_times(run, net.line_dwell[l as usize] as f64, turn);
     for (d, h) in dw.iter_mut().zip(stop_holds) {
         *d += h;
     }
-    let mut p = run_profile(run, &dw, turn, holds);
+    let mut p = run_profile_planned(run, &dw, turn, plan);
     p.hold += stop_holds.iter().sum::<f64>();
     p
 }

@@ -620,15 +620,50 @@ pub fn run(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], hold
 /// `run`, braking at `br` (T-3921: `TRAM_BRAKE` for a tram line), with `hops` from `hops` over the
 /// same limits, stops, jumps and braking (or none).
 pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], holds: &[Hold], hops: &Hops, br: f64) -> Profile {
-    let n = stops.len();
-    let mut p = Profile::default();
-    if n < 2 {
-        return p;
+    if stops.len() < 2 {
+        return Profile::default();
     }
-    let mut dw = dwell.to_vec();
-    dw.resize(n, 0.0);
+    run_planned(limits, stops, jump, dwell, &plan_holds(limits, stops, jump, holds, br, &mut PlanMemo::default()), hops, br)
+}
+
+/// What `plan_holds` worked out for one run, to take again where a timetable's holds differ from
+/// another's only in a hop or two (a hold's effect reads the hops it covers and nothing else).
+#[derive(Default)]
+pub struct PlanMemo {
+    /// A spread hold over the hops it covers and the zones they have: the standing it leaves at the
+    /// stop before, and its lowered speed.
+    spread: std::collections::HashMap<Vec<u64>, (Option<f64>, f64)>,
+    /// A hop's zones before its own holds and those holds: its zones and stands after.
+    hops: std::collections::HashMap<Vec<u64>, (Vec<(f64, f64, f64)>, Vec<(f64, f64)>)>,
+    /// A hop's phases from its start, for zones and stands.
+    laid: std::collections::HashMap<Vec<u64>, std::rc::Rc<(Vec<Phase>, f64)>>,
+}
+
+fn bits(key: &mut Vec<u64>, h: &Hold) {
+    key.extend([h.s.to_bits(), h.delay.to_bits(), h.span.to_bits()]);
+}
+
+/// What a run's holds do on its hops, apart from the standing times (T-4449): the standing each
+/// adds at a stop, the zones of slower running and the stands inside each hop. The same for every
+/// timetable of the run that has these holds, whatever it stands at its stops.
+#[derive(Clone, Debug, Default)]
+pub struct HoldPlan {
+    /// Standing added at a stop, in the order the holds took it.
+    waits: Vec<(usize, f64)>,
+    hold: f64,
+    /// Per hop with zones or stands, its phases from its start and its time (laid from t = 0, as
+    /// `Hops` has a hop's: a train taking it later has them offset).
+    laid: Vec<Option<std::rc::Rc<(Vec<Phase>, f64)>>>,
+}
+
+/// `HoldPlan` of `holds` over these stops (at least two).
+pub fn plan_holds(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], holds: &[Hold], br: f64, memo: &mut PlanMemo) -> HoldPlan {
+    let n = stops.len();
+    let mut plan = HoldPlan::default();
+    if n < 2 {
+        return plan;
+    }
     let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
-    p.dwell = dw[1..n - 1].iter().sum();
     let mut per_hop: Vec<Vec<Hold>> = vec![vec![]; n - 1];
     let (mut rt, mut buf) = (Retime::default(), Vec::new());
     let mut st: Vec<Stretch> = vec![];
@@ -645,10 +680,24 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
         let Some(&(i_first, ..)) = parts.first() else {
             // no running in it: wait at the stop before
             let i = stops.partition_point(|&s| s <= h.s).saturating_sub(1).min(n - 2);
-            dw[i] += h.delay;
-            p.hold += h.delay;
+            plan.waits.push((i, h.delay));
+            plan.hold += h.delay;
             continue;
         };
+        let mut key = vec![];
+        bits(&mut key, h);
+        for &(i, ..) in &parts {
+            key.push(i as u64);
+            key.extend(hop_zones[i].iter().flat_map(|z| [z.0.to_bits(), z.1.to_bits(), z.2.to_bits()]));
+        }
+        if let Some(&(wait, vc)) = memo.spread.get(&key) {
+            plan.waits.extend(wait.map(|x| (i_first, x)));
+            for &(i, z0, z1) in &parts {
+                hop_zones[i].push((z0, z1, vc));
+            }
+            plan.hold += h.delay;
+            continue;
+        }
         if st.len() < parts.len() {
             st.resize_with(parts.len(), Stretch::default);
         }
@@ -664,20 +713,23 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
         let mut total = |vc: f64| parts.iter().enumerate().map(|(j, &(_, z0, z1))| st[j].with_zone(&mut rt, z0, z1, vc)).sum::<f64>();
         // at the lowest speed the span takes at least len / v - t_in more: only near that is it run
         let slow = (len / FOLLOW_CRAWL_MIN_V - t_in < h.delay + 1.0).then(|| total(FOLLOW_CRAWL_MIN_V));
+        let mut wait = None;
         let vc = match slow.map(|t| t - base) {
             Some(most) if most <= h.delay => {
                 // too much to run off: the rest waits at the stop before the span
-                dw[i_first] += h.delay - most;
+                wait = Some(h.delay - most);
                 FOLLOW_CRAWL_MIN_V
             }
             _ => {
                 crawl_speed(total, base, h.delay, len, t_in, v_in, FOLLOW_CRAWL_MIN_V, slow)
             }
         };
+        memo.spread.insert(key, (wait, vc));
+        plan.waits.extend(wait.map(|x| (i_first, x)));
         for &(i, z0, z1) in &parts {
             hop_zones[i].push((z0, z1, vc));
         }
-        p.hold += h.delay;
+        plan.hold += h.delay;
     }
     for h in holds {
         if h.delay < HOLD_MIN_S || h.span > 0.0 {
@@ -686,8 +738,8 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
         let i = stops.partition_point(|&s| s <= h.s).saturating_sub(1).min(n - 2);
         if h.s - leave(i) < HOLD_NEAR_STOP_M || h.s >= stops[i + 1] - 1.0 {
             // At or by a stop: wait there (at the stop it is leaving).
-            dw[i] += h.delay;
-            p.hold += h.delay;
+            plan.waits.push((i, h.delay));
+            plan.hold += h.delay;
         } else {
             per_hop[i].push(*h);
         }
@@ -695,19 +747,21 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
     if st.is_empty() && per_hop.iter().any(|h| !h.is_empty()) {
         st.push(Stretch::default());
     }
-    let mut out = Vec::new();
-    let mut t = 0.0;
-    p.arr.push(0.0);
-    if dw[0] > 0.0 {
-        push(&mut out, 0.0, stops[0], 0.0, 0.0);
-        t = dw[0];
-    }
-    p.dep.push(t);
     for i in 0..n - 1 {
         let (a, b) = (leave(i), stops[i + 1]);
         let mut zones: Vec<(f64, f64, f64)> = std::mem::take(&mut hop_zones[i]);
         let mut mids: Vec<(f64, f64)> = vec![];
-        for h in &per_hop[i] {
+        let mut key = vec![i as u64, zones.len() as u64];
+        key.extend(zones.iter().flat_map(|z| [z.0.to_bits(), z.1.to_bits(), z.2.to_bits()]));
+        per_hop[i].iter().for_each(|h| bits(&mut key, h));
+        let known = if per_hop[i].is_empty() { None } else { memo.hops.get(&key) };
+        if let Some((z, m)) = known {
+            (zones, mids) = (z.clone(), m.clone());
+            for h in &per_hop[i] {
+                plan.hold += h.delay;
+            }
+        }
+        for h in per_hop[i].iter().filter(|_| known.is_none()) {
             // every point hold lies after the stands so far (holds are sorted), so in the last stretch
             let sr = &mut st[0];
             with_scratch(|sc| sr.of_hop(sc, limits, a, b, &zones, &mids, br));
@@ -733,9 +787,57 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
                 let vc = crawl_speed(|v| sr.with_zone(&mut rt, z0, h.s, v), base, h.delay, h.s - z0, t_in, v_in, 0.5, slow);
                 zones.push((z0, h.s, vc));
             }
-            p.hold += h.delay;
+            plan.hold += h.delay;
         }
-        match hops.0.get(i).filter(|_| per_hop[i].is_empty() && zones.is_empty() && hops.0.len() == n - 1) {
+        if known.is_none() && !per_hop[i].is_empty() {
+            memo.hops.insert(key, (zones.clone(), mids.clone()));
+        }
+        let laid = (!per_hop[i].is_empty() || !zones.is_empty()).then(|| {
+            let mut key = vec![i as u64, zones.len() as u64];
+            key.extend(zones.iter().flat_map(|z| [z.0.to_bits(), z.1.to_bits(), z.2.to_bits()]));
+            key.extend(mids.iter().flat_map(|m| [m.0.to_bits(), m.1.to_bits()]));
+            memo.laid
+                .entry(key)
+                .or_insert_with(|| {
+                    let mut out = vec![];
+                    let d = with_scratch(|sc| hop(sc, limits, a, b, &zones, &mids, 0.0, &mut Sink(Some(&mut out)), br));
+                    std::rc::Rc::new((out, d))
+                })
+                .clone()
+        });
+        plan.laid.push(laid);
+    }
+    plan
+}
+
+/// `run_with` for holds already planned over these stops (`plan_holds`).
+#[allow(clippy::too_many_arguments)]
+pub fn run_planned(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64], plan: &HoldPlan, hops: &Hops, br: f64) -> Profile {
+    let n = stops.len();
+    let mut p = Profile::default();
+    if n < 2 {
+        return p;
+    }
+    let mut dw = dwell.to_vec();
+    dw.resize(n, 0.0);
+    let leave = |i: usize| stops[i] + jump.get(i).copied().unwrap_or(0.0);
+    p.dwell = dw[1..n - 1].iter().sum();
+    for &(i, x) in &plan.waits {
+        dw[i] += x;
+    }
+    p.hold = plan.hold;
+    let mut out = Vec::new();
+    let mut t = 0.0;
+    p.arr.push(0.0);
+    if dw[0] > 0.0 {
+        push(&mut out, 0.0, stops[0], 0.0, 0.0);
+        t = dw[0];
+    }
+    p.dep.push(t);
+    for i in 0..n - 1 {
+        let (a, b) = (leave(i), stops[i + 1]);
+        let laid = plan.laid[i].as_deref();
+        match laid.map(|x| (&x.0, x.1)).or_else(|| hops.0.get(i).filter(|_| hops.0.len() == n - 1).map(|x| (&x.0, x.1))) {
             Some((ph, d)) => {
                 for q in ph {
                     push(&mut out, t + q.t, q.s, q.v, q.a);
@@ -744,7 +846,7 @@ pub fn run_with(limits: &[[f64; 2]], stops: &[f64], jump: &[f64], dwell: &[f64],
             }
             None => {
                 let mut sink = Sink(Some(&mut out));
-                t = with_scratch(|sc| hop(sc, limits, a, b, &zones, &mids, t, &mut sink, br));
+                t = with_scratch(|sc| hop(sc, limits, a, b, &[], &[], t, &mut sink, br));
             }
         }
         p.arr.push(t);
