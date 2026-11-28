@@ -632,6 +632,11 @@ last round counts as final for the status tag (`focusZones`), not for the card o
 the held clock, which wait for the zone in view's own final (its cluster's, or the whole solve's),
 except where the city view's zone's cluster went ahead of it (T-2459, above). A zone newly in view during the load supersedes the
 solve in hand; the pool holds at most three zones (`FOCUS_MAX_ZONES`), the oldest closed first.
+**The city view's zone** (T-4501, `focusTarget`, `?perfOff=focusSelected` off): once the pool has shown the zone in
+view a round, a zone selected in the city view that the load's solve covers and has shown no round of takes the pool,
+through every round, so its figures come in about its own time instead of at its cluster's round 0 in the main pool;
+the zone in view keeps that first round until the main pool's rounds replace it. Not while the main pool solves the
+selected zone's cluster ahead (T-2459, above), nor with a cached result shown.
 Questions about a zone shown from it go to its workers (`ask`, `target`, `cellModes`; the cells too
 while the main pool has not opened the zone). It ends (its workers terminated, questions waiting on them
 answered empty) when the whole solve's final lands, the network changes or a worker of it fails; the

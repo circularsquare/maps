@@ -1237,7 +1237,8 @@ class DemandClient {
     effect(() => { nearbyZones.value; this.ensure(); });
     // T-801: a selected zone's market opens for its partner bubbles
     // T-2453: and the zone the city view shows goes first after the zone in view
-    effect(() => { selection.value; this.selectedFirst(); this.ensure(); this.lodSoon(); queueMicrotask(() => this.lengthsAhead()); });
+    // T-4501: and during a load the focus pool takes it once the zone in view has its first figures from it
+    effect(() => { selection.value; this.selectedFirst(); this.ensure(); this.lodSoon(); this.focusSoon(); queueMicrotask(() => this.lengthsAhead()); });
     // T-1223: the zone in view goes fine once it has been in view VIEW_SETTLE_MS
     effect(() => {
       const id = viewedZone.value && zonesLoadForView.value ? activeCity.value : null;
@@ -4684,13 +4685,40 @@ class DemandClient {
     return !!this.fpool?.alive && ((this.fsolve?.svc === svc && this.fsolve.cities[0] === id) || this.fshown.get(id)?.s.svc === svc);
   }
 
-  /** The zone in view, reached and with no settled figures, is solved in the focus pool. */
+  /**
+   * T-4501: the zone the focus pool solves now: the one refined aside (T-2605); else the zone in view until the pool has
+   * shown it a round, then the city view's zone while the load's solve covers it and shows it nothing. The main pool
+   * gives such a zone figures only at its cluster's round 0, on one worker a whole solve's first round; alone it takes
+   * its own time. Not where the main pool solves its cluster ahead (T-2459: the card then
+   * waits for the zone in view's last focus round), nor with a cached result shown (its figures are final).
+   */
+  private focusTarget(svc: Service | null, early: boolean): CityId | null {
+    if (this.frefine) return this.frefine;
+    const view = viewedZone.peek() && zonesLoadForView.peek() ? activeCity.peek() : null;
+    const sel = early || !svc || perfOff("focusSelected") || this.cacheShown() ? null : this.selectedZone();
+    if (!sel) return view;
+    const need = this.solveNeed(svc);
+    if (view && need?.has(view) && !this.fshown.has(view)) return view;
+    const f = this.fsolve;
+    if (f?.svc === svc && f.cities[0] === sel) return sel;
+    const s = this.cur;
+    const main = s && !s.rough && s.svc === svc && s.cities.includes(sel) ? s : null;
+    if (main && this.selectedAhead(main) && main.ahead?.cities.includes(sel)) return view;
+    const round = main ? (main.ahead?.cities.includes(sel) ? main.clusterRes?.get(main.ahead.key)?.published ?? -1 : main.published) : -1;
+    const shown = round >= 0 && cityDemandViews.peek().has(sel);
+    return need?.has(sel) && !this.fshown.has(sel) && !shown ? sel : view;
+  }
+
+  /** The zone in view, reached and with no settled figures, is solved in the focus pool; T-4501: then the city view's
+   * zone (`focusTarget`). */
   private focusSoon() {
-    const p = this.fpool, id = this.frefine ?? activeCity.peek();
-    if (!p?.alive || (!this.frefine && (!viewedZone.peek() || !zonesLoadForView.peek()))) return;
+    const p = this.fpool;
+    if (!p?.alive) return;
     // T-2533: before the loading game's network, its pack opens there already if the save's stations reach the zone
     const a = this.ahead, early = gameLoadArmed() && !!a && !a.arrived;
     const svc = early ? null : this.latest();
+    const id = this.focusTarget(svc, early);
+    if (!id) return;
     if (!(svc ? this.solveNeed(svc) : early ? this.reachedSet(a!.svc) : null)?.has(id)) return;
     if (focusZones.peek().get(id) || (this.fsolve?.cities[0] === id && this.fsolve.svc === svc)) return;
     if (!p.holds(id)) {
@@ -4797,6 +4825,7 @@ class DemandClient {
       this.progress();
       this.checkHold();
       this.retireFocus();
+      this.focusSoon(); // T-4501: the city view's zone next, once the zone in view has a round
     });
   }
 
