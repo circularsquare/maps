@@ -1431,10 +1431,39 @@ export function speedAt(ph: Float32Array, first: number, count: number, x: numbe
 /** T-4187: `lineTrainSpeeds` in one array, entry k's from `idx[2k]`, `idx[2k + 1]` of them (-1: none), as an array an entry
  * cost more than its numbers */
 interface TrainSpeeds { v: Float32Array; idx: Int32Array }
+/** T-4153 stage 11: the last numbers of a line's `lineTrainSpeeds` to take where nothing they read has changed: its last
+ * `LineSpeeds`, per entry of the new path the old entry it lines up with (-1 none), the old entries' distances along,
+ * the old entries taken (`used`) and the new pieces worked out (`fresh`) */
+interface SpeedsKeep { old: LineSpeeds; from: Int32Array; offs: Float64Array; used: Uint8Array; fresh: number[]; bad: number[] }
+/** T-4153 stage 11: where along a line (metres from its start, as `phaseDelta` gives them) its speeds can differ from the
+ * last build's: pairs of ends. An entry from `a` to `b` metres is taken as it was where none of them reaches it. */
+const speedsHit = (bad: readonly number[], a: number, b: number) => { for (let i = 0; i < bad.length; i += 2) if (bad[i] <= b + 1e-3 && bad[i + 1] >= a - 1e-3) return true; return false; };
+/** The metres along a line's first run where a speed read from `now`'s phases can differ from `was`'s (pairs of ends,
+ * a second run's mapped back with `len1`, its length), null when the two tables do not have the same shape or their
+ * phases do not start in order. A phase is chosen by where it starts and the next one starts, so a phase that differs
+ * can change what is read from where either table has it start to where either table has the next one start. */
+function phaseDelta(was: Float32Array, now: Float32Array, len1: number): number[] | null {
+  if (was.length !== now.length || was[0] !== now[0] || was[2] !== now[2] || !Object.is(was[1], now[1]) || !Object.is(was[3], now[3])) return null;
+  const out: number[] = [];
+  let n = 4;
+  for (const run of [0, 1]) {
+    const count = was[run * 2];
+    for (let j = 0; j < count; j++) {
+      const o = n + j * 4;
+      if (j && !(was[o + 1] >= was[o - 3] && now[o + 1] >= now[o - 3])) return null;
+      if (Object.is(was[o + 1], now[o + 1]) && Object.is(was[o + 2], now[o + 2]) && Object.is(was[o + 3], now[o + 3])) continue;
+      const lo = j ? Math.min(was[o + 1], now[o + 1]) : -Infinity, hi = j + 1 < count ? Math.max(was[o + 5], now[o + 5]) : Infinity;
+      if (run) out.push(len1 - hi, len1 - lo);
+      else out.push(lo, hi);
+    }
+    n += count * 4;
+  }
+  return out;
+}
 /** A running line's train speeds (T-1271), per entry of its path: at the middle of each stroke
  * segment of that edge, the faster of its two runs there, km/h; none where the edge is not built.
  * Null for a line with no trains. */
-function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"], strokesOf: (e: number) => TrackStrokes | undefined, lens: number[], built: (e: number) => boolean): TrainSpeeds | null {
+function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"], strokesOf: (e: number) => TrackStrokes | undefined, lens: number[], built: (e: number) => boolean, keep?: SpeedsKeep): TrainSpeeds | null {
   if (!l.ok || !l.running || Math.max(...l.trains) <= 0) return null;
   const runs = [0, 1].map((run) => {
     const m = profileOf(l.id, run, ROW_SLOT[SPEED_LEVEL]) * 4;
@@ -1445,18 +1474,34 @@ function lineTrainSpeeds(l: ClockState["lines"][number], r: ClockState["render"]
   const at0 = phaseFinder(r.phases, runs[0].first, runs[0].count), at1 = phaseFinder(r.phases, runs[1].first, runs[1].count);
   const idx = new Int32Array(l.path.length * 2);
   let all = 0;
+  // (T-4153 stage 11: an entry on an edge, in a place and from phases as at the last time takes the last numbers: `keep`)
+  const kept: number[] = new Array(l.path.length).fill(-1);
+  let offAt = 0;
   const sts = l.path.map((p, k) => {
-    const st = strokesOf(p >> 1), on = !!st && built(p >> 1);
+    const raw = strokesOf(p >> 1), b = built(p >> 1), on = !!raw && b;
     idx[k * 2] = all;
-    idx[k * 2 + 1] = on ? st!.count : -1;
-    if (on) all += st!.count;
-    return on ? st : undefined;
+    idx[k * 2 + 1] = on ? raw!.count : -1;
+    if (on) all += raw!.count;
+    const ko = keep ? keep.from[k] : -1;
+    if (ko >= 0 && keep!.old.path[ko] === p && keep!.old.lens[ko] === lens[k] && (fault === "speeds" || Object.is(keep!.offs[ko], offAt)) && keep!.old.strokes[ko] === raw && keep!.old.built[ko] === b
+      && keep!.old.out!.idx[ko * 2 + 1] === idx[k * 2 + 1] && (fault === "speeds" || !speedsHit(keep!.bad, offAt, offAt + lens[k]))) kept[k] = ko;
+    offAt += lens[k];
+    return on ? raw : undefined;
   });
   const v = new Float32Array(all);
   let off = 0;
   l.path.forEach((p, k) => {
     const len = lens[k], st = sts[k];
-    if (st) {
+    if (kept[k] >= 0) {
+      keep!.used[kept[k]] = 1;
+      const n = idx[k * 2 + 1];
+      if (n > 0) v.set(keep!.old.out!.v.subarray(keep!.old.out!.idx[kept[k] * 2], keep!.old.out!.idx[kept[k] * 2] + n), idx[k * 2]);
+      netWork.speedsKept++;
+    } else if (keep && st) {
+      keep.fresh.push(p >> 1);
+      netWork.speedsMade++;
+    }
+    if (st && kept[k] < 0) {
       const n = st.count, o = idx[k * 2];
       const segLen = (j: number) => Math.hypot(st.seg[j * 4 + 2] - st.seg[j * 4], st.seg[j * 4 + 3] - st.seg[j * 4 + 1]);
       const total = n ? st.dist[n - 1] + segLen(n - 1) : 0;
@@ -1505,6 +1550,8 @@ const sameMetaOf = (kept: Float64Array, id: number, r: ClockState["render"]) => 
   }
   return true;
 };
+/** the length of each of a line's runs as it was (`metaOf`), to the last bit */
+const sameRunLens = (kept: Float64Array, id: number, r: ClockState["render"]) => [0, 1].every((run) => Object.is(kept[run * 4 + 3], r.meta[profileOf(id, run, ROW_SLOT[SPEED_LEVEL]) * 4 + 3]));
 /** `speedPhases` of a line now is `kept`, bit for bit (`bits`: `r.phases`' own) */
 function samePhasesOf(kept: Float32Array, id: number, r: ClockState["render"], bits: Uint32Array): boolean {
   const keptBits = new Uint32Array(kept.buffer, kept.byteOffset, kept.length);
@@ -2078,6 +2125,8 @@ const owned = <A extends Int32Array | Float32Array>(x: SampleTab<A>): A => {
  * build's values, so each entry's samples are written only where they differ. */
 function putEntries(x: SampleTab<Int32Array | Float32Array>, first: number, sm: LineSamples, valueOf: (f: number) => number, check: boolean) {
   const ks = sm.ks, rel = sm.rel, f32 = x.t instanceof Float32Array;
+  // (a run on no entries has samples on no stroke: a kept table holds the last line's values there)
+  if (ks.length < 2) { if (check) putRange(x, first, sm.count, null, -1, true); return; }
   for (let j = 0; j + 1 < ks.length; j++) {
     const a = first + ks[j], b = first + ks[j + 1];
     if (a >= b) continue;
@@ -2561,7 +2610,7 @@ export function setNetCheck(on: boolean) { netCheck = on; }
 /** T-4153: per part of the last build, ms (for measuring the parts an edit's build still pays for) */
 export const netLaps: Record<string, number> = {};
 /** T-4153: per build, the pieces of track, lines, line samples, stations and line speeds worked out again (counts) */
-export const netWork = { edges: 0, lines: 0, entries: 0, samples: 0, kept: 0, stations: 0, speeds: 0, side: "", entriesAll: 0, keptAll: 0, passMade: 0, passKept: 0, tables: 0, passMadeAll: 0, passKeptAll: 0, tablesAll: 0, laidAll: 0 };
+export const netWork = { edges: 0, lines: 0, entries: 0, samples: 0, kept: 0, stations: 0, speeds: 0, side: "", entriesAll: 0, keptAll: 0, passMade: 0, passKept: 0, tables: 0, passMadeAll: 0, passKeptAll: 0, tablesAll: 0, laidAll: 0, speedsKept: 0, speedsMade: 0 };
 let lapT = 0;
 const lap = (k: string) => { const t = performance.now(); netLaps[k] = (netLaps[k] ?? 0) + t - lapT; lapT = t; };
 export function* networkSteps(s: ClockState, cache: NetCache = newNetCache(), deferStrokes = false): Generator<void, NetworkBuffers, void> {
@@ -3085,7 +3134,8 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
       continue;
     }
     const runs = l.ok && l.running && Math.max(...l.trains) > 0;
-    let same = !!sp && (sp.ph !== null) === runs && (!runs || samePhasesOf(sp.ph!, l.id, r, phaseBits)) && sameArray(sp.path, l.path);
+    const phSame = !!sp && (sp.ph !== null) === runs && (!runs || samePhasesOf(sp.ph!, l.id, r, phaseBits));
+    let same = phSame && sameArray(sp!.path, l.path);
     let lens: number[] | undefined, strokes: (TrackStrokes | undefined)[] | undefined, built: boolean[] | undefined;
     // (over the same pieces of track their lengths, strokes and building are as they were)
     if (same && !loopSame && !sp!.path.every((p) => sameEdge(p >> 1))) {
@@ -3097,13 +3147,34 @@ function* networkStepsFrom(s: ClockState, cache: NetCache, deferStrokes: boolean
     const meta = metaOf(l.id, r);
     if (!same) {
       netWork.speeds++;
-      if (sp) pathDirty(sp.path);
       lens ??= l.path.map((p) => edgeLen.get(p >> 1) ?? 0);
       strokes ??= l.path.map((p) => edgesSeen.get(p >> 1)?.strokes);
       built ??= l.path.map((p) => builtEdge.get(p >> 1) === true);
-      const ph = runs ? speedPhases(l.id, r) : null;
-      sp = { row: l, phases: r.phases, meta, path: l.path.slice(), lens, ph, strokes, built, out: ph ? lineTrainSpeeds(l, r, (e) => edgesSeen.get(e)?.strokes, lens, (e) => builtEdge.get(e) === true) : null };
-      pathDirty(sp.path);
+      // (same phases and timing: the entries of the old path that line up with the new one's, from its start and from its end, take their numbers where their piece, length, distance along and strokes are as they were)
+      const ph = runs ? (phSame ? sp!.ph : speedPhases(l.id, r)) : null;
+      // (phases that differ in a few places: the entries along those places are worked out again)
+      const bad = sp && sp.out && runs && ph && sameRunLens(sp.meta, l.id, r) ? (phSame ? [] : phaseDelta(sp.ph!, ph, r.meta[profileOf(l.id, 1, ROW_SLOT[SPEED_LEVEL]) * 4 + 3])) : null;
+      const old = bad ? sp! : null;
+      let keep: SpeedsKeep | undefined;
+      if (old) {
+        const no = old.path.length, nn = l.path.length, from = new Int32Array(nn).fill(-1), offs = new Float64Array(no);
+        let pre = 0;
+        while (pre < no && pre < nn && old.path[pre] === l.path[pre]) pre++;
+        for (let k = 0; k < pre; k++) from[k] = k;
+        for (let i = 1; i <= no - pre && i <= nn - pre && old.path[no - i] === l.path[nn - i]; i++) from[nn - i] = no - i;
+        for (let k = 0, o = 0; k < no; k++) { offs[k] = o; o += old.lens[k]; }
+        keep = { old, from, offs, used: new Uint8Array(no), fresh: [], bad: bad! };
+      }
+      const out = ph ? lineTrainSpeeds(l, r, (e) => edgesSeen.get(e)?.strokes, lens, (e) => builtEdge.get(e) === true, keep) : null;
+      if (keep && out) {
+        // (only the pieces whose entries were worked out or dropped can fold another fastest train)
+        for (const e of keep.fresh) trainDirty.add(e);
+        for (let k = 0; k < keep.used.length; k++) if (!keep.used[k]) trainDirty.add(keep.old.path[k] >> 1);
+      } else {
+        if (sp) pathDirty(sp.path);
+        pathDirty(l.path);
+      }
+      sp = { row: l, phases: r.phases, meta, path: l.path.slice(), lens, ph, strokes, built, out };
     } else sp = { ...sp!, row: l, phases: r.phases, meta };
     speedsSeen.set(l.id, sp);
   }
