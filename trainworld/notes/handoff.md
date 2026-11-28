@@ -2,14 +2,15 @@
 
 Orchestrator: session bae761ca-c85c-416e-b4e2-0a931ae6b8a6, name maps-dd, since 2026-11-27 23:10 UTC (Windows 11 now; maps-6c gone, nothing in flight)
 Updated: 2026-11-28 03:00 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
-diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word 11-27 18:33 her time: "we can rise core cap to 14").
+diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word 11-27 22:42 her time: "lets also set core cap to 10 for a while").
 
 ## Next
 1. Work order (her 11-27): real bug fixes and regular chores first; solve speed and memory where possible; track rework toward the release 1 merge (before new modes); modes (T-4479-T-4498) after. Edit-speed work stops at 50 ms an action.
 2. Track rework: tracksync is merging master into tw/track (_track, levels to 44+, checklist in notes/T-3444-design/10-build-plan.md "The 11-28 sync"). Then T-4037 g3b (with T-4518: a click still picks between stations, her yes), then the release 1 list; crash round T-4519 and Asia edit bench T-4521 are gates before the merge.
 3. Running: realgaps (T-4514, NYC figure diff goes to her before landing), busundo (T-4091), labelstay (T-4229), nosound (T-4376), edgecost2 (T-4534: the patch check still trips on cost; smoke failed on it once). Easy list: notes/task-sweep-2026-11-28.md (T-2165, T-3457, T-4166 left).
 4. Server deploy waits for "more things in": shonei-server 07f5a75 + 3a8e65c (save level 43 with weekend offsets), unpushed; ask when a publish nears. Owed: 1 edit_bench + 1 perf_bench NYC on master, batch Gemini review before release.
-5. _track was at level 42 (LBN1); master is 43. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
+5. Country run (her 11-27, slow): Uzbekistan running, PID 30372, 3 cores "countryrun", log artifacts/trainworld/countryrun-uz-run.log, plan notes/country-plan-2026-11-28.md (8 batches). It owns data/packs from its first gate register until the join: snap8800 with the freeze. Join waits to go with Kazakhstan (needs 6 cores). Stop: data/work/world_run/STOP.
+6. _track was at level 42 (LBN1); master is 43. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
 
 ## Her words
 - 11-27 21:16-21:33 her time: track rework before new modes (DECISIONS); catch up tw/track, Gemini on it and the plan; crash testing all at once near release, not before; easy tasks to cut the count (notes/task-sweep-2026-11-28.md).
