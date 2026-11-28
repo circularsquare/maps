@@ -558,7 +558,7 @@ name; the code word is "realm" because "region" already means a zone in the code
 `pipeline/realms.py` (run by the join) writes each registry row's `realm` (its country's; in a split
 country the realm whose land holds its centre) and `packs/realms.geojson`, each realm's land
 (Natural Earth admin 0 cut along geoBoundaries ADM1 or the Census states), which only that
-assignment uses: the app reads no realm shapes. A realm is **shown** while the game has a station or
+assignment uses: the app reads no realm shapes. A realm is **shown** while the game has a station, a bus stop or
 track in it (blueprint or built; a station in its zone by the coarse outlines, "A place's zone" below,
 else the zone with the nearest centre; track in the zones it crosses, "Track" below), it holds the start zone, or the player showed it this session (its circle, a click on its land, a
 search pick of a city or place in it, or the view resting 0.4 s at zoom 10 or closer with its centre

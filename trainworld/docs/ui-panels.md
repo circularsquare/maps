@@ -179,7 +179,7 @@ wide so a longer date moves nothing [T-1868].
   22.7% train share in Paris" (with " on a weekday" and the like off the average day). A fixed
   table, measured on each save in a new game with every zone open (notes/T-2145.md).
   **Zoomed out below zoom 7** (a country or a few regions on screen) [T-1865] the bar names "World" instead [T-1110]:
-  the train rides summed over every city with a built station and a demand view, as the Cities
+  the train rides summed over every city with a built stop (a station or a bus, tram or ferry stop) and a demand view, as the Cities
   tab's All cities row sums them (`game/worldTotals.ts`; the name's hover: the city and station counts),
   whatever lies under the view's centre. The figure is those train trips a day, "11.8M trips/day"
   (three significant figures) [T-1440]; the bar is their share of a fixed 25 billion trips a day in
@@ -988,7 +988,7 @@ it has none), the area's name in the label's hover when there are two or more.
 
 ## Cities tab
 
-[T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built station, one row each, under a first
+[T-550, T-749, `ui/Cities.tsx`] Whatever the Lines toggle says: a list of every region (the toggle's regions) with a built stop of any kind, one row each, under a first
 row "All cities" that sums them [T-2389], a faint divider after it [T-857, T-1110, T-1865] (its split bar weighs every region's trips, its rides, profit and points are the sums; hovers as a
 row's, "in all cities"; the top bar names the same sum "World" when the map is zoomed far out, `game/worldTotals.ts`; it is not sorted; a click opens the
 all cities view ([ui-inspectors.md](ui-inspectors.md#the-all-cities-view)) and tints the row, a double click also zooms out to every built station as that view's go-to does [T-2395]). Each row: its name

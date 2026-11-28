@@ -6,8 +6,8 @@ import { signal } from "@preact/signals";
 import { cityDemandViews, type DemandView } from "./demand";
 import { hashView, type CityId } from "./cities";
 import { stationZone } from "./listScope";
-import { world } from "./world";
-import type { ModeSplit } from "./types";
+import { busStopsById, world } from "./world";
+import type { ModeSplit, WorldView } from "./types";
 import type { SplitRides } from "./splitTip";
 
 /** Below this map zoom (a country or a few regions on screen) the top bar names the world, not a city
@@ -55,16 +55,26 @@ export function smallPct(v: number): string {
   return v.toFixed(Math.min(6, 1 - Math.floor(Math.log10(v)))) + "%";
 }
 
-/** Every city with a built station, and how many stations it has. */
-export function builtCities(): Map<CityId, number> {
+/** T-4607: every city with a built stop of any kind (a station, or a bus stop, tram stop, ferry landing: whatever the
+ * world's stops hold), and how many built stations it has (0 where only bus stops stand). The one rule for "built":
+ * the Cities tab, the city panel, the top bar, the achievements and the realms all read it. */
+export function builtCitiesOf(w: WorldView | null | undefined): Map<CityId, number> {
   const built = new Map<CityId, number>();
-  for (const s of world.value?.save.stations ?? []) {
+  if (!w) return built;
+  for (const s of w.save.stations) {
     if (!s.built) continue;
     const z = stationZone(s);
     if (z) built.set(z, (built.get(z) ?? 0) + 1);
   }
+  for (const s of busStopsById(w).values()) {
+    if (!s.built) continue;
+    const z = stationZone(s);
+    if (z && !built.has(z)) built.set(z, 0);
+  }
   return built;
 }
+
+export const builtCities = () => builtCitiesOf(world.value);
 
 /** The world's figures for the top bar: the sums over `builtCities()` with the day's demand views
  * (`citySplit` their own split), the world's split from them, and the counts the name's hover gives. */

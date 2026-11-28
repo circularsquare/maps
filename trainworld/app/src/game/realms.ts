@@ -13,7 +13,7 @@ import { computed, effect, signal } from "@preact/signals";
 import type { MultiPolygon } from "geojson";
 import realmsJson from "./realms.json";
 import { CITIES, cityById, cityNear, cityWithin, outlinesIn, zoneBox, zonesTouching, type CityId } from "./cities";
-import { world } from "./world";
+import { busStopsById, world } from "./world";
 import { trackZones } from "./trackZones";
 import { coarseOutlines, inOutline } from "../map/coarseOutlines";
 import { makeFrame, type FrameSpec } from "./frame";
@@ -205,6 +205,12 @@ export function followStations(): () => void {
     }
     const next = new Set<string>();
     for (const s of w?.save.stations ?? []) {
+      let e = at.get(s.id);
+      if (!e || e.lng !== s.lng || e.lat !== s.lat) at.set(s.id, (e = { lng: s.lng, lat: s.lat, realm: realmOfPlace(s.lng, s.lat) }));
+      if (e.realm) next.add(e.realm);
+    }
+    for (const s of w ? busStopsById(w).values() : []) {
+      if (!s.built) continue;
       let e = at.get(s.id);
       if (!e || e.lng !== s.lng || e.lat !== s.lat) at.set(s.id, (e = { lng: s.lng, lat: s.lat, realm: realmOfPlace(s.lng, s.lat) }));
       if (e.realm) next.add(e.realm);

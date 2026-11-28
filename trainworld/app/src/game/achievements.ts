@@ -22,7 +22,7 @@ import { marketOff } from "./ui";
 import { foldTwins, readToday, runningToday, upkeepToday } from "./today";
 import { weekdayOf } from "./days";
 import { stationsById, world } from "./world";
-import { RIDES_PER_PERSON, sumModes } from "./worldTotals";
+import { builtCitiesOf, RIDES_PER_PERSON, sumModes } from "./worldTotals";
 import { zonesLoaded } from "./zones";
 import type { LineInput, LineStats, StationInput, WorldView } from "./types";
 import type { Complexes } from "./complexes";
@@ -444,8 +444,7 @@ function demandFiguresOf(w: AchWorld, d: DayDemand, v: DemandView, cx: Complexes
   const run = w.running;
   const firsts = new Map<FirstId, Detail>();
   // Trips a day: the Cities tab's World row, coarse zones included
-  const built = new Set<CityId>();
-  for (const s of w.stations) if (s.built) { const z = stationZone(s); if (z) built.add(z); }
+  const built = builtCitiesOf(w.w).keys();
   // (T-3509: each zone's trips within it, its far-apart parts' longer trips included)
   const zones = zoneViewsOf(d);
   const views = [...built].map((id) => zones.get(id)).filter((x) => x?.final);
