@@ -5,20 +5,12 @@ Updated: 2026-11-27 23:10 UTC. Live state: `venv\Scripts\python.exe trainworld/t
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 14 (her word 11-27 18:33 her time: "we can rise core cap to 14").
 
 ## Next
-0. Machine rebooted 16:38 her time, still Windows 10; she is waiting on the Windows 11 download. 8800, watch, reserve_cores restarted by maps-6c.
-1. 16:58 her time: pause lifted for "relatively easy tasks, things that we could likely finish in an hour"; 17:11 "lets begin to wrap up. we can resume work after" (Windows 11 restart). Landed: T-4420, T-4063, T-4422, T-4408 (saves review PASS). 8800 not rebuilt for them yet (b5697efe): rebuild after the restart. freestation (T-4249, tree freestation) stopped mid-way: fix and its test in, left the full Rust tests, the NYC figure diff, the Asia probe, a doc line and a changelog item (notes/T-4249.md in the tree): a fresh agent on that tree. Still parked: pagestage5
-   Gemini quota was out 16:24 UTC, back ~19:45 UTC. Gemini agents can't run tools/edit_bench.mjs: it's mine on master.
-2. Batch 1127d reviewed; T-4380's findings fixed (b5697efed); smoke PASSED after it. Gemini finding 2 (putEntries,
-   sampleStroke on an empty path) goes into T-4153 stage 11. Batch 1127e (hidepick, reachfill, crashcount, busfix,
-   later pagestage5 and loadsave): one Gemini review, then 1 edit_bench NYC on master. perf_bench NYC owed.
-3. Asks open: T-4396 notices (a-2026-11-27-13); shonei-server deploy 54c6241 + ff4e198 (a-2026-11-27-14; save
-   check level 42 must be live before the next publish). _track also sits at level 42 (LBN1): renumber at sync.
-4. T-4424 second Claude account: set up and committed; left her login (claude2) and the test in notes/T-4424.md.
-   Uncommitted from it: maps .claude/settings.json autoMemoryDirectory, tools/checks_index.py (has others' edits).
-5. Then T-4153 stage 11, T-4309, T-4315, T-3160, T-4370, T-3838; T-4420-4422 (tooling). Core cap 10.
-6. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
-
-Queued for the next free slot: editdesign2 (Opus): T-4267 revised against Gemini's review (artifacts/trainworld/gemini/T-4267-design-review.md, 6 HIGH), then its stages filed as T-4441-T-4475.
+1. Work order (her 11-27): real bug fixes and regular chores first, then solve speed, memory, schedule nudging (T-3742, nudge running), monorail and cable cars (T-4334-6 design running), track rework (not started while there is enough work).
+2. Owed: batch 1127e Gemini review (hidepick, reachfill, crashcount, busfix, then pagestage5, loadsave), 1 edit_bench NYC and 1 perf_bench NYC on master; smoke after this round; 8800 rebuild after the landings in flight. Daily: check_resources (11-27 done; Resend and R2 she said leave), requests.py fetch and sort.
+3. Landing: nudge raises the save level and needs a saves review first; tramcap and loadcard carry strings for her. editdesign2 files T-4267's stages (T-4441-T-4475) after checking Gemini's review; if A1's or C7's lie changes, ask her again.
+4. T-4249's settle still moves Asia lines 0, 4, 64 on an unused-track station: left to T-4239 (my call). Parked: pagestage5 (Gemini, T-4284). T-4424: her claude2 login and the test (notes/T-4424.md).
+5. _track sits at save level 42 (LBN1): renumber at sync. Redrawn zones on 8800: undo per notes/T-4364.md "The job"; data/work/pre-T4364* (19 GB) go 11-28 if she finds nothing.
+6. brief.py requires --tree and --port; fix in a tooling round.
 
 ## Her words
 - 11-27 18:30 her time: a hidden mode that was never built "dont show up anywhere, like in build menus" (T-4334 Goal); nothing to do for Resend or R2; track rework not started while there is enough other work ("shouldnt spread ourselves too thin").
@@ -55,7 +47,7 @@ Queued for the next free slot: editdesign2 (Opus): T-4267 revised against Gemini
 - Uncommitted, not ours (an 11-23 checks reorganisation): SPEC.md "What is covered", docs/code-tour.md,
   docs/interface.md, checks/old moves, checks/INDEX.md, tools/checks_index.py. Landings touching them: patch dance
   (`git diff --output=<f> -- <files>`, checkout, land, `git apply --3way <f>`, `git reset -- <files>`).
-- maps .claude/settings.json holds T-4428's PreToolUse guard entry beside the uncommitted autoMemoryDirectory (stage the hook hunk with checks/keep_hunks.py if it should be committed). brief.py still requires --tree and --port (fix in a tooling round).
+- maps .claude/settings.json: T-4428's guard entry sits beside the uncommitted autoMemoryDirectory (keep_hunks.py to commit only the hook).
 - Uncommitted on purpose: TODO.md (hers), notes/asks-log.jsonl, notes/board-live.json, changelog/roadmap.json,
   maps .claude/settings.json, notes/T-3397.md, tools/ops/archive_bad_saves.py.
 - Trees kept: _track (tw/track), tracksnap (snaptrack.py), _seed (Rust cache seed). hotfix461 removed 11-25 (branch on

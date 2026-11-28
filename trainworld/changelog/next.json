@@ -3,6 +3,18 @@
   "line": "",
   "items": [
     {
+      "id": "c021",
+      "text": "fixed street-snapped tram track above or below the street being capped at 60 km/h",
+      "edited": null,
+      "hidden": false,
+      "task": "T-4438",
+      "by": "tramcap",
+      "at": "2026-11-28T00:02:16Z",
+      "rev": 1,
+      "area": "track",
+      "fix": true
+    },
+    {
       "id": "c020",
       "text": "edits made while trips are calculated show up sooner on big saves",
       "edited": null,

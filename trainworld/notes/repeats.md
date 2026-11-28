@@ -12,6 +12,7 @@ meanwhile.
   this is literally like the 10th time ive brought this up"; the 11-22 call to show 90% as half the bar "doesnt seem
   to actually apply here". 11-25 02:35: "the cities that sit at 90% are inconsistent. they tend to be larger cities,
   but its nothing about the cities themselves. any city can sometimes load fast and sometimes slow."
+  11-27 19:16: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core."
 - Claimed fixes: T-793 (10-21), T-884 (10-21), T-1195 (10-24), T-2552 (11-05), T-2638 (11-07), T-3876 (11-20),
   T-3881 (11-20), T-4051 (11-24), the half-bar shift (11-22, app/src/game/loadBarCore.ts). Open: T-344 [P4].
 - Why they didn't hold (T-4263, from her 11-25 diagnostics and the code): seven of them changed the bar's model, not

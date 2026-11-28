@@ -10,6 +10,8 @@ artifacts/trainworld/T-4120/.
 
 ## Track
 
+- 2026-11-27 (T-4335): Monorail track bends to 20 m, tighter than train track's 25 m, as players expect (Anita: "i thought monorails can navigate tighter curves than normal trains"). Lie: real monorails need 40-100 m on main lines, 35-40 m on small ones. notes/T-4334.md
+- 2026-11-27 (Anita, T-4335): Monorail track never crosses other track on its own level (a beam can't cross rails). Drawn across it with the ramp switch on, it ramps over where that fits; otherwise the crossing is refused. notes/T-4334.md
 - 2026-11-25 (Anita, T-4248): Track should cross the 180th meridian if players build there ("this is not a game to replicate real world rails"), replacing the refusal in docs/world.md "The plane's edges" once built; scoped first.
 - 2026-11-23 (Anita, T-4085): More tracks are single tracks side by side, up to the model's 16, no game limit, replacing quad as two doubles (T-255); a partner is only the return-run default. Add a track on built track is blueprint, paid on Construct.
 - 2026-11-23 (Anita, T-4037): Line paths span a part of a bundle track between station cuts, not the whole track (Anita's (b)), departing from T-3444's design; placing or removing a station rewrites the paths over its piece.
@@ -54,6 +56,8 @@ artifacts/trainworld/T-4120/.
 - 2026-10-16 (Anita, T-534): A neighbourhood can name a station if within 3.5 km of its nearest fellow (Anita, was 3 km), so Harlem, Williamsburg and Midtown qualify; Manhattan (12 km) does not.
 
 ## Lines and scheduling
+- 2026-11-27 (Anita, T-4336): Cable car cabins hold 10 riders, as Mi Teleferico's, every 12 s at the most: 3,000 an hour each way. Counted at crush, so the rated load is 6.7 (every vehicle's crush is 1.5 times its rated load). notes/T-4334.md
+- 2026-11-27 (T-3742): A nudge asks for no trip calculation. Waits are by headway; a stop's first and last trains move by up to the offset (half a headway at most) and reach demand at the line's next edit (the lie). notes/T-3742.md
 - 2026-11-27 (T-4374): Deleting a station a line stops at takes the stop out as a stop edit does (a loop closes again on its new first stop). Where the line cannot run without it, the delete is refused as the station in use. notes/T-4374.md
 - 2026-11-27 (Anita, T-4220): An edit made during a whole re-solve shows its touched cities' quick result from a second worker, solved against the figures on screen, until the whole result replaces it. Asia's lines within 0.1% (worst -0.06%); off on phones and short memory. notes/T-4220.md
 - 2026-11-24 (Anita, T-4239): The train-count settle need not be exact. A line circling across a jump in its round trip (passing-track waits, following loss) is held: counts where its fleet falls short (lie: up to 3% more trains an hour than it runs), headways under one train spare. notes/T-4239.md
@@ -186,6 +190,7 @@ artifacts/trainworld/T-4120/.
 - 2026-11-04 (Anita, T-2450): Ferries run 32 km/h in open water (was 25), on Anita's "a little faster lol": harbour ferries a little faster than real slow ones, well under real fast ferries. Old saves' routes move to the new curve.
 
 ## Map and UI
+- 2026-11-27 (Anita, T-4334): The Build tab's mode gear lists Tram beside Bus, Ferry, Monorail and Cable car; trains and high speed always show. An unticked mode leaves the build menus unless the game has some of it, blueprints included. notes/T-4334.md
 - 2026-11-27 (Anita, T-4440): The first load's card gets its x and drag only once only trips are left to calculate; before that the map isn't usable. notes/T-4346.md
 - 2026-11-27 (Anita, T-4400): Hidden modes and hidden levels are removed from the map entirely. An even fade was ruled out: an opaque colour mixed toward the land paints over shown track crossing it and reads as a causeway over water. A ramp still fades out toward a hidden level.
 - 2026-11-27 (T-4400): A mode hides lines by their kind (high speed by its trains) and track by its own (a busway is the buses'); a station stays while its own kind or any line stopping there is shown. Lie: a shown line can run over hidden track.

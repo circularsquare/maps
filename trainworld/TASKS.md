@@ -198,11 +198,19 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: Stage 3 landed 11-25: the panels' `today` with the clock running costs 3-6 ms on your Asia save (was about 107). Click run on Asia: first 46 ms, later 37, 170, 272. Left: which follow-up piece later clicks wait behind (no per-click laps yet); the page's click hold stays (unsafe to drop).
   - Goal: Every follow-up step costs what the edit touched, so later clicks are answered like the first; measured with edit_bench's click run.
   - Other: notes/T-4281.md
+- T-4431 [P1] {L:edit-speed} A station's owed settle costs its lines' whole length
+  - Context: From T-4281: a later click on your Asia save waits behind the click before's owed settle, 105-200 ms natively for a station on a three-line, 1,000 km trunk: capacity rebuilt along the whole lines (weekdays and weekends), their timetables (about 40 ms), passing plans worked out again from empty memos.
+  - Goal: A station's owed settle costs the stretch around it; under 40 ms natively on the click run's trunk.
+  - Other: notes/T-4281.md "Stage 4"
+- T-4432 [P2] {L:edit-speed} Owed settle split so a later click waits for part
+  - Context: From T-4281: the owed settle is one unbroken task, 105-200 ms natively on your Asia save's trunk. The timetables (`retime`, about 40 ms) and the running trains' note that reads them could go a task later; every path reading the services would then finish them first.
+  - Goal: No piece of a station's follow-up over 60 ms natively on the click run's trunk.
+  - Other: notes/T-4281.md "Stage 4"
 - T-4291 [P1] {L:edit-speed} Rows and post sent by what an edit touched
   - Context: Stage 1 in tree rowsdelta (11-25): the rows read and post only the records an edit touched. Your Asia save, Node: rows 120 to 45 ms, post 24 to 15. Left: the drawn network's arrays compared and copied whole in the post (about 12 ms) and the phase tables laid out whole; the model's passes are T-4299, the complexes T-4300.
   - Goal: Rows and post cost what the edit touched, the drawn network fed the same changes; under 20 ms together on Asia.
   - Other: notes/T-4291.md
-- T-4309 [P2] {L:edit-speed} Track limits worked out by the lines an edit moved
+- T-4309 [P1] {L:edit-speed} Track limits worked out by the lines an edit moved (taking, 2026-11-27, agent tracklimits)
   - Context: From T-4299: a state's money and lists are kept per record now, 24 to about 5.5 ms a state on your Asia save. Still whole: the track limits, with the fleet needs, markers and turn limits built on them (about 2 ms), and profile_meta's copy (0.4 ms). The capacity has no index from a line to the track it shares.
   - Goal: An index from each line to the track it shares, so an edit works out the limits of only the lines it touched; under 3 ms a state on Asia.
   - Other: notes/T-4299.md
@@ -234,6 +242,102 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4348: a 44-year save is 1.6 MB, 1.46 MB of it the regions' day ledgers, so each autosave takes 60-100 ms more than a new game's; a click landing on it waits. At most about 5% of an edit's wait.
   - Goal: Autosave waits for a quiet moment or gzips off the clock worker (about 1-2 h); smaller ledgers later.
   - Other: notes/T-4348.md
+- T-4442 [P1] {L:edit-speed} Clicks on running track share their train work
+  - Context: T-4267 stage A1, your 11-27 yes. A later click on running track first works out the click before's train work, most of its wait on your Asia save (60-80 ms in Node). Overlaps T-4281 (clickwait): read its notes first.
+  - Goal: A quick run settles its trains once, after the answers; later clicks under 100 ms once T-4443 to T-4446 land.
+  - Other: notes/T-4267.md
+- T-4443 [P1] {L:edit-speed} {after:T-4309} Train work goes over only lines sharing track
+  - Context: T-4267 stage C1. The settle after an edit steps only the lines sharing track with it, but each round still goes over all 239 lines with trains and every track resource on your Asia save; a few passes also move far lines an earlier settle left unfinished.
+  - Goal: The rounds cost the lines sharing track, with the same rates to the bit as now; the settle under 15 ms in Node on the trunk.
+  - Other: notes/T-4267.md "The train work by scope"
+- T-4444 [P2] {L:edit-speed} {after:T-4309} Track capacity updated by what an edit touched
+  - Context: T-4267 stage C2. After each edit the track capacity update goes over every edge, node and resource on your Asia save to find what the edit changed.
+  - Goal: It finds them by index; the service update under 5 ms in Node on the trunk.
+  - Other: notes/T-4267.md
+- T-4445 [P2] {L:edit-speed} {after:T-4309} Weekend copy and departures by changed lines
+  - Context: T-4267 stage C3. After each edit's train work the weekend service is copied and the departures placed again over every line and track resource.
+  - Goal: Only the lines whose values changed copied and placed, with the same timetables to the bit.
+  - Other: notes/T-4267.md
+- T-4446 [P2] {L:edit-speed} {after:T-4442} Trains noted only for lines an edit reaches
+  - Context: T-4267 stage C4. Around each edit's train work, every line's pattern and every running train on your Asia save are noted, so trains keep their places.
+  - Goal: Only the lines sharing track with the edit noted, checked against the whole walk; both under 1 ms in Node.
+  - Other: notes/T-4267.md
+- T-4447 [P2] {L:edit-speed} A click's own checks without whole-save walks
+  - Context: T-4267 stage A6. A click's own checks take 9-21 ms in Node on your Asia save; part of that is walks over every line (its stops, its path, the edges each line uses) and the cost sums.
+  - Goal: Under 10 ms in Node on the trunk.
+  - Other: notes/T-4267.md
+- T-4448 [P2] {L:edit-speed} Ways back and twins checked only where an edit reached
+  - Context: T-4267 stage A8, from Gemini's review. Every edit searches the track again for each line with a way back of its own, and on saves with quad-track twins plans every twin again.
+  - Goal: Only the lines whose searched track or twin route the edit touched; both under 1 ms in Node on Asia.
+  - Other: notes/T-4267.md
+- T-4449 [P2] {L:edit-speed} Retime only the clusters an edit reached
+  - Context: T-4267 stage C5. After each edit's train work, every cluster's timing keys are worked out again.
+  - Goal: Keys kept per cluster; retime under 2 ms in Node.
+  - Other: notes/T-4267.md
+- T-4450 [P2] {L:edit-speed} {after:T-4309} The train work's before and after reads by scope
+  - Context: T-4267 stage C6. The train work reads every line's rates, keys and demand figures before and after an edit; T-4134 keeps the time zone and fleet kind per line.
+  - Goal: Only the scope's lines read; the train work after a click under 20 ms in Node on the trunk (60-80 now).
+  - Other: notes/T-4267.md
+- T-4451 [P2] {L:edit-speed} {after:T-4450} Delete line and breaking deletes answered at once
+  - Context: T-4267 stage A2. On your Asia save Delete line is answered in 526-703 ms and a delete that breaks a line in 2.2-2.6 s: neither gets a map patch, so both wait for the whole state.
+  - Goal: Both answered under 100 ms on Asia.
+  - Other: notes/T-4267.md
+- T-4452 [P2] {L:edit-speed} {after:T-4450} Removing a passageway answered at once
+  - Context: T-4267 stage A3. Removing a passageway is not sent as a click, so its answer waits for the whole state: 661 ms on your Asia save.
+  - Goal: Answered under 100 ms on Asia.
+  - Other: notes/T-4267.md
+- T-4453 [P2] {L:edit-speed} {after:T-4450} Construct answered at once
+  - Context: T-4267 stage A4. Construct is answered only with the whole state, since the page splits its cost by region from that state. It stays refused when the cash is short for its trains.
+  - Goal: Answered under 100 ms on Asia, its cost split from the edit's own records.
+  - Other: notes/T-4267.md
+- T-4454 [P2] {L:edit-speed} {after:T-4450} New line as one edit, answered at once
+  - Context: T-4267 stage A5. New line on the Lines tab is three edits (the line, its headways, its weekend share), answered in 226-242 ms on your Asia save.
+  - Goal: One edit and one undo step, answered under 100 ms on Asia.
+  - Other: notes/T-4267.md
+- T-4455 [P2] {L:edit-speed} A click's word and patch without whole-save walks
+  - Context: T-4267 stage A7. The worker's word and map patch, and the page's take of them, still walk every line, edge or station in places (station names, the delete tool's searches, the click map's edge points).
+  - Goal: Word and patch under 5 ms in Node; the page's take under 5 ms.
+  - Other: notes/T-4267.md
+- T-4456 [P2] {L:edit-speed} Trips sent only for lines that moved
+  - Context: T-4267 stage D1. After an edit that moves a running line, every line's trips for this hour and the next are sent again (50-200 ms on a 2,647-station game). Lines ending at the same platforms share them by arrival, so those go too.
+  - Goal: The trips piece under 10 ms on Asia for a trunk station.
+  - Other: notes/T-4267.md
+- T-4457 [P2] {L:edit-speed} Crash copy taken at a quiet moment
+  - Context: T-4267 stage D4, from Gemini's review. After every edit the worker copies the whole save for crash recovery (3-20 ms, twice 74-99 on your Asia save); a click that comes then waits behind it.
+  - Goal: No whole copy between an edit's answer and the next click; a recovery still loses no edit.
+  - Other: notes/T-4267.md
+- T-4458 [P2] {L:edit-speed} {after:T-4360} Rows step leftovers by line and track
+  - Context: T-4267 stage B2, the half T-4360 does not cover. Still whole per edit: each line's first stops and end platforms, the samples, line table and bends, and the marks, conflicts, single track and full track lists.
+  - Goal: All by what the edit touched, end platform groups keeping their numbers; the rows block under 15 ms in Node on Asia.
+  - Other: notes/T-4267.md
+- T-4459 [P2] {L:edit-speed} {after:T-4153} Sample tables kept per line
+  - Context: T-4267 stage B5. A station edit copies a whole sample table (up to 3.3 MB on your Asia save) and rewrites every line after a cut line.
+  - Goal: A changed line writes only its own rows; no table copied whole for a station edit.
+  - Other: notes/T-4267.md
+- T-4460 [P2] {L:edit-speed} Renderer leftovers by changed stations and lines
+  - Context: T-4267 stage B8. After each edit the renderer still redoes its train guard (2-14 ms), its groups (2-13) and transfer bubbles (3-6) over the whole save, and with a demand view on sends the whole layer again.
+  - Goal: Renderer and the frame after under 20 ms for a station on Asia.
+  - Other: notes/T-4267.md
+- T-4461 [P2] {L:edit-speed} Demand snapshot patched by record
+  - Context: T-4267 stage D2. After a burst of edits the demand snapshot is rebuilt from every station, line, complex and fare (46-69 ms in Node on your Asia save), and each edit with no demand lines reads every node to see whether one is due.
+  - Goal: Under 5 ms an edit on Asia.
+  - Other: notes/T-4267.md
+- T-4462 [P2] {L:edit-speed} {after:T-4153 and T-4458 to T-4460} Stop-click and track-run holds taken out
+  - Context: T-4267 stage B9, your 11-27 yes: the stop-click hold (500 ms) and track-run hold (220 ms) go once each follow-up costs only what the edit touched.
+  - Goal: A stop click's line path under 200 ms on Asia (965 now).
+  - Other: notes/T-4267.md
+- T-4463 [P2] {L:edit-speed} {after:the other T-4267 stages} Edit speed checked whole on Asia and New York
+  - Context: T-4267 stage D3. Each stage checks its own layer; nothing yet checks every layer kept by record together against a whole build.
+  - Goal: A standing check of every layer against a whole build after random edits; then every later click under 100 ms and a station built under 200 ms on Asia.
+  - Other: notes/T-4267.md
+- T-4464 [P2] {L:edit-speed} Far lines on shared track settle a moment later
+  - Context: T-4267 stage C7, your 11-27 yes (it can leave a far line a train up or down until an edit reaches it). Built only if T-4443 to T-4450 leave the trunk's train work over about 30 ms in the page.
+  - Goal: Later clicks on the trunk under 100 ms with the far lines settled in the next piece.
+  - Other: notes/T-4267.md
+- T-4501 [P1] {L:loading} A clicked city takes over a minute on one core (taking, 2026-11-27, agent cityload)
+  - Context: You, 11-27: "is it expected that the selected city sometimes still takes > a minute to load? im experiencing that. on using oen core." A repeat of the 90% bar (notes/repeats.md).
+  - Goal: The cause named from the code, and the biggest part fixed or staged.
+  - Other: notes/T-4501.md
 - T-4211 [P3] {L:loading} Loading time left right from the start
   - Context: T-4209's display fix (11-24) shows no time left until the solve's own time is known, then only counts down (asianita: none until 138 s, then 7 min down; final at 523 s). You: "then do the actual underlying fix later."
   - Goal: An estimate from the start, within about 30% of the real wait on asianita and NYC.
@@ -246,13 +350,6 @@ Sources: docs/demand-worldwide.md, docs/data-register.md. The unattended city pi
   - Context: From T-4359: a load adds each zone viewed while it runs and keeps it open until the load ends (Lantian 208 s in your session); a game load's card still does. At a save's load the default zone (New York) kept a "Loading city data" bar for 7 s after the view left it.
   - Goal: A zone viewed during a load opens and closes on its own.
   - Other: notes/T-4359.md
-- T-4438 [P2] {L:trams} Raised or sunk street tram keeps the 60 km/h cap (taking, 2026-11-27, agent tramcap)
-  - Context: A player, 11-27 (via you): tram track snapped to a street but elevated or underground gets the street 60 km/h cap; you: "we are paying full cost for those so they should be 75km/h cap".
-  - Goal: Street-snapped tram track above or below the street takes the 75 km/h tram cap; at-grade street track keeps 60.
-- T-4249 [P2] {L:edit-speed} A station on free track rebuilds lines at its ends (taking, 2026-11-27, agent freestation2)
-  - Context: Done (tree busrebuild, 11-25): edits rebuild only the bus lines they reach and the ways back they move, and send no trips when no line moved; 25-58 ms less per station edit on your Asia save. Left: a station on track no line uses still rebuilds the lines through that track's ends, and the settle then moves their neighbours.
-  - Goal: A station on track no line runs over rebuilds no line and sends no trips.
-  - Other: notes/T-4249.md
 - T-4424 [P2] {L:checks} Second Claude account (taking, 2026-11-27, agent claude2)
   - Context: You, 11-27: "i think i'll get a second claude subscription." Set up 11-27: the claude2 command, the .claude-2 folder, shared maps memory, tools look in both folders, next_orchestrator.py --account 2. Logged in 11-27; sessions on the two accounts do not see each other (no messages between them). Left: memory check from a claude2 session.
   - Goal: A claude2 session in maps uses the shared memory and your global CLAUDE.md.
@@ -344,6 +441,14 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4370 [P2] {L:memory} iPad games crash on big saves (taking, 2026-11-27, agent ipadmem)
   - Context: Two iPad players on 0.4.7 (tw-feedback 1795673563, 1795675092, 11-26): a Kansai save (1042 stations, 84 lines) runs out of memory while loading; another game crashes and reloads about every 2 minutes while editing lines (maybe T-4367's "Demand stopped", fixed 11-26, if not a tab reload). Related: T-3160.
   - Goal: The biggest memory peak on a big save's load and edits, on an emulated iPad, found and cut.
+- T-4433 [P2] {L:memory} Phone solving worker keeps 100 MB after a load
+  - Context: On an emulated iPad (NYC save, one solving worker that is the aux worker too, T-4103) a job just after the load's final takes its heap in use from 66 to 166 MB; the solve itself peaks at 66. A WASM memory keeps its highest size, so that stays all game. Which job was not traced.
+  - Goal: That job named and its peak brought near the solve's, rail trips unchanged.
+  - Other: notes/T-4370.md
+- T-4434 [P3] {L:memory} Page garbage while trains run
+  - Context: Safari collects late, so garbage piles up: with the clock running the web process swings about 240 MB on an emulated iPad after T-4370. Biggest allocators left: boarding queues and station crowds, speed colours made as text per bus point, text formatting each frame, the clock worker's money every 250 ms.
+  - Goal: The running swing halved on the NYC save in WebKit, the map unchanged.
+  - Other: notes/T-4370.md
 - T-3708 [P3] {L:memory} Place rows lost in a worker restart wait
   - Context: From T-2136's checker (by reading the code): a request for one place's rows lost in a demand worker restart times out after 20 s and is asked again only with the next result, so that zone's panel can wait that long.
   - Goal: A request lost in a restart is asked again once the worker is back; probed with a forced restart.
@@ -409,9 +514,9 @@ Ranked in notes/perf-survey.md and notes/T-1156.md (the all-China save) and note
 - T-4238 [P3] {L:timetables} Bus weekend rows run more often than weekdays on the same fleet
   - Context: Seen by the batch checker (11-24): a midtown bus line with 25 buses showed a 1 min headway on its weekend rows and 1.5 min on weekdays. May be right (shorter weekend trips) or a slip near T-4227's weekend share-out; not read yet.
   - Goal: The code says why, and it's fixed if it's a slip.
-- T-3742 [P2] {L:timetables} {after:Anita asks} Nudge a line's departure times (taking, 2026-11-27, agent nudge)
-  - Context: You, 11-21: per-row Offset design approved, "will start later". A player, 11-18: "offset departure times ... (like for example +4 minutes or -5 minutes)". Japanese players keep asking to set the ダイヤ (daiya, Japanese rail's word for the timetable; 11-24). Design done (agent nudgedesign); strings drafted in the note.
-  - Goal: Rail lines' rows take an offset from the game's timing that holds through later edits, shown at once on the board, chart and map.
+- T-4435 [P2] {L:accounts-server} {after:T-3742 lands} Server save check for nudged rows
+  - Context: T-3742 raises the save level to 43 with a trailing LOF1 block (the rows a player nudged). The server calls a level 43 save "new" and skips its check, and its test pinning save.rs LEVEL fails once T-3742 lands.
+  - Goal: trainworld_savecheck.go knows level 43 and reads LOF1, with a test; deployed on your word before the next publish.
   - Other: notes/T-3742.md
 - T-3572 [P4] {L:accounts-server} Money and costs much higher on another device
   - Context: Player report (Japanese, via your pad 2026-11-17): "別の端末で自分のアカウントにログインした際に資金がとても多くなり、建設費もとても高くなってしまうバグが発生しています。" (signing in on another device, their money became very large and building costs very high). Reach guess: players who switch devices; a currency shown differently per device. You, 2026-11-17: "we can store currency in save i guess yeah. but like p4 can do whenever".
@@ -1015,12 +1120,88 @@ Anita's notes on build 827, 2026-11-03 late morning (verbatim in notes/todo-2026
 - T-4334 [P3] {L:other-modes} Choose which modes the construct panel shows (taking, 2026-11-27, agent modesdesign)
   - Context: Your pad, 11-25: most players won't care about every mode as niche ones come (cable cars, monorail, maglev, maybe planes). Your design: a gear on the construct panel to hide or show modes; by default it shows today's (bus and ferry), with checkboxes for cable cars and monorail.
   - Goal: That gear and its setting, kept per player; a mode switched off and never built shows up nowhere, build menus included (you, 11-27). Needed before the next mode ships.
+  - Other: stages T-4479 to T-4482; design notes/T-4334.md
 - T-4335 [P3] {L:other-modes} Monorail as a mode
-  - Context: Your pad, 11-25: a train that can't connect to train track, only at or above grade, a bit dearer at grade and a bit cheaper elevated, steeper slopes allowed, top speed about 80-100 km/h, maybe tighter curve limits. Players ask for it. Not to start yet.
-  - Goal: A design to you first (rail facts decided and recorded), then the mode behind T-4334's gear.
+  - Context: Your pad, 11-25: a train that can't connect to train track, only at or above grade, a bit dearer at grade and a bit cheaper elevated, steeper slopes allowed, top speed about 80-100 km/h, maybe tighter curve limits. Players ask for it. Design answered 11-27; starts after solve speed, memory and nudging.
+  - Goal: The mode behind T-4334's gear, in stages T-4483 to T-4490.
+  - Other: notes/T-4334.md
 - T-4336 [P3] {L:other-modes} Cable cars
-  - Context: Your pad, 11-25: Mi Teleferico style. Straight spans only (waypoints allowed), very cheap to build, at or above grade, no slope limit, very short headways, small low-capacity cars drawn as little squircles. No terrain yet, so it will look a bit odd. Not to start yet.
-  - Goal: A design to you first, then the mode behind T-4334's gear.
+  - Context: Your pad, 11-25: Mi Teleferico style. Straight spans only (waypoints allowed), very cheap to build, at or above grade, no slope limit, very short headways, small low-capacity cars drawn as little squircles. No terrain yet, so it will look a bit odd. Design answered 11-27; after monorail.
+  - Goal: The mode behind T-4334's gear, in stages T-4491 to T-4498.
+  - Other: notes/T-4334.md
+- T-4479 [P3] {L:other-modes} {after:solve speed, memory and nudging} One list of modes for the gear
+  - Context: Stage G1 of T-4334. Each mode is written down once (name, icon, colour, key, what counts as having it), and today's eleven separate mode lists read from it.
+  - Goal: game/modes.ts with modesHad and modeShown, and the gear's setting kept per browser; nothing a player sees changes yet.
+  - Other: notes/T-4334.md
+- T-4480 [P3] {L:other-modes} {after:T-4479} The mode gear on the Build tab
+  - Context: Stage G2 of T-4334: the gear at the end of the Bus and Ferry row, a box per mode, Tram, Bus and Ferry ticked.
+  - Goal: 1 screenshot of the open gear.
+  - Other: notes/T-4334.md
+- T-4481 [P3] {L:other-modes} {after:T-4480} Build menus follow the mode gear
+  - Context: Stage G3 of T-4334: an unticked mode leaves the Build tab, its key, the track and station bars and Auto, unless the game has some. A tool already on stays until you leave it.
+  - Goal: In a new NYC game, unticking Bus removes the Bus button, U, Busway and BRT station; with a bus line built they all stay.
+  - Other: notes/T-4334.md
+- T-4482 [P3] {L:other-modes} {after:T-4481} Settings and Help follow the mode gear
+  - Context: Stage G4 of T-4334: Line shapes, the one-way streets setting and the Help rows follow the gear; Show modes lists the modes the game has plus any hidden. Docs, DECISIONS and one changelog item.
+  - Other: notes/T-4334.md
+- T-4483 [P3] {L:other-modes} {after:T-4482} Monorail track kind in the sim
+  - Context: Stage M1 of T-4335: monorail track joins only monorail (the rule busways have alone today becomes theirs too), ground level to +3, priced per level as decided.
+  - Goal: Rust tests pass for prices per level, the refusal below ground, and no join to rail, tram or busway.
+  - Other: notes/T-4334.md
+- T-4484 [P3] {L:other-modes} {after:T-4483} Monorail crossings, ramps and hills
+  - Context: Stage M2 of T-4335: no flat crossing with other track (your 11-27 yes), 135 m ramps a level, half the hill surcharge, no retyping to or from other track.
+  - Goal: Rust tests for each rule.
+  - Other: notes/T-4334.md
+- T-4485 [P3] {L:other-modes} {after:T-4484} Monorail cars, fleet and lines
+  - Context: Stage M3 of T-4335: monorail cars as a fleet of their own at US$3M, quote rows, monorail lines. The clock worker's crash recovery gets every fleet as one list, so no new fleet can be left out there.
+  - Goal: Rust tests; a save keeps the monorail fleet.
+  - Other: notes/T-4334.md
+- T-4486 [P3] {L:other-modes} {after:T-4485} Monorail in the track and station tools
+  - Context: Stage M4 of T-4335: the Monorail track type (levels below ground greyed), the Monorail station kind with platforms of 2-6 cars, Auto on monorail track, its gear box.
+  - Other: notes/T-4334.md
+- T-4487 [P3] {L:other-modes} {after:T-4486} Monorail in the mode lists and tabs
+  - Context: Stage M5 of T-4335: its name, icon and colour (picked with the colour check and shown to you), Money tab rows, Lines tab, diagram, default headways.
+  - Other: notes/T-4334.md
+- T-4488 [P3] {L:other-modes} {after:T-4487} Monorail on the map and real network
+  - Context: Stage M6 of T-4335: the beam and its trains drawn; monorail track snaps to real monorails, drawn while snapping even under Passenger, and train track stops snapping to them.
+  - Goal: 1 screenshot.
+  - Other: notes/T-4334.md
+- T-4489 [P3] {L:other-modes} {after:T-4488} Monorail docs, wiki and changelog
+  - Context: Stage M7 of T-4335: SPEC, docs, a wiki page, DECISIONS (the rail facts and the road crossing lie) and a changelog item.
+  - Goal: 1 game run: track at +1 and at ground, a station, a line, trains running, a crossing with rail ramping over.
+  - Other: notes/T-4334.md
+- T-4490 [P3] {L:other-modes} {after:T-4489} Real-network starts on monorail track
+  - Context: Stage M8 of T-4335: the real-network starts import OSM monorail routes on train track today; they move to monorail track and those saves are rebuilt.
+  - Other: notes/T-4334.md
+- T-4491 [P3] {L:other-modes} {after:T-4489} Cable car routes in the sim
+  - Context: Stage C1 of T-4336: a cable line is a ferry route in the air: straight legs at 21.6 km/h, angle stations at waypoints, cable car stations, at most 1 km over water.
+  - Goal: Rust tests for the run times and the refusals.
+  - Other: notes/T-4334.md
+- T-4492 [P3] {L:other-modes} {after:T-4491} Cable car prices, cabins and saves
+  - Context: Stage C2 of T-4336: US$10M a km plus US$8M a station, cabins as a fleet of their own, a redrawn built route charged for what it adds, saved in the ferry block.
+  - Goal: A save round trip with a planned and a built cable line loses nothing.
+  - Other: notes/T-4334.md
+- T-4493 [P3] {L:other-modes} {after:T-4492} The cable car tool
+  - Context: Stage C3 of T-4336: the Build tab's Cable car button and key K, a click for a station and a shift click for a waypoint, the station bar's Cable car station kind.
+  - Other: notes/T-4334.md
+- T-4494 [P3] {L:other-modes} {after:T-4493} Cable car line panel and headways
+  - Context: Stage C4 of T-4336: the line's panel, headways in seconds down to 12 s, new-line headways. It measures whether so many departures slow the count of who boards, and groups cabins by the minute if so.
+  - Other: notes/T-4334.md
+- T-4495 [P3] {L:other-modes} {after:T-4494} Cable cars on the map
+  - Context: Stage C5 of T-4336: the rope, stations, cabins as little squircles from zoom 14 in (your 11-27 note: so many vehicles), and the Traffic, Speed and Profit views.
+  - Goal: 1 screenshot.
+  - Other: notes/T-4334.md
+- T-4496 [P3] {L:other-modes} {after:T-4495} Cable cars in the mode lists and strings
+  - Context: Stage C6 of T-4336: name, icon and colour, Money tab rows, Lines tab, diagram, line shape, and cabin wording in the 37 strings that name a bus or boat.
+  - Other: notes/T-4334.md
+- T-4497 [P3] {L:other-modes} {after:T-4496} Cable car demand check
+  - Context: Stage C7 of T-4336: cable car rides pay no boarding cost, as ferry rides; a cabin holds 10 at crush; no fans (call 2).
+  - Goal: NYC's figures unchanged on the real save.
+  - Other: notes/T-4334.md
+- T-4498 [P3] {L:other-modes} {after:T-4497} Cable car docs, wiki and changelog
+  - Context: Stage C8 of T-4336: SPEC, docs, a wiki page, DECISIONS and a changelog item.
+  - Goal: 1 game run: a 3-station line with a waypoint, cabins running, riders boarding.
+  - Other: notes/T-4334.md
 Anita 2026-11-03 early afternoon (verbatim in notes/todo-2026-11-03g.md):
 Passing tracks (T-2228, archived; built as T-2231 to T-2233; notes/T-2228.md):
 - T-2240 [P3] {L:passing-tracks} Express still queues on an overtake pair
