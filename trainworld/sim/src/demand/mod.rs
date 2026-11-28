@@ -33,6 +33,8 @@ pub mod days;
 pub mod kernel;
 /// T-036: four f32 lanes (wasm simd128, SSE2) for the commute pair loop.
 pub mod lanes;
+/// T-3160: 16-bit tables for figures only a view reads.
+pub(crate) mod half;
 /// T-2365: trips by length (the city view's trip-length graph).
 pub mod lengths;
 /// T-1222: a zone's level of detail.

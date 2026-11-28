@@ -19,6 +19,7 @@ use super::busmerge::{self, Fold};
 use super::clock::now_ms;
 use super::network::Catch;
 use super::days::{day_rate, load_factor, share_out, share_ret, WEEKDAY, WORK};
+use super::half::HalfTable;
 use super::kernel::*;
 use super::lengths::{len_kernel, len_zero, scale_to, LenOut, LenSums, N_LEN};
 use super::lod::{self, Lod};
@@ -714,18 +715,18 @@ pub(crate) struct SubOut {
     /// Rail trips by (home station, work station) before the trips home are reversed, over the
     /// stations in the subzones' access lists only (`DemandApi::od_st`; every other station's row
     /// and column are zero, and a city a few stations reach would hold a whole network's S x S
-    /// otherwise, T-398).
-    pub(crate) od: Vec<f32>,
+    /// otherwise, T-398). Only the station and place views read it, so it is kept at 16 bits a number (T-3160).
+    pub(crate) od: HalfTable,
 }
 
 impl SubOut {
     fn empty() -> SubOut {
-        SubOut { rail_home: vec![], rail_work: vec![], walk_lost_home: vec![], walk_lost_work: vec![], unr_lost_home: vec![], unr_lost_work: vec![], acc_home: vec![], acc_work: vec![], od: vec![] }
+        SubOut { rail_home: vec![], rail_work: vec![], walk_lost_home: vec![], walk_lost_work: vec![], unr_lost_home: vec![], unr_lost_work: vec![], acc_home: vec![], acc_work: vec![], od: HalfTable::default() }
     }
     /// Every figure times `k` (T-1538's estimate of one period from another).
     fn scaled(&self, k: f32) -> SubOut {
         let s = |v: &[f32]| v.iter().map(|x| x * k).collect::<Vec<f32>>();
-        SubOut { rail_home: s(&self.rail_home), rail_work: s(&self.rail_work), walk_lost_home: s(&self.walk_lost_home), walk_lost_work: s(&self.walk_lost_work), unr_lost_home: s(&self.unr_lost_home), unr_lost_work: s(&self.unr_lost_work), acc_home: s(&self.acc_home), acc_work: s(&self.acc_work), od: s(&self.od) }
+        SubOut { rail_home: s(&self.rail_home), rail_work: s(&self.rail_work), walk_lost_home: s(&self.walk_lost_home), walk_lost_work: s(&self.walk_lost_work), unr_lost_home: s(&self.unr_lost_home), unr_lost_work: s(&self.unr_lost_work), acc_home: s(&self.acc_home), acc_work: s(&self.acc_work), od: HalfTable::build(self.od.len(), |i| self.od.get(i) * k) }
     }
     /// T-2214: the rail trips between two land parts in all.
     fn unr_rail(&self) -> f64 {
@@ -745,7 +746,7 @@ impl SubOut {
         msa(&mut self.unr_lost_work, &new.unr_lost_work, round);
         msa(&mut self.acc_home, &new.acc_home, round);
         msa(&mut self.acc_work, &new.acc_work, round);
-        msa(&mut self.od, &new.od, round);
+        self.od.msa(&new.od, round);
     }
 }
 
@@ -887,7 +888,7 @@ impl DemandApi {
             g += mem::graph(&p.g);
             avg += mem::loads(&p.avg);
             let s = &p.sub;
-            od += vb(&s.od);
+            od += s.od.heap_bytes();
             sub += vb(&s.rail_home) + vb(&s.rail_work) + vb(&s.walk_lost_home) + vb(&s.walk_lost_work) + vb(&s.unr_lost_home) + vb(&s.unr_lost_work) + vb(&s.acc_home) + vb(&s.acc_work);
             rest += vb(&p.fac) + vb(&p.seen) + mem::xfer(&p.xi) + vb(&p.xfer) + vb(&p.len.rail) + vb(&p.len.walk) + vb(&p.len.unr);
         }
@@ -1077,21 +1078,16 @@ impl DemandApi {
     }
 
     /// An S x S station-pair table over `od_st` only (`SubOut::od`).
-    pub(crate) fn compact_od(&self, od: &[f32], s: usize) -> Vec<f32> {
+    pub(crate) fn compact_od(&self, od: &[f32], s: usize) -> HalfTable {
         let k = self.od_st.len();
-        let mut out = Vec::with_capacity(k * k);
-        for &a in &self.od_st {
-            let row = &od[a as usize * s..(a as usize + 1) * s];
-            out.extend(self.od_st.iter().map(|&t| row[t as usize]));
-        }
-        out
+        HalfTable::build(k * k, |i| od[self.od_st[i / k] as usize * s + self.od_st[i % k] as usize])
     }
 
     /// `sub.od` at stations (a, t): 0 where either is in no access list.
     #[inline]
     fn sub_od(&self, sub: &SubOut, a: usize, t: usize) -> f32 {
         let (i, j) = (self.od_at[a], self.od_at[t]);
-        if i == u32::MAX || j == u32::MAX { 0.0 } else { sub.od[i as usize * self.od_st.len() + j as usize] }
+        if i == u32::MAX || j == u32::MAX { 0.0 } else { sub.od.get(i as usize * self.od_st.len() + j as usize) }
     }
 }
 
@@ -2045,12 +2041,9 @@ impl DemandApi {
         }
         let m = self.od_st.len();
         if sub.od.len() == m * m {
-            for i in 0..m {
-                let ki = keep[self.od_st[i] as usize];
-                for j in 0..m {
-                    sub.od[i * m + j] *= fw * ki + fh * keep[self.od_st[j] as usize];
-                }
-            }
+            let od = &sub.od;
+            let kept = HalfTable::build(m * m, |x| od.get(x) * (fw * keep[self.od_st[x / m] as usize] + fh * keep[self.od_st[x % m] as usize]));
+            sub.od = kept;
         }
         st.rail *= all as f64;
         st.rail_d.scale(all as f64);
@@ -2558,7 +2551,7 @@ impl DemandApi {
                     let f = q[a] / dep[a];
                     let k = self.od_st.len();
                     let i = self.od_at[a] as usize;
-                    for (&t, &x) in self.od_st.iter().zip(&sub.od[i * k..(i + 1) * k]) {
+                    for (&t, x) in self.od_st.iter().zip(sub.od.range(i * k, (i + 1) * k)) {
                         far_st[t as usize] += f * x;
                     }
                 } else {
