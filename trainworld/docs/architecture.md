@@ -993,12 +993,16 @@ all results are recomputed. Sizes: notes/T-040.md, notes/T-567.md.
   renumbers ids. Its key is a SHA-256 of the network demand reads, of every pack the solve covered
   (the packs open as it was sent, one closed while it ran included, T-2579) and of the market, the demand code's
   version, the worker count and the perfOff flags; the zones must be the
-  ones the new solve covers. **A stand-in** (T-4202, Anita 2026-11-24): a result whose key differs only in the
-  demand code's version or the worker count (an update; the same network, zones, packs and levels of detail) is
-  shown and ends the load exactly as a matching one does, its figures the last version's until the fresh
-  final replaces them; that final is written over it (the same key, so one result per slot still), and a stand-in
-  is never written itself (a write takes only a solve's own final). Packs that differ, a changed network form
-  (`canonical`) or `CACHE_FORMAT` mean no stand-in: a full load. `?perfOff=standIn` turns it off. The demand code's version (T-3926, `vite.config.ts` `demandKey`) is a SHA-256, made
+  ones the new solve covers. **A stand-in** (T-4202, Anita 2026-11-24; T-4586, Anita 2026-11-28): a result whose key
+  differs only in the demand code's version, the worker count or the market (an update or a country run: which
+  zones' market packs are open, their bytes and the routed drives their hashes carry; the same network, zones, city
+  packs and levels of detail) is shown and ends the load exactly as a matching one does, its figures the kept ones
+  until the fresh final replaces them; that final is written over it (the same key, so one result per slot still),
+  and a stand-in is never written itself (a write takes only a solve's own final). Market places are never
+  renumbered (the pipeline appends them), so a kept corridor book names this build's places; places added since
+  read none, and a changed market's workers have no rows for the kept book, so only the rows kept with it show
+  until the fresh final. City packs that differ, a changed network form (`canonical`) or `CACHE_FORMAT` mean no
+  stand-in: a full load. `?perfOff=standIn` turns it off. The demand code's version (T-3926, `vite.config.ts` `demandKey`) is a SHA-256, made
   at build time, of the source of every module in the bundler's graph from `demandClient.ts` (static and dynamic
   imports, and every file loaded by `new URL`: the demand, sums and cache-write workers' whole graphs, the demand
   WASM, market-rows.json), so every build of the same demand code has the same one and a release that changes none

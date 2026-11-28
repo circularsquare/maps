@@ -124,7 +124,7 @@ import { takesMarketless } from "../game/fareInEffect";
 import { localStep } from "./demandSteps";
 import { awaitFirstState, onFirstState, saveSlotsState } from "./clockClient";
 import { readDemandAhead, readDemandCache, writeDemandCache } from "./saveFile";
-import { DEMAND_KEY, CACHE_FORMAT, CACHE_VERSION, cacheAvailable, canonical, fromStored, sameKey, sha256, standsIn, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
+import { DEMAND_KEY, CACHE_FORMAT, CACHE_VERSION, MARKET, cacheAvailable, canonical, fromStored, noStandIn, sameKey, sha256, storedSize, toStored, type CacheKey, type StoredDemand } from "./demandCache";
 import { patientFetch } from "./patientFetch";
 import { binGzOf, isGzip, unpackBin } from "./packZip";
 
@@ -761,7 +761,6 @@ const solveModelMs = (stops: number, zones: number) => SOLVE_FIT.base + SOLVE_FI
 const GUESS_BYTES = 6e6;
 const LAST_SOLVE = "anitabuilder-load-solve";
 /** T-377: a zone's market pack as a load item, "market:<zone>" */
-const MARKET = "market:";
 const marketItem = (id: CityId) => MARKET + id;
 /** T-776: the world market's rows, beside the registry index the app bundles (a hashed file in a build) */
 const MARKET_ROWS = new URL("../game/market-rows.json", import.meta.url).href;
@@ -3089,24 +3088,26 @@ class DemandClient {
       const cities = Object.keys(stored.packs ?? {}).filter((k) => !isMarket(k));
       if (!need || need.size !== cities.length || cities.some((id) => !need.has(id))) return void (log.miss = "zones");
       const markets = this.wantsMarket(svc);
-      const had = Object.keys(stored.packs ?? {}).filter(isMarket).map(marketZone);
-      if (had.length !== markets.length || markets.some((id) => !had.includes(id))) return void (log.miss = "zones");
+      // T-4202, T-4586: after an update or a country run, the kept result of this network stands in while this build solves it
+      const stand = !perfOff("standIn");
       // (T-2574: what can be checked before the packs are in)
-      const pre = sameKey(stored, { ...this.keyBase(), packs: stored.packs ?? {} });
-      // T-4202: after an update, the last build's result of this network stands in while this one solves it
-      const standIn = (pre === "demand" || pre === "workers") && !perfOff("standIn");
-      if (pre && !standIn) return void (log.miss = pre);
+      const had = Object.keys(stored.packs ?? {}).filter(isMarket).map(marketZone);
+      if (!stand && (had.length !== markets.length || markets.some((id) => !had.includes(id)))) return void (log.miss = "markets");
+      const base = { ...this.keyBase(), packs: stored.packs ?? {} };
+      const pre = stand ? noStandIn(stored, base) : sameKey(stored, base);
+      if (pre) return void (log.miss = pre);
       if (!late()) this.expectCache(log, true);
       // (T-1223: the levels the solve will have; before the fine set is made, the save's list's)
       const saved = !this.lodZones && this.lod === "auto" ? this.savedFine : null;
       const coarse = cities.filter((id) => (saved ? !saved.includes(id) : this.levelFor(id) === LOD_COARSE));
       const key = await this.keyFor(cities, markets, coarse);
-      const why = !standIn ? sameKey(stored, key) : standsIn(stored, key) ? null : sameKey({ ...stored, demand: key.demand, workers: key.workers }, key);
+      const differs = sameKey(stored, key);
+      const why = differs && (stand ? noStandIn(stored, key) : differs);
       if (why) return void (log.miss = why);
-      if (standIn) log.standIn = pre!;
+      if (differs) log.standIn = differs;
       // (T-1533: a rough solve's estimate gives way to it)
       if (late() || this.failed) return void (log.miss = "late");
-      this.applyCache(svc, canon, stored, hash, cities, standIn);
+      this.applyCache(svc, canon, stored, hash, cities, !!differs);
       if (ahead && this.early) this.early.shown = true;
       log.shownAt = performance.now();
     } catch (err) {
@@ -3119,7 +3120,7 @@ class DemandClient {
   /** Show a cached result as a final one under CACHE_VERSION; the solve of the same network carries
    * on, its estimates are not shown, and its final round replaces it whole (T-4202: a stand-in's too). */
   private applyCache(svc: Service, ids: ReturnType<typeof canonical>, stored: StoredDemand, hash: string, cities: CityId[], standIn = false) {
-    const days = fromStored(stored, ids);
+    const days = fromStored(stored, ids, INTERCITY_PLACES.length);
     if (days.length !== DEMAND_DAYS.length) throw new Error("days");
     const now = performance.now();
     // a solve entry for it, so its layout and zones are known as a shown solve's are (T-324, T-325);

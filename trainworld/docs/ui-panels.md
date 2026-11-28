@@ -1666,9 +1666,9 @@ server `trainworld_community.go`, its `docs/trainworld-api.md` "Community"; note
   zone's own cluster, solved ahead of the rest (T-402: a Toronto view of a game with New York's
   network, about 6 s instead of 31 s); a new game until its viewed zone's figures, opened bare,
   arrive (T-351). **A game whose last final result is kept for its very network** (T-328: the
-  same network and packs; after an update, the last version's result stands in [T-4202]) holds the clock only
+  same network and packs; after an update or a country run, the kept result stands in [T-4202, T-4586]) holds the clock only
   until that network is in, the result shown and the zone in view with figures [T-2560]: its figures are that
-  network's final (a stand-in's the last version's, replaced at the fresh final), so the game plays on them while
+  network's final (a stand-in's the kept ones, replaced at the fresh final), so the game plays on them while
   the workers solve the same network again. The status tag then says "Trips in 81 cities being recomputed…"
   until the zone in view's cluster has its fresh final (the tag's own rule in "Status and busy
   tags"); the clock is not capped for it [T-2622]. Zones still solving then show their own loading bar and grey ("A zone still loading

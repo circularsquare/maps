@@ -10,12 +10,12 @@
 // The key: a SHA-256 of the network demand reads (the canonical form below), the SHA-256 of every
 // pack the solve covered and the market's, the demand code's version (DEMAND_KEY, T-3926), the worker
 // count (sums are added in worker order) and the perfOff flags. Any other difference means no cache, never a
-// wrong one. T-4202: a result whose key differs only in the demand code's version or the worker count (an
-// update, the same network, zones and packs) stands in while this build solves: shown as the cache is, its
-// figures replaced by the fresh final (`standsIn`).
+// wrong one. T-4202, T-4586: a result whose key differs only in the demand code's version, the worker count or the
+// market (an update or a country run; the same network, zones and city packs) stands in while this build solves:
+// shown as the cache is, its figures replaced by the fresh final (`noStandIn`).
 
 import type { CityId } from "../game/cities";
-import type { CorridorRows, DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand, StationDemand } from "../game/demand";
+import type { CorridorBook, CorridorRows, DayDemand, DemandView, IntercityDemand, LineDemand, PurposeDemand, StationDemand } from "../game/demand";
 import type { DemandDay } from "../game/days";
 import type { PurposeKey } from "../game/purposes";
 import type { ModeSplit } from "../game/types";
@@ -29,6 +29,8 @@ declare const __TW_DEMAND__: string | undefined;
  * demand side runs (the same in every build of the same demand code), on the dev server new at each start. */
 export const DEMAND_KEY = typeof __TW_DEMAND__ === "string" ? __TW_DEMAND__ : "unknown";
 export const CACHE_FORMAT = 13; // raise when the cached result's layout changes (T-4202: an older demand code's result is read as a stand-in)
+/** A market pack's item in a key's `packs` (demandClient's), before the zone's id. */
+export const MARKET = "market:";
 /** The view version a cached result is shown under: no solve has it, so the workers answer no
  * question about it (a click waits for the fresh solve). */
 export const CACHE_VERSION = 0;
@@ -159,15 +161,24 @@ export function sameKey(a: CacheKey, b: CacheKey): string | null {
   if (a.workers !== b.workers) return "workers";
   if (a.flags !== b.flags) return "flags";
   const ka = Object.keys(a.packs).sort(), kb = Object.keys(b.packs).sort();
-  if (ka.join() !== kb.join()) return "zones";
+  if (ka.join() !== kb.join()) return cityPart(a.packs).join() !== cityPart(b.packs).join() ? "zones" : "markets";
   for (const k of ka) if (a.packs[k] !== b.packs[k]) return "pack " + k;
   return null;
 }
 
-/** T-4202: a kept result whose key `a` differs from this build's `b` only in the demand code's version or the
- * worker count, so it can stand in (its layout, zones and packs the same) while this build solves the network. */
-export function standsIn(a: CacheKey, b: CacheKey): boolean {
-  return (a.demand !== b.demand || a.workers !== b.workers) && sameKey({ ...a, demand: b.demand, workers: b.workers }, b) === null;
+/** The zones' items of a key's packs, sorted: every pack but the market's. */
+const cityPart = (packs: Record<string, string>): string[] => Object.keys(packs).filter((k) => !k.startsWith(MARKET)).sort();
+
+/**
+ * T-4202, T-4586: why the kept result with key `a` cannot stand in for this build's solve of the same network, key `b`
+ * (null: it can, or the keys are equal). Its layout, flags, zones, city packs and their levels must be the same, so its
+ * figures read in this build's lines, stations and cells; the demand code's version, the worker count and the market
+ * may differ: which zones' market packs, their bytes and the routed drives their hashes carry (a country run changes
+ * them all). Market places are never renumbered (the pipeline appends), so its corridors name this build's places.
+ */
+export function noStandIn(a: CacheKey, b: CacheKey): string | null {
+  const cities = (k: CacheKey): CacheKey => ({ ...k, packs: Object.fromEntries(cityPart(k.packs).map((id) => [id, k.packs[id]])) });
+  return sameKey(cities({ ...a, demand: b.demand, workers: b.workers }), cities(b));
 }
 
 /** A final result's days as stored: `cities` the zones the solve covered (bare zones are left out;
@@ -189,8 +200,17 @@ export function toStored(days: DayDemand[], cities: CityId[], ids: { stationIds:
   });
 }
 
-/** The stored days as the page shows them, under `CACHE_VERSION`, with today's ids. */
-export function fromStored(stored: StoredDemand, ids: { stationIds: string[]; lineIds: string[] }): DayDemand[] {
+/** The stored days as the page shows them, under `CACHE_VERSION`, with today's ids. T-4586: a stand-in's corridor book
+ * made before places were added (`places` the market's now) reads none for them, not past its end. */
+export function fromStored(stored: StoredDemand, ids: { stationIds: string[]; lineIds: string[] }, places: number): DayDemand[] {
+  const grown = new Map<CorridorBook, CorridorBook>();
+  const pad = (a: Float64Array, n: number) => { const out = new Float64Array(n); out.set(a.subarray(0, n)); return out; };
+  const bookOf = (b: CorridorBook): CorridorBook => {
+    if (!b.key || b.totals.length >= 3 * places) return b;
+    let g = grown.get(b);
+    if (!g) grown.set(b, (g = { ...b, totals: pad(b.totals, 3 * places), own: pad(b.own, 2 * places), ...(b.apart ? { apart: pad(b.apart, places) } : {}) }));
+    return g;
+  };
   const stations = (s: Stations) => new Map(s.map(([i, b, a, t]): [string, StationDemand] => [ids.stationIds[i], t === undefined ? { boardings: b, alightings: a } : { boardings: b, alightings: a, transfers: t }]));
   return stored.days.map((d, day) => {
     const v = d.view;
@@ -202,7 +222,8 @@ export function fromStored(stored: StoredDemand, ids: { stationIds: string[]; li
       purposes: v.purposes && new Map(v.purposes.map(([k, p]) => [k, { lines: new Map(p.lines.map(([i, l]) => [ids.lineIds[i], l])), stations: stations(p.stations) }])),
     };
     const cities = new Map<CityId, DemandView>(d.cities.map(([id, c]) => [id, { ...view, ...c }]));
-    return { view, cities, intercity: d.intercity && { ...d.intercity, version: CACHE_VERSION } };
+    const ic = d.intercity;
+    return { view, cities, intercity: ic && { ...ic, version: CACHE_VERSION, ...(ic.corridors ? { corridors: { ...ic.corridors, book: bookOf(ic.corridors.book) } } : {}) } };
   });
 }
 

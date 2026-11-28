@@ -8,8 +8,9 @@
 //   every change of the shown view (version:round:final, version 0 = the cache) and a signature of
 //   every figure in the first final view shown and in the fresh solve's final. PASS when the
 //   fresh final's signature is the same on every run and the cached view's equals it.
-// stale: tampers with the stored cache (a pack's digest), reloads, and checks that the cache is not shown; then a
-//   changed network (the fare) must not show it either.
+// stale: tampers with the stored cache (a city pack's digest), reloads, and checks that the cache is not shown; then
+//   (T-4586) every market pack's digest, as a country run changes them: it stands in; then a changed network (the
+//   fare) must not show it either.
 // standin (T-4202): the stored cache made another demand code's (its demand key changed, its lines' and rail
 //   figures x1.5), a reload: it stands in (shown, the clock running at it) until the fresh final, which must equal
 //   the fresh final of an unchanged reload; then it is written again under this build's key, so the next reload
@@ -117,7 +118,7 @@ const errors = [];
 collectErrors(page, errors, null);
 
 /** the stored cache entries changed as `field` says (IndexedDB "anitabuilder", store "saves", keys "demand:..."):
- * 'pack' a pack's digest, 'standin' another demand code's (its key, and every day's lines' and rail figures x1.5,
+ * 'pack' a city pack's digest, 'market' every market pack's, 'standin' another demand code's (its key, and every day's lines' and rail figures x1.5,
  * so a stand-in shows other figures than the fresh final), 'read' none (each entry's demand key); resolves the
  * entries changed, or for 'read' [storage key, demand key] of each */
 const tamper = (field) => page.evaluate((field) => new Promise((res, rej) => {
@@ -142,7 +143,11 @@ const tamper = (field) => page.evaluate((field) => new Promise((res, rej) => {
               d.view.railTripsPerDay *= 1.5;
               for (const [, l] of d.view.lines) l.ridersPerDay *= 1.5;
             }
-          } else v.packs[Object.keys(v.packs)[0]] = 'x';
+          } else if (field === 'market') {
+            const ms = Object.keys(v.packs).filter((k) => k.startsWith('market:'));
+            if (!ms.length) return;
+            for (const k of ms) v.packs[k] += '~';
+          } else v.packs[Object.keys(v.packs).find((k) => !k.startsWith('market:'))] = 'x';
           st.put(v, key).onsuccess = () => { n++; };
         };
       }
@@ -310,17 +315,18 @@ try {
       console.log(`${pass ? 'PASS' : 'FAIL'}  ${what}`);
     }
   } else if (MODE === 'stale') {
-    // (T-4202: a changed demand key stands in: MODE=standin)
-    for (const field of ['pack']) {
+    // (T-4202: a changed demand key stands in: MODE=standin; T-4586: a changed market stands in too)
+    for (const field of ['pack', 'market']) {
       let r = await reload(); // writes a good cache again if the last run left none
       if (!summary(r).cached) r = await reload();
       const n = await tamper(field);
       r = await reload();
       const s = summary(r);
-      const pass = n > 0 && !s.cached;
+      const market = field === 'market';
+      const pass = n > 0 && (market ? s.cached && /^(pack market:|markets$)/.test(r.cache?.standIn ?? '') : !s.cached);
       ok &&= pass;
       out.runs.push({ field, tampered: n, ...s, cache: r.cache });
-      console.log(`${pass ? 'PASS' : 'FAIL'}  a changed ${field} shows no cache (${n} entries tampered; views ${s.views}; ${JSON.stringify(r.cache)})`);
+      console.log(`${pass ? 'PASS' : 'FAIL'}  a changed ${market ? 'market stands in' : 'city pack shows no cache'} (${n} entries tampered; views ${s.views}; ${JSON.stringify(r.cache)})`);
     }
     // a changed network (the fare, which demand reads), never solved to a cache (writes off), then
     // a reload; the fare is put back at the end

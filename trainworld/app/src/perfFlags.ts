@@ -48,7 +48,7 @@
 //   grow     a demand pool cut for memory never adds workers back (T-1366)
 //   keepSlack an idle demand worker well over its need restarts (and the network is solved again) with the pool not short of memory (T-4204)
 //   cacheAhead  a loading save's cached demand result waits for its network, and the camera for its first state
-//   standIn     T-4202: no other demand code's kept result stands in at a load (the full load, as before)
+//   standIn     T-4202, T-4586: no kept result of another demand code, worker count or market stands in at a load (the full load, as before)
 //   cacheCard   a loaded game showing its cached demand result keeps its card and held clock until the fresh final (T-347)
 //   splitAhead  the station bubbles' origins and transfers wait for the transfer pairs asked of the workers
 //   zoneZoom zones load for viewing at any zoom, exact outlines from zoom 5, every outline redrawn on each change
