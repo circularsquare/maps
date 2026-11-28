@@ -202,7 +202,7 @@ impl TrackWorld {
             let kind = if i > 0 && !list.iter().any(|m| near(m) && m.kind == MoveKind::Own) { MoveKind::With } else { MoveKind::Own };
             list.retain(|m| !near(m));
             if total != 0.0 {
-                list.push(Move { run, at: key, secs: total as f32, kind });
+                list.push(Move { run, at: key, secs: total as f32, kind, row: 0 });
             }
         }
         let mut ops: Vec<Op> = lists.into_iter().map(|(line, moves)| Op::MoveTrain { line, moves }).collect();
@@ -237,7 +237,7 @@ impl TrackWorld {
     fn clamped(&self, line: u32, m: &Move) -> f32 {
         let l = line as usize;
         let Some(lat) = self.svc.lattice(&self.net, l) else { return m.secs };
-        let Some((d, ..)) = move_dep(&lat, m, self.svc.ref_day(l), &mut vec![]) else { return m.secs };
+        let Some((d, ..)) = move_dep(&lat, m, self.svc.ref_day_row(l, m.row as usize), &mut vec![]) else { return m.secs };
         match self.move_range(line, m.run, d) {
             Ok(r) => (m.secs as f64).max(r.raw_lo.min(0.0)).min(r.raw_hi.max(0.0)) as f32,
             Err(_) => m.secs,

@@ -496,6 +496,11 @@ impl Lattice {
         let row = if self.rest_on { self.cal.row(day) } else { WEEKDAYS };
         std::array::from_fn(|q| self.period_slot[q] + SLOTS * row)
     }
+    /// T-4549: the kind of day (`WEEKDAYS`, `WEEKEND`) of the local day game time `g` falls in, by the line's own calendar
+    /// (`cal`, the week where it has none); what a move's kind is checked against. Not gated by `rest_on`.
+    pub fn row_at(&self, g: f64) -> usize {
+        self.cal.row(((g + self.shift) / DAY_S).floor() as i64)
+    }
     /// A slot's trains an hour, offset and phase (`levels_on`).
     pub fn slot(&self, s: usize) -> (f32, f64, f64) {
         let lev = s % SLOTS;
@@ -702,7 +707,7 @@ pub(crate) fn lattice_deps(lat: &Lattice, r: usize, a: f64, b: f64, out: &mut Ve
 /// T-4547: the departure (as `lattice_deps` gives it, unmoved) that move `m` takes on weekday `day`: the one of its run whose
 /// key is nearest, within half its headway. None: the move waits.
 pub(crate) fn move_dep(lat: &Lattice, m: &Move, day: i64, buf: &mut Vec<Dep>) -> Option<Dep> {
-    let lat = Lattice { cal: Cal::all(day, WEEKDAYS), ..*lat };
+    let lat = Lattice { cal: Cal::all(day, m.row as usize), ..*lat };
     let ofs = lat.shift + lat.lead;
     let g = day as f64 * DAY_S + m.at - ofs;
     buf.clear();
@@ -725,7 +730,7 @@ pub(crate) fn lattice_deps_moved(lat: &Lattice, mv: &[Move], r: usize, a: f64, b
     }
     let start = out.len();
     lattice_deps(lat, r, a - moves::MAX_MOVE_S, b + moves::MAX_MOVE_S, out);
-    keep_moved(mv, r, 0.0, lat.shift + lat.lead, a, b, start, out);
+    keep_moved(mv, r, 0.0, lat.shift + lat.lead, a, b, start, out, |g| lat.row_at(g));
 }
 
 /// `lattice_deps_local` with the moves applied: the departures in the line's local time (a move's `at` is game time).
@@ -735,15 +740,15 @@ pub(crate) fn lattice_deps_local_moved(lat: &Lattice, mv: &[Move], r: usize, a: 
     }
     let start = out.len();
     lattice_deps_local(lat, r, a - moves::MAX_MOVE_S, b + moves::MAX_MOVE_S, out);
-    keep_moved(mv, r, lat.shift, lat.shift + lat.lead, a, b, start, out);
+    keep_moved(mv, r, lat.shift, lat.shift + lat.lead, a, b, start, out, |g| lat.row_at(g));
 }
 
 #[allow(clippy::too_many_arguments)]
-fn keep_moved(mv: &[Move], r: usize, shift: f64, ofs: f64, a: f64, b: f64, start: usize, out: &mut Vec<Dep>) {
+fn keep_moved(mv: &[Move], r: usize, shift: f64, ofs: f64, a: f64, b: f64, start: usize, out: &mut Vec<Dep>, row_at: impl Fn(f64) -> usize) {
     let mut k = start;
     for i in start..out.len() {
         let (d, lev, hw, place) = out[i];
-        let d2 = d + moves::secs(mv, r, d - shift, hw, ofs);
+        let d2 = d + moves::secs(mv, r, d - shift, hw, ofs, row_at(d - shift));
         if d2 >= a && d2 < b {
             out[k] = (d2, lev, hw, place);
             k += 1;
@@ -1817,7 +1822,9 @@ impl Service {
         // rates equal to the weekdays' run the weekdays' pattern, so they keep `rest_on` off and the
         // lattice equal to one read back from a save, whose eras keep no weekend rates
         if rest_tph == tph && rest_off == off && rest_phase == phase {
-            return Some(self.joined(net, l, week));
+            // T-4549: a line with moves carries its calendar (without `rest_on`) so a move runs on its own kind of day only
+            let cal = if self.moves.get(l).is_some_and(|m| !m.is_empty()) { self.cal.get(l).copied().unwrap_or(Cal::NONE) } else { Cal::NONE };
+            return Some(self.joined(net, l, Lattice { cal, ..week }));
         }
         let cal = self.cal.get(l).copied().unwrap_or(Cal::NONE);
         Some(self.joined(net, l, Lattice { rest_tph, rest_off, rest_phase, rest_on: true, cal, hours: hours_of(&rest_tph), ..week }))
@@ -2230,9 +2237,14 @@ impl Service {
     /// T-4547: a weekday on which line `l` runs its current pattern (after its last era), where a move's departure is
     /// looked for.
     pub fn ref_day(&self, l: usize) -> i64 {
+        self.ref_day_row(l, WEEKDAYS)
+    }
+
+    /// T-4549: `ref_day` for a kind of day.
+    pub fn ref_day_row(&self, l: usize, row: usize) -> i64 {
         let after = self.eras_of(l).last().map_or(0, |e| (e.until / DAY_S).ceil() as i64 + 1);
         let mut day = super::timing::DAY_REF.max(after);
-        while row_of_day(day) != WEEKDAYS {
+        while row_of_day(day) != row {
             day += 1;
         }
         day
@@ -2248,9 +2260,8 @@ impl Service {
         }
         let Some(lat) = self.lattice(net, l) else { return held };
         let mut buf: Vec<Dep> = vec![];
-        let day = self.ref_day(l);
         for m in self.stored_of(l).iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With)) {
-            if let Some((_, lev, _, _)) = move_dep(&lat, m, day, &mut buf) {
+            if let Some((_, lev, _, _)) = move_dep(&lat, m, self.ref_day_row(l, m.row as usize), &mut buf) {
                 if (lev as usize) < SLOTS {
                     held[lev as usize] = true;
                 }
@@ -2263,7 +2274,7 @@ impl Service {
     /// in the day.
     pub fn train_at(&self, net: &Network, l: usize, run: u8, key: f64) -> Option<Train> {
         let lat = self.lattice(net, l)?;
-        let (_, lev, _, place) = move_dep(&lat, &Move { run, at: key, secs: 0.0, kind: MoveKind::Own }, self.ref_day(l), &mut vec![])?;
+        let (_, lev, _, place) = move_dep(&lat, &Move { run, at: key, secs: 0.0, kind: MoveKind::Own, row: 0 }, self.ref_day(l), &mut vec![])?;
         (place != NO_PLACE).then_some(Train { line: l as u32, run, lev, place })
     }
 
@@ -2298,8 +2309,8 @@ impl Service {
     pub fn moves_waiting(&self, net: &Network, l: usize) -> usize {
         let st = self.stored_of(l);
         let Some(lat) = self.lattice(net, l) else { return st.iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With)).count() };
-        let (day, mut buf) = (self.ref_day(l), vec![]);
-        st.iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With) && move_dep(&lat, m, day, &mut buf).is_none()).count()
+        let mut buf = vec![];
+        st.iter().filter(|m| matches!(m.kind, MoveKind::Own | MoveKind::With) && move_dep(&lat, m, self.ref_day_row(l, m.row as usize), &mut buf).is_none()).count()
     }
 
     /// A line's eras (empty for most).
@@ -2401,7 +2412,7 @@ impl Service {
                 }
                 last = Some(d);
                 if d >= a && d < b {
-                    let moved = moves::secs(mv, r, d, hw, lat.shift + lat.lead);
+                    let moved = moves::secs(mv, r, d, hw, lat.shift + lat.lead, lat.row_at(d));
                     let draw = d + shifts.iter().find(|x| x.0 as usize == r && x.1 == d).map_or(0.0, |x| x.2) + moved;
                     let var = if i < eras.len() {
                         era_var(&eras[i], &ls.runs[r], r, d, lev)

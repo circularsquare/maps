@@ -2741,7 +2741,6 @@ impl TrackWorld {
                     }
                 };
                 let Some(lat) = self.svc.lattice(&self.net, l) else { continue };
-                let day = self.svc.ref_day(l);
                 let mut buf = vec![];
                 // matched on the list as it was, so a move shifted for one slot is not tried against the next
                 let was = out[i].1.clone();
@@ -2749,7 +2748,7 @@ impl TrackWorld {
                     if !matches!(m.kind, super::moves::MoveKind::Own | super::moves::MoveKind::With) {
                         continue;
                     }
-                    if super::service::move_dep(&lat, m, day, &mut buf).is_some_and(|dep| dep.1 == x.slot) {
+                    if super::service::move_dep(&lat, m, self.svc.ref_day_row(l, m.row as usize), &mut buf).is_some_and(|dep| dep.1 == x.slot) {
                         let now = &mut out[i].2[k];
                         now.at = (now.at + d).rem_euclid(86400.0);
                     }

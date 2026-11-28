@@ -25,6 +25,8 @@ pub struct Move {
     pub at: f64,
     pub secs: f32,
     pub kind: MoveKind,
+    /// T-4549: the kind of day it belongs to (`params::WEEKDAYS`, `WEEKEND`): a move runs on days of its kind only.
+    pub row: u8,
 }
 
 /// A train by its place in its line's day (`Dep`'s level and place: the pattern's own numbering, the table's column), which no
@@ -74,15 +76,15 @@ pub fn apart(a: f64, b: f64) -> f64 {
 }
 
 /// The seconds run `r`'s departure at game time `d` of headway `hw` is moved: that of the move whose key is nearest it
-/// within half a headway, so two moves for one departure leave the nearer, and a move no departure is within half a
+/// within half a headway on a day of kind `row` (the day of the departure, `Lattice::row_at`), so two moves for one departure leave the nearer, and a move no departure is within half a
 /// headway of waits. Reads only the departure and the moves, so every window agrees.
-pub fn secs(moves: &[Move], r: usize, d: f64, hw: f64, ofs: f64) -> f64 {
+pub fn secs(moves: &[Move], r: usize, d: f64, hw: f64, ofs: f64, row: usize) -> f64 {
     if moves.is_empty() {
         return 0.0;
     }
     let (half, k) = (0.5 * hw, key_of(d, ofs));
     let mut best: Option<(f64, f64)> = None;
-    for m in moves.iter().filter(|m| m.run as usize == r) {
+    for m in moves.iter().filter(|m| m.run as usize == r && m.row as usize == row) {
         let dist = apart(m.at, k);
         if dist < half && best.map_or(true, |b| dist < b.0) {
             best = Some((dist, m.secs as f64));
@@ -93,5 +95,5 @@ pub fn secs(moves: &[Move], r: usize, d: f64, hw: f64, ofs: f64) -> f64 {
 
 /// What a hash of a line's departures reads of its moves (nothing for none, so their keys stay as they were).
 pub fn words(moves: &[Move]) -> Vec<u64> {
-    moves.iter().flat_map(|m| [m.at.to_bits(), (m.run as u64) << 40 | (m.kind as u64) << 32 | m.secs.to_bits() as u64]).collect()
+    moves.iter().flat_map(|m| [m.at.to_bits(), (m.row as u64) << 48 | (m.run as u64) << 40 | (m.kind as u64) << 32 | m.secs.to_bits() as u64]).collect()
 }

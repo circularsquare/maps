@@ -16,7 +16,7 @@ fn trips(w: &TrackWorld, l: usize, r: usize, a: f64, b: f64) -> Vec<Trip> {
 }
 
 fn own(run: u8, at: f64, secs: f32) -> Move {
-    Move { run, at, secs, kind: MoveKind::Own }
+    Move { run, at, secs, kind: MoveKind::Own, row: 0 }
 }
 
 /// One departure moves, as far as it is drawn and ends; its neighbours, the other direction and every other field
@@ -99,4 +99,33 @@ fn t4544_eras_keep_their_moves() {
     // (the era holds what ran before the edit; the line's own are clamped to the room it leaves)
     assert_eq!((eras[0].moves.len(), eras[0].moves[0].secs), (1, 90.0));
     assert_eq!(&*w.svc.stored_of(c), &*eras[0].moves);
+}
+
+/// T-4549: a move belongs to one kind of day: a weekday move is absent on a weekend day, a weekend move is absent on weekdays.
+#[test]
+fn t4549_a_move_runs_on_its_kind_of_day_only() {
+    let (mut w, _, c) = corridor(3);
+    let (wk, we) = (2.0 * DAY, 6.0 * DAY);
+    assert_eq!((row_of_day(2), row_of_day(6)), (WEEKDAYS, WEEKEND));
+    let base_wk = trips(&w, c, 0, wk, wk + DAY);
+    let base_we = trips(&w, c, 0, we, we + DAY);
+    let target = base_wk[base_wk.len() / 2].dep;
+    let lat = w.svc.lattice(&w.net, c).unwrap();
+    let key = moves::key_of(target, lat.shift + lat.lead);
+    let at_day = |v: &[Trip], day: f64| v.iter().find(|t| (t.dep - (target + (day - 2.0) * DAY)).abs() < 1.0).map(|t| t.moved);
+
+    w.svc.set_moves(c, vec![own(0, key, 120.0)]);
+    let (a, b) = (trips(&w, c, 0, wk, wk + DAY), trips(&w, c, 0, we, we + DAY));
+    assert_eq!((at_day(&a, 2.0), at_day(&b, 6.0)), (Some(120.0), Some(0.0)), "a weekday move");
+    assert_eq!(format!("{:?}", b), format!("{:?}", base_we), "the weekend as it was");
+
+    w.svc.set_moves(c, vec![Move { row: WEEKEND as u8, ..own(0, key, 60.0) }]);
+    let (a, b) = (trips(&w, c, 0, wk, wk + DAY), trips(&w, c, 0, we, we + DAY));
+    assert_eq!((at_day(&a, 2.0), at_day(&b, 6.0)), (Some(0.0), Some(60.0)), "a weekend move");
+    assert_eq!(format!("{:?}", a), format!("{:?}", base_wk), "the weekdays as they were");
+
+    // the boarding account's reference day of a kind agrees
+    let mut v = vec![];
+    w.svc.run_deps_as(&w.net, c, 0, we, we + DAY, Some(WEEKDAYS), &mut v);
+    assert!(v.iter().all(|t| t.moved == 0.0), "a weekday row has no weekend move");
 }

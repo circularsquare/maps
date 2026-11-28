@@ -523,7 +523,7 @@ fn train_lost(net: &Network, svc: &Service, lat: &Lattice, mv: &[Move], l: usize
         let mut out = vec![vec![]; SLOTS];
         for (d, l, hw, place) in buf {
             let lev = l as usize;
-            let m = moves::secs(mv, r, d - lat.shift, hw, lat.shift + lat.lead);
+            let m = moves::secs(mv, r, d - lat.shift, hw, lat.shift + lat.lead, lat.row_at(d - lat.shift));
             if lev >= SLOTS || place == NO_PLACE || !(d + m >= a && d + m < b) || !seen[lev].insert(place) {
                 continue;
             }

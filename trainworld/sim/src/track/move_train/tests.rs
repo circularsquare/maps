@@ -263,13 +263,13 @@ fn stored_seconds_run_clamped_and_a_move_with_no_train_waits() {
     let t = pick(&w, c);
     let r = w.move_range(c as u32, t.run, t.dep).unwrap();
     let key = key_at(&w, c, t.dep);
-    w.svc.set_moves(c, vec![Move { run: t.run, at: key, secs: 500.0, kind: moves::MoveKind::Own }]);
+    w.svc.set_moves(c, vec![Move { run: t.run, at: key, secs: 500.0, kind: moves::MoveKind::Own, row: 0 }]);
     w.retime();
     assert_eq!(w.svc.stored_of(c)[0].secs, 500.0);
     assert!((w.svc.moves_of(c)[0].secs as f64 - r.hi).abs() < 1e-3, "{} against {}", w.svc.moves_of(c)[0].secs, r.hi);
     assert!((moved_trains(&w, c, t.run)[0].1 as f64 - r.hi).abs() < 1e-3);
     // a line with no trains has no departure for it: it waits, and runs again when the trains come back
-    w.svc.set_moves(c, vec![Move { run: t.run, at: key, secs: 60.0, kind: moves::MoveKind::Own }]);
+    w.svc.set_moves(c, vec![Move { run: t.run, at: key, secs: 60.0, kind: moves::MoveKind::Own, row: 0 }]);
     let tph = slots_to_rows(w.net.line_tph[c]);
     w.apply(Op::TrainCounts { id: c as u32, trains: Some([0, 0, 0]), tph }).unwrap();
     assert!(moved_trains(&w, c, t.run).is_empty());
