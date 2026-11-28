@@ -1,6 +1,6 @@
 # Orchestrator handoff, trainworld
 
-Orchestrator: session bae761ca-c85c-416e-b4e2-0a931ae6b8a6, name maps-dd, since 2026-11-27 23:10 UTC (Windows 11 now; maps-6c gone, nothing in flight)
+Orchestrator: session 456cd30a-32f0-442b-89be-51ca3ca2e13e, name maps-d2, since 2026-11-28 03:54 UTC
 Updated: 2026-11-28 03:54 UTC. Live state: `venv\Scripts\python.exe trainworld/tools/handoff.py status`;
 diary notes/handoff-log.md. Her time UTC-5 (write dates to her in her time). Core cap 10 (her word 11-27 22:42 her time: "lets also set core cap to 10 for a while").
 
