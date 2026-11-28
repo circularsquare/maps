@@ -117,6 +117,13 @@ pub struct Capacity {
     dead_keys: usize,
     /// T-3542: the slots worked out when it was last built or updated (`Network::slot_worked`).
     worked: [bool; SLOTS],
+    /// T-4431: the overtake plans of the resources the last `update` built again, each once.
+    pub(crate) fresh: Vec<Arc<Plan>>,
+    /// T-4431: another capacity's `fresh` plans, which the next `update` takes where it builds an equal one: the
+    /// weekend service's update after the weekdays' (`TrackWorld::mirror_weekend`), so both services read one plan,
+    /// whose outcomes are kept by rates, and placing the weekend departures on the weekdays' service finds the
+    /// weekend outcomes its settle worked out.
+    pub(crate) donor: Vec<Arc<Plan>>,
 }
 
 impl Capacity {
@@ -1335,6 +1342,8 @@ impl Capacity {
     /// to a different delay, i.e. whether its holds may have changed.
     pub fn update(&mut self, net: &Network, lines: &[LineSvc], edges: &[u32], nodes: &[u32], rescheduled: &[u32]) -> Vec<bool> {
         self.worked = std::array::from_fn(|s| net.slot_worked(s));
+        self.fresh.clear();
+        let donor = std::mem::take(&mut self.donor);
         self.ensure_places();
         let (ne, nn) = (net.edge_count(), net.node_count());
         // what the edit touched, as flags and as lists: nothing below goes over every edge or node
@@ -1480,7 +1489,8 @@ impl Capacity {
         build_crossings(net, lines, &c, &sel, self);
         let owners: Vec<u32> = (0..lines.len() as u32).filter(|&l| follow[l as usize]).collect();
         build_follow(net, lines, &owners, self);
-        // a plan the edit left as it was keeps what it worked out (a rebuilt following loss of a line far from the edit)
+        // a plan the edit left as it was keeps what it worked out (a rebuilt following loss of a line far from the edit);
+        // one equal to the other service's takes that one (T-4431), with what this one's had worked out
         let mut kept: Vec<(*const Plan, Arc<Plan>)> = vec![];
         for r in first_new..self.res.len() {
             for p in &mut self.plans[r] {
@@ -1488,11 +1498,28 @@ impl Capacity {
                 match kept.iter().find(|k| k.0 == at) {
                     Some(k) => *p = k.1.clone(),
                     None => {
-                        if let Some(o) = old_plans.iter().find(|o| o.same_as(p)) {
+                        let old = old_plans.iter().find(|o| o.same_as(p));
+                        let take = match (donor.iter().find(|o| o.same_as(p)), old) {
+                            (Some(d), old) => {
+                                if let Some(o) = old {
+                                    d.absorb(o);
+                                }
+                                Some(d)
+                            }
+                            (None, old) => old,
+                        };
+                        if let Some(o) = take {
                             kept.push((at, o.clone()));
                             *p = o.clone();
                         }
                     }
+                }
+            }
+        }
+        for r in first_new..self.res.len() {
+            for p in &self.plans[r] {
+                if !self.fresh.iter().any(|q| Arc::ptr_eq(q, p)) {
+                    self.fresh.push(p.clone());
                 }
             }
         }

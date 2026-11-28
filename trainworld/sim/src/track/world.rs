@@ -1257,6 +1257,8 @@ impl TrackWorld {
     /// (`Service::update_scoped`, the same lines and track) on the weekends' rates and counts, so the
     /// next weekend settle starts from it rather than working every line out again.
     fn mirror_weekend(&mut self, lines: &[u32], schedules: &[u32], cap_dirty: bool, edges: &[u32], nodes: &[u32]) {
+        // T-4431: the plans the weekdays' update just built, for the weekend copy to share where it builds them alike
+        let donor = std::mem::take(&mut self.svc.cap.fresh);
         if !self.net.rest_solved {
             self.svc_rest = None;
         }
@@ -1267,7 +1269,9 @@ impl TrackWorld {
         let week = self.swap_in_weekend(&own);
         std::mem::swap(&mut self.net.line_tph, &mut self.net.line_tph_rest);
         if let Some(rest) = self.svc_rest.as_mut() {
+            rest.cap.donor = donor;
             rest.update_scoped(&self.net, lines, schedules, cap_dirty, Some((edges, nodes)));
+            rest.cap.donor.clear();
         }
         std::mem::swap(&mut self.net.line_tph, &mut self.net.line_tph_rest);
         self.put_back_weekdays(week);
@@ -3354,6 +3358,29 @@ mod circle_tests {
         assert!(!w.net.settle_kept_rest.iter().any(|e| e.0 == l as u32 && e.1 == 1), "the weekend hold went");
         assert_ne!(fresh.net.line_tph_rest[l][1], tph, "the weekend midday's headway moves slot 1");
         assert_eq!(w.net.line_tph_rest[l][1].to_bits(), fresh.net.line_tph_rest[l][1].to_bits());
+    }
+
+    /// T-4431: an edit's weekend copy shares the overtake plans the weekdays' update just built (one plan, its outcomes
+    /// kept by rates), so placing the weekend departures on the weekdays' service finds what the weekend settle worked out
+    #[test]
+    fn the_weekend_service_shares_the_weekdays_plans() {
+        let (mut w, n, _, express) = shinkansen();
+        set_passing(&mut w, &n[1..6], true);
+        w.apply(Op::Weekend { id: express, weekend: Weekend { share: 50, ..Weekend::default() } }).unwrap();
+        assert!(w.svc_rest.is_some(), "a weekend service of its own");
+        // passing tracks off at one station: both lines' plans built again
+        set_passing(&mut w, &n[3..4], false);
+        let plans = |c: &crate::track::capacity::Capacity| -> Vec<std::sync::Arc<crate::track::overtake::Plan>> { (0..c.res.len()).flat_map(|r| c.plans_of(r).iter().cloned()).collect() };
+        let (week, rest) = (plans(&w.svc.cap), plans(&w.svc_rest.as_ref().unwrap().cap));
+        assert!(!rest.is_empty(), "plans on the weekends");
+        for p in &rest {
+            let same = week.iter().find(|q| q.same_as(p)).expect("the weekdays have the same plan");
+            assert!(std::sync::Arc::ptr_eq(same, p), "one plan for both services");
+        }
+        // what the weekdays' settle and placing read is a whole build's
+        let mut g = crate::track::service::Service::default();
+        g.update_all(&w.net);
+        assert_eq!(w.svc.cap.canonical(), g.cap.canonical());
     }
 }
 

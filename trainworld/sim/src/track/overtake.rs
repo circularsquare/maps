@@ -28,8 +28,9 @@ const CYCLE_MAX_K: usize = 12;
 /// number the longer headway over the shorter, so a rate near zero would take it minutes (T-3238).
 /// Its shortest row where that is shorter (T-3542: rows from two hours).
 const HEADWAY_MAX_S: f64 = 4.0 * 3600.0;
-/// Results kept per plan, by the two lines' rates.
-const MEMO: usize = 8;
+/// Results kept per plan, by the two lines' rates: room for a settle's last rates on weekdays and on weekends,
+/// the weekend service sharing the weekdays' plans (T-4431).
+const MEMO: usize = 16;
 
 /// Station `n` has passing tracks that work: on double track (constructed), with a platform.
 pub fn passing_at(net: &Network, n: u32) -> bool {
@@ -210,6 +211,23 @@ impl Plan {
     /// T-4444: the same two runs over the same stretch, at the same times, so every outcome is the other plan's.
     pub fn same_as(&self, o: &Plan) -> bool {
         self.fast == o.fast && self.slow == o.slow && self.start == o.start && self.at == o.at && self.spacing == o.spacing && self.points == o.points && self.next == o.next
+    }
+
+    /// T-4431: the outcomes an equal plan (`same_as`) worked out that this one has not, taken over.
+    pub fn absorb(&self, o: &Plan) {
+        if std::ptr::eq(self, o) {
+            return;
+        }
+        let theirs = o.memo.lock().unwrap().clone();
+        let mut m = self.memo.lock().unwrap();
+        for (key, x) in theirs {
+            if !m.iter().any(|e| e.0 == key) {
+                if m.len() >= MEMO {
+                    m.remove(0);
+                }
+                m.push((key, x));
+            }
+        }
     }
 
     /// The next passing point after point `p`, or the stretch's end.
